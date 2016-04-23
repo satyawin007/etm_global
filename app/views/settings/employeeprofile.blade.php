@@ -81,8 +81,6 @@ use Illuminate\Support\Facades\Input;
                 	$employee = Employee::where("id","=",$values["id"])->get();
                 	$employee = $employee[0];
                 	$filename = $employee->filePath;
-                	$userrolemaster = UserRoleMaster::where("id","=",$employee->roleId)->get();
-                	$userrolemaster = $userrolemaster[0];
                 ?>
                 <div class="panel panel-default">
                     <div class="panel-heading" style="background: #438eb9;">
@@ -108,7 +106,6 @@ use Illuminate\Support\Facades\Input;
 								</ul>
 
 								<div class="tab-content profile-edit-tab-content">
-									
 									<div id="edit-basic" class="tab-pane active">
 										<form class="form-horizontal" action="updateemployeeprofile" method="post" role="form" enctype="multipart/form-data" name="updateprofile">
 										<h4 class="header blue bolder smaller">BASIC INFORMATION</h4>
@@ -142,8 +139,6 @@ use Illuminate\Support\Facades\Input;
 													</div>
 												</div>
 											</div>
-
-
 											<div class="col-xs-6">
 												<div class="form-group">
 													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Full Name</label>
@@ -154,7 +149,10 @@ use Illuminate\Support\Facades\Input;
 												<div class="form-group">
 													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Gender</label>
 													<div class="col-xs-8">
-														<input type="text" id="gender" name="gender"  required="" class="form-control" value="{{$employee->gender}}">
+														<select class="form-control"   required="" name="gender" id="gender"  value="{{$employee->gender}}">
+															<option <?php if($employee->gender == "Male"){echo 'selected = "selected"';}?> value="Male">Male</option>
+															<option <?php if($employee->gender == "Female"){echo 'selected = "selected"';}?> value="Female">Female</option>												
+														</select>
 													</div>
 											    </div>
 											    <div class="form-group">
@@ -202,28 +200,8 @@ use Illuminate\Support\Facades\Input;
 												<div class="form-group">
 													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> City</label>
 													<div class="col-xs-8">
-														<select class="form-control"   required="" name="city" id="city"  value="{{$employee->gender}}">
+														<select class="form-control"   required="" name="city" id="city" ">
 															<option selected="selected" value="{{$cityid}}">{{$cityname}}</option>												
-														</select>
-													</div>
-												</div>
-												<div class="form-group">
-													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Designation<span style="color:red;">*</span> </label>
-													<div class="col-xs-8">
-														<select class="form-control chosen-select" required="required"  name="designation" onChange="getEmpId()"" >
-															<option value="">-- Select Designation --</option>
-															<?php 
-																$roles = \UserRoleMaster::All();
-																foreach ($roles as $role){
-																	
-																	if($employee->roleId == $role->id){
-																		echo "<option selected value='".$role->id."'>".$role->name."</option>";
-																	}
-																	else{
-																		echo "<option value='".$role->id."'>".$role->name."</option>";
-																	}
-																}
-															?>												
 														</select>
 													</div>
 												</div>
@@ -506,7 +484,7 @@ use Illuminate\Support\Facades\Input;
 		<script type="text/javascript">
 		<?php 
 			if(Session::has('message')){
-				echo "bootbox.confirm('".Session::pull('message')."', function(result) {});";
+				echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 			}
 		?>
 
@@ -938,6 +916,28 @@ use Illuminate\Support\Facades\Input;
 		$('#edit-basic').find('input[type=file]').ace_file_input('show_file_list', [{type: 'image', name: {{$filename}}}]);
 	
 	
+		////////////////////
+		//change profile
+		$('[data-toggle="buttons"] .btn').on('click', function(e){
+			var target = $(this).find('input[type=radio]');
+			var which = parseInt(target.val());
+			$('.user-profile').parent().addClass('hide');
+			$('#user-profile-'+which).parent().removeClass('hide');
+		});
+		
+		
+		
+		/////////////////////////////////////
+		$(document).one('ajaxloadstart.page', function(e) {
+			//in ajax mode, remove remaining elements before leaving page
+			try {
+				$('.editable').editable('destroy');
+			} catch(e) {}
+			$('[class*=select2]').remove();
+		});
+	});
+		</script>
+	@stop
 		////////////////////
 		//change profile
 		$('[data-toggle="buttons"] .btn').on('click', function(e){

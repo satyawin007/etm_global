@@ -671,7 +671,8 @@ class RepairTransactionController extends \Controller {
 			$warehouse_arr[$warehouse->id] = $warehouse->name;
 		}
 		
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+						->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;

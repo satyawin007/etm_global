@@ -76,7 +76,7 @@ use Illuminate\Support\Facades\Input;
                 <?php 
                 	$employee = Employee::where("id","=",Auth::user()->id)->get();
                 	$employee = $employee[0];
-                	$userrolemaster = UserRoleMaster::where("id","=",$employee->roleId)->get();
+                	$userrolemaster = Role::where("id","=",$employee->rolePrevilegeId)->get();
                 	$userrolemaster = $userrolemaster[0];
                 ?>
                 <div class="panel panel-default">
@@ -124,7 +124,10 @@ use Illuminate\Support\Facades\Input;
 												<div class="form-group">
 													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Gender</label>
 													<div class="col-xs-8">
-														<input type="text" id="gender" name="gender"  required="" class="form-control" value="{{$employee->gender}}">
+														<select class="form-control"   required="" name="gender" id="gender"  value="{{$employee->gender}}">
+															<option <?php if($employee->gender == "Male"){echo 'selected = "selected"';}?> value="Male">Male</option>
+															<option <?php if($employee->gender == "Female"){echo 'selected = "selected"';}?> value="Female">Female</option>												
+														</select>
 													</div>
 											    </div>
 											    <div class="form-group">
@@ -180,7 +183,7 @@ use Illuminate\Support\Facades\Input;
 												<div class="form-group">
 													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Designation </label>
 													<div class="col-xs-8">
-														<input type="text" id="designation" name="designation" disabled="disabled" required="" class="form-control" value="{{$userrolemaster->name}}" >													
+														<input type="text" id="designation" name="designation" disabled="disabled" required="" class="form-control" value="{{$userrolemaster->roleName}}" >													
 													</div>
 												</div>
 												<div class="form-group">
@@ -461,7 +464,7 @@ use Illuminate\Support\Facades\Input;
 		<script type="text/javascript">
 		<?php 
 			if(Session::has('message')){
-				echo "bootbox.confirm('".Session::pull('message')."', function(result) {});";
+				echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 			}
 		?>
 

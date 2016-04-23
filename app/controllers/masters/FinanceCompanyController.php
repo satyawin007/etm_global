@@ -25,11 +25,11 @@ class FinanceCompanyController extends \Controller {
 			$table = "FinanceCompany";
 			if($db_functions_ctrl->insert($table, $fields)){
 				\Session::put("message","Operation completed Successfully");
-				return \Redirect::to("addfinancecompany");
+				return \Redirect::to("financecompanies");
 			}
 			else{
 				\Session::put("message","Operation Could not be completed, Try Again!");
-				return \Redirect::to("addfinancecompany");
+				return \Redirect::to("financecompanies");
 			}
 		}
 		

@@ -373,19 +373,19 @@ class EmployeeController extends \Controller {
 	{
 		$values = Input::all();
 		$field_names = array("fullname"=>"fullName","gender"=>"gender", "city"=>"cityId","employeeid"=>"empCode",
-				"email"=>"emailId","password"=>"password", "designation"=>"roleId", "roleprevilage"=>"rolePrevilegeId",
+				"email"=>"emailId","password"=>"password", "roleprevilage"=>"rolePrevilegeId",
 				"workgroup"=>"workGroup","age"=>"age", "fathername"=>"fatherName",
 				"religion"=>"religion","residance"=>"residance", "nonlocaldetails"=>"detailsForNonLocal",
 				"phonenumber"=>"mobileNo","homenumber"=>"homePhoneNo", "idproof"=>"idCardName",
-				"idproofnumber"=>"idCardNumber","leftjoiningdate"=>"leftjoiningDate", "rtaoffice"=>"rtaBranch",
+				"idproofnumber"=>"idCardNumber","joiningdate"=>"joiningDate", "rtaoffice"=>"rtaBranch",
 				"aadhdaarnumber"=>"aadharNumber","rationcardnumber"=>"rationCardNumber", "drivinglicence"=>"drivingLicence",
 				"drivingliceneexpiredate"=>"drvLicenceExpDate","accountnumber"=>"accountNumber", "bankname"=>"bankName",
-				"ifsccode"=>"ifscCode","branchname"=>"branchName", "presentaddress"=>"presentAddress"
+				"ifsccode"=>"ifscCode","branchname"=>"branchName", "presentaddress"=>"presentAddress","dateofbirth"=>"dob"
 			);
 		$fields = array();
 		foreach ($field_names as $key=>$val){
 			if(isset($values[$key])){
-				if($val == "dob" || $val == "drvLicenceExpDate" || $val == "leftjoiningDate"){
+				if($val == "dob" || $val == "drvLicenceExpDate" || $val == "joiningDate"){
 					$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 				}
 				else if($val == "password"){
@@ -396,38 +396,25 @@ class EmployeeController extends \Controller {
 				}
 			}
 		}
+		$fields["roleId"] = $fields["rolePrevilegeId"];
 		$entity = new \Employee();
 		foreach($fields as $key=>$value){
 			$entity[$key] = $value;
 		}
 		
-		
-		if(isset($values['family_name']) && $entity->save()){
-			$empid = $entity->id;
-			for($i=0; $i<count($values['family_name']); $i++){
-				$field_names = array("family_name"=>"name","family_relationship"=>"relationship", "family_gender"=>"gender",
-						"family_age"=>"age","family_nominee"=>"nominee", "family_job"=>"job",
-						"family_aadhaar"=>"aadharNumber","family_education"=>"Education", "family_mobile"=>"mobileNumber",
-						"family_accountnumber"=>"accountNumber","family_ifsccode"=>"ifscCode", "family_bankname"=>"bankName", "family_branchname"=>"branchName"
-					);
-				$fields = array();
-				foreach ($field_names as $key=>$val){
-					if(isset($values[$key])){
-						$fields[$val] = $values[$key][$i];
-					}
-				}
-				$fields["empid"] = $empid;
-				$entity = new \FamilyMembers();
-				foreach($fields as $key=>$value){
-					$entity[$key] = $value;
-				}
-				$entity->save();
-			}
+		$db_functions_ctrl = new DBFunctionsController();
+		$table = "Employee";
+		$values = array();
+		if($db_functions_ctrl->insert($table, $fields)){
 			\Session::put("message","Operation completed Successfully");
 			return \Redirect::to("addemployee");
 		}
-		\Session::put("message","Operation Could not be completed, Try Again!");
-		return \Redirect::to("addemployee");
+		else{
+			\Session::put("message","Operation Could not be completed, Try Again!");
+			return \Redirect::to("addemployee");
+		}
+		
+		
 	}
 	
 	/**

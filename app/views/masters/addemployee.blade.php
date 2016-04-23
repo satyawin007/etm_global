@@ -73,8 +73,8 @@
 										<div class="col-xs-8">
 											<select class="form-control" name="gender"   required="required">
 												<option selected="selected" value="">-- Select Gender --</option>
-												<option selected="selected" value="Male">Male</option>
-												<option selected="selected" value="Female">Female</option>
+												<option  value="Male">Male</option>
+												<option  value="Female">Female</option>
 											</select>
 										</div>
 									</div>
@@ -120,28 +120,25 @@
 									</div>
 								</div>
 								
-								
 								<div class="col-xs-6">
-									<!-- 
-									<div class="form-group">
+									<!--  <div class="form-group">
 										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Designation<span style="color:red;">*</span> </label>
 										<div class="col-xs-8">
 											<select class="form-control chosen-select" required="required" id="designation"  name="designation" onChange="getEmpId()"">
 												<option value="">-- Select Designation --</option>
 												<?php 
-													/*$roles = \UserRoleMaster::All();
+													/* $roles = \UserRoleMaster::All();
 													foreach ($roles as $role){
 														echo "<option value='".$role->id."'>".$role->name."</option>";
-													}*/
+													} */
 												?>												
 											</select>
 										</div>
-									</div>
-									 -->
+									</div>-->
 									<div class="form-group">
-										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Role-Previlage </label>
+										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Role-Previlage<span style="color:red;">*</span> </label>
 										<div class="col-xs-8">
-											<select class="form-control"   id="roleprevilage" name="roleprevilage" >
+											<select class="form-control"   id="roleprevilage" name="roleprevilage" onChange="getEmpId()" required="required">
 												<option value="">-- Select Role Previlage --</option>
 												<?php 
 													$roles = \Role::All();
@@ -157,9 +154,9 @@
 										<div class="col-xs-8">
 											<select class="form-control" name="workgroup"   required="required">
 												<option selected="selected" value="">-- Select Work group --</option>
-												<option selected="selected" value="DRIVER">DRIVER</option>
-												<option selected="selected" value="HELPER">HELPER</option>
-												<option selected="selected" value="OFFICE EMPLOYEE">OFFICE EMPLOYEE</option>
+												<option  value="DRIVER">DRIVER</option>
+												<option  value="HELPER">HELPER</option>
+												<option  value="OFFICE EMPLOYEE">OFFICE EMPLOYEE</option>
 											</select>
 										</div>
 									</div>
@@ -177,12 +174,6 @@
 										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Office Branch<span style="color:red;">*</span> </label>
 										<div class="col-xs-8">
 											<select class="form-control chosen-select" name="officebranch" id="branch"   required="required">
-											<?php 
-												$branches = OfficeBranch::All();
-												foreach ($branches as $branch){
-													echo "<option value='".$branch->id.">".$branch->name."</option>";
-												}
-											?>
 											</select>
 										</div>
 									</div>
@@ -387,8 +378,8 @@
 							</div>							
 						</div>
 					</div>
-					<!-- 
-					<div class="panel panel-default">
+					
+					<!-- <div class="panel panel-default">
 						<div class="panel-heading">
 							<h4 class="panel-title">
 								<div class="row">
@@ -400,6 +391,7 @@
 								</div>
 								<div style="margin-top: 5px;" class="col-xs-1"><i id="family_add" class="ace-icon fa fa-plus-circle bigger-160"></i> &nbsp;&nbsp; <i id="family_remove" class="ace-icon fa fa-minus-circle bigger-160"></i></div>
 								</div>
+								
 							</h4>
 						</div>
 
@@ -510,8 +502,7 @@
 							</div>
 						</div>
 					</div>
-					-->
-					<!-- 
+
 					<div class="panel panel-default">
 						<div class="panel-heading">
 							<h4 class="panel-title">
@@ -566,9 +557,8 @@
 								</div>
 							</div>
 						</div>
-					</div>								
+					</div>	 -->							
 				</div>
-				 -->
 				<div class="clearfix form-actions">
 					<div class="col-md-offset-3 col-md-9">
 						<button id="submit" class="btn" type="submit">
@@ -624,6 +614,7 @@
 			      url: "getbranchbycityid?id="+val,
 			      success: function(data) {
 			    	  $("#branch").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
 			      },
 			      type: 'GET'
 			   });
@@ -727,7 +718,7 @@
 			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.confirm('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 			

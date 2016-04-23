@@ -513,7 +513,7 @@ use Illuminate\Support\Facades\Input;
 			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.confirm('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 

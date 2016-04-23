@@ -234,6 +234,18 @@
 			$("#transtype").val(<?php echo "'".$values["transtype"]."'" ?>);
 			transtype = <?php echo "'".$values["transtype"]."'" ?>;
 
+			function enableIncharge(val){
+				alert("tezst");
+				if(val == "YES"){
+					$("#incharge").attr("disabled",false);
+					$('.chosen-select').trigger('chosen:updated');
+				}
+				else{
+					$("#incharge").attr("disabled",true);
+					$('.chosen-select').trigger('chosen:updated');
+				}
+			}
+			
 			function test(){;
 				paginate(1);
 			}
@@ -370,7 +382,6 @@
 				if(val == "income"){
 					$("#formbody").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
 					$("#formbody").show();						
-					
 					$('#incomebody').show();
 					$('#expensebody').hide();
 					$.ajax({
@@ -448,7 +459,20 @@
 								//onchange:''
 								//
 							});
-						  $("#paymenttype").attr("disabled",true);
+						  $("#incharge").attr("disabled",true);
+						  $("#enableincharge").val("NO");
+						  $('.chosen-select').trigger('chosen:updated');
+						  $("#enableincharge").on("change",function(){
+							  	val = $("#enableincharge").val();
+							  	if(val == "YES"){
+									$("#incharge").attr("disabled",false);
+									$('.chosen-select').trigger('chosen:updated');
+								}
+								else{
+									$("#incharge").attr("disabled",true);
+									$('.chosen-select').trigger('chosen:updated');
+								}
+						  });
 				    	  $("#formbody").show();
 				    	  
 				      },
@@ -485,6 +509,8 @@
 					myin.value="fuel"; 
 					//document.getElementById('transactionform').appendChild(myin);
 				} 
+				
+
 				 
 				var myin = document.createElement("input"); 
 				myin.type='hidden'; 
@@ -498,8 +524,9 @@
 				
 				//$('#incomebody').show();
 				//$('#expensebody').hide();
+			
 				$.ajax({
-			      url: "gettransactionfields?typeId="+val,
+			      url: "gettransactionfields?typeId="+val+"&transtype="+transtype,
 			      success: function(data) {
 			    	  $("#formbody").html(data);
 			    	  $('.date-picker').datepicker({
@@ -525,6 +552,20 @@
 						});
 						//pre-show a file name, for example a previously selected file
 						//$('#id-input-file-1').ace_file_input('show_file_list', ['myfile.txt'])
+					  $("#incharge").attr("disabled",true);
+					  $("#enableincharge").val("NO");
+					  $('.chosen-select').trigger('chosen:updated');
+					  $("#enableincharge").on("change",function(){
+						  	val = $("#enableincharge").val();
+						  	if(val == "YES"){
+								$("#incharge").attr("disabled",false);
+								$('.chosen-select').trigger('chosen:updated');
+							}
+							else{
+								$("#incharge").attr("disabled",true);
+								$('.chosen-select').trigger('chosen:updated');
+							}
+					  });
 			    	  $("#formbody").show();
 			    	  
 			      },
@@ -663,7 +704,7 @@
 			//$('.input-mask-phone').mask('(999) 999-9999');
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.confirm('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 

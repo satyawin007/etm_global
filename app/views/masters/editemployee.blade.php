@@ -117,9 +117,9 @@
 										<div class="col-xs-8">
 											<select class="form-control" name="workgroup">
 												<option selected="selected" value="">-- Select Work group --</option>
-												<option selected="selected" value="DRIVER">DRIVER</option>
-												<option selected="selected" value="HELPER">HELPER</option>
-												<option selected="selected" value="OFFICE EMPLOYEE">OFFICE EMPLOYEE</option>
+												<option  value="DRIVER">DRIVER</option>
+												<option  value="HELPER">HELPER</option>
+												<option  value="OFFICE EMPLOYEE">OFFICE EMPLOYEE</option>
 											</select>
 										</div>
 									</div>

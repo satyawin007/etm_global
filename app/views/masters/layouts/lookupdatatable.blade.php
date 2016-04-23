@@ -55,7 +55,7 @@
 						($form_info['action']=="addloan" && in_array(235, $jobs)) or
 						($form_info['action']=="adddailyfinance" && in_array(237, $jobs)) or
 						($form_info['action']=="addserviceprovider" && in_array(239, $jobs)) or
-						($form_info['action']=="adddistrict")
+						($form_info['action']=="addrole" && in_array(239, $jobs))
 					  ){ ?>
 					@include("masters.layouts.addlookupform",$form_info)
 				<?php } ?>
@@ -240,6 +240,7 @@
 				$("#status1 option").each(function() { this.selected = (this.text == status); });
 				$("#id1").val(id);		
 			}
+
 
 
 			function modalEditCity(id, name, code, state, status){

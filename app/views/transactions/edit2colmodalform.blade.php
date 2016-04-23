@@ -275,6 +275,21 @@
 	
 	@section('inline_js')
 		<script>
+			  $("#incharge").attr("disabled",true);
+			  $("#enableincharge").val("NO");
+			  $('.chosen-select').trigger('chosen:updated');
+			  $("#enableincharge").on("change",function(){
+				  	val = $("#enableincharge").val();
+				  	if(val == "YES"){
+						$("#incharge").attr("disabled",false);
+						$('.chosen-select').trigger('chosen:updated');
+					}
+					else{
+						$("#incharge").attr("disabled",true);
+						$('.chosen-select').trigger('chosen:updated');
+					}
+			  });
+	
 			$("#transtype").attr("disabled",true);
 			function changeState(val){
 				$.ajax({
@@ -389,7 +404,7 @@
 			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.confirm('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 			
