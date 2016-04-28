@@ -346,7 +346,7 @@
 		
 				.DataTable( {
 					bJQueryUI: true,
-					"bPaginate": true,
+					"bPaginate": true, "bDestroy": true,
 					bInfo: true,
 					"aoColumns": [
 					  <?php $cnt=count($values["theads"]); for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>

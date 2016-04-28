@@ -276,4 +276,35 @@ class AppSettingsController extends \Controller {
 		return View::make('masters.layouts.lookupdatatable', array("values"=>$values));
 	}
 	
+	public static function getEmpClients(){
+		$entities = null;
+		$emp_contracts = \Auth::user()->contractIds;
+		if($emp_contracts=="" || $emp_contracts==0){
+			$entities = \Client::All();
+		}
+		else{
+			$emp_contracts = explode(",", $emp_contracts);
+			 $entities = \Client::whereIn("depots.id",$emp_contracts)
+					->join("contracts", "clients.id", "=","contracts.clientId")
+					->join("depots", "depots.id", "=","contracts.depotId")
+			 		->select(array("clients.id as id","clients.name as name"))->get();
+		}
+		 return $entities->toArray();
+	}
+	
+	public static function getEmpBranches(){
+		$entities = null;
+		$branches =  \Auth::user()->officeBranchIds;
+		$entities = \OfficeBranch::all();
+// 		if($branches==0|| $branches==""){
+// 			$entities = \OfficeBranch::all();
+// 		}
+// 		else{
+// 			$emp_branch_arr = explode(",", $branches);
+// 			$entities = \OfficeBranch::whereIn("id",$emp_branch_arr)->get();
+// 		}
+		return $entities;
+	}
+	
 }
+?>

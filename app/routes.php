@@ -149,6 +149,8 @@ Route::get('/addemployee', function()
 	return View::make('masters.addemployee');
 });
 
+Route::get('/verifyemailid',"masters\EmployeeController@verifyEmailId");
+
 Route::get('/getempid',"masters\EmployeeController@getEmpId");
 
 Route::post('/addemployee',"masters\EmployeeController@addEmployee");
@@ -407,11 +409,21 @@ Route::any('/purchaseorder', "inventory\PurchaseOrderController@managePurchaseOr
 
 Route::any('/createpurchaseorder', "inventory\PurchaseOrderController@createPurchaseOrder");
 
-Route::any('/addpurchaseorder', "inventory\PurchaseOrderController@addPurchaseOrder");
+Route::any('/estimatepurchaseorders', "inventory\EstimatePurchaseOrderController@manageEstimatePurchaseOrders");
 
-Route::any('/editpurchaseorder', "inventory\PurchaseOrderController@editPurchaseOrder");
+Route::any('/addestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@addEstimatePurchaseOrder");
 
-Route::any('/deletepurchaseorder', "inventory\PurchaseOrderController@deletePurchaseOrder");
+Route::any('/editestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@editEstimatePurchaseOrder");
+
+Route::any('/deleteestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@deleteEstimatePurchaseOrder");
+
+Route::any('/estimatepurchaseorders', "inventory\EstimatePurchaseOrderController@manageEstimatePurchaseOrders");
+
+Route::any('/addestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@addEstimatePurchaseOrder");
+
+Route::any('/editestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@editEstimatePurchaseOrder");
+
+Route::any('/deleteestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@deleteEstimatePurchaseOrder");
 
 Route::any('/viewpurchaseditems', "inventory\purchaseOrderItemController@managePurchaseOrderItems");
 
@@ -559,6 +571,8 @@ Route::get('/vehiclemeeters', "contracts\VehicleMeeterController@manageVehicleMe
 Route::any('/addvehiclemeeter', "contracts\VehicleMeeterController@addVehicleMeeter");
 
 Route::any('/editvehiclemeeter', "contracts\VehicleMeeterController@editVehicleMeeter");
+
+Route::any('/getmeeterno', "contracts\VehicleMeeterController@getMeeterNo");
 
 Route::get('/clientholidays', "contracts\ClientHolidaysController@manageClientHolidays");
 

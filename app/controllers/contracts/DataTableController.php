@@ -82,8 +82,8 @@ class DataTableController extends \Controller {
 			$total = count($entities);
 		}
 		else{
-			$entities = \Client::join("states","states.id", "=", "clients.stateId")->join("cities","cities.id", "=", "clients.cityId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = count(\Client::where("stateId","!=",0)->get());
+			$entities = \Client::select($select_args)->limit($length)->offset($start)->get();
+			$total = \Client::count();
 		}
 	
 		$entities = $entities->toArray();

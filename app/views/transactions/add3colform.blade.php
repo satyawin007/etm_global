@@ -1,5 +1,6 @@
 <?php 
-	/*
+	use settings\AppSettingsController;
+/*
 	$form_info = array();
 	$form_info["name"] = "addstate";
 	$form_info["action"] = "addstate";
@@ -38,12 +39,14 @@
 			}
 		</style>
 	@stop
-	
+		<?php 
+			if(!isset($form_info['iscontractfuel'])){
+		?>
 		<div class="col-xs-offset-1 col-xs-10" style="margin-top: 1%; margin-bottom: 1%">
 			<div class="col-xs-6">
 				<div class="form-group">
 					<?php 
-						$branches =  \OfficeBranch::All();
+						$branches =  AppSettingsController::getEmpBranches();
 						$branches_arr = array();
 						foreach ($branches as $branch){
 							$branches_arr[$branch->id] = $branch->name;
@@ -178,14 +181,15 @@
 				</div>	
 			</div>
 		</div>
+		<?php }?>
 	
-		<div class="col-xs-12" style="margin-top: -1%">
+		<div class="col-xs-12" style="margin-top: 1%; margin-bottom: 1%">
 		<div class="">
 			<div class="">
 				<div >
 				<form style="padding-top:0px;" class="{{$form_info['class']}}" action="{{$form_info['action']}}" method="{{$form_info['method']}}" name="{{$form_info['name']}}"  id="{{$form_info['name']}}" enctype="multipart/form-data">
 					<?php $form_fields = $form_info['form_fields'];?>
-					<div id="formbody">	
+					<div>	
 					<?php foreach ($form_fields as $form_field) {?>
 						<div class="col-xs-6" style="margin-top: 15px; margin-bottom: -10px">
 						<?php if($form_field['type'] === "text" || $form_field['type'] === "email" ||$form_field['type'] === "number" || $form_field['type'] === "password"){ ?>
@@ -248,11 +252,12 @@
 						</div>
 					<?php } ?>
 					</div>
-					
+					<div id="formbody">	</div>
 					<div id="addfields"></div>
-					<div class="clearfix form-actions" >
-						<div class="col-md-offset-4 col-md-8" style="margin-top: 2%; margin-bottom: 1%">
-							<button id="submit" class="btn primary" type="submit" id="submit">
+					<div class="clearfix">
+						<div class="col-md-offset-0 col-md-12 form-actions" style="margin: 0px">
+							<div class="col-md-offset-4 col-md-5">
+							<button id="submit" class="btn primary">
 								<i class="ace-icon fa fa-check bigger-110"></i>
 								SUBMIT
 							</button>
@@ -262,6 +267,7 @@
 								<i class="ace-icon fa fa-undo bigger-110"></i>
 								RESET
 							</button>
+							</div>
 						</div>
 					</div>
 				</form>

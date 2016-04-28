@@ -449,6 +449,7 @@
 			$("#totalamount").attr("readonly",true);
 			$("#paymenttype").attr("disabled",true);
 			$("#incharge").attr("disabled",true);
+			$("#vehicle").attr("disabled",true);
 			$("#enableincharge").val("NO");
 
 			<?php
@@ -670,7 +671,7 @@
 			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 

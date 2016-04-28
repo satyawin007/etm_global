@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
+use settings\AppSettingsController;
 
 class SalaryAdvancesController extends \Controller {
 
@@ -147,7 +148,7 @@ class SalaryAdvancesController extends \Controller {
 			$emp_arr[$emp->id] = $emp->fullName." - ".$emp->empCode;
 		}
 		
-		$branches = \OfficeBranch::all();
+		$branches = AppSettingsController::getEmpBranches();
 		$branches_arr = array();
 		foreach ($branches as $branch){
 			$branches_arr[$branch->id] = $branch->name;

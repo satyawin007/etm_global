@@ -446,6 +446,7 @@ class PurchaseOrderController extends \Controller {
 		return View::make('inventory.purchaseorder', array("values"=>$values));
 	}
 	
+	
 	public function editPurchaseOrder()
 	{
 		$values = Input::all();

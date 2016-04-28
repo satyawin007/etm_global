@@ -68,16 +68,33 @@ class UserSettingsController extends \Controller {
 					"idproofnumber"=>"idCardNumber","presentaddress"=>"presentAddress","joiningdate"=>"joiningDate",
 					"aadhdaarnumber"=>"aadharNumber","rationcardnumber"=>"rationCardNumber", "drivinglicence"=>"drivingLicence",
 					"drivingliceneexpiredate"=>"drvLicenceExpDate","accountnumber"=>"accountNumber", "bankname"=>"bankName",
-					"ifsccode"=>"ifscCode","branchname"=>"branchName", "roleprevilage"=>"rolePrevilegeId",  "emailid"=>"emailId"
+					"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchId", "empbranches"=>"officeBranchIds", "clientbranches"=>"contractIds", "roleprevilage"=>"rolePrevilegeId",  "emailid"=>"emailId"
 			);
 			$fields = array();
+			$fields["officeBranchIds"] = "";
+			$fields["contractIds"] = "";
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
-					$fields[$val] = $values[$key];
+					if($val == "dob" || $val == "drvLicenceExpDate" || $val == "joiningDate"){
+						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+					}
+					else if($key == "clientbranches" || $key == "empcontracts"){
+						$field_val = "";
+						$i = 0;
+						for($i=0; $i<count($values[$key]); $i++){
+							if($i==(count($values[$key])-1)){
+								$field_val = $field_val.$values[$key][$i];
+								break;
+							}
+							$field_val = $field_val.$values[$key][$i].",";
+						}
+						$fields[$val] = $field_val;
+					}
+					else{
+						$fields[$val] = $values[$key];
+					}
 				}
-				if($val == "dob" || $val == "drvLicenceExpDate" || $val == "joiningDate"){
-					$fields[$val] = date("Y-m-d",strtotime($values[$key]));
-				}
+				
 			}
 			$fields["roleId"] = $fields["rolePrevilegeId"];
 			if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {

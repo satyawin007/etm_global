@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
+use settings\AppSettingsController;
 class SalariesController extends \Controller {
 
 
@@ -35,7 +36,7 @@ class SalariesController extends \Controller {
 		$form_info["bredcum"] = "PAY EMPLOYEE SALARY";
 		
 		$form_fields = array();
-		$branches = \OfficeBranch::All();
+		$branches = AppSettingsController::getEmpBranches();
 		$branches_arr = array();
 		foreach ($branches as $branch){
 			$branches_arr[$branch->id] = $branch->name;
@@ -114,7 +115,7 @@ class SalariesController extends \Controller {
 		$form_info["bredcum"] = "PAY EMPLOYEE SALARY";
 	
 		$form_fields = array();
-		$branches = \OfficeBranch::All();
+		$branches = AppSettingsController::getEmpBranches();
 		$branches_arr = array();
 		foreach ($branches as $branch){
 			$branches_arr[$branch->id] = $branch->name;

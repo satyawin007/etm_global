@@ -266,7 +266,7 @@ use Illuminate\Support\Facades\Input;
 		<script type="text/javascript">
 		<?php 
 			if(Session::has('message')){
-				echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+				echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 			}
 		?>
 

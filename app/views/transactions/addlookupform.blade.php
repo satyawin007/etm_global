@@ -144,7 +144,6 @@
 							</div>
 						<?php } ?>						
 					</div>							
-					
 					<?php } ?>
 					<div class="clearfix">
 						<div class="col-md-offset-0 col-md-12 form-actions" style="margin: 0px">

@@ -61,6 +61,20 @@
 				&nbsp; &nbsp; &nbsp;  SERVICE LOGS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
+			<?php } if(in_array(153, $jobs)){?>
+			<a href="fueltransactions?type=contracts">
+			<button>
+				<i class="ace-icon fa fa-flask bigger-300"></i><BR/>
+				&nbsp; &nbsp; &nbsp;  FUEL TRANSACIONS &nbsp; &nbsp; &nbsp; 
+			</button>
+			</a>
+			<?php } if(in_array(153, $jobs)){?>
+			<a href="repairtransactions?type=contracts">
+			<button>
+				<i class="ace-icon fa fa-cogs bigger-300"></i><BR/>
+				&nbsp; &nbsp; &nbsp;  REPAIR TRANSACIONS &nbsp; &nbsp; &nbsp; 
+			</button>
+			</a>
 			<?php } if(in_array(154, $jobs)){?>
 			<a href="vehiclemeeters">
 			<button>

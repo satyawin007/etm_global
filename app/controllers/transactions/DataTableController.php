@@ -214,7 +214,12 @@ class DataTableController extends \Controller {
 		$total = 0;
 		$data = array();
 		$select_args = array();
-		$select_args[] = "officebranch.name as branchId";
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$select_args[] = "clients.name as clientname";
+		}
+		else{
+			$select_args[] = "officebranch.name as branchId";
+		}
 		$select_args[] = "creditsuppliers.supplierName as creditSupplierId";
 		$select_args[] = "creditsuppliertransactions.date as date";
 		$select_args[] = "creditsuppliertransactions.billNumber as billNumber";
@@ -229,7 +234,9 @@ class DataTableController extends \Controller {
 		$select_args[] = "creditsuppliertransactions.batta as batta";
 		$select_args[] = "creditsuppliertransactions.id as id";
 		$select_args[] = "creditsuppliertransactions.branchId as branch";
-		
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$select_args[] = "depots.name as depotname";
+		}
 		$actions = array();
 		if(in_array(308, $this->jobs)){
 			$action = array("url"=>"editrepairtransaction?", "type"=>"", "css"=>"primary", "js"=>"modalEditRepairTransaction(", "jsdata"=>array("id"), "text"=>"EDIT");
@@ -255,8 +262,27 @@ class DataTableController extends \Controller {
 			$entities = \CreditSupplierTransactions::whereIn("creditsuppliertransactions.branchId",$branchids_arr)->orWhereIn("creditsuppliertransactions.creditSupplierId",$supids_arr)->where("creditsuppliertransactions.deleted","=","No")->leftjoin("vehicle", "vehicle.id","=","creditsuppliertransactions.vehicleId")->leftjoin("officebranch", "officebranch.id","=","creditsuppliertransactions.branchId")->leftjoin("creditsuppliers", "creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")->select($select_args)->limit($length)->offset($start)->get();
 			$total = \CreditSupplierTransactions::whereIn("creditsuppliertransactions.branchId",$branchids_arr)->orWhereIn("creditsuppliertransactions.creditSupplierId",$supids_arr)->where("creditsuppliertransactions.deleted","=","No")->count();
 		}
+		else if(isset($values["type"]) && $values["type"]=="contracts"){
+			$entities = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No")
+							->where("contractId",">",0)
+							->leftjoin("vehicle", "vehicle.id","=","creditsuppliertransactions.vehicleId")
+							->leftjoin("creditsuppliers", "creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
+							->leftjoin("contracts", "contracts.id","=","creditsuppliertransactions.contractId")
+							->leftjoin("clients", "clients.id","=","contracts.clientId")
+							->leftjoin("depots", "depots.id","=","contracts.depotId")
+							->select($select_args)->limit($length)->offset($start)->get();
+			$total = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No")
+							->where("contractId",">",0)->count();
+			foreach ($entities as $entity){
+				$entity["clientname"] = $entity["depotname"]." (".$entity["clientname"].")";
+			}
+		}
 		else{
-			$entities = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No")->leftjoin("vehicle", "vehicle.id","=","creditsuppliertransactions.vehicleId")->leftjoin("officebranch", "officebranch.id","=","creditsuppliertransactions.branchId")->leftjoin("creditsuppliers", "creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No")
+							->leftjoin("vehicle", "vehicle.id","=","creditsuppliertransactions.vehicleId")
+							->leftjoin("officebranch", "officebranch.id","=","creditsuppliertransactions.branchId")
+							->leftjoin("creditsuppliers", "creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
+							->select($select_args)->limit($length)->offset($start)->get();
 			$total = \CreditSupplierTransactions::count();
 		}
 		$entities = $entities->toArray();
@@ -304,7 +330,12 @@ class DataTableController extends \Controller {
 		$data = array();
 		$select_args = array();
 		
-		$select_args[] = "officebranch.name as branchId";
+		if(isset($values["contracts"]) && $values["contracts"]=="true"){
+			$select_args[] = "clients.name as clientname";
+		}
+		else{
+			$select_args[] = "officebranch.name as branchId";
+		}
 		$select_args[] = "fuelstationdetails.name as fuelStationName";
 		$select_args[] = "vehicle.veh_reg as vehicleId";
 		$select_args[] = "fueltransactions.filledDate as date";
@@ -314,6 +345,9 @@ class DataTableController extends \Controller {
 		$select_args[] = "fueltransactions.remarks as remarks";
 		$select_args[] = "fueltransactions.id as id";
 		$select_args[] = "fueltransactions.branchId as branch";
+		if(isset($values["contracts"]) && $values["contracts"]=="true"){
+			$select_args[] = "depots.name as depotname";
+		}
 		
 		$actions = array();
 		if(in_array(306, $this->jobs)){
@@ -326,6 +360,7 @@ class DataTableController extends \Controller {
 	
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
+		$entities = \Vehicle::where("id","=",0)->get();
 		if($search != ""){
 			$entities = \Vehicle::where("veh_reg", "like", "%$search%")->where("vehicle.status","=","ACTIVE")->orwhere("vehicle.status","=","INACTIVE")->leftjoin("lookuptypevalues","lookuptypevalues.id", "=", "vehicle.vehicle_type")->select($select_args)->limit($length)->offset($start)->get();
 			$total = \Vehicle::where("veh_reg", "like", "%$search%")->where("vehicle.status","=","ACTIVE")->orwhere("vehicle.status","=","INACTIVE")->count();
@@ -342,7 +377,24 @@ class DataTableController extends \Controller {
 				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 			}
 		}
-		else{
+		else if(isset($values["contracts"]) && $values["contracts"]=="true" && isset($values["client"])){
+			$entities = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+						->where("contractId",">",0)
+						->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
+						->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
+						->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
+						->leftjoin("clients", "clients.id","=","contracts.clientId")
+						->leftjoin("depots", "depots.id","=","contracts.depotId")
+						->select($select_args)->limit($length)->offset($start)->get();
+			
+			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+								->where("contractId",">",0)->count();
+			foreach ($entities as $entity){
+				$entity["clientname"] = $entity["depotname"]." (".$entity["clientname"].")";
+				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
+			}
+		}
+		else if(isset($values["branch1"])){
 			$dtrange = $values["daterange"];
 			$dtrange = explode(" - ", $dtrange);
 			$startdt = date("Y-m-d",strtotime($dtrange[0]));
@@ -493,13 +545,10 @@ class DataTableController extends \Controller {
 		$select_args[] = "creditsuppliertransdetails.status as status";
 		$select_args[] = "creditsuppliertransdetails.id as id";
 		
-	
 		$actions = array();
-		
-			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditPurchaseOrderItem(", "jsdata"=>array("id","repairedItem","quantity", "amount", "comments", "status"), "text"=>"EDIT");
-			$actions[] = $action;
-		
-			$values["actions"] = $actions;
+		$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditPurchaseOrderItem(", "jsdata"=>array("id","repairedItem","quantity", "amount", "comments", "status"), "text"=>"EDIT");
+		$actions[] = $action;
+		$values["actions"] = $actions;
 	
 		$search = $_REQUEST["search"];
 		$search = $search['value'];

@@ -1,5 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Input;
+use settings\AppSettingsController;
 ?>
 @extends('masters.master')
 	@section('inline_css')
@@ -78,7 +79,7 @@ use Illuminate\Support\Facades\Input;
 							<div class="col-xs-6">
 								<div class="form-group">
 									<?php 
-										$branches =  \OfficeBranch::All();
+										$branches = AppSettingsController::getEmpBranches();
 										$branches_arr = array();
 										foreach ($branches as $branch){
 											$branches_arr[$branch->id] = $branch->name;
@@ -563,6 +564,35 @@ use Illuminate\Support\Facades\Input;
 				}
 			}
 
+			function getFormData(val){
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+				$.ajax({
+			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
+			      success: function(data) {
+			    	  $("#vehicle").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
+			   myTable.ajax.url("getservicelogsdatatabledata?name=servicelogs&clientid="+clientId+"&depotid="+depotId).load();
+			}
+
+			function changeDepot(val){
+				$.ajax({
+			      url: "getdepotsbyclientId?id="+val,
+			      success: function(data) {
+			    	  $("#depot").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			    });
+
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+			}
+			
+
 			function showPaymentFields(val){
 				$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
 				$.ajax({
@@ -715,7 +745,7 @@ use Illuminate\Support\Facades\Input;
 			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 

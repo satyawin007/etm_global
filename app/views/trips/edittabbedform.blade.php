@@ -249,7 +249,7 @@
 			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 		

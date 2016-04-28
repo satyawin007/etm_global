@@ -103,7 +103,7 @@
 									<div class="form-group">
 										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Email Address <span style="color:red;">*</span> </label>
 										<div class="col-xs-8">
-											<input type="email" id="email"   required="required" name="email" class="form-control">
+											<input type="email" id="email"   required="required" name="email" onchange="verifyEmail(this.value)" class="form-control">
 										</div>
 									</div>
 									<div class="form-group">
@@ -171,9 +171,16 @@
 										</div>
 									</div>
 									<div class="form-group">
-										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Office Branch<span style="color:red;">*</span> </label>
+										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Employee Branch<span style="color:red;"></span> </label>
 										<div class="col-xs-8">
-											<select class="form-control chosen-select" name="officebranch" id="branch"   required="required">
+											<select class="form-control chosen-select"   id="officebranch" name="officebranch" > 
+												<option value="">-- Employee Branch --</option>
+												<?php 
+													$roles = \OfficeBranch::All();
+													foreach ($roles as $role){
+														echo "<option value='".$role->id."'>".$role->name."</option>";
+													}
+												?>												
 											</select>
 										</div>
 									</div>
@@ -181,6 +188,37 @@
 										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Employee Number <span style="color:red;">*</span> </label>
 										<div class="col-xs-8">
 											<input type="text" id="employeeid" name="employeeid" class="form-control" readonly="readonly">
+										</div>
+									</div>
+									<!-- 
+									<div class="form-group">
+										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Employee Office Branches<span style="color:red;"></span> </label>
+										<div class="col-xs-8">
+											<select class="form-control chosen-select"   id="empbranches" name="empbranches[]" multiple="multiple"> 
+												<option value="">ALL</option>
+												<?php 
+// 													$roles = \OfficeBranch::All();
+// 													foreach ($roles as $role){
+// 														echo "<option value='".$role->id."'>".$role->name."</option>";
+// 													}
+												?>												
+											</select>
+										</div>
+									</div>
+									 -->
+									<div class="form-group">
+										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Client Branches<span style="color:red;"></span> </label>
+										<div class="col-xs-8">
+											<select class="form-control chosen-select"   id="clientbranches" name="clientbranches[]"  multiple="multiple">
+												<option value="">ALL</option>
+												<?php 
+													$select_args = array();
+													$roles = \Depot::All();
+													foreach ($roles as $role){
+														echo "<option value='".$role->id."'>".$role->name."</option>";
+													}
+												?>												
+											</select>
 										</div>
 									</div>
 								</div>								
@@ -609,6 +647,19 @@
 			   });
 			}
 
+			function verifyEmail(val){
+				$.ajax({
+			      url: "verifyemailid?emailid="+val,
+			      success: function(data) {
+				      if(data=="yes"){
+			    	  	$("#email").val("");
+			    	  	alert("This Email Address is already Existed");
+				      }
+			      },
+			      type: 'GET'
+			   });
+			}
+
 			function changeCity(val){
 				$.ajax({
 			      url: "getbranchbycityid?id="+val,
@@ -718,7 +769,7 @@
 			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 			

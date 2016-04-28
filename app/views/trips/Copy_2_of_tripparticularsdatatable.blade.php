@@ -973,7 +973,7 @@ use Illuminate\Support\Facades\Input;
 			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 
@@ -1033,7 +1033,7 @@ use Illuminate\Support\Facades\Input;
 		
 				.DataTable( {
 					bJQueryUI: true,
-					"bPaginate": true,
+					"bPaginate": true, "bDestroy": true,
 					bInfo: true,
 					"aoColumns": [
 					  <?php $cnt=count($values["theads"]); for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>

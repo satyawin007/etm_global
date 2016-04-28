@@ -274,7 +274,18 @@
 				clientId =  $("#clientname").val();
 				depotId = $("#depot").val();
 			}
-			
+
+			function getMeeterNo(val){
+				$.ajax({
+			      url: "getmeeterno?vehicleid="+val,
+			      success: function(data) {
+			    	  $("#meeterno").val(data);
+			      },
+			      type: 'GET'
+			    });
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+			}
 
 			$("#reset").on("click",function(){
 				$("#{{$form_info['name']}}").reset();
@@ -421,7 +432,7 @@
 			}
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 
@@ -487,7 +498,7 @@
 		
 				.DataTable( {
 					bJQueryUI: true,
-					"bPaginate": true,
+					"bPaginate": true, "bDestroy": true,
 					bInfo: true,
 					"aoColumns": [
 					  <?php $cnt=count($values["theads"]); for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>

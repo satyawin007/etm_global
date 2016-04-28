@@ -55,6 +55,7 @@
 						($form_info['action']=="addloan" && in_array(235, $jobs)) or
 						($form_info['action']=="adddailyfinance" && in_array(237, $jobs)) or
 						($form_info['action']=="addserviceprovider" && in_array(239, $jobs)) or
+						($form_info['action']=="adddistrict" && in_array(239, $jobs)) or
 						($form_info['action']=="addrole" && in_array(239, $jobs))
 					  ){ ?>
 					@include("masters.layouts.addlookupform",$form_info)
@@ -411,7 +412,7 @@
 			}
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 
@@ -474,7 +475,8 @@
 		
 				.DataTable( {
 					bJQueryUI: true,
-					"bPaginate": true,
+					"bPaginate": true, "bDestroy": true,
+					"bDestroy": true,
 					bInfo: true,
 					"aoColumns": [
 					  <?php $cnt=count($values["theads"]); for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>

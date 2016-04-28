@@ -74,6 +74,9 @@
 			</div>
 			<?php if(isset($values["create_link"])){ 
 				$create_link  = $values["create_link"];
+				if(isset($values["type"])&& $values["type"]=="contracts"){
+					$create_link['href'] = $create_link['href']."?type=contracts";
+				}
 			?>
 			<div class="row" style="margin-right: 0px;"><div class="pull-right tableTools-container"><a class="btn btn-sm btn-primary"  href="{{$create_link['href']}}" >{{$create_link["text"]}}</a></div></div>
 			<?php } ?>
@@ -225,10 +228,39 @@
 			      type: 'GET'
 			   });
 			}
+
+			function getFormData(val){
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+				$.ajax({
+			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
+			      success: function(data) {
+			    	  $("#vehicle").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
+			   myTable.ajax.url("getservicelogsdatatabledata?name=servicelogs&clientid="+clientId+"&depotid="+depotId).load();
+			}
+
+			function changeDepot(val){
+				$.ajax({
+			      url: "getdepotsbyclientId?id="+val,
+			      success: function(data) {
+			    	  $("#depot").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			    });
+
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+			}
+			
 			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 
@@ -258,7 +290,7 @@
 		
 				.DataTable( {
 					bJQueryUI: true,
-					"bPaginate": true,
+					"bPaginate": true, "bDestroy": true,
 					bInfo: true,
 					"aoColumns": [
 					  <?php $cnt=count($values["theads"]); for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>

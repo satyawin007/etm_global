@@ -1,3 +1,6 @@
+<?php
+use settings\AppSettingsController;
+?>
 @extends('masters.master')
 	@section('inline_css')
 		<style>
@@ -55,7 +58,7 @@
 	@section('page_content')
 	<?php $form_info = $values["form_info"]; ?>
 	<?php $jobs = Session::get("jobs"); ?>
-	<?php if(($values['bredcum'] == "INCOME TRANSACTIONS" && in_array(301, $jobs)) ||  ($values['bredcum'] == "EXPENSES TRANSACTIONS" && in_array(303, $jobs)) || ($values['bredcum'] == "FUEL TRANSACTIONS" && in_array(305, $jobs))){?>
+	<?php if(($values['bredcum'] == "INCOME TRANSACTIONS" && in_array(301, $jobs)) ||  ($values['bredcum'] == "EXPENSES TRANSACTIONS" && in_array(303, $jobs)) || ($values['bredcum'] == "FUEL TRANSACTIONS" && in_array(305, $jobs)) || ($values['bredcum'] == "CONTRACT FUEL TRANSACTIONS" && in_array(305, $jobs))){?>
 		<div id="accordion1" class="col-xs-offset-0 col-xs-12 accordion-style1 panel-group" style="width: 99%;">			
 			<div class="panel panel-default">
 				<div class="panel-heading">
@@ -99,9 +102,10 @@
 								</div>
 							</div>
 							<div class="col-xs-4">
+								<?php if(($values['bredcum'] != "CONTRACT FUEL TRANSACTIONS" && in_array(305, $jobs))){ ?>
 								<div class="form-group">
 									<?php 
-										$branches =  \OfficeBranch::All();
+										$branches =  AppSettingsController::getEmpBranches();
 										$branches_arr = array();
 										foreach ($branches as $branch){
 											$branches_arr[$branch->id] = $branch->name;
@@ -128,6 +132,32 @@
 										</select>
 									</div>			
 								</div>	
+								<?php } else {?>
+									<div class="form-group">
+										<div class="col-xs-6">
+											<?php 
+												$form_field = array("name"=>"clientname1", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot1(this.value);"), "class"=>"form-control chosen-select");
+											?>
+											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+												<option value="">-- {{$form_field['name']}} --</option>
+												<?php 
+													$clients =  AppSettingsController::getEmpClients();
+													foreach ($clients as $client){
+														echo '<option value="'.$client['id'].'">'.$client['name'].'</option>'; 
+													}
+												?>
+											</select>
+										</div>
+										<div class="col-xs-6">
+											<?php 
+												$form_field = array("name"=>"depot1", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+											?>
+											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+												<option value="">-- {{$form_field['name']}} --</option>
+											</select>
+										</div>
+									</div>	
+								<?php } ?>
 							</div>
 							<input type="hidden" name="transtype" id="transtype" value="{{$values['transtype']}}"/>
 							<div class="col-xs-1" style="margin-top: 0px; margin-left:-20px; margin-bottom: -10px">
@@ -235,7 +265,6 @@
 			transtype = <?php echo "'".$values["transtype"]."'" ?>;
 
 			function enableIncharge(val){
-				alert("tezst");
 				if(val == "YES"){
 					$("#incharge").attr("disabled",false);
 					$('.chosen-select').trigger('chosen:updated');
@@ -285,6 +314,32 @@
 				myin.name='daterange'; 
 				myin.value=dt; 
 				document.getElementById('paginate').appendChild(myin); 
+
+				client1 = $("#clientname1").val();
+				if(client1 != undefined && client1 != ""){
+					var myin = document.createElement("input"); 
+					myin.type='hidden'; 
+					myin.name='client1'; 
+					myin.value=client1; 
+					document.getElementById('paginate').appendChild(myin);
+				}
+
+				depot1 = $("#depot1").val();
+				if(depot1 != undefined && depot1 != ""){
+					var myin = document.createElement("input"); 
+					myin.type='hidden'; 
+					myin.name='depot1'; 
+					myin.value=depot1; 
+					document.getElementById('paginate').appendChild(myin);
+				}
+				if(client1>0 && depot1>0){
+					var myin = document.createElement("input"); 
+					myin.type='hidden'; 
+					myin.name='type'; 
+					myin.value='contracts'; 
+					document.getElementById('paginate').appendChild(myin);
+				}
+
 				$("#page").val(page);
 				$("#paginate").submit();				
 			}
@@ -356,6 +411,85 @@
 					}
 				});
 			};
+
+			function getContractFuelFields(val){
+				$("#formbody").hide();
+				$("#addfields").hide();
+				transtype = val;
+				var myin = document.createElement("input"); 
+				myin.type='hidden'; 
+				myin.name='transtype'; 
+				myin.value=val;
+				document.getElementById('transactionform').appendChild(myin); 
+
+				var myin = document.createElement("input"); 
+				myin.type='hidden'; 
+				myin.name='branch'; 
+				myin.value=$("#branch").val();
+				document.getElementById('transactionform').appendChild(myin); 
+				
+				var myin = document.createElement("input"); 
+				myin.type='hidden'; 
+				myin.name='date1'; 
+				myin.value=$("#date").val();
+				document.getElementById('transactionform').appendChild(myin); 	
+
+				client = $("#clientname").val();
+				clientbranch = $("#depot").val();
+							
+				if(true){	
+					$('#transactionform').show();				
+					$('#expensebody').hide();
+					$('#incomebody').hide();
+					$("#formbody").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
+					$("#formbody").show();					
+					$.ajax({
+				      url: "getfueltransactionfields?client="+client+"&clientbranch="+clientbranch,
+				      success: function(data) {
+				    	  $("#formbody").html(data);
+				    	  $('.date-picker').datepicker({
+							autoclose: true,
+							todayHighlight: true
+						  });
+				    	  $('.number').keydown(function(e) {
+							 this.value = this.value.replace(/[^0-9.]/g, ''); 
+							 this.value = this.value.replace(/(\..*)\./g, '$1');
+						  });
+						  $(".chosen-select").chosen();
+						  $('.chosen-select a.chosen-single').focus();
+						  $('.file').ace_file_input({
+								no_file:'No File ...',
+								btn_choose:'Choose',
+								btn_change:'Change',
+								droppable:false,
+								onchange:null,
+								thumbnail:false //| true | large
+								//whitelist:'gif|png|jpg|jpeg'
+								//blacklist:'exe|php'
+								//onchange:''
+								//
+							});
+						  $("#incharge").attr("disabled",true);
+						  $("#enableincharge").val("NO");
+						  $('.chosen-select').trigger('chosen:updated');
+						  $("#enableincharge").on("change",function(){
+							  	val = $("#enableincharge").val();
+							  	if(val == "YES"){
+									$("#incharge").attr("disabled",false);
+									$('.chosen-select').trigger('chosen:updated');
+								}
+								else{
+									$("#incharge").attr("disabled",true);
+									$('.chosen-select').trigger('chosen:updated');
+								}
+						  });
+				    	  $("#formbody").show();
+				    	  
+				      },
+				      type: 'GET'
+				   });
+				}	
+			}
 			
 			function showTranType(val){
 				$("#formbody").hide();
@@ -597,7 +731,32 @@
 			$('#incomebody').hide();
 			$('#expensebody').hide();
 			$('#transactionform').hide();
-			
+			<?php if(($values['bredcum'] == "CONTRACT FUEL TRANSACTIONS" && in_array(305, $jobs))){?>
+				$('#transactionform').show();
+			<?php }?>
+
+			function changeDepot(val){
+				$.ajax({
+			      url: "getdepotsbyclientId?id="+val,
+			      success: function(data) {
+			    	  $("#depot").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			    });
+			}
+
+			function changeDepot1(val){
+				$.ajax({
+			      url: "getdepotsbyclientId?id="+val,
+			      success: function(data) {
+			    	  $("#depot1").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			    });
+
+			}
 
 			function modalEditServiceProvider(id, branchId, provider, name, number,companyName, configDetails, address, refName,refNumber){
 				$("#provider1 option").each(function() { this.selected = (this.text == provider); });
@@ -704,7 +863,7 @@
 			//$('.input-mask-phone').mask('(999) 999-9999');
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 
@@ -766,7 +925,7 @@
 		
 				.DataTable( {
 					bJQueryUI: true,
-					"bPaginate": true,
+					"bPaginate": true, "bDestroy": true,
 					bInfo: true,
 					"aoColumns": [
 					  <?php $cnt=count($values["theads"]); for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>

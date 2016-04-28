@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
+use settings\AppSettingsController;
 class RepairTransactionController extends \Controller {
 
 	/**
@@ -16,6 +17,9 @@ class RepairTransactionController extends \Controller {
 			$values = Input::all();
 			//$values["Dsf"];
 			$url = "repairtransactions";
+			if(isset($values["clientname"])){
+				$url = "repairtransactions?type=contracts";
+			}
 			$field_names = array("creditsupplier"=>"creditSupplierId","branch"=>"branchId","battapaidto"=>"battaEmployee", "paymenttype"=>"paymentType",
 						"date"=>"date","billnumber"=>"billNumber","amountpaid"=>"paymentPaid","comments"=>"comments","totalamount"=>"amount",
 						"bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate","vehicle"=>"vehicleId",
@@ -36,6 +40,11 @@ class RepairTransactionController extends \Controller {
 						$fields[$val] = $values[$key];
 					}
 				}
+			}
+			$contract = \Contract::where("clientId","=",$values["clientname"])->where("depotId","=",$values["depot"])->get();
+			if(count($contract)>0){
+				$contract = $contract[0];
+				$fields["contractId"] = $contract->id;
 			}
 			if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
 				$destinationPath = storage_path().'/uploads/'; // upload path
@@ -678,15 +687,28 @@ class RepairTransactionController extends \Controller {
 			$incharges_arr[$incharge->id] = $incharge->name;
 		}
 		
+		
 		$form_field = array("name"=>"creditsupplier", "content"=>"credit supplier", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$credit_sup_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"billnumber", "content"=>"bill number", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"billnumber", "content"=>"bill number", "readonly"=>"", "required"=>"","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"branchname", "content"=>"branch", "readonly"=>"readonly", "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"date", "content"=>"Transaction date", "readonly"=>"readonly", "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"vehicle", "content"=>"Vehicle", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$veh_arr, "class"=>"form-control chosen-select");
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$veh_arr = array();
+			$clients =  AppSettingsController::getEmpClients();
+			$clients_arr = array();
+			foreach ($clients as $client){
+				$clients_arr[$client['id']] = $client['name'];
+			}
+			$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
+			$form_fields[] = $form_field;
+		}
+		$form_field = array("name"=>"vehicle", "content"=>"Vehicle", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$veh_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"labourcharges", "content"=>"labour charges", "readonly"=>"", "required"=>"","type"=>"text", "class"=>"form-control ");
 		$form_fields[] = $form_field;
@@ -890,8 +912,12 @@ class RepairTransactionController extends \Controller {
 		$values['links'] = $links;
 		
 		$values['create_link'] = array("href"=>"createrepairtransaction","text"=>"CREATE REPAIR TRANSACTION");
-	
-		$theads = array('Branch', 'Credit supplier', "date", "bill number", "payment paid", "payment Type", "total amount", "comments", "summary", "status", "Actions");
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$theads = array('Contract', 'Credit supplier', "date", "bill number", "payment paid", "payment Type", "total amount", "comments", "summary", "status", "Actions");
+		}
+		else {
+			$theads = array('Branch', 'Credit supplier', "date", "bill number", "payment paid", "payment Type", "total amount", "comments", "summary", "status", "Actions");
+		}
 		$values["theads"] = $theads;
 	
 		//Code to add modal forms
@@ -943,6 +969,9 @@ class RepairTransactionController extends \Controller {
 		$values["modals"] = $modals;
 	
 		$values["provider"] = "vehicle_repairs";
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$values["provider"]  = $values["provider"]."&type=contracts";
+		}
 		return View::make('transactions.repairsdatatable', array("values"=>$values));
 	}
 	

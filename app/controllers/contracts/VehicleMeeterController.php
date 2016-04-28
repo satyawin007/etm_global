@@ -100,15 +100,15 @@ class VehicleMeeterController extends \Controller {
 	 *
 	 * @return Response
 	 */
-	public function getfinanceCompanybyCityId()
+	public function getMeeterNo()
 	{
 		$values = Input::all();
-		$entities = \FinanceCompany::where("cityId","=",$values['id'])->get();
-		$response = "<option> --select finance company-- </option>";
-		foreach ($entities as $entity){
-			$response = $response."<option value='".$entity->id."'>".$entity->name."</option>";
+		$entities = \VehicleMeeter::where("vehicleId","=",$values['vehicleid'])->get();
+		if(count($entities)>0){
+			echo "M".(count($entities)+1);
+			return;
 		}
-		echo $response;
+		echo "M1";
 	}
 	
 	/**
@@ -172,9 +172,9 @@ class VehicleMeeterController extends \Controller {
 				$vehicles_arr[$vehicle['id']] = $vehicle['veh_reg'];
 			}
 		}
-		$form_field = array("name"=>"vehicle", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
+		$form_field = array("name"=>"vehicle", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getMeeterNo(this.value);"), "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"meeterno", "content"=>"meeterno", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"meeterno", "content"=>"meeterno", "readonly"=>"readonly",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"startdate", "content"=>"start date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
@@ -195,7 +195,7 @@ class VehicleMeeterController extends \Controller {
 		
 		$form_field = array("name"=>"vehicle1", "content"=>"vehicle", "readonly"=>"readonly",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"meeterno1", "content"=>"meeterno", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"meeterno1", "content"=>"meeterno", "readonly"=>"readonly",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"startdate1", "content"=>"start date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;

@@ -276,6 +276,7 @@
 	@section('inline_js')
 		<script>
 			  $("#incharge").attr("disabled",true);
+			  $("#vehicleno").attr("disabled",true);
 			  $("#enableincharge").val("NO");
 			  $('.chosen-select').trigger('chosen:updated');
 			  $("#enableincharge").on("change",function(){
@@ -404,7 +405,7 @@
 			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 			

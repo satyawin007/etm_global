@@ -246,7 +246,7 @@
 <<<<<<< HEAD
 					echo "bootbox.confirm('".Session::pull('message')."', function(result) {});";
 =======
-					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 >>>>>>> 72e685edd86450ad3906e4d443bfb4698aefc52a
 				}
 			?>

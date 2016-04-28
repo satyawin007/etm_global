@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
+use settings\AppSettingsController;
 class ServiceLogController extends \Controller {
 
 	/**
@@ -62,6 +63,10 @@ class ServiceLogController extends \Controller {
 						$fields["remarks"] = $jsonitem->remarks;
 					}
 					$db_functions_ctrl->insert($table, $fields);
+					
+					$veh_meeter = \VehicleMeeter::where("status","=","ACTIVE")
+										->where("vehicleId","=",$jsonitem->vehicle)
+										->update(array("endReading"=>$jsonitem->endreading,"endDate"=>date("Y-m-d")));
 					$success = true;
 				}
 			}
@@ -260,6 +265,14 @@ class ServiceLogController extends \Controller {
 			if(count($servlogs)>0){
 				$servlog = $servlogs[0];
 				$response[0] = array($servlog->endReading);
+			}
+			else{
+				$veh_meeter = \VehicleMeeter::where("status","=","ACTIVE")->
+						where("vehicleId","=",$values["vehicleid"])->get();
+				if(count($veh_meeter)>0){
+					$veh_meeter = $veh_meeter[0];
+					$response[0] = array($veh_meeter->startReading);
+				}
 			}
 		}
 		$today = new \DateTime(date("Y-m-d"));
@@ -467,7 +480,7 @@ class ServiceLogController extends \Controller {
 			$districts_arr[$district['id']] = $district['name'];
 		}
 		
-		$clients =  \Client::all();
+		$clients =  AppSettingsController::getEmpClients();
 		$clients_arr = array();
 		foreach ($clients as $client){
 			$clients_arr[$client['id']] = $client['name'];

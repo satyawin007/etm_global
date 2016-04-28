@@ -30,7 +30,9 @@
 	
 	@section('bredcum')	
 		<small>
-			CONTRACTS
+			HOME
+			<i class="ace-icon fa fa-angle-double-right"></i>
+			STOCK & INVENTORY 
 			<i class="ace-icon fa fa-angle-double-right"></i>
 			{{$values['bredcum']}}
 		</small>
@@ -38,19 +40,19 @@
 
 	@section('page_content')
 		<div class="row ">
-			<div class="col-xs-offset-0 col-xs-12" style="max-width:98%;margin-left: 1%;">
+			<div class="col-xs-offset-1 col-xs-10">
 				<?php $form_info = $values["form_info"];?>
 				<?php $jobs = Session::get("jobs");?>
 				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) || 
-						($form_info['action']=="addservicelog")
+						($form_info['action']=="addestimatepurchaseorder")
 					  ){ ?>
-					@include("servicelogs.tablerowform",$form_info)
+					@include("inventory.tablerowform",$form_info)
 				<?php } ?>
 			</div>
 		</div>
 				
 		<div class="row ">
-		<div class="col-xs-offset-0 col-xs-12">
+		<div class="col-xs-offset-1 col-xs-10">
 			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 10px;">MANAGE {{$values["bredcum"]}}</h3>		
 			<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
 			<div class="clearfix">
@@ -89,6 +91,25 @@
 					</form>
 				</div>
 				<div class="pull-right tableTools-container"></div>
+			</div>
+			<div class="row">
+				<div class="col-xs-offset-4 col-xs-7">
+					<div class="col-xs-7">
+						<select name="clientid" id="clientid" class="formcontrol chosen-select">
+							<option value="0">ALL</option>
+						<?php 
+							$clients =  \Client::all();
+							$clients_arr = array();
+							foreach ($clients as $client){
+								echo "<option value='".$client['id']."'>".$client['name']."</option>";
+							}
+						?>
+						</select>
+					</div>
+					<div class="col-xs-4">
+						<button class="btn btn-xs btn-primary" id="getbtn">&nbsp;&nbsp;GET&nbsp;&nbsp;</button>
+					</div>
+				</div>
 			</div>
 			<div class="table-header" style="margin-top: 10px;">
 				Results for "{{$values['bredcum']}}"				 
@@ -130,7 +151,6 @@
 					</div>
 	
 					<div class="modal-body" id="modal_body">
-					
 					</div>
 	
 					<div class="modal-footer">
@@ -142,80 +162,6 @@
 				</div>
 			</div>
 		</div><!-- PAGE CONTENT ENDS -->
-		
-		
-		<div id="pendingservicelogs" class="modal" tabindex="-1" >
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" id="dismissmodal" class="close" data-dismiss="modal">x</button>
-						<h4 class="blue bigger">PENDING SERVICE LOGS</h4>
-					</div>
-		
-					<div class="modal-body">
-						<div class="row">
-							<div class="col-xs-12">
-							<form name="pendingservicelogsform" id="pendingservicelogsform" class="form-horizontal" action="addservicelogrequest" method="post">	
-								<div class="form-group">
-									<label class="col-xs-3 control-label no-padding-right" for="form-field-1">CLIENT<span style="color:red;">*</span> </label>
-									<div class="col-xs-7">
-										<input readonly="readonly" type="text" name="pendingclient" id="pendingclient" required="required" class="form-control">
-									</div>			
-								</div>
-								<div class="form-group">
-									<label class="col-xs-3 control-label no-padding-right" for="form-field-1">DEPOT/BRANCH<span style="color:red;">*</span> </label>
-									<div class="col-xs-7">
-										<input readonly="readonly" type="text" name="pendingdepot" id="pendingdepot" required="required"  class="form-control">
-									</div>			
-								</div>
-								<div class="form-group">
-									<label class="col-xs-3 control-label no-padding-right" for="form-field-1">VEHICLE<span style="color:red;">*</span> </label>
-									<div class="col-xs-7">
-										<input readonly="readonly" type="text" name="pendingvehicle"  id="pendingvehicle"  required="required"  class="form-control">
-									</div>			
-								</div>
-								<div class="form-group">
-									<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> PENDING DATES </label>
-									<div class="col-xs-7">
-										<select class="form-control chosen-select" name="pendingdates[]" id="pendingdates" multiple="multiple">
-											<option value="">-- pendingdate --</option>
-										</select>
-									</div>			
-								</div>
-								<div class="form-group">
-									<label class="col-xs-3 control-label no-padding-right" for="form-field-1">CUSTOME DATE </label>
-									<div class="col-xs-7">
-										<input type="text" id="customdate" required="required" name="customdate" class="form-control date-picker">
-									</div>			
-								</div>
-								<div class="form-group">
-									<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> COMMENTS </label>
-									<div class="col-xs-7">
-										<textarea id="pendingcomments" name="pendingcomments" class="form-control"></textarea>
-									</div>			
-								</div>
-								<div class="modal-footer">
-									<button class="btn btn-sm" data-dismiss="modal">
-										<i class="ace-icon fa fa-times"></i>
-										Cancel
-									</button>
-					
-									<button id="pendingmodalsave" class="btn btn-sm btn-primary">
-										<i class="ace-icon fa fa-check"></i>
-										Save
-									</button>
-								</div>
-		
-								</form>
-							</div>
-						</div>
-					</div>
-		
-					
-				</div>
-			</div>
-		</div>
-		<a  href="#pendingservicelogs" data-toggle="modal" id="pendinglogs" onclick="showPendingServiceLogs()"></a>
 		
 	@stop
 	
@@ -244,21 +190,20 @@
 			var app = angular.module('myApp', []);
 			app.controller('myCtrl', function($scope, $http) {
 				$scope.vehicles = [];
-				$scope.ids = ['vehicle', 'servicedate', 'substitutevehicle', 'starttime', 'driver1', 'driver2', 'helper', 'penalitiestype'];
-				$scope.vars = ['distance','repairkms', 'startreading', 'endreading', 'penalityamount', 'remarks' ];
+				$scope.ids = ['item', 'manufacturer', 'creditsupplier'];
+				$scope.vars = ['quantity','unitprice', 'remarks' ];
 				$scope.vehicles_text = [];
-				exe_recs_text = [];
 				$scope.addRow = function(){
 					$scope.ids.forEach(function(entry) {
 						text = $("#"+entry+" option:selected").val();
-						if(entry != "vehicle"){
+						if(entry != "item"){
 							$scope[entry] = text;
 						}
 					});	
-					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" ||  typeof $scope.servicedate === "undefined" ||$scope.driver1 === "" || $scope.vehicle === "" || $scope.servicedate === "") {
+					if(typeof $scope.item === "undefined" || typeof $scope.quanity === "undefined" || $scope.item === "" || $scope.quantity) {
 						return;
 					}
-					$scope.distance = $("#distance").val();	
+					alert("DSF");
 
 					text_arr = [];
 					veh_arr = {};
@@ -282,6 +227,7 @@
 					$scope.vehicles_text.unshift(text_arr);
 					$scope.vehicles.unshift(veh_arr);
 					$('.chosen-select').trigger("chosen:updated");
+					alert("END");
 				};
 
 				$scope.editRow = function(vehicle){	
@@ -318,10 +264,9 @@
 							$scope[entry] = text;
 						}
 					});	
-					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" ||  typeof $scope.servicedate === "undefined" ||$scope.driver1 === "" || $scope.vehicle === "" || $scope.servicedate === "") {
+					if(typeof $scope.item === "undefined" || typeof $scope.qty === "undefined" || $scope.item === "" || $scope.quantity) {
 						return;
 					}	
-					$scope.distance = $("#distance").val();	
 					tempdata = [];
 					var index = -1;		
 					var comArr = eval( $scope.vehicles );
@@ -331,7 +276,7 @@
 							$scope.ids.forEach(function(entry) {
 								text = $("#"+entry+" option:selected").text();
 								$("#"+entry).find('option:selected').removeAttr("selected");
-								if(entry != "vehicle"){
+								if(entry != "item"){
 									if(text != ""){
 										$scope.vehicles_text[index][entry] = text;
 									}
@@ -433,29 +378,63 @@
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
 	
-			function modalEditServiceLog(vehicleId, serviceDate, startTime, startReading, endReading, distance, repairkms, remarks, status, id){
-				$("#vehicle1").val(vehicleId);	
-				$("#servicedate1").val(serviceDate);				
-				$("#startreading1").val(startReading);
-				$("#endreading1").val(endReading);
-				$("#repairkms1").val(repairkms);
-				$("#remarks1").val(remarks);
-				$("#distance1").val(distance);
-				$("#starttime1 option").each(function() {this.selected = (this.text == startTime); });
+			function modalEditContract(id){
+				//$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
+				url = "editcontract?id="+id;
+				var ifr=$('<iframe />', {
+		            id:'MainPopupIframe',
+		            src:url,
+		            style:'seamless="seamless" scrolling="no" display:none;width:100%;height:423px; border:0px solid',
+		            load:function(){
+		                $(this).show();
+		            }
+		        });
+	    	    $("#modal_body").html(ifr);
+			}
+			
+			function modalEditClient(id, name, code, city, state, status){
+				$("#clientname1").val(name);				
+				$("#clientcode1").val(code);
+				$("#statename1 option").each(function() {this.selected = (this.text == state); });
+				$("#cityname1 option").each(function() {this.selected = (this.text == city); });
 				$("#status1 option").each(function() { this.selected = (this.text == status); });
 				$("#id1").val(id);		
 				$('.chosen-select').trigger("chosen:updated");	
 			}
 
-			function showPendingServiceLogs (){
+			function modalEditDistrict(id, name, code, state, status){
+				$("#districtname1").val(name);				
+				$("#districtcode1").val(code);
+				$("#statename1 option").each(function() {this.selected = (this.text == state); });
+				$("#status1 option").each(function() { this.selected = (this.text == status); });
+				$("#id1").val(id);		
 				$('.chosen-select').trigger("chosen:updated");	
-			}		
+			}
 
+			$("#getbtn").on("click",function(){
+				clientid = $("#clientid").val();
+				myTable.ajax.url("getcontractsdatatabledata?name=contracts&clientid="+clientid).load();
+			})
 			$("#reset").on("click",function(){
 				$("#{{$form_info['name']}}").reset();
 			});
 
 			$("#submit").on("click",function(){
+				var statename = $("#statename").val();
+				if(statename != undefined && statename ==""){
+					alert("Please select statename");
+					return false;
+				}
+				var districtname = $("#districtname").val();
+				if(districtname != undefined && districtname ==""){
+					alert("Please select districtname");
+					return false;
+				}
+				var cityname = $("#cityname").val();
+				if(cityname != undefined && cityname ==""){
+					alert("Please select cityname");
+					return false;
+				}
 				var clientname = $("#clientname").val();
 				if(clientname != undefined && clientname ==""){
 					alert("Please select clientname");
@@ -466,104 +445,66 @@
 					alert("Please select depot");
 					return false;
 				}
-				var depotname = $("#depotname").val();
-				if(depotname != undefined && depotname ==""){
-					alert("Please select depotname");
+				var route = $("#route").val();
+				if(route != undefined && route ==""){
+					alert("Please select route");
 					return false;
 				}
+				var vehicletype = $("#vehicletype").val();
+				if(vehicletype != undefined && vehicletype ==""){
+					alert("Please select vehicletype");
+					return false;
+				}
+				var vehicletype = $("#vehicletype").val();
+				if(vehicletype != undefined && vehicletype ==""){
+					alert("Please select vehicletype");
+					return false;
+				}
+				noofvehicles  = $("#noofvehicles").val();
+				if(noofvehicles != undefined && noofvehicles ==""){
+					alert("Please enter no of vehicles");
+					return false;
+				}
+				
 				submit_data="true";
 				return false;
+				
+				//$("#{{$form_info['name']}}").submit();
 			});
 
-			$("#pendingmodalsave").on("click",function(){
-				clientname = $("#clientname").val();
-				$('form#pendingservicelogsform').append('<input type="hidden" name="clientid" value="'+clientname+'" />');
-				depot = $("#depot").val();
-				$('form#pendingservicelogsform').append('<input type="hidden" name="depot" value="'+depot+'" />');
-				vehicle = $("#vehicle").val();
-				$('form#pendingservicelogsform').append('<input type="hidden" name="vehicle" value="'+vehicle+'" />');
-				$.ajax({
-                    url: $('#pendingservicelogsform').attr('action'),
-                    type: "post",
-                    data: $("#pendingservicelogsform").serialize(),
-                    success: function(response) {
-                    	response = jQuery.parseJSON(response);	
-                        if(response.status=="success"){
-                        	bootbox.alert(response.message, function(result) {});
-        					$("#dismissmodal").click();	
-                        }
-                        if(response.status=="fail"){
-                        	bootbox.alert(response.message, function(result) {});
-                        }
-                    }
-                });
-				return false;
+			$("#type").on("change",function(){
+				if(this.value != ""){
+					window.location.replace('lookupvalues?type='+this.value);
+				}
 			});
 
-			function changeDepot(val){
+			$("#type").on("change",function(){
+				if(this.value != ""){
+					window.location.replace('lookupvalues?type='+this.value);
+				}
+			});
+
+			$("#provider").on("change",function(){
+				val = $("#provider option:selected").html();
+				window.location.replace('serviceproviders?provider='+val);
+			});
+
+			function changeState(val){
 				$.ajax({
-			      url: "getdepotsbyclientId?id="+val,
+			      url: "getcitiesbystateid?id="+val,
+			      success: function(data) {
+			    	  $("#cityname").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
+			}
+
+			function changeCity(val){
+				$.ajax({
+			      url: "getdepotsbycityid?id="+val,
 			      success: function(data) {
 			    	  $("#depot").html(data);
-			    	  $('.chosen-select').trigger("chosen:updated");
-			      },
-			      type: 'GET'
-			    });
-
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-			}
-
-			function getFormData(val){
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-				$.ajax({
-			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
-			      success: function(data) {
-			    	  $("#vehicle").html(data);
-			    	  $('.chosen-select').trigger("chosen:updated");
-			      },
-			      type: 'GET'
-			   });
-			   myTable.ajax.url("getservicelogsdatatabledata?name=servicelogs&clientid="+clientId+"&depotid="+depotId).load();
-			}
-
-			function getStartReading(val){
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-				vehicleid = $("#vehicle").val();
-				servicedate = $("#servicedate").val();
-				url = "getstartreading?clientid="+clientId+"&depotid="+depotId+"&date="+val+"&vehicleid="+vehicleid+"&servicedate="+servicedate;
-				$.ajax({
-			      url: url,
-			      success: function(data) {
-			    	  data = JSON.parse(data);
-			    	  $("#startreading").val(data[0]);
-			    	  $("#servicedate").html(data[1]);
-			    	  angular.element('#myCtrl').scope().exe_recs_text =  data[2];
-			    	  angular.element('#myCtrl').scope().$apply();
-			    	  $("#startreading").trigger('input');
-			    	  $("#endreading").val("");
-					  $("#endreading").trigger('input');
-					  $("#distance").val("");
-					  $("#distance").trigger('input');
-					  $('.chosen-select').trigger("chosen:updated");
-			      },
-			      type: 'GET'
-			   });
-			}
-
-			function getDriverHelper (val){
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-				$.ajax({
-			      url: "getdriverhelper?clientid="+clientId+"&depotid="+depotId+"&vehicleid="+val,
-			      success: function(data) {
-				      data = JSON.parse(data);
-			    	  $("#driver1").html(data[0]);
-			    	  $("#driver2").html(data[1]);
-			    	  $("#helper").html(data[2]);
-			    	  $("#servicedate").html(data[3]);
 			    	  $('.chosen-select').trigger("chosen:updated");
 			      },
 			      type: 'GET'
@@ -626,125 +567,9 @@
 			$('.input-daterange').datepicker({autoclose:true,todayHighlight: true});
 
 			$('.input-mask-phone').mask('(999) 999-9999');
-
 			
 			var myTable = null;
-			jQuery(function($) {
-// 				test_data = [];
-// 				test_data['vehicle'] = 'AP23'; 
-// 				angular.element('#myCtrl').scope().exe_recs_text =  [test_data];
-// 		    	angular.element('#myCtrl').scope().$apply();
-				$("#div_substitutevehicle").hide();	
-				$("#div_penalitiestype").hide();
-				$("#div_penalityamount").hide();
-				$("#distance").attr("readonly",true);	
-				$("#div_driver1").hide();	
-		    	$("#div_driver2").hide();
-		    	$("#div_helper").hide();	
-
-				$('#endreading').on('change', function() { 
-					if($('#endreading').val()<$('#startreading').val()){
-						alert("End Reading must be greater than Start Reading");
-						return;
-					}
-					dist = $('#endreading').val()-$('#startreading').val();
-					$("#distance").val(dist);
-					$("#distance").trigger('input');
-				});
-
-				$('#endreading1').on('change', function() { 
-					if($('#endreading1').val()<$('#startreading1').val()){
-						alert("End Reading must be greater than Start Reading");
-						return;
-					}
-					dist = $('#endreading1').val()-$('#startreading1').val();
-					$("#distance1").val(dist);
-				});
-
-				$('#substitutevehicleckbox').on('change', function() { 
-				    if (this.checked) {
-				    	$("#div_substitutevehicle").show();	
-				    }
-				    else{
-				    	$("#div_substitutevehicle").hide();	
-				    }
-				});
-				$('#fine').on('change', function() { 
-				    // From the other examples
-				    if (this.checked) {
-				    	$("#div_penalityamount").show();	
-						$("#div_penalitiestype").show();	
-				    }
-				    else{
-				    	$("#div_penalityamount").hide();	
-						$("#div_penalitiestype").hide();
-				    }
-				});
-
-				$('#pendingservlogs').on('change', function() { 
-					var clientname = $("#clientname").val();
-					if(clientname != undefined && clientname ==""){
-						alert("Please select clientname");
-						$('#pendingservlogs').prop('checked', false); 
-						return false;
-					}
-					var depot = $("#depot").val();
-					if(depot != undefined && depot ==""){
-						alert("Please select depot");
-						$('#pendingservlogs').prop('checked', false); 
-						return false;
-					}
-					var vehicle = $("#vehicle").val();
-					if(vehicle != undefined && vehicle ==""){
-						alert("Please select vehicle");
-						$('#pendingservlogs').prop('checked', false); 
-						return false;
-					}
-				    if (this.checked) {
-				    	clientId =  $("#clientname").val();
-						depotId = $("#depot").val();
-						vehicle = $("#vehicle").val();
-
-						$.ajax({
-					      url: "getpendingservicelogs?clientid="+clientId+"&depotid="+depotId+"&vehicleid="+vehicle,
-					      success: function(data) {
-						      data = JSON.parse(data);
-					    	  $("#pendingdates").html(data[0]);
-					    	  $('.chosen-select').trigger("chosen:updated");
-					      },
-					      type: 'GET'
-					    });
-					    
-				    	clientname = $("#clientname option:selected").text();
-				    	depot = $("#depot option:selected").text();
-				    	vehicle = $("#vehicle option:selected").text();
-					    $("#pendingclient").val(clientname);
-					    $("#pendingdepot").val(depot);
-					    $("#pendingvehicle").val(vehicle);
-					    $("#pendinglogs").click();
-					    $('#pendingservlogs').prop('checked', false); 
-				    }
-				});
-				
-				$('#drv_helper').on('change', function() { 
-				    if (this.checked) {
-				    	$("#div_driver1").show();	
-				    	$("#div_driver2").show();
-				    	$("#div_helper").show();
-				    }
-				    else{
-				    	$("#div_driver1").hide();	
-				    	$("#div_driver2").hide();
-				    	$("#div_helper").hide();
-				    }
-				});
-
-				 $('#pendingservicelogsform').submit(function() {
-					 alert("DF");
-				        // DO STUFF
-				        return false; // return false to cancel form action
-				 });
-					
+			jQuery(function($) {		
 				//initiate dataTables plugin
 				myTable = 
 				$('#dynamic-table')
@@ -755,6 +580,7 @@
 				.DataTable( {
 					bJQueryUI: true,
 					"bPaginate": true, "bDestroy": true,
+					"bDestroy": true,
 					bInfo: true,
 					"aoColumns": [
 					  <?php $cnt=count($values["theads"]); for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
@@ -766,7 +592,7 @@
 					"bProcessing": true,
 			        "bServerSide": true,
 					"ajax":{
-		                url :"getservicelogsdatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
+		                url :"getcontractsdatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
 		                type: "post",  // method  , by default get
 		                error: function(){  // error handling
 		                    $(".employee-grid-error").html("");

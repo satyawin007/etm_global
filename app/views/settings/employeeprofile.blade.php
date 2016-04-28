@@ -123,7 +123,7 @@ use Illuminate\Support\Facades\Input;
 													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Role-Previlage </label>
 													<div class="col-xs-8">
 														<select class="form-control"   name="roleprevilage" >
-															<option value="">-- Select Role Previlage --</option>
+															<option value="">ALL</option>
 															<?php 
 																$roles = \Role::All();
 																foreach ($roles as $role){
@@ -132,6 +132,27 @@ use Illuminate\Support\Facades\Input;
 																	}
 																	else{
 																		echo "<option value='".$role->id."'>".$role->roleName."</option>";
+																	}
+																}
+															?>												
+														</select>
+													</div>
+												</div>
+												<div class="form-group">
+													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Client Branches<span style="color:red;"></span> </label>
+													<div class="col-xs-8">
+														<select class="form-control chosen-select"   id="clientbranches" name="clientbranches[]"  multiple="multiple">
+															<option value="">ALL</option>
+															<?php 
+																$roles = \Depot::where("status","=","ACTIVE")->get();
+																$client_branches = $employee->contractIds;
+																$client_branches = explode(",", $client_branches);
+																foreach ($roles as $role){
+																	if(in_array($role->id, $client_branches)){
+																		echo "<option selected value='".$role->id."'>".$role->name."</option>";
+																	}
+																	else{
+																		echo "<option value='".$role->id."'>".$role->name."</option>";
 																	}
 																}
 															?>												
@@ -209,6 +230,26 @@ use Illuminate\Support\Facades\Input;
 													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Work Group </label>
 													<div class="col-xs-8">
 														<input type="text" id="workgroup" name="workgroup" disabled="disabled"  required="" class="form-control" value="{{$employee->workGroup}}">
+													</div>
+												</div>
+												<div class="form-group">
+													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Employee Branch<span style="color:red;"></span> </label>
+													<div class="col-xs-8">
+														<select class="form-control chosen-select"   id="officebranch" name="officebranch"> 
+															<option value="">-- Employee Branch --</option>
+															<?php 
+																$roles = \OfficeBranch::All();
+																foreach ($roles as $role){
+																	if($role->id==$employee->officeBranchId){
+																		echo "<option selected value='".$role->id."'>".$role->name."</option>";
+																	}
+																	else{
+																		echo "<option value='".$role->id."'>".$role->name."</option>";
+																	}
+																	
+																}
+															?>												
+														</select>
 													</div>
 												</div>
 											</div>
@@ -471,7 +512,7 @@ use Illuminate\Support\Facades\Input;
 		<script src="../assets/js/date-time/bootstrap-datepicker.js"></script>
 		<script src="../assets/js/jquery.hotkeys.js"></script>
 		<script src="../assets/js/bootstrap-wysiwyg.js"></script>
-		<script src="../assets/js/select2.js"></script>
+		<script src="../assets/js/chosen.jquery.js"></script>
 		<script src="../assets/js/fuelux/fuelux.spinner.js"></script>
 		<script src="../assets/js/x-editable/bootstrap-editable.js"></script>
 		<script src="../assets/js/x-editable/ace-editable.js"></script>
@@ -484,7 +525,7 @@ use Illuminate\Support\Facades\Input;
 		<script type="text/javascript">
 		<?php 
 			if(Session::has('message')){
-				echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+				echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 			}
 		?>
 
@@ -650,7 +691,37 @@ use Illuminate\Support\Facades\Input;
 			success: function(response, newValue) {
 			}
 		});
-		
+
+
+		if(!ace.vars['touch']) {
+			$('.chosen-select').chosen({allow_single_deselect:true}); 
+			//resize the chosen on window resize
+	
+			$(window)
+			.off('resize.chosen')
+			.on('resize.chosen', function() {
+				$('.chosen-select').each(function() {
+					 var $this = $(this);
+					 $this.next().css({'width': $this.parent().width()});
+				})
+			}).trigger('resize.chosen');
+			//resize chosen on sidebar collapse/expand
+			$(document).on('settings.ace.chosen', function(e, event_name, event_val) {
+				if(event_name != 'sidebar_collapsed') return;
+				$('.chosen-select').each(function() {
+					 var $this = $(this);
+					 $this.next().css({'width': $this.parent().width()});
+				})
+			});
+	
+	
+			$('#chosen-multiple-style .btn').on('click', function(e){
+				var target = $(this).find('input[type=radio]');
+				var which = parseInt(target.val());
+				if(which == 2) $('#form-field-select-4').addClass('tag-input-style');
+				 else $('#form-field-select-4').removeClass('tag-input-style');
+			});
+		}
 		
 		
 		// *** editable avatar *** //

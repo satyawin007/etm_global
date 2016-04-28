@@ -2,8 +2,7 @@
 
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
-use settings\AppSettingsController;
-class TransactionController extends \Controller {
+class ContractFuelTransactionController extends \Controller {
 
 	/**
 	 * add a new state.
@@ -152,6 +151,7 @@ class TransactionController extends \Controller {
 				}
 			}
 			if(isset($values["transtype"]) && $values["transtype"] == "fuel" ){
+				
 				if(isset($values["date"]) && $values["date"] == ""){
 					$values["date"] = date("d-m-Y");
 				}
@@ -204,9 +204,6 @@ class TransactionController extends \Controller {
 					else if(isset($values["tripid"])){
 						return \Redirect::to("addtripfuel?transtype=fuel&id=".$values["tripid"]);
 					}
-					else if(isset($fields["contractId"])){
-						return \Redirect::to("fueltransactions?type=contracts");
-					}
 					return \Redirect::to("fueltransactions");
 				}
 				else{
@@ -216,9 +213,6 @@ class TransactionController extends \Controller {
 					}
 					else if(isset($values["tripid"])){
 						return \Redirect::to("addtripfuel?transtype=fuel&id=".$values["tripid"]);
-					}
-					else if(isset($fields["contractId"])){
-						return \Redirect::to("fueltransactions?type=contracts");
 					}
 					return \Redirect::to("fueltransactions");
 				}
@@ -1077,25 +1071,12 @@ class TransactionController extends \Controller {
 			$state_arr[$state['id']] = $state->name;
 		}
 		
-		if(isset($values["client"]) && isset($values["clientbranch"])){
-			$vehicles =  \ContractVehicle::where("contract_vehicles.status","=","ACTIVE")
-							->where("contracts.clientId","=",$values["client"])
-							->where("contracts.depotId","=",$values["clientbranch"])
-							->join("contracts","contracts.id","=","contract_vehicles.contractId")
-							->join("vehicle","vehicle.id","=","contract_vehicles.vehicleId")
-							->select("vehicle.id as id","vehicle.veh_reg as veh_reg")->get();
-			$vehicles_arr = array();
-			foreach ($vehicles as $vehicle){
-				$vehicles_arr[$vehicle['id']] = $vehicle->veh_reg;
-			}
+		$vehicles =  \Vehicle::all();
+		$vehicles_arr = array();
+		foreach ($vehicles as $vehicle){
+			$vehicles_arr[$vehicle['id']] = $vehicle->veh_reg;
 		}
-		else{
-			$vehicles =  \Vehicle::all();
-			$vehicles_arr = array();
-			foreach ($vehicles as $vehicle){
-				$vehicles_arr[$vehicle['id']] = $vehicle->veh_reg;
-			}
-		}
+		
 		$select_fields = array();
 		$select_fields[] = "fuelstationdetails.name as name";
 		$select_fields[] = "cities.name as cityname";
@@ -1846,9 +1827,6 @@ class TransactionController extends \Controller {
 	{
 		$values = Input::all();
 		$values['bredcum'] = "FUEL TRANSACTIONS";
-		if(isset($values["type"]) && $values["type"]=="contracts"){
-			$values['bredcum'] = "CONTRACT FUEL TRANSACTIONS";
-		}
 		$values['home_url'] = 'masters';
 		$values['add_url'] = '#';
 		$values['form_action'] = '#';
@@ -1885,23 +1863,7 @@ class TransactionController extends \Controller {
 			$values["provider"]= $url;
 	
 		}
-		else if((isset($values["clientname1"]) && isset($values["depot1"]))){
-			$theads = array('contract', 'fuel station name', 'veh reg No', 'filled date', 'amount', 'bill no', 'payment type', 'remarks', "Actions");
-			$values["theads"] = $theads;
-			$url = "fuel&type=contracts&contracts=true&";
-			if(isset($values["clientname1"])){
-				$url = $url."client=".$values["clientname1"];
-			}
-			if(isset($values["depot1"])){
-				$url = $url."&depot=".$values["depot1"];
-			}
-			if(isset($values["daterange"])){
-				$url = $url."&daterange=".$values["daterange"];
-			}
-			$values["provider"]= $url;
-		}
-		
-		else if(isset($values["transtype"]) && isset($values["transtype"]) && $values["transtype"]=="fuel"){
+		else if(isset($values["transtype"]) && $values["transtype"]=="fuel"){
 			$theads = array('branch', 'fuel station name', 'veh reg No', 'filled date', 'amount', 'bill no', 'payment type', 'remarks', "Actions");
 			$values["theads"] = $theads;
 			$url = "fuel&";
@@ -1927,22 +1889,8 @@ class TransactionController extends \Controller {
 		$form_info["class"] = "form-horizontal";
 		$form_info["back_url"] = "masters";
 		$form_info["bredcum"] = "add transaction";
-		if(isset($values["type"]) && $values["type"]=="contracts"){
-			$form_info['iscontractfuel'] = "YES";
-		}
 	
 		$form_fields = array();
-		if(isset($values["type"]) && $values["type"]=="contracts"){
-			$clients =  AppSettingsController::getEmpClients();
-			$clients_arr = array();
-			foreach ($clients as $client){
-				$clients_arr[$client['id']] = $client['name'];
-			}
-			$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getContractFuelFields('fuel');"), "class"=>"form-control chosen-select", "options"=>array());
-			$form_fields[] = $form_field;
-		}
 	
 		$types_arr = array("Current"=>"Current","Mobile/Dongle"=>"Mobile/Dongle","Internet"=>"Internet","Water Cans/Tankers"=>"Water Cans/Tankers","Computer/Printer Purchases/Repairs"=>"Computer/Printer Purchases/Repairs");
 	
