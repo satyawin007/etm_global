@@ -264,7 +264,7 @@
 									<tr>
 										<th>VEHICLE</th>
 										<th>SERVICE DATE</th>
-										<th>START - END </th>
+										<th>START - END = DIST </th>
 										<th>DRIVERS</th>
 										<th>HELPER</th>
 										<th>REMARKS</th>
@@ -275,7 +275,7 @@
 								<tr ng-repeat="vehicle in vehicles_text">
 									<td>@{{vehicle.vehicle}}</td>
 									<td>@{{vehicle.servicedate}}</td>
-									<td>@{{vehicle.startreading}} - @{{vehicle.endreading}}</td>
+									<td>@{{vehicle.startreading}} - @{{vehicle.endreading}} = @{{vehicle.endreading-vehicle.startreading}}</td>
 									<td>@{{vehicle.driver1}}<br/> @{{vehicle.driver2}}</td>
 									<td>@{{vehicle.helper}}</td>
 									<td>@{{vehicle.remarks}}</td>

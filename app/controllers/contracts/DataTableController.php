@@ -119,6 +119,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "depots.id as depotId";
 		$select_args[] = "depots.name as depotName";
 		$select_args[] = "depots.code as depotCode";
+		$select_args[] = "officebranch.name as parentwarehouse";
 		$select_args[] = "cities.name as cityName";
 		$select_args[] = "districts.name as districtName";
 		$select_args[] = "states.name as stateName";
@@ -127,7 +128,7 @@ class DataTableController extends \Controller {
 			
 		$actions = array();
 		if(in_array(209, $this->jobs)){
-			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditDepot(", "jsdata"=>array("id","depotName","depotCode", "cityName", "districtName", "stateName", "status"), "text"=>"EDIT");
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditDepot(", "jsdata"=>array("id","depotName","depotCode","parentwarehouse", "cityName", "districtName", "stateName", "status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
 		$values["actions"] = $actions;
@@ -141,6 +142,7 @@ class DataTableController extends \Controller {
 		else{
 			$entities = \Depot::join("states","states.id", "=", "depots.stateId")
 					->join("cities","cities.id", "=", "depots.cityId")
+					->join("officebranch","officebranch.id", "=", "depots.parentWarehouse")
 					->join("districts","districts.id", "=", "depots.districtId")
 					->select($select_args)->limit($length)->offset($start)->get();
 			$total = count(\Depot::where("stateId","!=",0)->get());
@@ -166,7 +168,7 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[7] = $action_data;
+			$data_values[8] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

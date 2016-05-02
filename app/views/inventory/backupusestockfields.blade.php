@@ -1,5 +1,4 @@
 <?php 
-	use Illuminate\Support\Facades\View;
 	$branches =  \OfficeBranch::where("isWareHouse","=","Yes")->get();
 	$branches_arr = array();
 	foreach ($branches as $branch){
@@ -31,69 +30,127 @@
 	$select_fields[] = "items.name as name";
 	$select_fields[] = "purchased_items.qty as qty";
 	$select_fields[] = "purchased_items.unitPrice as unitPrice";
-	$select_fields[] = "creditsuppliers.supplierName as creditSupplier";
-	$select_fields[] = "purchase_orders.billNumber as billNo";
 	$select_fields[] = "purchased_items.id as id";
 	
-	$stockitems =  \PurchasedOrders::where("officeBranchId","=",$values["warehouseid"])
-					->where("purchased_items.status","=","ACTIVE")
-					->join("purchased_items","purchased_items.purchasedOrderId","=","purchase_orders.id")
-					->join("items","purchased_items.itemId","=","items.id")
-					->join("creditsuppliers","purchase_orders.creditSupplierId","=","creditsuppliers.id")
-					->select($select_fields)->get();
+	$stockitems =  \PurchasedOrders::where("officeBranchId","=",$values["warehouseid"])->where("purchased_items.status","=","ACTIVE")->join("purchased_items","purchased_items.purchasedOrderId","=","purchase_orders.id")->join("items","purchased_items.itemId","=","items.id")->select($select_fields)->get();
 	$stockitems_arr = array();
 	foreach ($stockitems as $stockitem){
-		$stockitems_arr[$stockitem['id']] = $stockitem->name." - qty(".$stockitem->qty.") - ".$stockitem->creditSupplier."(".$stockitem->billNo.")";
+		$stockitems_arr[$stockitem['id']] = $stockitem->name." - qty(".$stockitem->qty.") - Price for unit : ".$stockitem->unitPrice."";
 	}
 	//print_r($values); die();
 ?>
 
-<?php if($values["action"] == "itemtovehicles" || $values["action"] == "itemstovehicle" || $values["action"] == "vehicletowarehouse"){
-	$form_fields = array();
-	$form_field = array("name"=>"item", "id"=>"item",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getItemInfo(this.value)"),   "options"=>$stockitems_arr);
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"itemactions", "id"=>"itemactions",  "content"=>"item actions", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>array());
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"itemnumbers", "id"=>"itemnumbers",  "content"=>"item numbers", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "multiple"=>"multiple", "options"=>array());
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"alertdate", "id"=>"alertdate",  "content"=>"alert date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"units", "id"=>"units",  "content"=>"units", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"qty", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"vehicle", "id"=>"vehicle",  "content"=>"vehicle", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"remarks", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"bill", "id"=>"bill",  "content"=>"bill", "readonly"=>"",  "required"=>"", "type"=>"link", "class"=>"form-control");
-	$form_fields[] = $form_field;
-	$form_info = array();
-	$form_info["form_fields"] = $form_fields;
-	$form_info["theads"] = array("ITEM", "ITEM NUMBERS", "ITEM ACTION", "VEHICLE", "QTY", "ALERT DATE", "REMARKS", "ACTION");
-?>
-	@include("inventory.tablerowform",$form_fields);
-<?php } else if($values["action"] == "warehousetowarehouse"){
-	$form_fields = array();
-	$form_field = array("name"=>"item", "id"=>"item",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getItemInfo(this.value)"),   "options"=>$stockitems_arr);
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"itemnumbers", "id"=>"itemnumbers",  "content"=>"item numbers", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "multiple"=>"multiple", "options"=>array());
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"units", "id"=>"units",  "content"=>"units", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"qty", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"towarehouse", "id"=>"towarehouse",  "content"=>"to warehouse", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",   "options"=>$branches_arr);
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"remarks", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"bill", "id"=>"bill",  "content"=>"bill", "readonly"=>"",  "required"=>"", "type"=>"link", "class"=>"form-control");
-	$form_fields[] = $form_field;
-	$form_info = array();
-	$form_info["form_fields"] = $form_fields;
-	$form_info["theads"] = array("ITEM", "ITEM NUMBERS", "QTY", "WAREHOUSE", "REMARKS", "ACTION");
-?>
-	@include("inventory.tablerowform",$form_fields);
+<?php if($values["action"] == "itemtovehicles" || $values["action"] == "itemstovehicle" || $values["action"] == "vehicletowarehouse"){?>
+	<div class="col-xs-12" style="border: 1px solid #D5D5D5; margin-left: 10px; margin-top: 10px; max-width:98%">
+		<div class="row" style="background-color: #307ECC;">
+			<div style="margin-top: 5px; color:white; float:left;">
+					&nbsp;ADD / REMOVE ROW 
+				</a>
+			</div>
+			<div style="margin-top: 5px; margin-right:10px; float:right; color:white" ><i id="children_add" class="ace-icon fa fa-plus-circle bigger-160"></i> &nbsp;&nbsp; <i id="children_remove" class="ace-icon fa fa-minus-circle bigger-160"></i> &nbsp;&nbsp; <i id="children_refresh" class="ace-icon fa fa-refresh bigger-160"></i></div>
+		</div>
+		<div class="row col-xs-12" id="children_fields_all">
+			<div id="children_fields" style="padding-top: 7px; padding-bottom: 2px;" class="children_fields">
+				<div id="row0" class="">								
+					<div class="form-group inline" style="float:left;width:20%;">
+						<div class="col-xs-12">
+							<select class="form-control item chosen-select" id="item0" name="item[]" onchange="getItemInfo(this.value, this.id)">
+								<option value="">-- item --</option>
+								<?php 
+									foreach($stockitems_arr as  $key=>$val){
+										echo "<option value='".$key."' >".$val."</option>";
+									}
+								?>
+							</select>
+						</div>
+					</div>
+					<div class="form-group inline" style="float:left; width:12%; margin-left:5px;">
+						<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> UNITS </label>
+						<div class="col-xs-8">
+							<input type="text" name="units[]" readonly="readonly" id="units0" class="form-control units" onchange="unitsChange(this.id)">
+						</div>
+					</div>
+					<div class="form-group inline" style="float:right; width: 68%; margin-right: 0%; margin-left: 1%;">
+						<div style="width:10%; float:left; margin-right:15px;">
+							<input type="text" id="qty0" name="qty[]" class="form-control qty" placeholder="qty" onchange="qtyChange(this.id)">
+						</div>
+						<div style="width:17%; float:left; margin-right:15px;">
+							<select class="form-control chosen-select vehicle" id="vehicle0" name="vehicle[]" >
+								<option value="">-- vehicle --</option>
+								<?php 
+									foreach($vehicles_arr as  $key=>$val){
+										echo "<option value='".$key."' >".$val."</option>";
+									}
+								?>
+							</select>
+						</div>
+						<div style="width:20%; float:left; margin-left:40px;">
+							<input type="text" id="alertdate0" placeholder="alert date (if any)"  name="alertdate[]" class="form-control date-picker" >
+						</div>
+						<div style="width:43%; float:right; ">
+							<input type="text" id="remarks0" placeholder="remarks"  name="remarks[]" class="form-control remarks" >
+						</div>
+							<input type="hidden" name="position[]"  id="position0" class="position"/>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+<?php } else if($values["action"] == "warehousetowarehouse"){?>
+	<div class="col-xs-12" style="border: 1px solid #D5D5D5; margin-left: 10px; margin-top: 10px; max-width:98%">
+		<div class="row" style="background-color: #307ECC;">
+			<div style="margin-top: 5px; color:white; float:left;">
+					&nbsp;ADD / REMOVE ROW 
+				</a>
+			</div>
+			<div style="margin-top: 5px; margin-right:10px; float:right; color:white" ><i id="children_add" class="ace-icon fa fa-plus-circle bigger-160"></i> &nbsp;&nbsp; <i id="children_remove" class="ace-icon fa fa-minus-circle bigger-160"></i> &nbsp;&nbsp; <i id="children_refresh" class="ace-icon fa fa-refresh bigger-160"></i></div>
+		</div>
+		<div class="row col-xs-12" id="children_fields_all">
+			<div id="children_fields" style="padding-top: 7px; padding-bottom: 2px;" class="children_fields">
+				<div id="row0" class="">								
+					<div class="form-group inline" style="float:left;width:30%;">
+						<label class="col-xs-2 control-label no-padding-right" for="form-field-1">ITEM </label>
+						<div class="col-xs-10">
+							<select class="form-control item chosen-select" id="item0" name="item[]" onchange="getItemInfo(this.value, this.id)">
+								<option value="">-- item --</option>
+								<?php 
+									foreach($stockitems_arr as  $key=>$val){
+										echo "<option value='".$key."' >".$val."</option>";
+									}
+								?>
+							</select>
+						</div>
+					</div>
+					<div class="form-group inline" style="float:left; width:10%; margin-left:5px;">
+						<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> UNITS </label>
+						<div class="col-xs-8">
+							<input type="text" name="units[]" readonly="readonly" id="units0" class="form-control units" onchange="unitsChange(this.id)">
+						</div>
+					</div>
+					<div class="form-group inline" style="float:right; width: 60%; margin-right: 0%; margin-left: 1%;">
+						<label style="width:5%; float:left; margin-right:5px;" class="control-label no-padding-right" for="form-field-1"> QTY </label>
+						<div style="width:15%; float:left; margin-right:15px;">
+							<input type="text" id="qty0" name="qty[]" class="form-control qty" onchange="qtyChange(this.id)">
+						</div>
+						<label style="width:8%;float:left; margin-right:5px;" class=" control-label no-padding-right" for="form-field-1"> TO WH </label>
+						<div style="width:17%; float:left; margin-right:15px;">
+							<select class="form-control chosen-select warehouse" id="warehouse0" name="towarehouse[]" >
+								<option value="">-- warehouse --</option>
+								<?php 
+									foreach($branches_arr as  $key=>$val){
+										echo "<option value='".$key."' >".$val."</option>";
+									}
+								?>
+							</select>
+						</div>
+						<div style="width:40%; float:right; ">
+							<input type="text" id="remarks0" placeholder="remarks"  name="remarks[]" class="form-control remarks" >
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 <?php } else if($values["action"] == "TO WAREHOUSE"){?>
 	<div class="form-group col-xs-6" style="margin-top: 15px; margin-bottom: -10px">
 		<div class="form-group" id="repairbuttons">

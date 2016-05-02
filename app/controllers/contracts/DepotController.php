@@ -14,7 +14,8 @@ class DepotController extends \Controller {
 		if (\Request::isMethod('post'))
 		{
 			$values = Input::all();
-			$field_names = array("depotname"=>"name","depotcode"=>"code","statename"=>"stateId","cityname"=>"cityId","districtname"=>"districtId");
+			$field_names = array("depotname"=>"name","depotcode"=>"code","statename"=>"stateId","cityname"=>"cityId",
+								"parentofficebranch"=>"ParentWarehouse", "districtname"=>"districtId");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
@@ -70,7 +71,9 @@ class DepotController extends \Controller {
 		$values = Input::all();
 		if (\Request::isMethod('post'))
 		{
-			$field_names = array("depotname1"=>"name","depotcode1"=>"code","cityname1"=>"cityId","statename1"=>"stateId","districtname1"=>"districtId", "status1"=>"status");
+			$field_names = array("depotname1"=>"name","depotcode1"=>"code","cityname1"=>"cityId",
+					"parentofficebranch1"=>"ParentWarehouse","statename1"=>"stateId","districtname1"=>"districtId", 
+					"status1"=>"status");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
@@ -182,7 +185,7 @@ class DepotController extends \Controller {
 		$values['add_url'] = 'adddepot';
 		$values['form_action'] = 'depots';
 		$values['action_val'] = '';
-		$theads = array('depot ID','depot Name', "depot Code", "city", "district", "State", "status","Actions");
+		$theads = array('depot ID','depot Name', "depot Code", "Parent warehouse", "city", "district", "State", "status","Actions");
 		$values["theads"] = $theads;
 			
 		$actions = array();
@@ -222,13 +225,21 @@ class DepotController extends \Controller {
 			$districts_arr[$district['id']] = $district['name'];
 		}
 		
-		$form_field = array("name"=>"statename", "content"=>"state name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDistrict(this.value);"), "class"=>"form-control chosen-select", "options"=>$state_arr);
+		$branches =  \OfficeBranch::all();
+		$branches_arr = array();
+		foreach ($branches as $branch){
+			$branches_arr[$branch['id']] = $branch['name'];
+		}
+		
+		$form_field = array("name"=>"statename", "content"=>"state name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"),  "class"=>"form-control chosen-select", "options"=>$state_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"districtname", "content"=>"district name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"), "class"=>"form-control chosen-select", "options"=>$districts_arr);
+		$form_field = array("name"=>"districtname", "content"=>"district name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDistrict(this.value);"),"class"=>"form-control chosen-select", "options"=>$districts_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"cityname", "content"=>"city name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$citie_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"depotname", "content"=>"depot name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"parentofficebranch", "content"=>"parent warehouse", "readonly"=>"",  "required"=>"required","type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"depotcode", "content"=>"depot code", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -255,6 +266,8 @@ class DepotController extends \Controller {
 		$form_field = array("name"=>"cityname1", "content"=>"city name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$citie_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"districtname1", "content"=>"district name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"), "class"=>"form-control chosen-select", "options"=>$districts_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"parentofficebranch1", "content"=>"parent warehouse", "readonly"=>"",  "required"=>"required","type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"depotname1", "content"=>"depot name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;

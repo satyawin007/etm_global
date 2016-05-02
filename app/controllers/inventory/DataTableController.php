@@ -522,6 +522,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "inventory_transaction.toVehicleId as toVehicleId";
 		$select_args[] = "inventory_transaction.fromActionId as fromActionId";
 		$select_args[] = "inventory_transaction.toActionId as toActionId";
+		$select_args[] = "inventory_transaction.itemNumbers as itemNumbers";
 		$select_args[] = "inventory_transaction.remarks as remarks";
 		$select_args[] = "inventory_transaction.status as status";
 		$select_args[] = "inventory_transaction.action as action";
@@ -641,7 +642,7 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[11] = $action_data;
+			$data_values[12] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

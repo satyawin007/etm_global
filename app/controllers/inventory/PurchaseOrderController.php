@@ -13,6 +13,7 @@ class PurchaseOrderController extends \Controller {
 	{
 		if (\Request::isMethod('post'))
 		{
+			//$values["DSF"];
 			$values = Input::all();
 			$url = "purchaseorder";
 			$field_names = array("creditsupplier"=>"creditSupplierId","warehouse"=>"officeBranchId","receivedby"=>"receivedBy", "paymenttype"=>"paymentType",
@@ -62,12 +63,13 @@ class PurchaseOrderController extends \Controller {
 				foreach ($jsonitems as $jsonitem){
 					$fields = array();
 					$fields["purchasedOrderId"] = $recid;
-					$fields["itemId"] = $jsonitem->i5;
-					$fields["manufacturerId"] = $jsonitem->i6;
-					$fields["qty"] = $jsonitem->i2;
-					$fields["purchasedQty"] = $jsonitem->i2;
-					$fields["unitPrice"] = $jsonitem->i3;
-					$fields["itemStatus"] = $jsonitem->i4;
+					$fields["itemId"] = $jsonitem->i6;
+					$fields["manufacturerId"] = $jsonitem->i7;
+					$fields["itemNumbers"] = $jsonitem->i2;
+					$fields["qty"] = $jsonitem->i3;
+					$fields["purchasedQty"] = $jsonitem->i3;
+					$fields["unitPrice"] = $jsonitem->i4;
+					$fields["itemStatus"] = $jsonitem->i5;
 					$db_functions_ctrl->insert($table, $fields);
 				}
 				
@@ -433,6 +435,8 @@ class PurchaseOrderController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"quantity", "content"=>"quantity", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
 		$form_fields[] = $form_field;
+		$form_field = array("name"=>"itemnumbers", "content"=>"item numbers", "readonly"=>"readonly", "required"=>"","type"=>"textarea", "placeholder"=>"Enter item numbers as comma(,) separated value without any spaces like 24A4,1B35", "action"=>array("type"=>"onchange","script"=>"validateInput(this.value)"), "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
 		$form_field = array("name"=>"unitprice", "content"=>"price of unit", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"status", "content"=>"status", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>array("New"=>"New","Old"=>"Old"), "class"=>"form-control");
@@ -500,21 +504,23 @@ class PurchaseOrderController extends \Controller {
 				$table::where('purchasedOrderId',"=", $values['id'])->update(array("status"=>"DELETED"));
 				
 				$jsonitems = json_decode($values["jsondata"]);
+				
 				foreach ($jsonitems as $jsonitem){
 					$fields = array();
-					$fields["itemId"] = $jsonitem->i6;
-					$fields["manufacturerId"] = $jsonitem->i7;
-					$fields["qty"] = $jsonitem->i2;
-					$fields["purchasedQty"] = $jsonitem->i2;
-					$fields["unitPrice"] = $jsonitem->i3;
-					$fields["itemStatus"] = $jsonitem->i4;
+					$fields["itemId"] = $jsonitem->i7;
+					$fields["manufacturerId"] = $jsonitem->i8;
+					$fields["itemNumbers"] = $jsonitem->i2;
+					$fields["qty"] = $jsonitem->i3;
+					$fields["purchasedQty"] = $jsonitem->i3;
+					$fields["unitPrice"] = $jsonitem->i4;
+					$fields["itemStatus"] = $jsonitem->i5;
 					$fields["status"] = "ACTIVE";
-					if($jsonitem->i5 == "undefined"){
+					if($jsonitem->i6 == "undefined"){
 						$fields["purchasedOrderId"] = $values["id"];
 						$db_functions_ctrl->insert($table, $fields);
 					}
 					else{
-						$data = array("id"=>$jsonitem->i5);
+						$data = array("id"=>$jsonitem->i6);
 						$db_functions_ctrl->update($table, $fields, $data);
 					}
 				}
@@ -697,6 +703,8 @@ class PurchaseOrderController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"quantity", "content"=>"quantity", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
 			$form_fields[] = $form_field;
+			$form_field = array("name"=>"itemnumbers", "content"=>"item numbers", "readonly"=>"readonly", "required"=>"","type"=>"textarea", "placeholder"=>"Enter item numbers as comma(,) separated value without any spaces like 24A4,1B35", "action"=>array("type"=>"onchange","script"=>"validateInput(this.value)"), "class"=>"form-control chosen-select");
+			$form_fields[] = $form_field;
 			$form_field = array("name"=>"unitprice", "content"=>"price of unit", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"status", "content"=>"status", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>array("New"=>"New","Old"=>"Old"), "class"=>"form-control");
@@ -789,8 +797,10 @@ class PurchaseOrderController extends \Controller {
 	
 	public function getManufacturers(){
 		$values = Input::all();
+		$jsondata = array();
 		$itemid = $values["itemid"];
 		$man = \Items::where("id","=",$itemid)->first();
+		$jsondata["itemnuberstatus"] = $man->itemNumber;
 		$mans = "";
 		$mans_arr = explode(",",$man->manufactures);
 		foreach ($mans_arr as $man){
@@ -802,7 +812,8 @@ class PurchaseOrderController extends \Controller {
 				$mans = $mans."<option value='".$manId."' >".$man."</option>";
 			}
 		}
-		echo $mans;
+		$jsondata["manufactures"] = $mans;
+		echo json_encode($jsondata);
 	}
 	
 	public function deletePurchaseOrder(){

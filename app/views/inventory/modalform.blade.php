@@ -31,7 +31,7 @@
 							<div class="form-group">
 								<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 								<div class="col-xs-7">
-									<textarea {{$form_field['readonly']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"></textarea>
+									<textarea <?php if(isset($form_field["placeholder"])) echo " placeholder='".$form_field["placeholder"]."' ";?> {{$form_field['readonly']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"></textarea>
 								</div>			
 							</div>
 							<?php } ?>

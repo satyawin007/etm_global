@@ -409,13 +409,11 @@ Route::any('/purchaseorder', "inventory\PurchaseOrderController@managePurchaseOr
 
 Route::any('/createpurchaseorder', "inventory\PurchaseOrderController@createPurchaseOrder");
 
-Route::any('/estimatepurchaseorders', "inventory\EstimatePurchaseOrderController@manageEstimatePurchaseOrders");
+Route::any('/addpurchaseorder', "inventory\PurchaseOrderController@addPurchaseOrder");
 
-Route::any('/addestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@addEstimatePurchaseOrder");
+Route::any('/editpurchaseorder', "inventory\PurchaseOrderController@editPurchaseOrder");
 
-Route::any('/editestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@editEstimatePurchaseOrder");
-
-Route::any('/deleteestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@deleteEstimatePurchaseOrder");
+Route::any('/deletepurchaseorder', "inventory\PurchaseOrderController@deletePurchaseOrder");
 
 Route::any('/estimatepurchaseorders', "inventory\EstimatePurchaseOrderController@manageEstimatePurchaseOrders");
 
@@ -468,6 +466,8 @@ Route::any('/deleteusedstockitem', "inventory\StockController@deleteUsedStockIte
 Route::any('/getitemsbyaction', "inventory\StockController@getFields");
 
 Route::any('/getiteminfo', "inventory\StockController@getItemInfo");
+
+Route::any('/getrepairitembysupplier', "inventory\StockController@getRepairItemsBySupplier");
 
 Route::any('/getalertinfo', "inventory\StockController@getAlertInfo");
 

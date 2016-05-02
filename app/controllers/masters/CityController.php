@@ -162,13 +162,20 @@ class CityController extends \Controller {
 	{
 		$values = Input::all();
 		$emp_contracts = \Auth::user()->contractIds;
+		if($emp_contracts == ""){
+			$entities = \Depot::where("clientId","=",$values['id'])
+						->join("contracts", "depots.id", "=","contracts.depotId")
+						->join("clients", "clients.id", "=","contracts.clientId")
+						->select(array("depots.id as id","depots.name as name"))->get();
+		}
+		else{
 		$emp_contracts = explode(",", $emp_contracts);
 		$entities = \Depot::whereIn("depots.id",$emp_contracts)
 						->where("clientId","=",$values['id'])
 						->join("contracts", "depots.id", "=","contracts.depotId")
 						->join("clients", "clients.id", "=","contracts.clientId")
 						->select(array("depots.id as id","depots.name as name"))->get();
-		
+		}
 		$response = "<option value=''> --select depot-- </option>";
 		foreach ($entities as $entity){
 			$response = $response."<option value='".$entity->id."'>".$entity->name."</option>";

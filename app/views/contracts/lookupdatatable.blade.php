@@ -242,11 +242,12 @@
 				$('.chosen-select').trigger("chosen:updated");	
 			}
 
-			function modalEditDepot(id, name, code, city, district, state, status){
+			function modalEditDepot(id, name, code, parent, city, district, state, status){
 				$("#depotname1").val(name);				
 				$("#depotcode1").val(code);
 				$("#statename1 option").each(function() {this.selected = (this.text == state); });
 				$("#districtname1 option").each(function() {this.selected = (this.text == district); });
+				$("#parentofficebranch1 option").each(function() {this.selected = (this.text == parent); });
 				$("#cityname1 option").each(function() {this.selected = (this.text == city); });
 				$("#status1 option").each(function() { this.selected = (this.text == status); });
 				$("#id1").val(id);		

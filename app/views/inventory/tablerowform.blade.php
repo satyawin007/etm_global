@@ -41,132 +41,14 @@
 			}
 		</style>
 	@stop	
-	
-		<div class="widget-box col-xs-12">
-			<div class="widget-header">
-				<h4 class="widget-title">{{ strtoupper($form_info['bredcum'])}}</h4>
-				<div style="float:right;padding-right: 2%; margin-top: 5px">
-					<a style="color: white;" href="contractsmenu" title="contracts"><span style="color:white"><i class="ace-icon fa fa-home bigger-200"></i></span></a> &nbsp; &nbsp;
-					<a style="color: grey;"  title="{{$form_info['back_url']}}" href="{{$form_info['back_url']}}"><span style="color:white"><i class="ace-icon fa fa-arrow-circle-left bigger-200"></i></span></a>
-					<?php if(isset($form_info["addlink"])){ ?>
-					    &nbsp;&nbsp;&nbsp;&nbsp;<a style="color: grey;"  title="{{$form_info['addlink']}}"  data-toggle='modal' href="#{{$form_info['addlink']}}"><span style="color:white"><i class="ace-icon fa fa-plus-circle bigger-200"></i></span></a>					    
-					<?php } ?>
-				</div>
-			</div>
-			<div class="widget-body"  ng-app="myApp" ng-controller="myCtrl">
-				<div class="widget-main no-padding">
-				<form style="padding-top:20px;" class="{{$form_info['class']}}" action="{{$form_info['action']}}" method="{{$form_info['method']}}" name="{{$form_info['name']}}"  id="{{$form_info['name']}}">
-					<div class="row">
-					<?php $form_fields = $form_info['form_fields'];?>	
-					<?php foreach ($form_fields as $form_field) {?>
-						<div class="col-xs-6">
-						<?php if($form_field['type'] === "text" || $form_field['type'] === "email" ||$form_field['type'] === "number" || $form_field['type'] === "password"){ ?>
-						<div class="form-group" >
-							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-							<div class="col-xs-7">
-								<input {{$form_field['readonly']}} type="{{$form_field['type']}}" id="{{$form_field['name']}}" {{$form_field['required']}} name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['value']))  echo " value=".$form_field['value']." "; ?> <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
-							</div>			
-						</div>
-						<?php } ?>
-						<?php if($form_field['type'] === "empty" ){ ?>
-						<div class="form-group" >
-							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-							<div class="col-xs-7">
-								<label class="control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-							</div>			
-						</div>
-						<?php } ?>
-						<?php if($form_field['type'] === "hidden"){ ?>
-						<div class="form-group">
-							<div class="col-xs-7">
-								<input type="{{$form_field['type']}}" id="{{$form_field['name']}}" name="{{$form_field['name']}}" value="{{$form_field['value']}}" >
-							</div>			
-						</div>
-						<?php } ?>
-						<?php if($form_field['type'] === "daterange"){ ?>				
-						<div class="form-group">
-							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-							<div class="col-xs-7">
-								<div class="input-daterange input-group">
-										<input type="text" id="fromdate"  style="padding-top: 15px;padding-bottom: 18px;" required="required" name="fromdate" <?php if(isset($form_field['value']))  echo " value=".$form_field['value'][0]." "; ?> class="input-sm form-control"/>
-										<span class="input-group-addon">
-											<i class="fa fa-exchange"></i>
-										</span>
-										<input type="text" class="input-sm form-control"  style="padding-top: 15px;padding-bottom: 18px;" id="todate" required="required" <?php if(isset($form_field['value']))  echo " value=".$form_field['value'][1]." "; ?>  name="todate"/>
-									</div>
-							</div>	
-									
-						</div>
-						<?php } ?>
-						<?php if($form_field['type'] === "textarea"){ ?>				
-						<div class="form-group">
-							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-							<div class="col-xs-7">
-								<textarea {{$form_field['readonly']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"><?php if(isset($form_field['value']))  echo " value=".$form_field['value']." "; ?></textarea>
-							</div>			
-						</div>
-						<?php } ?>
-						<?php if($form_field['type'] === "radio"){ ?>				
-						<div class="form-group">
-							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-							<div class="col-xs-7">
-								<div class="radio">
-								<?php 
-									foreach($form_field["options"] as $key => $value){
-										echo "<label><input type='radio' name=\"".$form_field['name']."\"class='ace' value='$key'> <span class='lbl'>".$value."</span></label>&nbsp;&nbsp;";
-									}
-								?>
-								</div>
-							</div>			
-						</div>
-						<?php } ?>
-						<?php if($form_field['type'] === "select"){ ?>
-						<div class="form-group">
-							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-							<div class="col-xs-7">
-								<select class="{{$form_field['class']}}" {{$form_field['required']}} name="{{$form_field['name']}}" <?php if(isset($form_field['id'])) { echo 'id="'.$form_field['id'].'"'; } else { echo 'id="'.$form_field['name'].'"'; }?>  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>  <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-									<option value="">-- {{$form_field['name']}} --</option>
-									<?php 
-										foreach($form_field["options"] as $key => $value){
-											if(isset($form_field['value']) && $form_field['value']==$key) { 
-												echo "<option selected='selected' value='$key'>$value</option>";
-											}
-											else{
-												echo "<option value='$key'>$value</option>";
-											}
-										}
-									?>
-								</select>
-							</div>			
-						</div>				
-						<?php } ?>
-						<?php if($form_field['type'] === "checkbox"){ ?>
-							<div class="form-group">
-								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-								<div class="col-xs-7">
-									<?php 
-									$options = $form_field["options"];
-									foreach ($options as $key=>$value) {
-									?>
-									<div class="checkbox inline">
-										<label>
-											<input name="{{$key}}" value="YES" type="checkbox" class="ace">
-											<span class="lbl">&nbsp;{{$key}} &nbsp;&nbsp;</span>
-										</label>
-									</div>
-									<?php } ?>
-								</div>
-							</div>
-						<?php } ?>						
-					</div>
-					<?php } ?>
-					</div>
+			<div class="row"  ng-app="myApp" ng-controller="myCtrl">
+				<div class="">
+					<div class="col-xs-12">
 					<h3 style="margin-top:-10px;" class="header smaller lighter blue">&nbsp;</h3>
-					<div >
-						<div class="col-xs-5">
-						<?php $form_fields = $form_info['add_form_fields'];?>	
+						<div class="col-xs-4">
+						<?php $form_fields = $form_info['form_fields'];?>	
 						<?php foreach ($form_fields as $form_field) {?>
-							<div class="col-xs-12">
+							<div class="col-xs-12" id="div_{{$form_field['name']}}">
 							<?php if($form_field['type'] === "text" || $form_field['type'] === "email" ||$form_field['type'] === "number" || $form_field['type'] === "password"){ ?>
 							<div class="form-group" >
 								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
@@ -195,6 +77,14 @@
 								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 								<div class="col-xs-8">
 									<textarea {{$form_field['readonly']}} ng-model="{{$form_field['name']}}" id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"></textarea>
+								</div>			
+							</div>
+							<?php } ?>
+							<?php if($form_field['type'] === "link"){ ?>				
+							<div class="form-group">
+								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+								<div class="col-xs-8" style="padding-top: 7px;">
+									<span><a href="nobill.png"  target="_blank" id="{{$form_field['name']}}" name="{{$form_field['name']}}" >Click here to see bill</a></span>
 								</div>			
 							</div>
 							<?php } ?>
@@ -232,6 +122,7 @@
 								</div>			
 							</div>				
 							<?php } ?>
+							
 							<?php if($form_field['type'] === "checkbox"){ ?>
 								<div class="form-group">
 									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
@@ -254,60 +145,29 @@
 						<?php } ?>
 						<div>
 							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> &nbsp; </label>
-							<div class="col-xs-2"><input class="btn btn-xs" type="button" id="addrowbtn" ng-click="addRow()" value="  ADD  "/></div>
-							<div class="col-xs-2"><input class="btn btn-xs" type="button" id="updaterowbtn" ng-click="updateRow()" value="  UPDATE  "/></div>
+							<div class="col-xs-2"><input class="btn btn-xs" type="button" id="addrowbtn" onClick="addRow()" value="  ADD  "/></div>
+							<div class="col-xs-2"><input class="btn btn-xs" type="button" id="updaterowbtn" onClick="updateRow()" value="  UPDATE  "/></div>
 						</div>
 						</div>
-						<div class="col-xs-7">
-							<table class="table table-striped table-bordered table-hover" style="border:1px solid #DDDDDD">
+						<div class="col-xs-8">
+							<table  class="table table-striped table-bordered table-hover">
 								<thead>
 									<tr>
-										<th>ITEM</th>
-										<th>MANUFACTURER</th>
-										<th>QTY</th>
-										<th>UNIT PRICE</th>
-										<th>CREDIT SUPPLIER</th>
-										<th>REMARKS</th>
-										<th>AMOUT</th>
-										<th>ACTIONS</th>
+									<?php 
+										$ths = $form_info['theads'];
+										foreach ($ths as $th){
+											echo "<th>".$th."</th>";
+										}
+									?>
 									</tr>
 								</thead>
-								<tr ng-repeat="vehicle in vehicles_text">
-									<td>@{{vehicle.item}}</td>
-									<td>@{{vehicle.manufacturer}}</td>
-									<td>@{{vehicle.quantity}}</td>
-									<td>@{{vehicle.unitprice}}</td>
-									<td>@{{vehicle.creditsupplier}}</td>
-									<td>@{{vehicle.remarks}}</td>
-									<td style="text-align: right;">@{{vehicle.quanity}}*@{{vehicle.unitprice}}</td>
-									<td>
-										<input type="button" value="Edit" class="btn btn-minier btn-purple" style="margin:2px;" id="editrowbtn" ng-click="editRow(vehicle.vehicle)"/> &nbsp;&nbsp;&nbsp;
-										<input type="button" value="Remove" class="btn btn-minier btn-purple removerowbtn" style="margin:2px;" id="removerowbtn" ng-click="removeRow(vehicle.vehicle)"/>
-									</td>
-								</tr>
-								<tr><td colspan="6" style="text-align: right;">TOTAL AMT</td><td id="totalamt" style="font-size: 15px; font-weight: bold; text-align: right; ">1230.00</td><td></td></tr>
+								<tbody id="rowtable">
+									<tr ng-repeat="vehicle in vehicles_text">
+									</tr>
+								</tbody>
 							</table>
 						</div>
 					</div>	
-					<div class="clearfix">
-						<div class="col-md-offset-0 col-md-12 form-actions" style="margin: 0px">
-							<div class="col-md-offset-4 col-md-5">
-							<button id="submit" class="btn primary" ng-click="postData()">
-								<i class="ace-icon fa fa-check bigger-110"></i>
-								SUBMIT
-							</button>
-							<!--  <input type="submit" class="btn btn-info" type="button" value="SUBMIT"> -->
-							&nbsp; &nbsp; &nbsp;
-							<button id="reset" class="btn" type="reset">
-								<i class="ace-icon fa fa-undo bigger-110"></i>
-								RESET
-							</button>
-							</div>
-						</div>
-					</div>
-				</form>
-				</div>
 				</div>
 			</div>
-		</div>
 	

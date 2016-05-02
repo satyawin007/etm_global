@@ -184,7 +184,7 @@
 					<div class="clearfix" >
 						<div class="col-md-12" style="background-color: #E6DFDF;border-top: 2px solid #D2CDCD; margin-top: 10px;">
 						<div class="col-md-offset-4 col-md-8" style="margin-top: 2%; margin-bottom: 1%">
-							<button class="btn primary" id="submit" onClick="postData()">
+							<button id="reset" class="btn primary" type="submit" id="submit">
 								<i class="ace-icon fa fa-check bigger-110"></i>
 								SUBMIT
 							</button>
@@ -313,7 +313,6 @@
 	@section('page_js')
 		<!-- page specific plugin scripts -->
 		<script src="../assets/js/dataTables/jquery.dataTables.js"></script>
-		<script src="../assets/js/angular-1.5.4/angular.min.js"></script>
 		<script src="../assets/js/dataTables/jquery.dataTables.bootstrap.js"></script>
 		<script src="../assets/js/dataTables/extensions/buttons/dataTables.buttons.js"></script>
 		<script src="../assets/js/dataTables/extensions/buttons/buttons.flash.js"></script>
@@ -329,203 +328,9 @@
 	
 	
 	@section('inline_js')
-	
-		<!-- inline scripts related to angular JS-->
-		<script>
-			submit_data = "false";
-			var app = angular.module('myApp', []);
-			app.controller('myCtrl', function($scope, $http) {
-				$scope.vehicles = [];
-				$scope.ids = ['vehicle', 'servicedate', 'substitutevehicle', 'starttime', 'driver1', 'driver2', 'helper', 'penalitiestype'];
-				$scope.vars = ['distance','repairkms', 'startreading', 'endreading', 'penalityamount', 'remarks' ];
-				$scope.vehicles_text = [];
-				exe_recs_text = [];
-				$scope.addRow = function(){
-					$scope.ids.forEach(function(entry) {
-						text = $("#"+entry+" option:selected").val();
-						if(entry != "vehicle"){
-							$scope[entry] = text;
-						}
-					});	
-					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" ||  typeof $scope.servicedate === "undefined" ||$scope.driver1 === "" || $scope.vehicle === "" || $scope.servicedate === "") {
-						return;
-					}
-					$scope.distance = $("#distance").val();	
-
-					text_arr = [];
-					veh_arr = {};
-					$scope.ids.forEach(function(entry) {
-						text = $("#"+entry+" option:selected").text();
-						val = $("#"+entry+" option:selected").val();
-						veh_arr[entry] = val;
-						$("#"+entry).find('option:selected').removeAttr("selected");
-						if(val==""){
-							text="";
-						}
-						text_arr[entry] = text;
-						$scope[entry] = '';
-					});
-					$scope.vars.forEach(function(entry) {
-						text_arr[entry] = $scope[entry];
-						veh_arr[entry] = $scope[entry];
-						$scope[entry] = '';
-					});
-
-					$scope.vehicles_text.unshift(text_arr);
-					$scope.vehicles.unshift(veh_arr);
-					$('.chosen-select').trigger("chosen:updated");
-				};
-
-				$scope.editRow = function(vehicle){	
-					var index = -1;		
-					var comArr = eval( $scope.vehicles_text );
-					var comArr1 = eval( $scope.vehicles );
-					for( var i = 0; i < comArr.length; i++ ) {
-						if( comArr[i].vehicle === vehicle ) {
-							index = i;
-							break;
-						}
-					}
-					if( index === -1 ) {
-						alert( "Something gone wrong" );
-						return;
-					}
-					$scope.vars.forEach(function(entry) {
-						$scope[entry]=comArr1[i][entry];
-					});	
-					$scope.ids.forEach(function(entry) {
-						$("#"+entry+" option").each(function() {   this.selected =(this.text == comArr[i][entry])});
-						$("#"+entry).find('option:selected').attr("selected", "selected"); 
-						$scope[entry]=comArr1[i][entry];
-					});	
-					$('.chosen-select').trigger("chosen:updated");	
-				};
-
-				$scope.updateRow = function(){	
-					$scope.ids.forEach(function(entry) {
-						text = $("#"+entry+" option:selected").val();
-						text = text.replace("? string:", "");
-						text = text.replace(" ?", "");
-						if(entry != "vehicle"){
-							$scope[entry] = text;
-						}
-					});	
-					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" ||  typeof $scope.servicedate === "undefined" ||$scope.driver1 === "" || $scope.vehicle === "" || $scope.servicedate === "") {
-						return;
-					}	
-					$scope.distance = $("#distance").val();	
-					tempdata = [];
-					var index = -1;		
-					var comArr = eval( $scope.vehicles );
-					for( var i = 0; i < comArr.length; i++ ) {
-						if( comArr[i].vehicle === $scope.vehicle ) {
-							index = i;
-							$scope.ids.forEach(function(entry) {
-								text = $("#"+entry+" option:selected").text();
-								$("#"+entry).find('option:selected').removeAttr("selected");
-								if(entry != "vehicle"){
-									if(text != ""){
-										$scope.vehicles_text[index][entry] = text;
-									}
-									$scope.vehicles[index][entry] = $scope[entry];
-									$scope[entry] = '';
-								}
-							});
-							$scope.vars.forEach(function(entry) {
-								$scope.vehicles_text[index][entry] = $scope[entry];
-								$scope.vehicles[index][entry] = $scope[entry];
-								$scope[entry] = '';
-							});
-							break;
-						}
-					}
-					if( index === -1 ) {
-						alert( "Vehicle can not be updated / Something gone wrong" );
-						return;
-					}
-					alert("updated successfully");
-					$('.chosen-select').trigger("chosen:updated");
-				};
-				
-				$scope.removeRow = function(vehicle){	
-					var index = -1;		
-					var comArr = eval( $scope.vehicles_text );
-					for( var i = 0; i < comArr.length; i++ ) {
-						if( comArr[i].vehicle === vehicle ) {
-							index = i;
-							break;
-						}
-					}
-					if( index === -1 ) {
-						alert( "Something gone wrong" );
-						return;
-					}
-					$scope.vehicles.splice( index, 1 );	
-					$scope.vehicles_text.splice( index, 1 );		
-				};
-
-				$scope.postData = function() {
-					if(submit_data=="false"){
-						return;
-					}
-					$('#jsondata').val(JSON.stringify($scope.vehicles));
-					$.ajax({
-                        url: "{{$form_info['name']}}",
-                        type: "post",
-                        data: $("#{{$form_info['name']}}").serialize(),
-                        success: function(response) {
-                        	response = jQuery.parseJSON(response);	
-                            if(response.status=="success"){
-                            	bootbox.alert(response.message, function(result) {});
-                            	resetForm("{{$form_info['name']}}");
-                            	$scope.vehicles= [];	
-            					$scope.vehicles_text = [];		
-                            }
-                            if(response.status=="fail"){
-                            	bootbox.alert(response.message, function(result) {});
-                            }
-                        }
-                    });
-				};
-
-				function resetForm(formid)
-			    { 
-		            form = $('#'+formid);
-		            element = ['input','select','textarea'];
-		            for(i=0; i<element.length; i++) 
-		            {
-	                    $.each( form.find(element[i]), function(){  
-                            switch($(this).attr('class')) {
-                              case 'form-control chosen-select':
-                              	$(this).find('option:first-child').attr("selected", "selected"); 
-                                break;
-                            }
-                            switch($(this).attr('type')) {
-                            case 'text':
-                            case 'select-one':
-                            case 'textarea':
-                            case 'hidden':
-                            case 'file':
-                            	$(this).val('');
-                              break;
-                            case 'checkbox':
-                            case 'radio':
-                            	$(this).attr('checked',false);
-                              break;
-                           
-                          }
-	                    });
-		            }
-		            $('.chosen-select').trigger("chosen:updated");	
-			    }
-			});
-		</script>
-	
-	
 		<script>
 			$("#repairbuttons").hide();
 			$("#repairreturnbuttons").hide();
-
 			var count = 0;
 			function getItems(val){
 				$("#repairbuttons").hide();
@@ -535,23 +340,6 @@
 				if(action==""){
 					alert("select action");
 					return;
-				}
-				if(action=="itemtovehicles"){
-					ids = ["item", "itemnumbers", "itemactions", "vehicle"];
-					vars = ["qty", "alertdate", "remarks"];
-					hide_fields_text = ["itemactions"];
-					entities_text = [];
-					entities = [];
-					exe_recs_text = [];
-					condition_elements = ["item","qty"];
-				}
-				if(action=="warehousetowarehouse"){
-					ids = ["item", "itemnumbers", "towarehouse"];
-					vars = ["qty", "remarks"];
-					entities_text = [];
-					entities = [];
-					exe_recs_text = [];
-					condition_elements = ["item","qty"];
 				}
 				if(action=="vehicletowarehouse"){
 					$("#addfields").html("");
@@ -590,12 +378,73 @@
 			      url: "getitemsbyaction?action="+action+"&warehouseid="+warehouse,
 			      success: function(data) {
 			    	  $("#addfields").html(data);
-			    	  $("#div_itemnumbers").hide();
-					  $("#div_alertdate").hide();
-					  $("#div_itemactions").hide();
 			    	  $("#units").attr("disabled",true);
+			    	  //$("#alertdate").hide();
 			    	  $('.chosen-select').chosen();
 			    	  $('.chosen-select').trigger('chosen:updated');
+			    	  $("#alertdate"+0).prop("readonly",true);
+			    	  //var ele = $('#children_fields:first-child').clone(false);
+			    	  $("#children_add").on("click",function(){
+			    		    count = count+1;
+			    		    //$('.chosen-select').removeClass("chosen-select");
+			    		    lastItemId = $("#children_fields:last-child").find(".item").attr('id');
+			    		    lastQtyId = $("#children_fields:last-child").find(".qty").attr('id');
+			    		    ele = $('#children_fields:last-child').clone();
+			    		    ele.appendTo('#children_fields_all');
+			    		    $('#children_fields:last-child select').removeClass("chosen-select").removeAttr("id").css("display", "block").next().remove();
+			    		    $("#children_fields:last-child").find(".item").attr('id',"item"+count);
+			    		    $("#children_fields:last-child").find(".creditsupplier").attr('id',"creditsupplier"+count);
+			    		    $("#children_fields:last-child").find(".units").attr('id',"units"+count);
+			    		    $("#units"+count).attr("readonly","readonly");
+			    		    $("#units"+count).val("");
+			    		    $("#children_fields:last-child").find(".qty").attr('id',"qty"+count);
+			    		    $("#qty"+count).val("");
+			    		    $("#qty"+count).removeAttr("readonly");
+			    		    $("#children_fields:last-child").find(".remarks").attr('id',"remarks"+count);
+			    		    $("#remarks"+count).val("");
+			    		    $("#children_fields:last-child").find(".position").attr('id',"position"+count);
+			    		    $("#position"+count).val("");
+			    		    $("#children_fields:last-child").find(".date-picker").attr('id',"alertdate"+count);
+			    		    $("#alertdate"+count).val("");
+			    		    $("#alertdate"+count).prop("readonly",true);
+			    		    $("#children_fields:last-child").find(".vehicle").attr('id',"vehicle"+count);
+			                $('#children_fields:last-child select').addClass("chosen-select");
+			                //$('#children_fields:last-child #').removeClass("chosen-select");
+			                $('#children_fields:last-child select').chosen();
+					    	//$('.chosen-select').trigger('chosen:updated');
+					    	$("#alertdate"+count).prop("readonly",true);
+							itemVal = $("#"+lastItemId+" option:selected").text();
+							if(itemVal.indexOf("qty")>0){
+								start = itemVal.indexOf("qty(");
+								start = start+4;
+								itemQty = itemVal.substring(start,itemVal.indexOf(")"));
+								itemQty = parseInt(itemQty);
+								reqQty = parseInt($("#"+lastQtyId).val());
+				                start = itemVal.indexOf("(");
+							    end = itemVal.indexOf(")");
+							    end = itemVal.substring(end,itemVal.lenght);
+							    end = "("+(itemQty-reqQty)+end;
+							    start = itemVal.substring(0,start);
+								//itemVal = $("#item"+(count)+" option:selected").text(start+end);
+								selectVal = $("#"+lastItemId).val();	
+								$("#item"+(count)).find('option[value="'+selectVal+'"]').text(start+end);
+								$('.chosen-select').trigger('chosen:updated');
+								$("#qty"+(count-1)).attr("readonly","readonly");
+							}
+					  });
+	
+					  $("#children_remove").on("click",function(){
+							if(($(".children_fields").length)>1)
+								$('#children_fields:last-child').remove();
+					  });
+
+					  $("#children_refresh").on("click",function(){
+						    getItems(0);
+						    getItems(0);
+					  });
+					  $("#paymenttype").attr("disabled",true);
+					  $("#incharge").attr("disabled",true);
+					  $("#enableincharge").val("NO");
 			      },
 			      type: 'GET'
 			   });
@@ -701,36 +550,43 @@
 			}
 			
 
-			function getItemInfo(id){
-				$("#div_itemnumbers").hide();
-				$("#div_alertdate").hide();
-				$("#div_itemactions").hide();
+			function getItemInfo(val,id){
+				if(id == ""){
+					id = "item0";
+				}
+				var units = id.substring(4, id.length);
+
+				itemVal = $("#item"+units+" option:selected").text();
+				start = itemVal.indexOf(" - qty(");
+				itemname = itemVal.substring(0,start);
+				if(itemname=="tires"){
+					showTirePositions(units);
+				}
+				
+				alertid = "#alertdate"+units;
+				$(alertid).prop("readonly",true);
+				$("#position"+units).val("");
+				units = "#units"+units;
 				$.ajax({
-			      url: "getiteminfo?id="+id,
+			      url: "getiteminfo?id="+val,
 			      success: function(data) {
-				      //alert(data);
 			    	  var obj = JSON.parse(data);
-			    	  $("#units").val(obj.units);
-			    	  if(obj.itemactionsstatus=="Yes"){
-			    		  $("#itemactions").html(obj.itemactions);
-			    		  $("#div_itemactions").show();
-			    	  }
-			    	  if(obj.itemnumberstatus=="Yes"){
-			    		  $("#itemnumbers").html(obj.itemnumbers);
-			    		  $("#div_itemnumbers").show();
-			    	  }
-			    	  if(obj.alertstatus=="Yes"){
-			    		  $("#div_alertdate").show();
-			    	  }
-			    	  $("#bill").attr('href', "../app/storage/uploads/"+obj.filePath);
-			    	  $('.date-picker').datepicker({
-						autoclose: true,
-						todayHighlight: true
-					  });
-			    	  $('.chosen-select').trigger('chosen:updated');
+			    	  $(units).val(obj.units);
 			      },
 			      type: 'GET'
 			   });
+
+				$.ajax({
+			      url: "getalertinfo?id="+val,
+			      success: function(data) {
+				      //alert(data);
+				      if(data=="Yes"){
+			    	  	$(alertid).prop("readonly",false);
+			    	  	$(alertid).datepicker({ autoclose: true, todayHighlight: true })
+				      }
+			      },
+			      type: 'GET'
+			   });	
 			}
 
 			function deleteUsedStockItem(id) {
@@ -773,15 +629,7 @@
 			});
 
 			$("#submit").on("click",function(){
-				date = $("#date").val();
-				if(date==""){
-					alert("entter date");
-					return;
-				}
-				submit_data=true;
-				return false;
-				
-				//$("#{{$form_info['name']}}").submit();
+				$("#{{$form_info['name']}}").submit();
 			});
 
 
@@ -897,20 +745,9 @@
 				//
 			});
 			
-			function validateQuantity(qty){
-				text = $("#item option:selected").text();
-				if(text.indexOf("qty") > -1){
-					endindex = text.indexOf("qty(");
-					text = text.substring(endindex+4, endindex+10);
-					endindex = text.indexOf(")");
-					avalqty = text.substring(0, endindex);
-					avalqty = parseInt(avalqty);
-					qty = parseInt(qty);
-					if(avalqty<qty){
-						alert("Entered Quantity not available");
-						$("#qty").val("");
-					}
-				}
+			function paginate(page){
+				//alert("page : "+page);
+				return;
 			}
 
 			jQuery(function($) {		
@@ -1132,244 +969,5 @@
 				$("#refresh").on("click",function(){ myTable.search( '', true ).draw(); });
 			});
 		
-		</script>
-		
-		<script>
-			var ids = [];
-			var vars = [];
-			var entities_text = [];
-			var entities = [];
-			var hide_fields_text = [];
-			var condition_elements = [];
-			var rowid=0;
-			var editrowid=-1;
-			var submit_data=false;
-			function addRow(){
-				//alert("in addRow "+condition_elements);
-				ids.forEach(function(entry) {
-					text = $("#"+entry+" option:selected").val();
-				});
-				add_condition = false;	
-				var isReturn = false;
-				condition_elements.forEach(function(entry) {
-					itemm_val = $("#"+entry).val();
-					if(typeof itemm_val === "undefined" || itemm_val == ""){
-						alert("select "+entry);
-						isReturn=true;
-					}
-				});
-				if(isReturn){
-					return;
-				}
-				text_arr = new Array();
-				veh_arr = new Array();
-				ids.forEach(function(entry) {
-					text = $("#"+entry+" option:selected").text();
-					if(entry=="itemnumbers"){
-						text = "";
-						$('#itemnumbers option:selected').each(function(){ 
-							text = text+$(this).text()+","; 
-						});
-					}
-					val = $("#"+entry+" option:selected").val();
-					veh_arr[entry] = val;
-					$("#"+entry).find('option:selected').removeAttr("selected");
-					if(val==""){
-						text="";
-					}
-					if(entry=="item"){
-						if(text.indexOf("qty") > -1){
-							endindex = text.indexOf(" -");
-							text = text.substring(0, endindex);
-						}
-					}
-					text_arr[entry] = text;
-				});
-				vars.forEach(function(entry) {
-					text_arr[entry] = $("#"+entry).val();
-					veh_arr[entry] = $("#"+entry).val();
-					$("#"+entry).val("");
-				});
-				text_arr["rowid"]=rowid;
-				rowid++;
-				entities_text.unshift(text_arr);
-				entities.unshift(veh_arr);
-				$('.chosen-select').trigger("chosen:updated");
-				drawTable()
-			}
-
-			function drawTable(){
-				//alert("indraw Table: "+entities_text.length);
-				table_data = "";
-				comArr = entities_text;
-				for(i=0; i<entities_text.length; i++){
-					table_data = table_data+"<tr>";
-					ids.forEach(function(entry) {
-						table_data = table_data+"<td>"+entities_text[i][entry]+"</td>"
-					});
-					vars.forEach(function(entry) {
-						table_data = table_data+"<td>"+entities_text[i][entry]+"</td>"
-					});
-					table_data = table_data+"<td>"+
-											'<span   style="margin:2px; color: #428bca" id="editrowbtn" onclick="editRow(\''+entities_text[i].rowid+'\')"><i class="ace-icon fa fa-pencil-square-o bigger-150"></i> </span>&nbsp;'+
-											'<span   style="margin:2px;color: #d12723" id="removerowbtn" onclick="removeRow(\''+entities_text[i].rowid+'\')"><i class="ace-icon fa fa-trash-o bigger-150"></i></span>'
-										+"</td>";
-					table_data = table_data+"</tr>";
-				}
-				$("#rowtable").html(table_data);
-			}
-	
-			function editRow(rowid1){	
-				var index = -1;		
-				var comArr = eval( entities_text );
-				var comArr1 = eval( entities );
-				for( var i = 0; i < comArr.length; i++ ) {
-					alert("editrow : "+comArr[i].rowid+" - "+rowid1);
-					if( comArr[i].rowid == rowid1 ) {
-						index = i;
-						editrowid = rowid1;
-						break;
-					}
-				}
-				if( index === -1 ) {
-					alert( "Something gone wrong" );
-					return;
-				}
-				vars.forEach(function(entry) {
-					$("#"+entry).val(comArr1[index][entry]);
-				});	
-				ids.forEach(function(entry) {
-					$("#"+entry+" option").each(function() {   this.selected =(this.value == comArr1[index][entry])});
-					$("#"+entry).find('option:selected').attr("selected", "selected"); 
-				});	
-				$('.chosen-select').trigger("chosen:updated");	
-			};
-	
-			function updateRow(){	
-				tempdata = [];
-				var index = -1;		
-				var comArr = eval( entities_text );
-				for( var i = 0; i < comArr.length; i++ ) {
-					alert("updateRow :"+comArr[i].rowid+" - "+editrowid);
-					if( comArr[i].rowid == editrowid ) {
-						index = i;
-						ids.forEach(function(entry) {
-							text = $("#"+entry+" option:selected").text();
-							if(entry != "item"){
-								if(text != ""){
-									entities_text[index][entry] = text;
-								}
-								entities[index][entry] = $("#"+entry).val();
-							}
-							$("#"+entry).find('option:selected').removeAttr("selected");
-						});
-						vars.forEach(function(entry) {
-							entities_text[index][entry] = $("#"+entry).val();
-							entities[index][entry] = $("#"+entry).val();
-							$("#"+entry).val("");
-						});
-						break;
-					}
-				}
-				if( index === -1 ) {
-					alert( "Vehicle can not be updated / Something gone wrong" );
-					return;
-				}
-				alert("updated successfully");
-				$('.chosen-select').trigger("chosen:updated");
-				drawTable()	
-			};
-			
-			function removeRow(rowid1){	
-				var index = -1;		
-				var comArr = eval(entities_text);
-				for( var i = 0; i < comArr.length; i++ ) {
-					alert("removeRow :"+comArr[i].rowid+" - "+rowid1);
-					if( comArr[i].rowid == rowid1 ) {
-						index = i;
-						break;
-					}
-				}
-				if( index === -1 ) {
-					alert( "Something gone wrong" );
-					return;
-				}
-				entities.splice( index, 1 );	
-				entities_text.splice( index, 1 );	
-				drawTable()	
-			};
-	
-			function postData() {
-				if(!submit_data){
-					return;
-				}
-				var jsonobj = {};
-				for(i=0; i<entities.length; i++){
-					var item = {} ;
-					ids.forEach(function(entry) {
-						if(entry=="itemnumbers"){
-							item[entry] = entities_text[i][entry];
-						}
-						else{
-							item[entry] = entities[i][entry];
-						}
-					});
-					vars.forEach(function(entry) {
-						item[entry] = entities[i][entry];
-					});
-					jsonobj[i]=  item;
-				}
-				$('#jsondata').val(JSON.stringify(jsonobj));
-				$.ajax({
-	                url: "{{$form_info['name']}}",
-	                type: "post",
-	                data: $("#{{$form_info['name']}}").serialize(),
-	                success: function(response) {
-	                	response = jQuery.parseJSON(response);	
-	                    if(response.status=="success"){
-	                    	bootbox.alert(response.message, function(result) {});
-	                    	resetForm("{{$form_info['name']}}");
-	                    	entities= [];	
-	                    	entities_text = [];	
-	                    	drawTable();	
-	                    }
-	                    if(response.status=="fail"){
-	                    	bootbox.alert(response.message, function(result) {});
-	                    }
-	                }
-	            });
-			};
-	
-			function resetForm(formid)
-		    { 
-	            form = $('#'+formid);
-	            element = ['input','select','textarea'];
-	            for(i=0; i<element.length; i++) 
-	            {
-	                $.each( form.find(element[i]), function(){  
-	                    switch($(this).attr('class')) {
-	                      case 'form-control chosen-select':
-	                      	$(this).find('option:first-child').attr("selected", "selected"); 
-	                        break;
-	                    }
-	                    switch($(this).attr('type')) {
-	                    case 'text':
-	                    case 'select-one':
-	                    case 'textarea':
-	                    case 'hidden':
-	                    case 'file':
-	                    	$(this).val('');
-	                      break;
-	                    case 'checkbox':
-	                    case 'radio':
-	                    	$(this).attr('checked',false);
-	                      break;
-	                   
-	                  }
-	                });
-	            }
-	            $('.chosen-select').trigger("chosen:updated");	
-		    }
-	
 		</script>
 	@stop

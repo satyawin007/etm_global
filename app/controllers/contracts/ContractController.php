@@ -505,10 +505,20 @@ class ContractController extends \Controller {
 				$vehicles_arr[$vehicle['id']] = $vehicle['veh_reg'];
 			}
 		}
+		
+		$ex_drivers = \ContractVehicle::where("status","=","ACTIVE")->get();
+		$ex_drivers_arr = array();
+		foreach ($ex_drivers as $ex_driver){
+			$ex_drivers_arr[] = $ex_driver['driver1Id'];
+			$ex_drivers_arr[] = $ex_driver['driver2Id'];
+		}
 		$drivers =  \Employee::where("roleId","=",19)->get();
 		$drivers_arr = array();
 		foreach ($drivers as $driver){
-			$drivers_arr[$driver['id']] = $driver['fullName']." (".$driver->empCode.")";
+			if(!in_array($driver['id'],$ex_drivers_arr)){
+				$drivers_arr[$driver['id']] = $driver['fullName']." (".$driver->empCode.")";
+			}
+			
 		}
 		$helpers =  \Employee::where("roleId","=",20)->get();
 		$helpers_arr = array();

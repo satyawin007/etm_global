@@ -338,7 +338,7 @@ class ServiceLogController extends \Controller {
 			$con_vehs_text = array();
 			$con_vehs_text['vehicle'] = $vehicles_arr[$servlog->contractVehicleId];
 			$con_vehs_text['servicedate'] = date("d-m-Y",strtotime($servlog->serviceDate));
-			$con_vehs_text['reading'] = $servlog->startReading." - ".$servlog->endReading;
+			$con_vehs_text['reading'] = $servlog->startReading." - ".$servlog->endReading." = ".($servlog->endReading-$servlog->startReading);
 			$drivers = "";
 			if($servlog->driver1Id != 0){
 				$drivers = $drivers.$drivers_arr[$servlog->driver1Id].", ";

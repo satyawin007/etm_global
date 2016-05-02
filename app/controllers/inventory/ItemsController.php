@@ -14,7 +14,11 @@ class ItemsController extends \Controller {
 		if (\Request::isMethod('post'))
 		{
 			$values = Input::all();
-			$field_names = array("name"=>"name","number"=>"number","shortname"=>"shortName","description"=>"description","units"=>"unitsOfMeasure","tags"=>"tags","model"=>"itemModel","itemtype"=>"itemTypeId","manufacturer"=>"manufactures","itemactions"=>"itemActions","stockable"=>"stockable","expirable"=>"expirable","needalert"=>"needAlert");
+			$field_names = array("name"=>"name","number"=>"number","shortname"=>"shortName",
+						"description"=>"description","units"=>"unitsOfMeasure","tags"=>"tags",
+						"model"=>"itemModel","itemtype"=>"itemTypeId","manufacturer"=>"manufactures",
+						"itemactions"=>"itemActions","stockable"=>"stockable","expirable"=>"expirable",
+						"needalert"=>"needAlert", "itemnumber"=>"itemNumber");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if((isset($values[$key]) && $key == "manufacturer") || (isset($values[$key]) && $key == "itemactions")){
@@ -53,7 +57,10 @@ class ItemsController extends \Controller {
 		if (\Request::isMethod('post'))
 		{
 			$values = Input::all();
-			$field_names = array("name"=>"name","number"=>"number","shortname"=>"shortName","description"=>"description","units"=>"unitsOfMeasure","tags"=>"tags","model"=>"itemModel","itemtype"=>"itemTypeId","manufacturer"=>"manufactures","itemactions"=>"itemActions","stockable"=>"stockable","expirable"=>"expirable","needalert"=>"needAlert");
+			$field_names = array("name"=>"name","number"=>"number","shortname"=>"shortName","description"=>"description",
+								"units"=>"unitsOfMeasure","tags"=>"tags","model"=>"itemModel",
+								"itemtype"=>"itemTypeId","manufacturer"=>"manufactures","itemactions"=>"itemActions",
+								"stockable"=>"stockable","expirable"=>"expirable","needalert"=>"needAlert", "itemnumber"=>"itemNumber");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if((isset($values[$key]) && $key == "manufacturer") || (isset($values[$key]) && $key == "itemactions")){
@@ -129,7 +136,7 @@ class ItemsController extends \Controller {
 			$form_fields = array();		
 			$form_field = array("name"=>"name", "value"=>$entity->name, "content"=>"item name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"number", "value"=>$entity->number,  "content"=>"item number", "readonly"=>"","required"=>"required","type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"number", "value"=>$entity->number,  "content"=>"item number", "readonly"=>"","required"=>"","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"shortname", "value"=>$entity->shortName,  "content"=>"short name", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -152,6 +159,8 @@ class ItemsController extends \Controller {
 			$form_field = array("name"=>"stockable", "value"=>$entity->stockable,  "content"=>"stockable", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"expirable", "value"=>$entity->expirable,  "content"=>"expirable", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"itemnumber", "content"=>"item number", "value"=>$entity->itemNumber, "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"id", "value"=>$entity->id,  "content"=>"", "readonly"=>"",  "required"=>"", "type"=>"hidden", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -229,7 +238,7 @@ class ItemsController extends \Controller {
 		$form_fields = array();		
 		$form_field = array("name"=>"name", "content"=>"item name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"number", "content"=>"item number", "readonly"=>"","required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"number", "content"=>"item number", "readonly"=>"","required"=>"","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"shortname", "content"=>"short name", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -252,6 +261,8 @@ class ItemsController extends \Controller {
 		$form_field = array("name"=>"stockable", "content"=>"stockable", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"expirable", "content"=>"expirable", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"itemnumber", "content"=>"item number", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
 		$form_fields[] = $form_field;
 				
 		$form_info["form_fields"] = $form_fields;

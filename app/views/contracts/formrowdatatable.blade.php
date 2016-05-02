@@ -193,9 +193,22 @@
 				$scope.ids = ['vehicle','driver1','driver2','helper'];
 				$scope.vehicles_text = [];
 				$scope.addRow = function(){
-					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" || $scope.driver1 === "" || $scope.vehicle === "") {
+					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" || $scope.driver1 === "" || $scope.vehicle === "" || $scope.driver1 == $scope.driver2) {
+						alert("Duplicate or Wrong Value");
 						return;
-					}	
+					}
+					index =  -1;	
+					var comArr = eval( $scope.vehicles );
+					for( var i = 0; i < comArr.length; i++ ) {
+						if( comArr[i].vehicle === $scope.vehicle ||  comArr[i].driver1 === $scope.driver1 || comArr[i].driver2 === $scope.driver2 || comArr[i].helper === $scope.helper) {
+							index = i;
+							break;
+						}
+					}
+					if( index  != -1 ) {
+						alert( "duplicate value" );
+						return;
+					}
 					$scope.vehicles.unshift({ 'vehicle':$scope.vehicle, 'driver1': $scope.driver1, 'driver2':$scope.driver2 , 'helper':$scope.helper });
 					$scope.vehicle='';
 					$scope.driver1='';
