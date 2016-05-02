@@ -15,11 +15,21 @@ class FuelStationController extends \Controller {
 		{
 			$values = Input::all();
 			         
-			$field_names = array("fuelstationname"=>"name","balanceamount"=>"balanceAmount", "bankaccount"=>"bankAccount", "paymenttype"=>"paymentType","paymentexpectedday"=>"paymentExpectedDay","cityname"=>"cityId","statename"=>"stateId");
+			$field_names = array("fuelstationname"=>"name","balanceamount"=>"balanceAmount", "bankaccount"=>"bankAccount",
+									"paymenttype"=>"paymentType","paymentexpectedday"=>"paymentExpectedDay","cityname"=>"cityId",
+									"statename"=>"stateId","securitydepositamount"=>"securityDepositAmount","securitypaymenttype"=>"securityPaymentType",
+									"securitypaymentdate"=>"securityPaymentDate","bankname"=>"bankName","accountnumber"=>"accountNumber",
+									"chequenumber"=>"chequeNumber","issuedate"=>"issueDate","transactiondate"=>"transactionDate"
+								);
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
-					$fields[$val] = $values[$key];
+					if ($key == "transactiondate" || $key=="securitypaymentdate" || $key=="issuedate"){
+						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+					}
+					else{
+						$fields[$val] = $values[$key];
+					}
 				}
 			}
 			$db_functions_ctrl = new DBFunctionsController();
@@ -98,11 +108,21 @@ class FuelStationController extends \Controller {
 		$values = Input::all();
 		if (\Request::isMethod('post'))
 		{
-			$field_names = array("fuelstationname"=>"name","balanceamount"=>"balanceAmount","paymenttype"=>"paymentType","paymentexpectedday"=>"paymentExpectedDay","cityname"=>"cityId","statename"=>"stateId","status"=>"status");
+			$field_names = array("fuelstationname"=>"name","balanceamount"=>"balanceAmount", "bankaccount"=>"bankAccount",
+									"paymenttype"=>"paymentType","paymentexpectedday"=>"paymentExpectedDay","cityname"=>"cityId",
+									"statename"=>"stateId","securitydepositamount"=>"securityDepositAmount","securitypaymenttype"=>"securityPaymentType",
+									"securitypaymentdate"=>"securityPaymentDate","bankname"=>"bankName","accountnumber"=>"accountNumber",
+									"chequenumber"=>"chequeNumber","issuedate"=>"issueDate","transactiondate"=>"transactionDate"
+								);
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
-					$fields[$val] = $values[$key];
+					if ($key == "transactiondate" || $key=="securitypaymentdate" || $key=="issuedate"){
+						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+					}
+					else{
+						$fields[$val] = $values[$key];
+					}
 				}
 			}
 			$db_functions_ctrl = new DBFunctionsController();
@@ -168,8 +188,45 @@ class FuelStationController extends \Controller {
 			$form_fields[] = $form_field;					
 			$form_field = array("name"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"bank account", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$banks_arr, "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"paymenttype", "value"=>$entity->paymentType,"id"=>"paymenttype",  "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+			$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
 			$form_fields[] = $form_field;
+			if($entity->paymentType === "cheque_credit"){
+				//die();
+				$bankacts =  \BankDetails::All();
+				$bankacts_arr = array();
+				foreach ($bankacts as $bankact){
+					$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+				}
+				$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control",  "options"=>$bankacts_arr);
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"chequenumber", "id"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"cheque number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+				$form_fields[] = $form_field;
+			}
+			if($entity->paymentType === "cheque_debit"){
+				$bankacts =  \BankDetails::All();
+				$bankacts_arr = array();
+				foreach ($bankacts as $bankact){
+					$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+				}
+				$form_field = array("name"=>"bankaccount",  "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control",  "options"=>$bankacts_arr);
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"chequenumber", "id"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"cheque number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+				$form_fields[] = $form_field;
+			}
+			if($entity->paymentType === "dd"){
+				$form_field = array("name"=>"bankname", "id"=>"bankname","value"=>$entity->bankName, "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"ddnumber", "id"=>"ddnumber","value"=>$entity->ddNumber, "content"=>"dd number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"issuedate", "id"=>"issuedate", "value"=>date("d-m-Y",strtotime($entity->issueDate)),"content"=>"issue date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+				$form_fields[] = $form_field;
+			}
+			if($entity->paymentType === "ecs" || $entity->paymentType === "neft" || $entity->paymentType === "rtgs"){
+				$form_field = array("name"=>"bankname", "id"=>"bankname","value"=>$entity->bankName, "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"accountnumber", "id"=>"accountnumber","value"=>$entity->accountNumber, "content"=>"account number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+				$form_fields[] = $form_field;
+			}
 			$form_field = array("name"=>"paymentexpectedday", "value"=>$entity->paymentExpectedDay, "content"=>"payment expected day", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"statename", "value"=>$entity->stateId, "content"=>"state name", "readonly"=>"",  "required"=>"required", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"),  "type"=>"select", "class"=>"form-control", "options"=>$state_arr);
@@ -272,20 +329,78 @@ class FuelStationController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"balanceamount", "content"=>"balance Amount", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");
 		$form_fields[] = $form_field;
-		
 		$form_field = array("name"=>"bankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "options"=>$banks_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymentexpectedday", "content"=>"payment expected day", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>""), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"statename", "content"=>"state name", "readonly"=>"",  "required"=>"required", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"),  "type"=>"select", "class"=>"form-control chosen-select", "options"=>$state_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"cityname", "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>array(), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
+		$form_field = array("name"=>"securitydepositamount", "content"=>"security deposit amt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control number");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"securitypaymenttype", "id"=>"securitypaymenttype",  "content"=>"security payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"securitypaymentdate", "content"=>"security payment date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
+		$form_fields[] = $form_field;
+		
+		
+		
 		
 		$form_info["form_fields"] = $form_fields;
-		$values["form_info"] = $form_info;
+		$values['form_info'] = $form_info;
+		
+		
+		$form_info = array();
+		$form_info["name"] = "edit";
+		$form_info["action"] = "editfuelstation";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "states";
+		$form_info["bredcum"] = "edit fuel station";
+		
+		$banks =  \BankDetails::where("bankdetails.status", "=", "ACTIVE")->join("lookuptypevalues","lookuptypevalues.id","=","bankdetails.bankName")->select("bankdetails.id as id", "bankdetails.accountNo as accountNo", "lookuptypevalues.name as name")->get();
+		$banks_arr = array();
+		foreach ($banks as $bank){
+			$banks_arr [$bank['id']] = $bank->name." - ".$bank->accountNo;
+		}
+		
+		$states =  \State::all();
+		$state_arr = array();
+		foreach ($states as $state){
+			$state_arr[$state['id']] = $state->name;
+		}
+			
+		$cities =  \City::all();
+		$cities_arr = array();
+		foreach ($cities as $city){
+			$cities_arr[$city['id']] = $city->name;
+		}
+		
+		$modals = array();
+		$form_fields = array();
+		$form_field = array("name"=>"id1", "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"fuelstationname1", "value"=>"", "content"=>"fuel station name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"balanceamount1", "value"=>"", "content"=>"balance Amount", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");
+		$form_fields[] = $form_field;					
+		$form_field = array("name"=>"bankaccount1", "value"=>"", "content"=>"bank account", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$banks_arr, "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"paymenttype1", "value"=>"",  "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"paymentexpectedday1", "value"=>"", "content"=>"payment expected day", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"statename1", "value"=>"", "content"=>"state name", "readonly"=>"",  "required"=>"required", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"),  "type"=>"select", "class"=>"form-control", "options"=>$state_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"cityname1", "value"=>"", "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$cities_arr, "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"status1", "value"=>"", "content"=>"status", "readonly"=>"",  "required"=>"","type"=>"select", "options"=>array("ACTIVE"=>"ACTIVE","INACTIVE"=>"INACTIVE"), "class"=>"form-control");
+		$form_fields[] = $form_field;
+		
+		$form_info["form_fields"] = $form_fields;
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
 		
 		$values["provider"] = "fuelstations";
 			

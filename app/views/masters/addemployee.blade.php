@@ -359,7 +359,7 @@
 									<div class="form-group">
 										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Driving Licence</label>
 										<div class="col-xs-8">
-											<input type="text" name="drivinglicence" id="drivinglicence" class="form-control">
+											<input type="text" name="drivinglicence" id="drivinglicence" class="form-control" onchange="ValidateDrivingLicence(this.value)" />
 										</div>
 									</div>
 									<div class="form-group">
@@ -410,6 +410,30 @@
 										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Branch Name </label>
 										<div class="col-xs-8">
 											<input type="text" name="branchname" id="branchname" class="form-control">
+										</div>
+									</div>
+								</div>
+							</div>							
+						</div>
+					</div>
+					
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h4 class="panel-title">
+								<a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
+									<i class="ace-icon fa fa-angle-right bigger-110" data-icon-hide="ace-icon fa fa-angle-down" data-icon-show="ace-icon fa fa-angle-right"></i>
+									&nbsp;SALARY CARD
+								</a>
+							</h4>
+						</div>
+
+						<div class="panel-collapse collapse" id="collapseFour">
+							<div class="panel-body">
+								<div class="col-xs-6">								
+									<div class="form-group">
+										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Salary Card No </label>
+										<div class="col-xs-8">
+											<input type="text" name="salarycardno" id="salarycardno" class="form-control input-mask-card" maxlength="16" minlength="16">
 										</div>
 									</div>
 								</div>
@@ -635,6 +659,21 @@
 			   });
 			}
 
+			function ValidateDrivingLicence(val){
+				$.ajax({
+			      url: "validatedrivinglicense?license="+val,
+			      success: function(data) {
+			    	  if(data == "YES"){
+			    		  bootbox.alert('This driving licence is already exists', function(result) {});
+			    	  }
+			    	  else if(data != "NO"){
+			    		  bootbox.alert(data, function(result) {});
+			    	  }
+			      },
+			      type: 'GET'
+			   });
+			}
+
 			function changeState(val){
 				$.ajax({
 			      url: "getcitiesbystateid?id="+val,
@@ -670,6 +709,8 @@
 			      type: 'GET'
 			   });
 			}
+
+			$('.input-mask-card').mask('9999-9999-9999-9999');
 
 			$("#family_add").on("click",function(){
 				ele = $('#family_fields:first-child').clone();

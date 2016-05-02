@@ -43,22 +43,10 @@
 			<div class="col-xs-offset-1 col-xs-10">
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
-				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) or 
-						($form_info['action']=="addcity" && in_array(208, $jobs)) or
-						($form_info['action']=="addemployeebatta" && in_array(217, $jobs)) or
-						($form_info['action']=="addservicedetails" && in_array(219, $jobs)) or
-						($form_info['action']=="addlookupvalue" && in_array(223, $jobs)) or
-						($form_info['action']=="addbankdetails" && in_array(225, $jobs)) or 
-						($form_info['action']=="addfinancecompany" && in_array(227, $jobs)) or 
-						($form_info['action']=="addcreditsupplier" && in_array(229, $jobs)) or
-						($form_info['action']=="addfuelstation" && in_array(233, $jobs)) or
-						($form_info['action']=="addloan" && in_array(235, $jobs)) or
-						($form_info['action']=="adddailyfinance" && in_array(237, $jobs)) or
-						($form_info['action']=="addserviceprovider" && in_array(239, $jobs)) or
-						($form_info['action']=="adddistrict" && in_array(239, $jobs)) or
+				<?php if(($form_info['action']=="addbillpayment" && in_array(206, $jobs)) or 
 						($form_info['action']=="addrole" && in_array(239, $jobs))
 					  ){ ?>
-					@include("masters.layouts.addlookupform",$form_info)
+					@include("billpayments.addlookupform",$form_info)
 				<?php } ?>
 			</div>
 		</div>
@@ -132,7 +120,7 @@
 				$modals = $values['modals'];
 				foreach ($modals as $modal){
 		?>
-				@include('masters.layouts.modalform', $modal);
+				@include('masters.layouts.edit2colmodalform', $modal);
 		<?php }} ?>
 		
 	@stop
@@ -157,7 +145,76 @@
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
+			$("#div_parentbill").hide();
 
+
+			$('#existing_bills').on('change', function() { 
+				//alert("billparticulars");
+			   if (this.checked) {
+				    $("#div_parentbill").show();	
+				    $("#billno").attr("readonly", true); 
+				    $("#totalamount").attr("readonly", true); 
+				    $("#billdate").attr("readonly", true); 
+				    $("#billparticulars").attr("readonly", true); 
+			   }
+			   else{
+				    $("#div_parentbill").hide();	
+				    $("#billno").attr("readonly", false); 
+				    $("#billno").val(""); 
+				    $("#totalamount").attr("readonly", false); 
+				    $("#totalamount").val("");
+				    $("#billdate").attr("readonly", false); 
+				    $("#billdate").val("");
+				    $("#billparticulars").attr("readonly", false); 
+				    $("#billparticulars").html("");
+				    $("#clientname option").each(function() { this.selected = (this.value == 0); });
+			    	$('.chosen-select').trigger("chosen:updated");
+			   }
+			});
+
+			$('#bulk_payment').on('change', function() { 
+				//alert("billparticulars");
+			   if (this.checked) {
+				    $("#div_billno").hide();	
+				    $("#div_billdate").hide();	
+				    $("#totalamount").attr("readonly", true);
+			   }
+			   else{
+				    $("#div_billno").show();	
+				    $("#div_billdate").show();	
+			   }
+			});
+
+			function getbillno(val){
+				$.ajax({
+			      url: "getbillno?id="+val,
+			      success: function(data) {
+			    	  json_data = JSON.parse(data);
+			    	  $("#billno").val(json_data.billNo);
+			    	  $("#totalamount").val(json_data.totalAmount);
+			    	  $("#billdate").val(json_data.billDate);
+			    	  $("#clientname option").each(function() { this.selected = (this.value == json_data.clientId); });
+			    	  $("#billparticulars").html(json_data.billParticulars);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
+			}
+
+			function gettotalamount(val){
+
+				if($('#bulk_payment').is(':checked')){
+					$.ajax({
+				      url: "gettotalamount?id="+val,
+				      success: function(data) {
+				    	  json_data = JSON.parse(data);
+				    	  $("#totalamount").val(json_data.totalAmount);
+				      },
+				      type: 'GET'
+				   });
+				}
+			}
+			
 			function paginate(page){
 				var myin = document.createElement("input"); 
 				myin.type='hidden'; 
@@ -252,6 +309,48 @@
 				$("#id1").val(id);		
 			}
 
+			function modalEditBillPayments(billNo,billDate,paidDate, totalAmount, amountPaid,name,billParticulars, remarks ,status, id,clientId,parentBillId,transctionType){
+				$("#paiddate1").val(paidDate);				
+				$("#totalamount1").val(totalAmount);
+				$("#amountpaid1").val(amountPaid);
+				$("#clientname1 option").each(function() { this.selected = (this.text == name); });
+				$("#billparticulars1").val(billParticulars);
+				$("#remarks1").val(remarks);
+				$("#status1 option").each(function() { this.selected = (this.text == status); });
+				$("#id1").val(id);
+				$("#billdate1").val("");
+				$("#billno1").val("");
+				if(transctionType == "Existing Bills"){
+					if(parentBillId != "" && parentBillId != 0){
+						$("#div_parentbill1").show();
+						$("#div_billdate1").show();
+						$("#div_billno1").show();
+						$("#parentbill1 option").each(function() { this.selected = (this.value == parentBillId); });
+					}	
+					else{
+						$("#div_parentbill1").hide();
+					}	
+					$("#billdate1").val(billDate);
+					$("#billno1").val(billNo);	
+				}
+				else if(transctionType == "Bulk Payment"){
+					$("#div_parentbill1").hide();
+					$("#parentbill1 option").each(function() { this.selected = (this.value == 0); });
+					$("#div_billdate1").hide();
+					$("#div_billno1").hide();
+				}
+				else{
+					$("#div_billdate1").show();
+					$("#div_billno1").show();
+					$("#billdate1").val(billDate);
+					$("#billno1").val(billNo);	
+					$("#div_parentbill1").hide();
+					$("#parentbill1 option").each(function() { this.selected = (this.value == 0); });
+				}
+				
+				$('.chosen-select').trigger("chosen:updated");			
+			}
+
 			function modalEditFuelStation(name,paymentType,PaymentExpectedDay,bankAccount,accountNo,cityId,stateId,status,balanceAmount,id){
 				$("#fuelstationname1").val(name);				
 				$("#balanceamount1").val(balanceAmount);
@@ -310,16 +409,18 @@
 
 			$("#submit").on("click",function(){
 				
-				var statename = $("#statename").val();
-				if(statename != undefined && statename ==""){
-					alert("Please select statename");
+				var clientname = $("#clientname").val();
+				if(clientname != undefined && clientname ==""){
+					alert("Please select clientname");
 					return false;
 				}
 
-				var sourcecity = $("#sourcecity").val();
-				if(sourcecity != undefined && sourcecity ==""){
-					alert("Please select sourcecity");
-					return false;
+				if($('#existing_bills').is(':checked')){
+					var parentbill = $("#parentbill").val();
+					if(parentbill != undefined && parentbill ==""){
+						alert("Please select parentbill");
+						return false;
+					}
 				}
 
 				var destinationcity = $("#destinationcity").val();
@@ -518,7 +619,7 @@
 					"bProcessing": true,
 			        "bServerSide": true,
 					"ajax":{
-		                url :"getdatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
+		                url :"getbillpaymentsdatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
 		                type: "post",  // method  , by default get
 		                error: function(){  // error handling
 		                    $(".employee-grid-error").html("");

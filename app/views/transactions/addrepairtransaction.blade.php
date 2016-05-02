@@ -128,7 +128,7 @@ use settings\AppSettingsController;
 										<div id="formbody">	
 										</div>
 					
-					<div id="addfields"></div>
+<!-- 					<div id="addfields"></div> -->
 					<div class="clearfix form-actions">
 						<div class="col-md-offset-4 col-md-8" style="margin-top: 2%; margin-bottom: 1%">
 							<button id="submit" class="btn primary" type="submit">
@@ -275,7 +275,7 @@ use settings\AppSettingsController;
 							</div>							
 							<?php } ?>
 					</div>
-					<div id="addfields"></div>
+					 <div id="addfields"></div> 
 				</div>
 			</div>
 		</div>
@@ -291,6 +291,7 @@ use settings\AppSettingsController;
 					<thead>
 						<tr>
 							<th>Item</th>
+							<th>Vehicles</th>
 							<th>Quantity</th>
 							<th>Amount</th>
 							<th>Remarks</th>
@@ -363,7 +364,7 @@ use settings\AppSettingsController;
 								<div class="form-group">
 									<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<select class="{{$form_field['class']}}" name="{{$form_field['name']}}" id="{{$form_field['name']}}"  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
+										<select class="{{$form_field['class']}}" name="{{$form_field['name']}}" id="{{$form_field['name']}}"  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>  <?php if(isset($form_field['multiple'])) {  echo " multiple "; }?>>
 											<option value="">-- {{$form_field['name']}} --</option>
 											<?php 
 												foreach($form_field["options"] as $key => $value){
@@ -469,15 +470,25 @@ use settings\AppSettingsController;
 			function getFormValues(){
 				tr = [];
 				country = $("#item option:selected").text();
+				if($("#item").val() == ""){
+					alert("Please Select Item");
+					return;
+				}
 				tr[0] = country;
+				text_data =  "";
+				$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.text+",";} });
+				tr[1] = text_data;
 				lname = $("#quantity").val();
-				tr[1] = lname;
+				tr[2] = lname;
 				unitprice = $("#amount").val();
-				tr[2] = unitprice;
+				tr[3] = unitprice;
 				status = $("#remarks").val();
-				tr[3] = status;
-				tr[4] = '<button class="btn btn-sm btn-primary" onclick="editItem('+row+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+row+')">Remove</button>';
-				tr[5] = $("#item").val();
+				tr[4] = status;
+				tr[5] = '<button class="btn btn-sm btn-primary" onclick="editItem('+row+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+row+')">Remove</button>';
+				tr[6] = $("#item").val();
+				text_data =  "";
+				$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.value+",";} });
+				tr[7] = text_data;
 				if(country != ""  && lname!="" && unitprice!=""){
 					if(isEdit && editRowId>=0){
 						for(i=0; i<row; i++){
@@ -486,8 +497,13 @@ use settings\AppSettingsController;
 								tabledata[i][1] = tr[1];
 								tabledata[i][2] = tr[2];
 								tabledata[i][3] = tr[3];
-								tabledata[i][4] = '<button class="btn btn-sm btn-primary" onclick="editItem('+editRowId+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+editRowId+')">Remove</button>';;
-								tabledata[i][5] = $("#item").val();
+								tabledata[i][4] = tr[4];
+								tabledata[i][5] = '<button class="btn btn-sm btn-primary" onclick="editItem('+editRowId+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+editRowId+')">Remove</button>';;
+								tabledata[i][6] = $("#item").val();
+								text_data =  "";
+								$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.value+",";} });
+								tabledata[i][7] = text_data;
+								//alert("test"+tabledata[i][7]);
 							}
 						}
 						isEdit = false;
@@ -500,6 +516,7 @@ use settings\AppSettingsController;
 						drawTable();
 					}
 					$("#item option").each(function() { this.selected = (this.value == ""); });
+					$("#vehicles option").each(function() { this.selected = false; });
 					$("#quantity").val("");
 					$("#amount").val("");
 					$("#remarks").val("");
@@ -570,12 +587,11 @@ use settings\AppSettingsController;
 				$.ajax({
 			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
 			      success: function(data) {
-			    	  $("#vehicle").html(data);
+			    	  $("#vehicles").html(data);
 			    	  $('.chosen-select').trigger("chosen:updated");
 			      },
 			      type: 'GET'
 			   });
-			   myTable.ajax.url("getservicelogsdatatabledata?name=servicelogs&clientid="+clientId+"&depotid="+depotId).load();
 			}
 
 			function changeDepot(val){
@@ -594,6 +610,7 @@ use settings\AppSettingsController;
 			
 
 			function showPaymentFields(val){
+				//alert(val);
 				$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
 				$.ajax({
 			      url: "getpaymentfields?paymenttype="+val,
@@ -646,10 +663,21 @@ use settings\AppSettingsController;
 				editRowId = rowid;
 				for(i=0; i<row; i++){
 					if(editRowId == i){
-						$("#quantity").val(tabledata[i][1]);				
-						$("#amount").val(tabledata[i][2]);
-						$("#remarks").val(tabledata[i][3]);
+						$("#quantity").val(tabledata[i][2]);				
+						$("#amount").val(tabledata[i][3]);
+						$("#remarks").val(tabledata[i][4]);
 						$("#item option").each(function() { this.selected = (this.text == tabledata[i][0]); });
+						$("#vehicles option").each(function() { 
+								//alert("test"+tabledata[i][1]);
+								var text_arr = tabledata[i][1];
+								text_arr = text_arr.split(",");
+								for(j=0;j<text_arr.length;j++){
+									if(this.text == text_arr[j]){
+										this.selected = true; 
+									}
+								}
+							}
+						);
 						$('.chosen-select').trigger('chosen:updated');
 						$("#modal-form").modal("show");
 						break;
@@ -665,14 +693,18 @@ use settings\AppSettingsController;
 					if(tabledata[i][0] != ""){
 						jsondata = jsondata+"{";
 						tdata = tdata+"<tr>";
-						for(j=0; j<5; j++){	
+						for(j=0; j<6; j++){	
 							tdata = tdata+"<td>"+tabledata[i][j]+"</td>";
-							if(j<4){
+						}
+						for(j=0; j<8; j++){	
+							if(j==5){
+							}
+							else if(j<7){
 								jsondata = jsondata+"\"i"+j+"\":\""+tabledata[i][j]+"\",";
 							}
-							if(j==4){
-								totalamt = (totalamt*1)+(tabledata[i][2]*1);
-								jsondata = jsondata+"\"i"+5+"\":\""+tabledata[i][5]+"\"";
+							else if(j==7){
+								totalamt = (totalamt*1)+(tabledata[i][3]*1);
+								jsondata = jsondata+"\"i"+7+"\":\""+tabledata[i][7]+"\"";
 							}
 						}
 						tdata = tdata+"</tr>";

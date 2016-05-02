@@ -209,6 +209,8 @@ Route::any('/addemployeebatta', "masters\EmployeeBattaController@addEmployeeBatt
 
 Route::any('/editemployeebatta', "masters\EmployeeBattaController@editEmployeeBatta");
 
+Route::any('/validatedrivinglicense', "masters\EmployeeController@ValidateDrivingLicence");
+
 Route::get('/servicedetails', "masters\ServiceDetailsController@manageServiceDetails");
 
 Route::any('/addservicedetails', "masters\ServiceDetailsController@addServiceDetails");
@@ -579,3 +581,15 @@ Route::get('/clientholidays', "contracts\ClientHolidaysController@manageClientHo
 Route::any('/addclientholidays', "contracts\ClientHolidaysController@addclientholidays");
 
 Route::any('/editclientholidays', "contracts\ClientHolidaysController@editclientholidays");
+
+Route::any('/billpayments',"billpayments\BillPaymentsController@manageBillPayments");
+
+Route::any('/addbillpayment',"billpayments\BillPaymentsController@addBillPayment");
+
+Route::any('/editbillpayment',"billpayments\BillPaymentsController@editBillPayments");
+
+Route::any('/getbillpaymentsdatatabledata', "billpayments\DataTableController@getDataTableData");
+
+Route::get('/getbillno',"billpayments\BillPaymentsController@getBillNo");
+
+Route::get('/gettotalamount',"billpayments\BillPaymentsController@getTotalAmount");

@@ -82,7 +82,7 @@ class EmployeeController extends \Controller {
 				$links[] = $link;
 			}
 			
-			if(isset($values['action']) && $values['action']=="terminated") {
+			/* if(isset($values['action']) && $values['action']=="terminated") {
 				$url = "employees?action=terminated";
 				$url = $url."&page=".$values['page'];
 				$link = array("url"=>$url, "name"=>"Load Terminated Employees");
@@ -92,7 +92,7 @@ class EmployeeController extends \Controller {
 			else{
 				$link = array("url"=>"employees?action=terminated", "name"=>"Load Terminated Employees");
 				$links[] = $link;
-			}
+			} */
 			if(isset($values['action']) && $values['action']=="all") {
 				$url = "employees?action=all";
 				$url = $url."&page=".$values['page'];
@@ -231,7 +231,7 @@ class EmployeeController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"termination_date", "content"=>"termination date", "readonly"=>"", "required"=>"required", 	"type"=>"text", "class"=>"form-control date-picker");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"remarks", "readonly"=>"", "content"=>"remarks", "required"=>"", "type"=>"textarea", "class"=>"form-control");
+			$form_field = array("name"=>"remarks", "readonly"=>"", "content"=>"remarks", "required"=>"required", "type"=>"textarea", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_info["form_fields"] = $form_fields;
 			$modals[] = $form_info;
@@ -250,7 +250,7 @@ class EmployeeController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"id1", "content"=>"", "readonly"=>"readonly",  "required"=>"", "type"=>"hidden", "value"=>"", "class"=>"form-control");
 			$form_fields[] = $form_field;				
-			$form_field = array("name"=>"remarks", "readonly"=>"", "content"=>"remarks", "required"=>"", "type"=>"textarea", "class"=>"form-control");
+			$form_field = array("name"=>"remarks", "readonly"=>"", "content"=>"remarks", "required"=>"required", "type"=>"textarea", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_info["form_fields"] = $form_fields;
 			$modals[] = $form_info;
@@ -333,13 +333,18 @@ class EmployeeController extends \Controller {
 				$fields = array( "status"=>"BLOCKED");
 			}
 		}
-		$values = array();
 		if($db_functions_ctrl->update($table, $fields, $data)){
 			if($isBlocked){
+				$table = "EmployeeActivity";
+				$fields = array("empid"=>$values["id1"],"reason"=>$values["remarks"],"date"=>date("Y-m-d"),"action"=>"UNBLOCKED");
+				$db_functions_ctrl->insert($table, $fields);
 				\Session::put("message","Employee Unblocked Successfully");
 				return Redirect::to("employees");
 			}
 			else{
+				$table = "EmployeeActivity";
+				$fields = array("empid"=>$values["id1"],"reason"=>$values["remarks"],"date"=>date("Y-m-d"),"action"=>"BLOCKED");
+				$db_functions_ctrl->insert($table, $fields);
 				\Session::put("message","Employee Blocked Successfully");
 				return Redirect::to("employees");
 			}
@@ -381,7 +386,8 @@ class EmployeeController extends \Controller {
 				"idproofnumber"=>"idCardNumber","joiningdate"=>"joiningDate", "rtaoffice"=>"rtaBranch",
 				"aadhdaarnumber"=>"aadharNumber","rationcardnumber"=>"rationCardNumber", "drivinglicence"=>"drivingLicence",
 				"drivingliceneexpiredate"=>"drvLicenceExpDate","accountnumber"=>"accountNumber", "bankname"=>"bankName",
-				"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchId", "clientbranches"=>"contractIds", "presentaddress"=>"presentAddress","dateofbirth"=>"dob"
+				"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchId", 
+				"clientbranches"=>"contractIds", "presentaddress"=>"presentAddress","dateofbirth"=>"dob","salarycardno"=>"salaryCardNo"
 			);
 		$fields = array();
 		foreach ($field_names as $key=>$val){
@@ -417,8 +423,11 @@ class EmployeeController extends \Controller {
 		
 		$db_functions_ctrl = new DBFunctionsController();
 		$table = "Employee";
-		$values = array();
 		if($db_functions_ctrl->insert($table, $fields)){
+			$empid = \Employee::where("emailId","=",$values["email"])->first();
+			$table = "SalaryDetails";
+			$fields = array("empId"=>$empid->id);
+			$db_functions_ctrl->insert($table, $fields);
 			\Session::put("message","Operation completed Successfully");
 			return \Redirect::to("addemployee");
 		}
@@ -458,16 +467,22 @@ class EmployeeController extends \Controller {
 		}
 	}
 
-
-	/**
-	 * Remove the specified resource from storage.
-	 *
-	 * @param  int  $id
-	 * @return Response
-	 */
-	public function destroy($id)
+	public function ValidateDrivingLicence()
 	{
-		//
+		$values = Input::All();
+		$emps = \Employee::where("drivingLicence","=",$values["license"])->get();
+		if(count($emps)>0){
+			$emps = $emps[0];
+			$emps = \EmployeeActivity::where("empid","=",$emps->id)->where("action","=","BLOCKED")->orderby("date","des")->first();
+			if(count($emps)>0){
+				echo "Driving Licence is existed and Employee is blocked due to ".$emps->reason;
+				return;
+			}
+			echo "YES";
+		}
+		else{
+			echo "NO";
+		}
 	}
 
 
