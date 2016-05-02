@@ -59,7 +59,7 @@
 					<div>
 					<?php $form_fields = $form_info['form_fields'];?>	
 					<?php foreach ($form_fields as $form_field) {?>
-						<div class="col-xs-6">
+						<div class="col-xs-6" id="div_{{$form_field['name']}}">
 						<?php if($form_field['type'] === "text" || $form_field['type'] === "email" ||$form_field['type'] === "number" || $form_field['type'] === "password"){ ?>
 						<div class="form-group" >
 							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
@@ -135,8 +135,8 @@
 									?>
 									<div class="checkbox inline">
 										<label>
-											<input name="{{$key}}" value="YES" type="checkbox" class="ace">
-											<span class="lbl">&nbsp;{{$key}} &nbsp;&nbsp;</span>
+											<input name="{{$key}}" id="{{$key}}" value="YES" type="checkbox" class="ace">
+											<span class="lbl">&nbsp;{{$value}} &nbsp;&nbsp;</span>
 										</label>
 									</div>
 									<?php } ?>

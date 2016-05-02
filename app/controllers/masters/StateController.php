@@ -19,7 +19,7 @@ class StateController extends \Controller {
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
 					$fields[$val] = $values[$key];
-				}				
+				}
 			}
 			$db_functions_ctrl = new DBFunctionsController();
 			$table = "State";

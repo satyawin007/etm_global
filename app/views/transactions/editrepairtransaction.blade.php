@@ -278,10 +278,11 @@
 					<thead>
 						<tr>
 							<th>Item</th>
+							<th>Vehicles</th>
 							<th>Quantity</th>
 							<th>Amount</th>
 							<th>Remarks</th>
-							<th>id</th>
+							<th>Entity Id</th>
 							<th>Actions</th>
 						</tr>
 					</thead>
@@ -352,7 +353,7 @@
 								<div class="form-group">
 									<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<select class="{{$form_field['class']}}" name="{{$form_field['name']}}" id="{{$form_field['name']}}"  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
+										<select class="{{$form_field['class']}}" name="{{$form_field['name']}}" id="{{$form_field['name']}}"  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) {  echo " multiple "; }?>>
 											<option value="">-- {{$form_field['name']}} --</option>
 											<?php 
 												foreach($form_field["options"] as $key => $value){
@@ -455,6 +456,8 @@
 			<?php
 				$select_args = array();
 				$select_args[] = "lookuptypevalues.name as item";
+				$select_args[] = "creditsuppliertransdetails.repairedItem as itemId";
+				$select_args[] = "creditsuppliertransdetails.vehicleIds as vehicleIds";
 				$select_args[] = "creditsuppliertransdetails.quantity as qty";
 				$select_args[] = "creditsuppliertransdetails.amount as amount";
 				$select_args[] = "creditsuppliertransdetails.comments as comments";
@@ -466,8 +469,15 @@
 				$i = -1;
 				foreach ($entities as $entity){
 					$i++;
-					$table_data = $table_data."['".$entity->item."', '".$entity->qty."', '".$entity->amount."', '".$entity->comments."', '".$entity->id."', ";
-					$table_data = $table_data.'\'<button class="btn btn-sm btn-primary" onclick="editItem('.($i).')">Edit</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-danger" onclick="removeItem('.($i).')">Remove</button>\', \''.$entity->itemId."', '".$entity->manufacturerId."'],";    
+					$vehregs = explode(",", $entity->vehicleIds);
+					$vehregs_text = "";
+					$vehregs= Vehicle::whereIn("id",$vehregs)->get();
+					foreach ($vehregs as $vehreg){
+						$vehregs_text = $vehregs_text.$vehreg->veh_reg.",";
+					}
+					
+					$table_data = $table_data."['".$entity->item."', '".$vehregs_text."', '".$entity->qty."', '".$entity->amount."', '".$entity->comments."', '".$entity->id."', ";
+					$table_data = $table_data.'\'<button class="btn btn-sm btn-primary" onclick="editItem('.($i).')">Edit</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-danger" onclick="removeItem('.($i).')">Remove</button>\', \''.$entity->itemId."', '".$entity->vehicleIds."'],";    
 				}
 				$table_data = $table_data."]; ";
 				echo $table_data;
@@ -478,19 +488,27 @@
 			function getFormValues(){
 				tr = [];
 				country = $("#item option:selected").text();
+				if($("#item").val() == ""){
+					alert("Please Select Item");
+					return;
+				}
 				tr[0] = country;
-				fname = $("#iteminfo option:selected").text();
-				tr[1] = fname;
+				text_data =  "";
+				$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.text+",";} });
+				tr[1] = text_data;
 				lname = $("#quantity").val();
 				tr[2] = lname;
-				unitprice = $("#unitprice").val();
+				unitprice = $("#amount").val();
 				tr[3] = unitprice;
-				status = $("#status").val();
+				status = $("#remarks").val();
 				tr[4] = status;
+				tr[5] =  "undefined";
 				tr[6] = '<button class="btn btn-sm btn-primary" onclick="editItem('+row+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+row+')">Remove</button>';
 				tr[7] = $("#item").val();
-				tr[8] = $("#iteminfo").val();
-				if(country != "" && fname!="" && lname!="" && unitprice!=""){
+				text_data =  "";
+				$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.value+",";} });
+				tr[8] = text_data;
+				if(country != ""  && lname!="" && unitprice!=""){
 					if(isEdit && editRowId>=0){
 						for(i=0; i<row; i++){
 							if(editRowId == i){
@@ -499,9 +517,14 @@
 								tabledata[i][2] = tr[2];
 								tabledata[i][3] = tr[3];
 								tabledata[i][4] = tr[4];
+								tabledata[i][5] = tr[5];
 								tabledata[i][6] = '<button class="btn btn-sm btn-primary" onclick="editItem('+editRowId+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+editRowId+')">Remove</button>';;
-								tabledata[i][7] = $("#item").val();
-								tabledata[i][8] = $("#iteminfo").val();
+								tabledata[i][7] = tr[7];
+								text_data =  "";
+								$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.value+",";} });
+								tabledata[i][8] = text_data;
+								
+								//alert("test"+tabledata[i][7]);
 							}
 						}
 						isEdit = false;
@@ -513,11 +536,11 @@
 						row++;
 						drawTable();
 					}
-					$("#status option").each(function() { this.selected = (this.value == ""); });
 					$("#item option").each(function() { this.selected = (this.value == ""); });
-					$("#iteminfo option").each(function() { this.selected = (this.value == ""); });
+					$("#vehicles option").each(function() { this.selected = false; });
 					$("#quantity").val("");
-					$("#unitprice").val("");
+					$("#amount").val("");
+					$("#remarks").val("");
 					$('.chosen-select').trigger('chosen:updated');
 				}
 			}
@@ -559,7 +582,6 @@
 				      },
 				      type: 'GET'
 				   });
-				
 			}
 
 			function enablePaymentType(val){
@@ -601,11 +623,20 @@
 				for(i=0; i<row; i++){
 					if(editRowId == i){
 						$("#quantity").val(tabledata[i][2]);				
-						$("#unitprice").val(tabledata[i][3]);
-						$("#status option").each(function() { this.selected = (this.value == tabledata[i][4]); });
+						$("#amount").val(tabledata[i][3]);
+						$("#remarks").val(tabledata[i][4]);
 						$("#item option").each(function() { this.selected = (this.text == tabledata[i][0]); });
-						$("#iteminfo").append('<option value='+tabledata[i][8]+'>'+tabledata[i][1]+'</option>');
-						$("#iteminfo option").each(function() { this.selected = (this.text == tabledata[i][1]); });
+						$("#vehicles option").each(function() { 
+								//alert("test"+tabledata[i][1]);
+								var text_arr = tabledata[i][1];
+								text_arr = text_arr.split(",");
+								for(j=0;j<text_arr.length;j++){
+									if(this.text == text_arr[j]){
+										this.selected = true; 
+									}
+								}
+							}
+						);
 						$('.chosen-select').trigger('chosen:updated');
 						$("#modal-form").modal("show");
 						break;
@@ -623,19 +654,21 @@
 						tdata = tdata+"<tr>";
 						for(j=0; j<7; j++){	
 							tdata = tdata+"<td>"+tabledata[i][j]+"</td>";
-							if(j<5){
+						}
+						for(j=0; j<9; j++){	
+							if(j==6){
+							}
+							else if(j<8){
 								jsondata = jsondata+"\"i"+j+"\":\""+tabledata[i][j]+"\",";
 							}
-							if(j==5){
-								jsondata = jsondata+"\"i"+j+"\":\""+tabledata[i][j]+"\",";
-								jsondata = jsondata+"\"i"+6+"\":\""+tabledata[i][7]+"\",";
-								jsondata = jsondata+"\"i"+7+"\":\""+tabledata[i][8]+"\"";
+							else if(j==8){
+								totalamt = (totalamt*1)+(tabledata[i][3]*1);
+								jsondata = jsondata+"\"i"+8+"\":\""+tabledata[i][8]+"\"";
 							}
 						}
-						totalamt = totalamt+(tabledata[i][2]*tabledata[i][3]);
 						tdata = tdata+"</tr>";
 						if((i+1)==row){
-							jsondata = jsondata+"}";
+						jsondata = jsondata+"}";
 						}
 						else{
 							jsondata = jsondata+"},";

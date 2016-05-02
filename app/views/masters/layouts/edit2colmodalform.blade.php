@@ -1,5 +1,5 @@
 <div id="{{$modal['name']}}" class="modal" tabindex="-1">
-	<div class="modal-dialog">
+	<div class="modal-dialog" style="width:80%">
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -12,25 +12,26 @@
 					<form name="{{$modal['action']}}" id="{{$modal['name']}}" class="form-horizontal" action="{{$modal['action']}}" method="post">	
 						<?php $form_fields = $modal['form_fields'];?>	
 						<?php foreach ($form_fields as $form_field) {?>
+							<div class="col-xs-6" id="div_{{$form_field['name']}}">
 							<?php if($form_field['type'] === "text" || $form_field['type'] === "email" || $form_field['type'] === "password"){ ?>
 							<div class="form-group">
-								<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-								<div class="col-xs-7">
+								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+								<div class="col-xs-8">
 									<input {{$form_field['readonly']}} type="{{$form_field['type']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['required']) && $form_field['required']=="required") echo " required='required' "; ?> name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
 								</div>			
 							</div>
 							<?php } ?>
 							<?php if($form_field['type'] === "hidden"){ ?>
 							<div class="form-group">
-								<div class="col-xs-7">
+								<div class="col-xs-8">
 									<input type="{{$form_field['type']}}" id="{{$form_field['name']}}" name="{{$form_field['name']}}" value="{{$form_field['value']}}" >
 								</div>			
 							</div>
 							<?php } ?>
 							<?php if($form_field['type'] === "textarea"){ ?>				
 							<div class="form-group">
-								<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-								<div class="col-xs-7">
+								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+								<div class="col-xs-8">
 									<textarea {{$form_field['required']}} {{$form_field['readonly']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"></textarea>
 								</div>			
 							</div>
@@ -38,8 +39,8 @@
 							
 							<?php if($form_field['type'] === "select"){ ?>
 							<div class="form-group">
-								<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-								<div class="col-xs-7">
+								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+								<div class="col-xs-8">
 									<select class="{{$form_field['class']}}" name="{{$form_field['name']}}" <?php if(isset($form_field['id'])) { echo " id='".$form_field['id']."' "; } else {?> id="{{$form_field['name']}}" <?php } ?> <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
 										<option value="">-- {{$form_field['name']}} --</option>
 										<?php 
@@ -53,7 +54,7 @@
 							<?php } ?>
 							<?php if($form_field['type'] === "checkbox"){ ?>
 							<div class="form-group">
-								<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 								<div class="col-xs-8">
 									<?php 
 									$options = $form_field["options"];
@@ -71,7 +72,7 @@
 							<?php } ?>	
 							<?php if($form_field['type'] === "radio"){ ?>
 							<div class="form-group">
-								<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 								<div class="col-xs-8">
 									<?php 
 										$options = $form_field["options"];
@@ -87,21 +88,24 @@
 								</div>
 							</div>
 							<?php } ?>
-						
+							</div>
 						<?php } ?>
-						
-						<div class="modal-footer">
-							<button class="btn btn-sm" data-dismiss="modal">
-								<i class="ace-icon fa fa-times"></i>
-								Cancel
-							</button>
-			
-							<button class="btn btn-sm btn-primary">
-								<i class="ace-icon fa fa-check"></i>
-								Save
-							</button>
 						</div>
-
+						</div>
+						<div class="row">						
+							<div class="modal-footer">
+								<button class="btn btn-sm" data-dismiss="modal">
+									<i class="ace-icon fa fa-times"></i>
+									Cancel
+								</button>
+				
+								<button class="btn btn-sm btn-primary">
+									<i class="ace-icon fa fa-check"></i>
+									Save
+								</button>
+							</div>
+						</div>
+	
 						</form>
 					</div>
 				</div>

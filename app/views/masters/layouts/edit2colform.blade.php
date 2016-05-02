@@ -131,6 +131,7 @@
 						</div>
 					
 					<?php } ?>
+					<div id="addfields"></div>
 					<div class="clearfix" >
 						<div class="col-md-12" style="background-color: #E6DFDF;border-top: 2px solid #D2CDCD; margin-top: 10px;">
 						<div class="col-md-offset-4 col-md-8" style="margin-top: 2%; margin-bottom: 1%">
@@ -163,6 +164,23 @@
 	
 	@section('inline_js')
 		<script>
+			function showPaymentFields(val){
+				//alert(val);
+				$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
+				$.ajax({
+			      url: "getpaymentfields?paymenttype="+val,
+			      success: function(data) {
+			    	  $("#addfields").html(data);
+			    	  $('.date-picker').datepicker({
+						autoclose: true,
+						todayHighlight: true
+					  });
+			    	  $("#addfields").show();
+			      },
+			      type: 'GET'
+			   });
+			}
+			
 			function changeState(val){
 				$.ajax({
 			      url: "getcitiesbystateid?id="+val,
@@ -182,6 +200,8 @@
 			      type: 'GET'
 			   });
 			}
+
+			$('.input-mask-card').mask('9999-9999-9999-9999');
 			
 			$("#reset").on("click",function(){
 				$("#{{$form_info['name']}}").reset();

@@ -352,7 +352,15 @@
 									EMPLOYEE SALARY
 								</a>
 							</li>
+							<?php } if(in_array(109, $jobs)){?>								
+							<li class="hover">
+								<a href="billpayments">
+									<i class="menu-icon fa fa-caret-right"></i>
+									BILLS & PAYMENTS
+								</a>
+							</li>
 							<?php } ?>
+							
 						</ul>
 					</li>
 					

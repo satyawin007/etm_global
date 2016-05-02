@@ -68,7 +68,9 @@ class UserSettingsController extends \Controller {
 					"idproofnumber"=>"idCardNumber","presentaddress"=>"presentAddress","joiningdate"=>"joiningDate",
 					"aadhdaarnumber"=>"aadharNumber","rationcardnumber"=>"rationCardNumber", "drivinglicence"=>"drivingLicence",
 					"drivingliceneexpiredate"=>"drvLicenceExpDate","accountnumber"=>"accountNumber", "bankname"=>"bankName",
-					"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchId", "empbranches"=>"officeBranchIds", "clientbranches"=>"contractIds", "roleprevilage"=>"rolePrevilegeId",  "emailid"=>"emailId"
+					"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchId", 
+					"empbranches"=>"officeBranchIds", "clientbranches"=>"contractIds", "roleprevilage"=>"rolePrevilegeId",
+					"emailid"=>"emailId","salarycardno"=>"salaryCardNo"
 			);
 			$fields = array();
 			$fields["officeBranchIds"] = "";

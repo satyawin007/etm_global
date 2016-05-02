@@ -380,7 +380,7 @@ use Illuminate\Support\Facades\Input;
 												<div class="form-group">
 													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Driving Licence</label>
 													<div class="col-xs-8">
-														<input type="text" name="drivinglicence" id="drivinglicence" class="form-control" value="{{$employee->drivingLicence}}">
+														<input type="text" name="drivinglicence" id="drivinglicence" class="form-control" value="{{$employee->drivingLicence}}" onchange="ValidateDrivingLicence(this.value)" />
 													</div>
 												</div>
 												<div class="form-group">
@@ -432,6 +432,20 @@ use Illuminate\Support\Facades\Input;
 												</div>
 											</div>
 										</div>
+										
+										<h4 class="header blue bolder smaller">SALARY CARD</h4>
+
+										<div class="panel-body">
+											<div class="col-xs-6">								
+												<div class="form-group">
+													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Salary Card No </label>
+													<div class="col-xs-8">
+														<input type="text" name="salarycardno" id="salarycardno" class="form-control input-mask-card" value="{{$employee->salaryCardNo}}" maxlength="16" minlength="16">
+													</div>
+												</div>
+											</div>
+										</div>
+										
 										<div class="clearfix form-actions">
 											<div class="col-md-offset-3 col-md-9">
 												<button class="btn btn-info" type="submit">
@@ -528,6 +542,21 @@ use Illuminate\Support\Facades\Input;
 				echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 			}
 		?>
+
+		function ValidateDrivingLicence(val){
+			$.ajax({
+		      url: "validatedrivinglicense?license="+val,
+		      success: function(data) {
+		    	  if(data == "YES"){
+		    		  bootbox.alert('This driving licence is already exists', function(result) {});
+		    	  }
+		    	  else if(data != "NO"){
+		    		  bootbox.alert(data, function(result) {});
+		    	  }
+		      },
+		      type: 'GET'
+		   });
+		}
 
 	   function changeState(val){
 			$.ajax({
@@ -979,6 +1008,8 @@ use Illuminate\Support\Facades\Input;
 			$(this).prev().focus();
 		})
 		$('.input-mask-phone').mask('(999) 999-9999');
+
+		$('.input-mask-card').mask('9999-9999-9999-9999');
 
 		<?php 
 			$filename = "'../app/storage/uploads/".$filename."'";
