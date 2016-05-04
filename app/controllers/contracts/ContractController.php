@@ -103,6 +103,7 @@ class ContractController extends \Controller {
 		$values = Input::all();
 		if (\Request::isMethod('post'))
 		{
+			//$values['DSFasdf'];
 			$field_names = array(
 							"statename"=>"stateId","districtname"=>"districtId","cityname"=>"cityId",
 							"route"=>"routeId","vehicletype"=>"vehicleTypeId","distance"=>"distance","contracttype"=>"contractType",
@@ -128,18 +129,63 @@ class ContractController extends \Controller {
 				$db_functions_ctrl = new DBFunctionsController();
 				$table = "ContractVehicle";
 				$jsonitems = json_decode($values["contractvehicles"]);
+				//$val["SDF"];
 				foreach ($jsonitems as $jsonitem){
 					if($jsonitem->id != "-1"){
-						$fields = array();
-						$fields["driver1Id"] = $jsonitem->driver1;
-						if(isset($jsonitem->driver2)){
+						$entity = $db_functions_ctrl->get($table, array("id"=>$jsonitem->id));
+						$entity = $entity[0];
+						if($entity->driver1Id != $jsonitem->driver1 || $entity->driver2Id != $jsonitem->driver2 || $entity->helperId != $jsonitem->helper ){
+							$db_functions_ctrl->update($table, array("status"=>"INACTIVE"), array("id"=>$jsonitem->id));
+							
+							$drivers =  \Employee::where("roleId","=",19)->get();
+							$drivers_arr = array();
+							foreach ($drivers as $driver){
+								$drivers_arr[$driver['id']] = $driver['fullName']." (".$driver->empCode.")";
+							}
+							$helpers =  \Employee::where("roleId","=",20)->get();
+							$helpers_arr = array();
+							foreach ($helpers as $helper){
+								$helpers_arr[$helper['id']] = $helper['fullName']." (".$helper->empCode.")";
+							}
+							
+							$update_data = "";
+							if($entity->driver1Id != $jsonitem->driver1){
+								$update_data = $update_data."Driver 1 - ".$drivers_arr[$entity->driver1Id].", ";
+							}
+							if($entity->driver2Id != $jsonitem->driver2 && $entity->driver2Id != 0){
+								$update_data = $update_data."Driver 2 - ".$drivers_arr[$entity->driver2Id].", ";
+							}
+							if($entity->helperId != $jsonitem->helper && $entity->helperId !=0){
+								$update_data = $update_data."Helper - ".$helpers_arr[$entity->helperId].", ";
+							}
+							$fields = array();
+							$fields["contractId"] = $entity->contractId;
+							$fields["vehicleId"] = $jsonitem->vehicle;
+							$fields["driver1Id"] = $jsonitem->driver1;
 							$fields["driver2Id"] = $jsonitem->driver2;
-						}
-						if(isset($jsonitem->helperId)){
 							$fields["helperId"] = $jsonitem->helper;
+							$fields["vehicleStartDate"] = $entity->vehicleStartDate;
+							$fields["remarks"] = $update_data." Updated";
+							$db_functions_ctrl->insert($table, $fields);
 						}
-						$fields["status"] = $jsonitem->status;
-						$db_functions_ctrl->update($table, $fields, array("id"=>$jsonitem->id));
+						else{
+							$fields = array();
+							$fields["driver1Id"] = $jsonitem->driver1;
+							if(isset($jsonitem->driver2)){
+								$fields["driver2Id"] = $jsonitem->driver2;
+							}
+							if(isset($jsonitem->helperId)){
+								$fields["helperId"] = $jsonitem->helper;
+							}
+							if(isset($jsonitem->date)){
+								$fields["inActiveDate"] = date("Y-m-d",strtotime($jsonitem->date));
+							}
+							if(isset($jsonitem->remarks)){
+								$fields["remarks"] = $jsonitem->remarks;
+							}
+							$fields["status"] = $jsonitem->status;
+							$db_functions_ctrl->update($table, $fields, array("id"=>$jsonitem->id));
+						}
 					}
 					else{
 						$fields = array();
@@ -151,6 +197,9 @@ class ContractController extends \Controller {
 						}
 						if(isset($jsonitem->helperId)){
 							$fields["helperId"] = $jsonitem->helper;
+						}
+						if(isset($jsonitem->date)){
+							$fields["vehicleStartDate"] = date("Y-m-d",strtotime($jsonitem->date));
 						}
 						$db_functions_ctrl->insert($table, $fields);
 					}
@@ -189,6 +238,7 @@ class ContractController extends \Controller {
 			$form_info["class"] = "form-horizontal";
 			$form_info["back_url"] = "contracts";
 			$form_info["bredcum"] = "edit contract";
+			$form_info['btn_action_type']="edit";
 			
 			$form_fields = array();		
 			$states =  \State::all();
@@ -297,15 +347,28 @@ class ContractController extends \Controller {
 					$vehicles_arr[$vehicle['id']] = $vehicle['veh_reg'];
 				}
 			}
+			
+			$ex_drivers = \ContractVehicle::where("status","=","ACTIVE")->get();
+			$ex_drivers_arr = array();
+			foreach ($ex_drivers as $ex_driver){
+// 				$ex_drivers_arr[] = $ex_driver['driver1Id'];
+// 				$ex_drivers_arr[] = $ex_driver['driver2Id'];
+// 				$ex_drivers_arr[] = $ex_driver['helperId'];
+			}
 			$drivers =  \Employee::where("roleId","=",19)->get();
 			$drivers_arr = array();
 			foreach ($drivers as $driver){
-				$drivers_arr[$driver['id']] = $driver['fullName']." (".$driver->empCode.")";
+				if(!in_array($driver['id'],$ex_drivers_arr)){
+					$drivers_arr[$driver['id']] = $driver['fullName']." (".$driver->empCode.")";
+				}
+				
 			}
 			$helpers =  \Employee::where("roleId","=",20)->get();
 			$helpers_arr = array();
 			foreach ($helpers as $helper){
-				$helpers_arr[$helper['id']] = $helper['fullName']." (".$helper->empCode.")";
+				if(!in_array($helper['id'],$ex_drivers_arr)){
+					$helpers_arr[$helper['id']] = $helper['fullName']." (".$helper->empCode.")";
+				}
 			}
 			$form_fields =  array();
 			$form_field = array("name"=>"vehicle", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
@@ -316,7 +379,11 @@ class ContractController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"helper", "content"=>"helper", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$helpers_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"status", "content"=>"status", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("ACTIVE"=>"ACTIVE","INACTIVE"=>"INACTIVE"));
+			$form_field = array("name"=>"date", "content"=>"date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"status", "content"=>"status", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onChange", "script"=>"verifyActiveStatus(this.value);"), "options"=>array("ACTIVE"=>"ACTIVE","INACTIVE"=>"INACTIVE"));
 			$form_fields[] = $form_field;
 			$form_info["add_form_fields"] = $form_fields;
 			$values['form_info'] = $form_info;
@@ -370,6 +437,21 @@ class ContractController extends \Controller {
 		$response = "";
 		foreach ($entities as $entity){
 			$response = $response."<option value='".$entity->id."'>".$entity->name."</option>";
+		}
+		echo $response;
+	}
+	
+	
+	public function getVehicleActiveStatus()
+	{
+		$values = Input::all();
+		$entities = \ContractVehicle::where("VehicleId","=",$values['id'])->get();
+		$response = "No";
+		foreach ($entities as $entity){
+			if($entity->status=="ACTIVE"){
+				$response = "Yes";
+				break;
+			}
 		}
 		echo $response;
 	}
@@ -511,6 +593,7 @@ class ContractController extends \Controller {
 		foreach ($ex_drivers as $ex_driver){
 			$ex_drivers_arr[] = $ex_driver['driver1Id'];
 			$ex_drivers_arr[] = $ex_driver['driver2Id'];
+			$ex_drivers_arr[] = $ex_driver['helperId'];
 		}
 		$drivers =  \Employee::where("roleId","=",19)->get();
 		$drivers_arr = array();
@@ -523,7 +606,9 @@ class ContractController extends \Controller {
 		$helpers =  \Employee::where("roleId","=",20)->get();
 		$helpers_arr = array();
 		foreach ($helpers as $helper){
-			$helpers_arr[$helper['id']] = $helper['fullName']." (".$helper->empCode.")";
+			if(!in_array($helper['id'],$ex_drivers_arr)){
+				$helpers_arr[$helper['id']] = $helper['fullName']." (".$helper->empCode.")";
+			}
 		}
 		$form_fields =  array();
 		$form_field = array("name"=>"vehicle", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);

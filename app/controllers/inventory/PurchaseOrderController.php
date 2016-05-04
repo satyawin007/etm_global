@@ -66,6 +66,7 @@ class PurchaseOrderController extends \Controller {
 					$fields["itemId"] = $jsonitem->i6;
 					$fields["manufacturerId"] = $jsonitem->i7;
 					$fields["itemNumbers"] = $jsonitem->i2;
+					$fields["itemNumbersAll"] = $jsonitem->i2;
 					$fields["qty"] = $jsonitem->i3;
 					$fields["purchasedQty"] = $jsonitem->i3;
 					$fields["unitPrice"] = $jsonitem->i4;
@@ -608,7 +609,7 @@ class PurchaseOrderController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"warehouse", "id"=>"warehouse", "value"=>$entity->officeBranchId, "content"=>"warehouse", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$warehouse_arr, "class"=>"form-control chosen-select");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"receivedby", "id"=>"receivedby", "value"=>$entity->receivedBy, "content"=>"received by", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+			$form_field = array("name"=>"receivedby", "id"=>"receivedby", "value"=>$entity->receivedBy, "content"=>"received by", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"orderdate", "id"=>"orderdate", "value"=> date("d-m-Y",strtotime($entity->orderDate)), "content"=>"order date", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
 			$form_fields[] = $form_field;
@@ -800,7 +801,9 @@ class PurchaseOrderController extends \Controller {
 		$jsondata = array();
 		$itemid = $values["itemid"];
 		$man = \Items::where("id","=",$itemid)->first();
-		$jsondata["itemnuberstatus"] = $man->itemNumber;
+		
+		$jsondata["itemnumberstatus"] = $man->itemNumber;
+		
 		$mans = "";
 		$mans_arr = explode(",",$man->manufactures);
 		foreach ($mans_arr as $man){

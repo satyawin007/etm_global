@@ -78,6 +78,7 @@
 			submit_data = "false";
 			$(".removerowbtn").hide();
 			var app = angular.module('myApp', []);
+			var editid = 0;
 			app.controller('myCtrl', function($scope, $http) {
 				<?php 
 					$vehicles =  \Vehicle::all();
@@ -101,11 +102,21 @@
 					$con_vehs_text_str = "[";
 					foreach ($con_vehs as $veh){
 						$drv2 = "";
+						$helper = "";
 						if($veh->driver2Id != 0){
 							$drv2 = $drivers_arr[$veh->driver2Id];
 						}
-						$con_vehs_text_str = $con_vehs_text_str."{ 'vehicle':'".$vehicles_arr[$veh->vehicleId]."', 'driver1':'".$drivers_arr[$veh->driver1Id]."', 'driver2':'".$drv2."', 'helper':'".$helpers_arr[$veh->helperId]."', 'status':'".$veh->status."'},";
-						$con_vehs_str = $con_vehs_str."{ 'vehicle':'".$veh->vehicleId."', 'driver1':'".$veh->driver1Id."', 'driver2':'".$veh->driver2Id."', 'helper':'".$veh->helperId."', 'status':'".$veh->status."', 'id':'".$veh->id."'},";
+						if($veh->helperId != 0){
+							$helper = $helpers_arr[$veh->helperId];
+						}
+						if($veh->inActiveDate != "0000-00-00" && $veh->inActiveDate != "" && $veh->inActiveDate != "1970-01-01"){
+							$veh->inActiveDate = date("d-m-Y",strtotime($veh->inActiveDate));
+						}
+						else{
+							$veh->inActiveDate = "";
+						}
+						$con_vehs_text_str = $con_vehs_text_str."{ 'vehicle':'".$vehicles_arr[$veh->vehicleId]."', 'driver1':'".$drivers_arr[$veh->driver1Id]."', 'driver2':'".$drv2."', 'helper':'".$helper."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'status':'".$veh->status."', 'id':'".$veh->id."'},";
+						$con_vehs_str = $con_vehs_str."{ 'vehicle':'".$veh->vehicleId."', 'driver1':'".$veh->driver1Id."', 'driver2':'".$veh->driver2Id."', 'helper':'".$veh->helperId."', 'status':'".$veh->status."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'id':'".$veh->id."'},";
 					}
 					$con_vehs_str = $con_vehs_str."]";
 					$con_vehs_text_str = $con_vehs_text_str."]";
@@ -118,12 +129,14 @@
 					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" || $scope.driver1 === "" || $scope.vehicle === "") {
 						return;
 					}	
-					$scope.vehicles.push({ 'vehicle':$scope.vehicle, 'driver1': $scope.driver1, 'driver2':$scope.driver2 , 'helper':$scope.helper, 'status':'ACTIVE', 'id':'-1' });
+					$scope.vehicles.push({ 'vehicle':$scope.vehicle, 'driver1': $scope.driver1, 'driver2':$scope.driver2 , 'helper':$scope.helper, 'date':$scope.date, 'status':'ACTIVE', 'id':'-1' });
 					$scope.vehicle='';
 					$scope.driver1='';
 					$scope.driver2='';
 					$scope.helper='';
 					$scope.status='';
+					$scope.date='';
+					$scope.remarks='';
 					$scope.id='';
 
 					text_arr = [];
@@ -132,11 +145,13 @@
 						$("#"+entry).find('option:selected').removeAttr("selected");
 						text_arr[entry] = text;
 					});
+					$text_arr['date']=$("#date").val();
+					$text_arr['remarks']=$("#remarks").val();
 					$scope.vehicles_text.push(text_arr);
 					$('.chosen-select').trigger("chosen:updated");
 				};
 
-				$scope.editRow = function(vehicle){	
+				$scope.editRow = function(id){
 					$("#addrowbtn").hide();
 					$("#updaterowbtn").show();
 					tempdata = [];
@@ -144,8 +159,9 @@
 					var comArr = eval( $scope.vehicles_text );
 					var comArr1 = eval( $scope.vehicles );
 					for( var i = 0; i < comArr.length; i++ ) {
-						if( comArr[i].vehicle === vehicle ) {
+						if( comArr1[i].id === id ) {
 							index = i;
+							editid = comArr1[i].id;
 							break;
 						}
 					}
@@ -158,6 +174,8 @@
 						$("#"+entry).find('option:selected').attr("selected", "selected"); 
 						$scope[entry]=comArr1[i][entry];
 					});	
+					$scope['date']=comArr1[i]['date'];
+					$scope['remarks']=comArr1[i]['remarks'];
 					$('.chosen-select').trigger("chosen:updated");	
 				};
 
@@ -169,20 +187,25 @@
 					var index = -1;		
 					var comArr = eval( $scope.vehicles );
 					for( var i = 0; i < comArr.length; i++ ) {
-						if( comArr[i].vehicle === $scope.vehicle ) {
+						if( comArr[i].id == editid && comArr[i].vehicle==$scope.vehicle) {
 							index = i;
+							alert($scope.helper);
 							$scope.vehicles[i]['driver1']=$scope.driver1;
-							$scope.vehicles[i]['driver2']=$scope.driver1;
+							$scope.vehicles[i]['driver2']=$scope.driver2;
 							$scope.vehicles[i]['helper']=$scope.helper;
 							$scope.vehicles[i]['status']=$scope.status;
+							$scope.vehicles[i]['date']=$scope.date;
+							$scope.vehicles[i]['remarks']=$scope.remarks;
 
 							$scope.ids.forEach(function(entry) {
 								text = $("#"+entry+" option:selected").text();
-								$("#"+entry).find('option:selected').removeAttr("selected");
 								if(entry != "vehicle"){
 									$scope.vehicles_text[index][entry] = text;
 								}
+								$("#"+entry).find('option:selected').removeAttr("selected");
 							});
+							$scope.vehicles_text[i]['date']=$scope.date;
+							$scope.vehicles_text[i]['remarks']=$scope.remarks;
 							break;
 						}
 					}
@@ -195,6 +218,8 @@
 					$scope.driver2='';
 					$scope.helper='';
 					$scope.status='';
+					$scope.date='';
+					$scope.remarks='';
 					alert("updated successfully");
 					$('.chosen-select').trigger("chosen:updated");
 					$("#addrowbtn").show();
@@ -358,6 +383,30 @@
 			      type: 'GET'
 			   });
 			}
+
+			function verifyActiveStatus(val){
+				id = $("#vehicle").val();
+				if(id==""){
+					alert("select vehicle");
+					return;
+				}
+				if(val=="ACTIVE"){
+					id = id.substr(9,id.length);
+					id = id.substr(0,id.indexOf(" ?"));
+					$.ajax({
+				      url: "getvehicleactivestatus?id="+id,
+				      success: function(data) {
+					      if(data=="Yes"){
+						      alert("You can not change Status to ACTIVE, as there is an ACTIVE Contract-Vehicle");
+						      $("#updaterowbtn").hide();
+					      }
+				      },
+				      type: 'GET'
+				   });
+				}
+			}
+
+			
 
 			<?php 
 				if(Session::has('message')){

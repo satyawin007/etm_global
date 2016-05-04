@@ -35,9 +35,9 @@
 	$select_fields[] = "purchase_orders.billNumber as billNo";
 	$select_fields[] = "purchased_items.id as id";
 	
-	$stockitems =  \PurchasedOrders::where("officeBranchId","=",$values["warehouseid"])
+	$stockitems =  \PurchasedItems::where("purchase_orders.officeBranchId","=",$values["warehouseid"])
 					->where("purchased_items.status","=","ACTIVE")
-					->join("purchased_items","purchased_items.purchasedOrderId","=","purchase_orders.id")
+					->join("purchase_orders","purchased_items.purchasedOrderId","=","purchase_orders.id")
 					->join("items","purchased_items.itemId","=","items.id")
 					->join("creditsuppliers","purchase_orders.creditSupplierId","=","creditsuppliers.id")
 					->select($select_fields)->get();
@@ -54,7 +54,7 @@
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"itemactions", "id"=>"itemactions",  "content"=>"item actions", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>array());
 	$form_fields[] = $form_field;
-	$form_field = array("name"=>"itemnumbers", "id"=>"itemnumbers",  "content"=>"item numbers", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "multiple"=>"multiple", "options"=>array());
+	$form_field = array("name"=>"itemnumbers", "id"=>"itemnumbers",  "content"=>"item numbers", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "multiple"=>"multiple", "action"=>array("type"=>"onchange","script"=>"calItemCount(this.id)"),  "options"=>array());
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"alertdate", "id"=>"alertdate",  "content"=>"alert date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
 	$form_fields[] = $form_field;
@@ -77,7 +77,7 @@
 	$form_fields = array();
 	$form_field = array("name"=>"item", "id"=>"item",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getItemInfo(this.value)"),   "options"=>$stockitems_arr);
 	$form_fields[] = $form_field;
-	$form_field = array("name"=>"itemnumbers", "id"=>"itemnumbers",  "content"=>"item numbers", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "multiple"=>"multiple", "options"=>array());
+	$form_field = array("name"=>"itemnumbers", "id"=>"itemnumbers",  "content"=>"item numbers", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "multiple"=>"multiple", "action"=>array("type"=>"onchange","script"=>"calItemCount(this.id)"),  "options"=>array());
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"units", "id"=>"units",  "content"=>"units", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
 	$form_fields[] = $form_field;
@@ -91,82 +91,30 @@
 	$form_fields[] = $form_field;
 	$form_info = array();
 	$form_info["form_fields"] = $form_fields;
-	$form_info["theads"] = array("ITEM", "ITEM NUMBERS", "QTY", "WAREHOUSE", "REMARKS", "ACTION");
+	$form_info["theads"] = array("ITEM", "ITEM NUMBERS", "WAREHOUSE", "QTY", "REMARKS", "ACTION");
 ?>
 	@include("inventory.tablerowform",$form_fields);
-<?php } else if($values["action"] == "TO WAREHOUSE"){?>
-	<div class="form-group col-xs-6" style="margin-top: 15px; margin-bottom: -10px">
-		<div class="form-group" id="repairbuttons">
-			<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> VEHICLE REG<span style="color:red;">*</span> </label>
-			<div class="col-xs-7">
-				<select class="form-control chosen-select vehicle" id="vehicle" required="required" name="repairvehicle" >
-					<option value="">-- vehicle --</option>
-					<?php 
-						foreach($vehicles_arr as  $key=>$val){
-							echo "<option value='".$key."' >".$val."</option>";
-						}
-					?>
-				</select>
-			</div>			
-		</div>
-	</div>
-	<div class="col-xs-12" style="border: 1px solid #D5D5D5; margin-left: 10px; margin-top: 10px; max-width:98%">
-		<div class="row" style="background-color: #307ECC;">
-			<div style="margin-top: 5px; color:white; float:left;">
-					&nbsp;ADD / REMOVE ROW 
-				</a>
-			</div>
-			<div style="margin-top: 5px; margin-right:10px; float:right; color:white" ><i id="children_add" class="ace-icon fa fa-plus-circle bigger-160"></i> &nbsp;&nbsp; <i id="children_remove" class="ace-icon fa fa-minus-circle bigger-160"></i> &nbsp;&nbsp; <i id="children_refresh" class="ace-icon fa fa-refresh bigger-160"></i></div>
-		</div>
-		<div class="row col-xs-12" id="children_fields_all">
-			<div id="children_fields" style="padding-top: 7px; padding-bottom: 2px;" class="children_fields">
-				<div id="row0" class="">								
-					<div class="form-group inline" style="float:left;width:25%;">
-						<label class="col-xs-2 control-label no-padding-right" for="form-field-1">ITEM </label>
-						<div class="col-xs-10">
-							<select class="form-control item chosen-select" id="item0" name="item[]" onchange="getManufacturers(this.value, this.id)">
-								<option value="">-- item --</option>
-								<?php 
-									$stockitems =  \Items::where("status","=","ACTIVE")->get();
-									$stockitems_arr = array();
-									foreach ($stockitems as $stockitem){
-										$stockitems_arr[$stockitem['id']] = $stockitem->name." - ".$stockitem->shortName;
-									}
-									foreach($stockitems_arr as  $key=>$val){
-										echo "<option value='".$key."' >".$val."</option>";
-									}
-								?>
-							</select>
-						</div>
-					</div>
-					<div class="form-group inline" style="float:left; width:25%; margin-left:5px;">
-						<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> MANUFACTURERS</label>
-						<div class="col-xs-8">
-							<select class="form-control item chosen-select units" id="units0" name="units[]" >	
-								<option value="">-- manufacturer --</option>
-							</select>
-						</div>
-					</div>
-					<div class="form-group inline" style="float:right; width: 50%; margin-right: 0%; margin-left: 1%;">
-						<label style="width:5%; float:left; margin-right:5px;" class="control-label no-padding-right" for="form-field-1"> QTY </label>
-						<div style="width:15%; float:left; margin-right:15px;">
-							<input type="text" id="qty0" name="qty[]" class="form-control qty" onchange="qtyChange(this.id)">
-						</div>
-						<label style="width:8%;float:left; margin-right:5px;" class=" control-label no-padding-right" for="form-field-1"> STATUS </label>
-						<div style="width:13%; float:left; margin-right:15px;">
-							<select class="form-control  chosen-select warehouse" id="warehouse0" name="status[]" >
-								<option value="Old">USED</option>
-								<option value="New">NEW</option>
-							</select>
-						</div>
-						<div style="width:35%; float:right; ">
-							<input type="text" id="remarks0" placeholder="remarks"  name="remarks[]" class="form-control remarks" >
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+<?php } else if($values["action"] == "TO WAREHOUSE"){
+	$form_fields = array();
+	$form_field = array("name"=>"item", "id"=>"item",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getManufacturers(this.value)"), "options"=>$items_arr);
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"manufacturer", "id"=>"manufacturer",  "content"=>"manufacturer", "readonly"=>"readonly",  "required"=>"", "type"=>"select", "options"=>array(), "class"=>"form-control chosen-select");
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"itemnumbers", "id"=>"itemnumbers",  "content"=>"item numbers", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"calItemCountText(this.value)"), "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"qty", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"vehicle", "id"=>"vehicle",  "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"itemstatus", "id"=>"itemstatus",  "content"=>"item status", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("USED"=>"USED","NEW"=>"NEW"));
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"remarks", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_info = array();
+	$form_info["form_fields"] = $form_fields;
+	$form_info["theads"] = array("ITEM", 'MANUFACTURER', "VEHICLE", "STATUS", "ITEM NUMBERS", "QTY", "REMARKS", "ACTION");
+?>
+	@include("inventory.tablerowform",$form_fields);
 <?php } else if($values["action"] == "TO VEHICLE1"){?>
 	<div class="form-group col-xs-6" style="margin-top: 15px; margin-bottom: -10px">
 		<div class="form-group" id="repairbuttons">
@@ -396,62 +344,26 @@
 		<?php } ?>
 		
 		<div id="paymentfields" style="margin-top: 15px; margin-bottom: -10px"></div>
-	
-	<div class="col-xs-12" style="border: 1px solid #D5D5D5; margin-left: 10px; margin-top: 10px; max-width:98%">
-		<div class="row" style="background-color: #307ECC;">
-			<div style="margin-top: 5px; color:white; float:left;">
-					&nbsp;ADD / REMOVE ROW 
-				</a>
-			</div>
-			<div style="margin-top: 5px; margin-right:10px; float:right; color:white" ><i id="children_add" class="ace-icon fa fa-plus-circle bigger-160"></i> &nbsp;&nbsp; <i id="children_remove" class="ace-icon fa fa-minus-circle bigger-160"></i> &nbsp;&nbsp; <i id="children_refresh" class="ace-icon fa fa-refresh bigger-160"></i></div>
-		</div>
-		<div class="row col-xs-12" id="children_fields_all">
-			<div id="children_fields" style="padding-top: 7px; padding-bottom: 2px;" class="children_fields">
-				<div id="row0" class="">								
-					<div class="form-group inline" style="float:left;width:25%;">
-						<label class="col-xs-2 control-label no-padding-right" for="form-field-1">ITEM </label>
-						<div class="col-xs-10">
-							<select class="form-control item chosen-select" id="item0" name="item[]" onchange="getManufacturers(this.value, this.id)">
-								<option value="">-- item --</option>
-								<?php 
-									$stockitems =  \Items::where("status","=","ACTIVE")->get();
-									$stockitems_arr = array();
-									foreach ($stockitems as $stockitem){
-										$stockitems_arr[$stockitem['id']] = $stockitem->name." - ".$stockitem->shortName;
-									}
-									foreach($stockitems_arr as  $key=>$val){
-										echo "<option value='".$key."' >".$val."</option>";
-									}
-								?>
-							</select>
-						</div>
-					</div>
-					<div class="form-group inline" style="float:left; width:25%; margin-left:5px;">
-						<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> MANUFACTURERS</label>
-						<div class="col-xs-8">
-							<select class="form-control item chosen-select units" id="units0" name="units[]" >	
-								<option value="">-- manufacturer --</option>
-							</select>
-						</div>
-					</div>
-					<div class="form-group inline" style="float:right; width: 50%; margin-right: 0%; margin-left: 1%;">
-						<label style="width:5%; float:left; margin-right:5px;" class="control-label no-padding-right" for="form-field-1"> QTY </label>
-						<div style="width:15%; float:left; margin-right:15px;">
-							<input type="text" id="qty0" name="qty[]" class="form-control qty" onchange="qtyChange(this.id)">
-						</div>
-						<label style="width:8%;float:left; margin-right:5px;" class=" control-label no-padding-right" for="form-field-1"> STATUS </label>
-						<div style="width:13%; float:left; margin-right:15px;">
-							<select class="form-control  chosen-select warehouse" id="warehouse0" name="status[]" >
-								<option value="Old">USED</option>
-								<option value="New">NEW</option>
-							</select>
-						</div>
-						<div style="width:35%; float:right; ">
-							<input type="text" id="remarks0" placeholder="remarks"  name="remarks[]" class="form-control remarks" >
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-<?php }?>
+<?php 
+	$form_fields = array();
+	$form_field = array("name"=>"item", "id"=>"item",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getManufacturers(this.value)"), "options"=>$items_arr);
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"manufacturer", "id"=>"manufacturer",  "content"=>"manufacturer", "readonly"=>"readonly",  "required"=>"", "type"=>"select", "options"=>array(), "class"=>"form-control chosen-select");
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"itemnumbers", "id"=>"itemnumbers",  "content"=>"item numbers", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"calItemCountText(this.value)"), "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"qty", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"vehicle", "id"=>"vehicle",  "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"itemstatus", "id"=>"itemstatus",  "content"=>"item status", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("USED"=>"USED","NEW"=>"NEW"));
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"remarks", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_info = array();
+	$form_info["form_fields"] = $form_fields;
+	$form_info["theads"] = array("ITEM", 'MANUFACTURER', "VEHICLE", "STATUS", "ITEM NUMBERS", "QTY", "REMARKS", "ACTION");
+
+?>
+@include("inventory.tablerowform",$form_fields);
+<?php } ?>

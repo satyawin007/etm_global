@@ -541,25 +541,132 @@ class DataTableController extends \Controller {
 	
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
-		if($search != ""){
-			$entities = \InventoryTransactions::where("items.name","like","%$search%")->where("inventory_transaction.status","=","ACTIVE")->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")->leftjoin("items","items.id","=","purchased_items.itemId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = \InventoryTransactions::where("items.name","like","%$search%")->where("inventory_transaction.status","=","ACTIVE")->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")->leftjoin("items","items.id","=","purchased_items.itemId")->select($select_args)->count();
-			if($total<= 0){
-				$vehids = \Vehicle::where("veh_reg","like","%$search%")->get();
-				$vehids_arr = array();
-				foreach ($vehids as $vehid){
-					$vehids_arr[] = $vehid->id;
-				}
-				$entities = \InventoryTransactions::whereIn("fromVehicleId",$vehids_arr)->orWhereIn("toVehicleId",$vehids_arr)->where("inventory_transaction.status","=","ACTIVE")->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")->leftjoin("items","items.id","=","purchased_items.itemId")->select($select_args)->limit($length)->offset($start)->get();
-				$total = \InventoryTransactions::whereIn("fromVehicleId",$vehids_arr)->orWhereIn("toVehicleId",$vehids_arr)->where("inventory_transaction.status","=","ACTIVE")->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")->leftjoin("items","items.id","=","purchased_items.itemId")->select($select_args)->count();
+		if(isset($values["repairs"])){
+			$total = 0;
+			$data = array();
+			$select_args = array();
+			$select_args[] = "creditsuppliers.supplierName as creditSupplierId";
+			$select_args[] = "officebranch.name as officeBranchId";
+			$select_args[] = "employee.fullName as receivedBy";
+			$select_args[] = "purchase_orders.orderDate as orderDate";
+			$select_args[] = "purchase_orders.billNumber as billNumber";
+			$select_args[] = "purchase_orders.amountPaid as amountPaid";
+			$select_args[] = "purchase_orders.paymentType as paymentType";
+			$select_args[] = "purchase_orders.totalAmount as totalAmount";
+			$select_args[] = "purchase_orders.comments as comments";
+			$select_args[] = "purchase_orders.status as status";
+			$select_args[] = "purchase_orders.id as id";
+			$select_args[] = "purchase_orders.type as type";
+			$actions = array();
+			$jobs = \Session::get("jobs");
+			if(in_array(329, $jobs)){
+				$action = array("url"=>"editpurchaseorder?", "type"=>"", "css"=>"primary", "js"=>"modalEditPurchaseOrder(", "jsdata"=>array("id"), "text"=>"EDIT");
+				$actions[] = $action;
+				$action = array("url"=>"#","css"=>"danger", "id"=>"deletePurchaseOrder", "type"=>"", "text"=>"DELETE");
+				$actions[] = $action;
 			}
-		}
-		else{
-			if(isset($values["fromdate"]) && isset($values["todate"]) && isset($values["warehouse"])){
+			$values["actions"] = $actions;
+		
+			$search = $_REQUEST["search"];
+			$search = $search['value'];
+			if($search != ""){
+				$entities = \PurchasedOrders::where("creditsuppliers.supplierName", "like", "%$search%")
+								->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
+								->join("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+								->join("employee","employee.id","=","purchase_orders.receivedBy")
+								->select($select_args)->limit($length)->offset($start)->get();
+				$total = count($entities);
+			}
+			else{
 				$values["fromdate"] = date("Y-m-d",strtotime($values["fromdate"]));
 				$values["todate"] = date("Y-m-d",strtotime($values["todate"]));
-				$entities = \InventoryTransactions::where("fromWareHouseId","=",$values["warehouse"])->where("inventory_transaction.status","=","ACTIVE")->wherebetween("date",array($values["fromdate"],$values["todate"]))->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")->leftjoin("items","items.id","=","purchased_items.itemId")->select($select_args)->limit($length)->offset($start)->get();
-				$total =\InventoryTransactions::where("fromWareHouseId","=",$values["warehouse"])->where("inventory_transaction.status","=","ACTIVE")->wherebetween("date",array($values["fromdate"],$values["todate"]))->count();
+				$entities = \PurchasedOrders::where("purchase_orders.status","ACTIVE")
+							->where("purchase_orders.type", "!=", "PURCHASE ORDER")
+							->where("purchase_orders.officeBranchId", "=", $values["warehouse"])
+							->whereBetween("purchase_orders.orderDate",array($values["fromdate"],$values["todate"]))
+							->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
+							->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+							->leftjoin("employee","employee.id","=","purchase_orders.receivedBy")
+							->select($select_args)->limit($length)->offset($start)->get();
+				$total = \PurchasedOrders::where("purchase_orders.status","ACTIVE")
+							->where("purchase_orders.type", "!=", "PURCHASE ORDER")
+							->whereBetween("purchase_orders.orderDate",array($values["fromdate"],$values["todate"]))
+							->count();
+			}
+		
+			$entities = $entities->toArray();
+			foreach($entities as $entity){
+				$entity["orderDate"] = date("d-m-Y",strtotime($entity["orderDate"]));
+				
+				$select_args[] = "employee.fullName as receivedBy";
+				$select_args[] = "purchase_orders.orderDate as orderDate";
+				$select_args[] = "purchase_orders.billNumber as billNumber";
+				$select_args[] = "purchase_orders.amountPaid as amountPaid";
+				$select_args[] = "purchase_orders.paymentType as paymentType";
+				$select_args[] = "purchase_orders.totalAmount as totalAmount";
+				
+				if($entity["type"]=="TO WAREHOUSE" || $entity["type"]=="TO WAREHOUSE REPAIR"){
+					$vals = array("receivedBy","amountPaid","paymentType","totalAmount");
+					$entity["creditSupplierId"]= $entity["type"];
+					foreach ($vals as $val){
+						$entity[$val] = "";
+					}
+				}
+				
+				$data_values = array_values($entity);
+				$actions = $values['actions'];
+				$action_data = "";
+				foreach($actions as $action){
+					if($action["type"] == "modal"){
+						$jsfields = $action["jsdata"];
+						$jsdata = "";
+						$i=0;
+						for($i=0; $i<(count($jsfields)-1); $i++){
+							$jsdata = $jsdata." '".$entity[$jsfields[$i]]."', ";
+						}
+						$jsdata = $jsdata." '".$entity[$jsfields[$i]];
+						$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+					}
+					else if($action['url'] == "#"){
+						$action_data = $action_data."<button class='btn btn-minier btn-".$action["css"]."' onclick='".$action["id"]."(".$entity["id"].")' >".strtoupper($action["text"])."</button>&nbsp; &nbsp;" ;
+					}
+					else {
+						$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+					}
+				}
+				$data_values[10] = $action_data;
+				$data[] = $data_values;
+			}
+			return array("total"=>$total, "data"=>$data);
+		}
+		else{
+			if($search != ""){
+				$entities = \InventoryTransactions::where("items.name","like","%$search%")->where("inventory_transaction.status","=","ACTIVE")->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")->leftjoin("items","items.id","=","purchased_items.itemId")->select($select_args)->limit($length)->offset($start)->get();
+				$total = \InventoryTransactions::where("items.name","like","%$search%")->where("inventory_transaction.status","=","ACTIVE")->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")->leftjoin("items","items.id","=","purchased_items.itemId")->select($select_args)->count();
+				if($total<= 0){
+					$vehids = \Vehicle::where("veh_reg","like","%$search%")->get();
+					$vehids_arr = array();
+					foreach ($vehids as $vehid){
+						$vehids_arr[] = $vehid->id;
+					}
+					$entities = \InventoryTransactions::whereIn("fromVehicleId",$vehids_arr)->orWhereIn("toVehicleId",$vehids_arr)->where("inventory_transaction.status","=","ACTIVE")->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")->leftjoin("items","items.id","=","purchased_items.itemId")->select($select_args)->limit($length)->offset($start)->get();
+					$total = \InventoryTransactions::whereIn("fromVehicleId",$vehids_arr)->orWhereIn("toVehicleId",$vehids_arr)->where("inventory_transaction.status","=","ACTIVE")->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")->leftjoin("items","items.id","=","purchased_items.itemId")->select($select_args)->count();
+				}
+			}
+			else{
+				if(isset($values["fromdate"]) && isset($values["todate"]) && isset($values["warehouse"])){
+					$values["fromdate"] = date("Y-m-d",strtotime($values["fromdate"]));
+					$values["todate"] = date("Y-m-d",strtotime($values["todate"]));
+					$entities = \InventoryTransactions::where("fromWareHouseId","=",$values["warehouse"])
+									->where("inventory_transaction.status","=","ACTIVE")
+									->wherebetween("date",array($values["fromdate"],$values["todate"]))
+									->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")
+									->leftjoin("items","items.id","=","purchased_items.itemId")
+									->select($select_args)->limit($length)->offset($start)->get();
+					$total =\InventoryTransactions::where("fromWareHouseId","=",$values["warehouse"])
+									->where("inventory_transaction.status","=","ACTIVE")
+									->wherebetween("date",array($values["fromdate"],$values["todate"]))->count();
+				}
 			}
 		}
 		

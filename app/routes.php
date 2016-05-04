@@ -546,6 +546,8 @@ Route::any('/addcontract', "contracts\ContractController@addContract");
 
 Route::any('/editcontract', "contracts\ContractController@editContract");
 
+Route::any('/getvehicleactivestatus', "contracts\ContractController@getVehicleActiveStatus");
+
 Route::get('/servicelogs', "servicelogs\ServiceLogController@manageServiceLogs");
 
 Route::any('/addservicelog', "servicelogs\ServiceLogController@addServiceLog");

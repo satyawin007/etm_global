@@ -267,6 +267,7 @@
 										<th>DRIVER2</th>
 										<th>HELPER</th>
 										<th>STATUS</th>
+										<th>REMARKS</th>
 										<th>ACTIONS</th>
 									</tr>
 								</thead>
@@ -275,11 +276,21 @@
 									<td>@{{vehicle.driver1}}</td>
 									<td>@{{vehicle.driver2}}</td>
 									<td>@{{vehicle.helper}}</td>
-									<td>@{{vehicle.status}}</td>
-									<td>
-										<input type="button" value="Edit" class="btn btn-minier btn-purple" style="margin:2px;" id="editrowbtn" ng-click="editRow(vehicle.vehicle)"/> &nbsp;&nbsp;&nbsp;
-										<input type="button" value="Remove" class="btn btn-minier btn-purple removerowbtn" style="margin:2px;" id="removerowbtn" ng-click="removeRow(vehicle.vehicle)"/>
-									</td>
+									<td>@{{vehicle.status}} @{{vehicle['date'] ? "("+vehicle['date']+")" : ''}}</td>
+									<?php 
+										if(isset($form_info['btn_action_type']) && $form_info['btn_action_type']=="edit"){
+									?>
+										<td>@{{vehicle.remarks}}</td>
+										<td>
+											<input type="button" value="Edit" class="btn btn-minier btn-purple" style="margin:2px;" id="editrowbtn" ng-click="editRow(vehicle.id)"/> &nbsp;&nbsp;&nbsp;
+											<input type="button" value="Remove" class="btn btn-minier btn-purple removerowbtn" style="margin:2px;" id="removerowbtn" ng-click="removeRow(vehicle.id)"/>
+										</td>
+									<?php } else{?>
+										<td>
+											<input type="button" value="Edit" class="btn btn-minier btn-purple" style="margin:2px;" id="editrowbtn" ng-click="editRow(vehicle.vehicle)"/> &nbsp;&nbsp;&nbsp;
+											<input type="button" value="Remove" class="btn btn-minier btn-purple removerowbtn" style="margin:2px;" id="removerowbtn" ng-click="removeRow(vehicle.vehicle)"/>
+										</td>
+									<?php }?>
 								</tr>
 							</table>
 						</div>

@@ -379,6 +379,12 @@ use Illuminate\Support\Facades\Input;
 			isEdit = false;
 			editRowId = -1;
 			function getFormValues(){
+				if(!$("#itemnumbers").attr("readonly")){
+					ckval = $("#itemnumbers").val();
+					if(!validateInput(ckval)){
+						return false;
+					}
+				}
 				tr = [];
 				country = $("#item option:selected").text();
 				tr[0] = country;
@@ -447,7 +453,9 @@ use Illuminate\Support\Facades\Input;
 				itemnumbers = itemnumbers.split(",");
 				if(qty != itemnumbers.length){
 					alert("Quantity and Item Numbers count does not match");
+					return false;
 				}
+				return true;
 			}
 
 			function getManufacturers(id){

@@ -277,7 +277,6 @@
 						</div>
 						<div class="table-header" style="margin-top: 10px;">
 							Results for "{{$values['bredcum']}}"							 
-							<div style="float:right;padding-right: 15px;padding-top: 6px;"><a style="color: white;" href="{{$values['home_url']}}"><i class="ace-icon fa fa-home bigger-200"></i></a> &nbsp; &nbsp; &nbsp; <a style="color: white;"  href="{{$values['add_url']}}"><i class="ace-icon fa fa-plus-circle bigger-200"></i></a></div>				
 						</div>
 						<!-- div.table-responsive -->
 						<!-- div.dataTables_borderWrap -->
@@ -298,6 +297,109 @@
 					</div>					
 				</div>
 			</div>
+			
+			<?php
+				$theads1 = array('Stock Transaction Type','Warehouse', "received By", "transaction date", "bill number", "amount paid", "payment type", "total amount", "comments", "status", "Actions");
+				$values["theads1"] = $theads1;
+			?>
+			
+			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: -10px;">MANAGE REPAIR TRANSACTIONS</h3>		
+			<div class="row" >
+				<div>
+					<div class="row col-xs-12" style="padding-left:2%; padding-top: 2%">
+						<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
+						<div class="clearfix">
+							<div class="col-xs-12 input-group">
+								<form action="{{$values['form_action']}}" name="paginate" id="paginate">
+								<div class="col-xs-offset-1 col-xs-5">
+									<div class="form-group">
+										<label class="col-xs-4 control-label no-padding-right" for="form-field-1">DATE RANGE<span style="color:red;">*</span></label>
+										<div class="col-xs-8">
+											<div class="input-daterange input-group">
+												<input type="text" id="fromdate1"  style="padding-top: 15px;padding-bottom: 18px;" required="required" name="fromdate1" <?php if(isset($values["fromdate1"])) echo " value=".$values["fromdate1"]." "; ?> class="input-sm form-control"/>
+												<span class="input-group-addon">
+													<i class="fa fa-exchange"></i>
+												</span>
+												<input type="text" class="input-sm form-control"  style="padding-top: 15px;padding-bottom: 18px;" id="todate1" required="required" <?php if(isset($values["fromdate1"])) echo " value=".$values["todate1"]." "; ?>  name="todate1"/>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-xs-4">
+									<div class="form-group">
+										<?php 
+											$branches_arr = array();
+											$warehouses = \OfficeBranch::where("isWareHouse","=","Yes")->get();
+											foreach ($warehouses as $warehouse){
+												$branches_arr[$warehouse->id] = $warehouse->name;
+											}
+											if(!isset($values['warehouse1'])){
+												$values["warehouse1"] = 0;
+											}
+										?>
+										<?php $form_field = array("name"=>"warehouse2", "value"=>$values["warehouse1"], "content"=>"warehouse", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select1", "options"=>$branches_arr); ?>
+										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+										<div class="col-xs-9">
+											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+												<option value="">-- {{$form_field['name']}} --</option>
+												<?php 
+													foreach($form_field["options"] as $key => $value){
+														if(isset($form_field['value']) && $form_field['value']==$key) { 
+															echo "<option selected='selected' value='$key'>$value</option>";
+														}
+														else{
+															echo "<option value='$key'>$value</option>";
+														}
+													}
+												?>
+											</select>
+										</div>			
+									</div>	
+								</div>
+								<div class="col-xs-1" style="margin-top: 0px; margin-left:-20px; margin-bottom: -10px">
+									<div class="form-group">
+										<label class="col-xs-0 control-label no-padding-right" for="form-field-1"> </label>
+										<div class="col-xs-5">
+											<input class="btn btn-sm btn-primary" type="button" value="GET" onclick="test1()"/>
+										</div>			
+									</div>
+								</div>
+								<?php 
+								if(isset($values['links'])){
+									$links = $values['links'];
+									foreach($links as $link){
+										echo "<a class='btn btn-white btn-success' href=".$link['url'].">".$link['name']."</a> &nbsp; &nbsp; &nbsp";
+									}
+								}
+								?>
+								<?php echo "<input type='hidden' name='action' value='".$values['action_val']."'/>"; ?>					
+								</form>
+							</div>
+							<div class="pull-right tableTools-container"></div>
+						</div>
+						<div class="table-header" style="margin-top: 10px;">
+							Results for  "REPAIRE {{$values['bredcum']}}"							 
+						</div>
+						<!-- div.table-responsive -->
+						<!-- div.dataTables_borderWrap -->
+						<div>
+							<table id="dynamic-table1" class="table table-striped table-bordered table-hover">
+								<thead>
+									<tr>
+										<?php 
+											$theads = $values['theads1'];
+											foreach($theads as $thead){
+												echo "<th>".strtoupper($thead)."</th>";
+											}
+										?>
+									</tr>
+								</thead>
+							</table>								
+						</div>
+					</div>					
+				</div>
+			</div>
+			
 		</div>	
 		<?php 
 			if(isset($values['modals'])) {
@@ -559,6 +661,25 @@
 					$("#repairbuttons").show();
 					if(val == "TO WAREHOUSE" || val == "TO CREDIT SUPPLIER"){
 						action = val;
+
+						if(val=="TO WAREHOUSE"){
+							ids = ["item", 'manufacturer', "vehicle", "itemstatus"];
+							vars = ["itemnumbers", "qty", "remarks"];
+							entities_text = [];
+							entities = [];
+							exe_recs_text = [];
+							condition_elements = ["item","qty"];
+						}
+
+						if(val=="TO CREDIT SUPPLIER"){
+							ids = ["item", 'manufacturer', "vehicle", "itemstatus"];
+							vars = ["itemnumbers", "qty", "remarks"];
+							entities_text = [];
+							entities = [];
+							exe_recs_text = [];
+							condition_elements = ["item","qty"];
+						}
+						
 					}
 					else if(val == 0){}
 					else{
@@ -601,13 +722,21 @@
 			   });
 			}
 
-			function getManufacturers(value, id){
-				id = id.replace("item","units");
+			function getManufacturers(id){
+				$("#div_itemnumbers").hide();
+				$("#div_alertdate").hide();
+				$("#div_itemactions").hide();
 				$.ajax({
-			      url: "getmanufacturers?itemid="+value,
+			      url: "getmanufacturers?itemid="+id,
 			      success: function(data) {
-			    	  $("#"+id).html(data);
-					  $('.chosen-select').trigger('chosen:updated');
+				      //alert(data);
+			    	  var obj = JSON.parse(data);
+			    	  if(obj.itemnumberstatus=="Yes"){
+			    		  $("#qty").attr("readonly",true);
+			    		  $("#div_itemnumbers").show();
+			    	  }
+			    	  $("#manufacturer").html(obj.manufactures);
+			    	  $('.chosen-select').trigger('chosen:updated');
 			      },
 			      type: 'GET'
 			   });
@@ -618,7 +747,6 @@
 				$.ajax({
 			      url: "getrepairitembysupplier?itemid="+value,
 			      success: function(data) {
-				      alert(id);
 			    	  $("#"+id).html(data);
 					  $('.chosen-select').trigger('chosen:updated');
 			      },
@@ -697,7 +825,40 @@
 					alert("select TO date");
 					return;
 				}
-				$("#paginate").submit();		
+				//$("#paginate").submit();	
+				var url = "getinventorydatatabledata?name=usedstock";
+				url = url+"&warehouse="+branch;
+				url = url+"&fromdate="+fdt;
+				url = url+"&todate="+tdt;
+				myTable.ajax.url(url).load();
+					
+			}
+
+			function test1(){
+				branch = $("#warehouse2").val();
+				if(branch == ""){
+					alert("select warehouse");
+					return;
+				}
+				fdt = $("#fromdate1").val();
+				if(fdt == ""){
+					alert("select FROM date");
+					return;
+				}
+				tdt = $("#todate1").val();
+				if(tdt == ""){
+					alert("select TO date");
+					return;
+				}
+				//$("#paginate").submit();	
+				var url = "getinventorydatatabledata?name=usedstock";
+				url = url+"&warehouse="+branch;
+				url = url+"&fromdate="+fdt;
+				url = url+"&todate="+tdt;
+				url = url+"&repairs=repairs";
+				//alert(url);
+				myTable1.ajax.url(url).load();
+					
 			}
 			
 
@@ -717,6 +878,7 @@
 			    	  }
 			    	  if(obj.itemnumberstatus=="Yes"){
 			    		  $("#itemnumbers").html(obj.itemnumbers);
+			    		  $("#qty").attr("readonly",true);
 			    		  $("#div_itemnumbers").show();
 			    	  }
 			    	  if(obj.alertstatus=="Yes"){
@@ -753,6 +915,18 @@
 				});
 			};
 
+			function calItemCount(id){
+				count = $("#itemnumbers :selected").length;
+				$("#qty").val(count);
+			}
+
+			function calItemCountText(id){
+				count = $("#itemnumbers").val();
+				count = count.split(",");
+				count = count.length;
+				$("#qty").val(count);
+			}
+
 			function getItemInfo1(val){
 				$.ajax({
 			      url: "getiteminfo?action=vehicletovehicle&id="+val,
@@ -778,6 +952,32 @@
 					alert("entter date");
 					return;
 				}
+
+				var creditsupplier = $("#creditsupplier").val();
+				if(creditsupplier != undefined && creditsupplier ==""){
+					alert("Please select creditsupplier");
+					return false;
+				}
+
+				var amountpaid = $("#amountpaid").val();
+				if(amountpaid != undefined && amountpaid ==""){
+					alert("Please select amountpaid");
+					return false;
+				}
+				if(amountpaid == "Yes"){
+					var paymenttype = $("#paymenttype").val();
+					if(paymenttype != undefined && paymenttype ==""){
+						alert("Please select paymenttype");
+						return false;
+					}
+				}
+
+				var totalamount = $("#totalamount").val();
+				if(totalamount != undefined && totalamount ==""){
+					alert("Please select totalamount");
+					return false;
+				}
+				
 				submit_data=true;
 				return false;
 				
@@ -913,9 +1113,11 @@
 				}
 			}
 
+			var myTable = null;
+			var myTable1 = null;
 			jQuery(function($) {		
 				//initiate dataTables plugin
-				var myTable = 
+				myTable = 
 				$('#dynamic-table')
 				//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
 
@@ -961,173 +1163,55 @@
 						style: 'multi'
 					}
 			    } );
-			
-				
-				
-				$.fn.dataTable.Buttons.swfPath = "../assets/js/dataTables/extensions/buttons/swf/flashExport.swf"; //in Ace demo ../assets will be replaced by correct assets path
-				$.fn.dataTable.Buttons.defaults.dom.container.className = 'dt-buttons btn-overlap btn-group btn-overlap';
-				
-				/*new $.fn.dataTable.Buttons( myTable, {
-					buttons: [
-					  {
-						"extend": "colvis",
-						"text": "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>",
-						"className": "btn btn-white btn-primary btn-bold",
-						columns: ':not(:first):not(:last)'
-					  },
-					  {
-						"extend": "copy",
-						"text": "<i class='fa fa-copy bigger-110 pink'></i> <span class='hidden'>Copy to clipboard</span>",
-						"className": "btn btn-white btn-primary btn-bold"
-					  },
-					  {
-						"extend": "csv",
-						"text": "<i class='fa fa-database bigger-110 orange'></i> <span class='hidden'>Export to CSV</span>",
-						"className": "btn btn-white btn-primary btn-bold"
-					  },
-					  {
-						"extend": "excel",
-						"text": "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
-						"className": "btn btn-white btn-primary btn-bold"
-					  },
-					  {
-						"extend": "pdf",
-						"text": "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
-						"className": "btn btn-white btn-primary btn-bold"
-					  },
-					  {
-						"extend": "print",
-						"text": "<i class='fa fa-print bigger-110 grey'></i> <span class='hidden'>Print</span>",
-						"className": "btn btn-white btn-primary btn-bold",
-						autoPrint: false,
-						message: 'This print was produced using the Print button for DataTables'
-					  }		  
-					]
-				} );
-				myTable.buttons().container().appendTo( $('.tableTools-container') );
-				*/
-				
-				//style the message box
-				var defaultCopyAction = myTable.button(1).action();
-				myTable.button(1).action(function (e, dt, button, config) {
-					defaultCopyAction(e, dt, button, config);
-					$('.dt-button-info').addClass('gritter-item-wrapper gritter-info gritter-center white');
-				});
-				
-				
-				var defaultColvisAction = myTable.button(0).action();
-				myTable.button(0).action(function (e, dt, button, config) {
+
+
+				myTable1 = 
+					$('#dynamic-table1')
+					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
+
+					//.wrap("<div id='tableData' style='width:300px; overflow: auto;overflow-y: hidden;-ms-overflow-y: hidden; position:relative; margin-right:5px; padding-bottom: 15px;display:block;'/>"); 
 					
-					defaultColvisAction(e, dt, button, config);
-					
-					
-					if($('.dt-button-collection > .dropdown-menu').length == 0) {
-						$('.dt-button-collection')
-						.wrapInner('<ul class="dropdown-menu dropdown-light dropdown-caret dropdown-caret" />')
-						.find('a').attr('href', '#').wrap("<li />")
-					}
-					$('.dt-button-collection').appendTo('.tableTools-container .dt-buttons')
-				});
-			
-				////
-			
-				setTimeout(function() {
-					$($('.tableTools-container')).find('a.dt-button').each(function() {
-						var div = $(this).find(' > div').first();
-						if(div.length == 1) div.tooltip({container: 'body', title: div.parent().text()});
-						else $(this).tooltip({container: 'body', title: $(this).text()});
-					});
-				}, 500);
+					.DataTable( {
+						bJQueryUI: true,
+						"bPaginate": true, "bDestroy": true,
+						bInfo: true,
+						"aoColumns": [
+						  <?php $cnt=count($values["theads1"]); for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
+						],
+						"aaSorting": [],
+						oLanguage: {
+					        sProcessing: '<i class="ace-icon fa fa-spinner fa-spin orange bigger-250"></i>'
+					    },
+						"bProcessing": true,
+				        "bServerSide": true,
+						"ajax":{
+			                url :"getinventorydatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
+			                type: "get",  // method  , by default get
+			                error: function(){  // error handling
+			                    $(".employee-grid-error").html("");
+			                    $("#dynamic-table").append('<tbody class="employee-grid-error"><tr>No data found in the server</tr></tbody>');
+			                    $("#employee-grid_processing").css("display","none");
+			 
+			                }
+			            },
+				
+						//"sScrollY": "500px",
+						//"bPaginate": false,
+						"sScrollX" : "true",
+						//"sScrollX": "300px",
+						//"sScrollXInner": "120%",
+						"bScrollCollapse": true,
+						//Note: if you are applying horizontal scrolling (sScrollX) on a ".table-bordered"
+						//you may want to wrap the table inside a "div.dataTables_borderWrap" element
+				
+						//"iDisplayLength": 50
 				
 				
-				
-				
-				
-				myTable.on( 'select', function ( e, dt, type, index ) {
-					if ( type === 'row' ) {
-						$( myTable.row( index ).node() ).find('input:checkbox').prop('checked', true);
-					}
-				} );
-				myTable.on( 'deselect', function ( e, dt, type, index ) {
-					if ( type === 'row' ) {
-						$( myTable.row( index ).node() ).find('input:checkbox').prop('checked', false);
-					}
-				} );
+						select: {
+							style: 'multi'
+						}
+				    } );
 			
-			
-			
-			
-				/////////////////////////////////
-				//table checkboxes
-				$('th input[type=checkbox], td input[type=checkbox]').prop('checked', false);
-				
-				//select/deselect all rows according to table header checkbox
-				$('#dynamic-table > thead > tr > th input[type=checkbox], #dynamic-table_wrapper input[type=checkbox]').eq(0).on('click', function(){
-					var th_checked = this.checked;//checkbox inside "TH" table header
-					
-					$('#dynamic-table').find('tbody > tr').each(function(){
-						var row = this;
-						if(th_checked) myTable.row(row).select();
-						else  myTable.row(row).deselect();
-					});
-				});
-				
-				//select/deselect a row when the checkbox is checked/unchecked
-				$('#dynamic-table').on('click', 'td input[type=checkbox]' , function(){
-					var row = $(this).closest('tr').get(0);
-					if(!this.checked) myTable.row(row).deselect();
-					else myTable.row(row).select();
-				});
-			
-			
-			
-				$(document).on('click', '#dynamic-table .dropdown-toggle', function(e) {
-					e.stopImmediatePropagation();
-					e.stopPropagation();
-					e.preventDefault();
-				});
-				
-				
-				
-				//And for the first simple table, which doesn't have TableTools or dataTables
-				//select/deselect all rows according to table header checkbox
-				var active_class = 'active';
-				$('#simple-table > thead > tr > th input[type=checkbox]').eq(0).on('click', function(){
-					var th_checked = this.checked;//checkbox inside "TH" table header
-					
-					$(this).closest('table').find('tbody > tr').each(function(){
-						var row = this;
-						if(th_checked) $(row).addClass(active_class).find('input[type=checkbox]').eq(0).prop('checked', true);
-						else $(row).removeClass(active_class).find('input[type=checkbox]').eq(0).prop('checked', false);
-					});
-				});
-				
-				//select/deselect a row when the checkbox is checked/unchecked
-				$('#simple-table').on('click', 'td input[type=checkbox]' , function(){
-					var $row = $(this).closest('tr');
-					if(this.checked) $row.addClass(active_class);
-					else $row.removeClass(active_class);
-				});
-			
-				
-			
-				/********************************/
-				//add tooltip for small view action buttons in dropdown menu
-				$('[data-rel="tooltip"]').tooltip({placement: tooltip_placement});
-				
-				//tooltip placement on right or left
-				function tooltip_placement(context, source) {
-					var $source = $(source);
-					var $parent = $source.closest('table')
-					var off1 = $parent.offset();
-					var w1 = $parent.width();
-			
-					var off2 = $source.offset();
-					//var w2 = $source.width();
-			
-					if( parseInt(off2.left) < parseInt(off1.left) + parseInt(w1 / 2) ) return 'right';
-					return 'left';
-				}
 				$('<button style="margin-top:-5px;" class="btn btn-minier btn-primary" id="refresh"><i style="margin-top:-2px; padding:6px; padding-right:5px;" class="ace-icon fa fa-refresh bigger-110"></i></button>').appendTo('div.dataTables_filter');
 				$("#refresh").on("click",function(){ myTable.search( '', true ).draw(); });
 			});
@@ -1154,6 +1238,10 @@
 				condition_elements.forEach(function(entry) {
 					itemm_val = $("#"+entry).val();
 					if(typeof itemm_val === "undefined" || itemm_val == ""){
+						alert("select "+entry);
+						isReturn=true;
+					}
+					else if(entry=="qty" && itemm_val==0){
 						alert("select "+entry);
 						isReturn=true;
 					}
@@ -1250,7 +1338,6 @@
 				var index = -1;		
 				var comArr = eval( entities_text );
 				for( var i = 0; i < comArr.length; i++ ) {
-					alert("updateRow :"+comArr[i].rowid+" - "+editrowid);
 					if( comArr[i].rowid == editrowid ) {
 						index = i;
 						ids.forEach(function(entry) {
@@ -1284,7 +1371,6 @@
 				var index = -1;		
 				var comArr = eval(entities_text);
 				for( var i = 0; i < comArr.length; i++ ) {
-					alert("removeRow :"+comArr[i].rowid+" - "+rowid1);
 					if( comArr[i].rowid == rowid1 ) {
 						index = i;
 						break;
