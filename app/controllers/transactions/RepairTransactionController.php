@@ -42,13 +42,13 @@ class RepairTransactionController extends \Controller {
 					}
 				}
 			}
-			if(isset($values["clientname"]) && isset($values["depot"])){
+			/* if(isset($values["clientname"]) && isset($values["depot"])){
 				$contract = \Contract::where("clientId","=",$values["clientname"])->where("depotId","=",$values["depot"])->get();
 				if(count($contract)>0){
 					$contract = $contract[0];
 					$fields["contractId"] = $contract->id;
 				}
-			}
+			} */
 			if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
 				$destinationPath = storage_path().'/uploads/'; // upload path
 				$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension
@@ -80,7 +80,24 @@ class RepairTransactionController extends \Controller {
 					$fields["amount"] = $jsonitem->i3;
 					$fields["comments"] = $jsonitem->i4;
 					$fields["vehicleIds"] = $jsonitem->i7;
+					$veh_arr = explode(",",$jsonitem->i7);
+					$con_ids = "";
+					foreach ($veh_arr as $veh){
+						$contract_veh = \ContractVehicle::where("vehicleId","=",$veh)
+										->where("status","=","ACTIVE")->get();
+						if(count($contract_veh)>0){
+							$contract_veh = $contract_veh[0];
+							$con_ids = $con_ids.$contract_veh->contractId.",";
+							$url = "repairtransactions?type=contracts";
+						}
+					}
+					$fields["contractIds"] = $con_ids;
 					$db_functions_ctrl->insert($table, $fields);
+					$table = "CreditSupplierTransactions";
+					$data = array("id"=>$recid);
+					$fields = array();
+					$fields["contractId"] = $con_ids;
+					$db_functions_ctrl->update($table, $fields, $data);
 				}
 				
 			}
@@ -126,13 +143,13 @@ class RepairTransactionController extends \Controller {
 					}
 				}
 			}
-			if(isset($values["clientname"]) && isset($values["depot"])){
+			/* if(isset($values["clientname"]) && isset($values["depot"])){
 				$contract = \Contract::where("clientId","=",$values["clientname"])->where("depotId","=",$values["depot"])->get();
 				if(count($contract)>0){
 					$contract = $contract[0];
 					$fields["contractId"] = $contract->id;
 				}
-			}
+			} */
 			if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
 				$destinationPath = storage_path().'/uploads/'; // upload path
 				$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension
@@ -158,14 +175,32 @@ class RepairTransactionController extends \Controller {
 				$table::where('creditSupplierTransId',"=", $values['id1'])->update(array("status"=>"DELETED"));
 				$jsonitems = json_decode($values["jsondata"]);
 				foreach ($jsonitems as $jsonitem){
-					$fields = array();
-					$fields["repairedItem"] = $jsonitem->i7;
-					$fields["quantity"] = $jsonitem->i2;
-					$fields["amount"] = $jsonitem->i3;
-					$fields["comments"] = $jsonitem->i4;
-					$fields["vehicleIds"] = $jsonitem->i8;
-					$fields["creditSupplierTransId"] = $values["id1"];
-					$db_functions_ctrl->insert($table, $fields);
+						$fields = array();
+						$fields["creditSupplierTransId"] = $values['id1'];
+						$fields["repairedItem"] = $jsonitem->i7;
+						$fields["quantity"] = $jsonitem->i2;
+						$fields["amount"] = $jsonitem->i3;
+						$fields["comments"] = $jsonitem->i4;
+						$fields["vehicleIds"] = $jsonitem->i8;
+						$veh_arr = explode(",",$jsonitem->i8);
+						$con_ids = "";
+						foreach ($veh_arr as $veh){
+							$contract_veh = \ContractVehicle::where("vehicleId","=",$veh)
+											->where("status","=","ACTIVE")->get();
+							if(count($contract_veh)>0){
+								$contract_veh = $contract_veh[0];
+								$con_ids = $con_ids.$contract_veh->contractId.",";
+								$url = "repairtransactions?type=contracts";
+							}
+						}
+						$fields["contractIds"] = $con_ids;
+						$table = "CreditSupplierTransDetails";
+						$db_functions_ctrl->insert($table, $fields);
+						$table = "CreditSupplierTransactions";
+						$data = array("id"=>$values['id1']);
+						$fields = array();
+						$fields["contractId"] = $con_ids;
+						$db_functions_ctrl->update($table, $fields, $data);
 				}
 				
 			}
@@ -261,7 +296,7 @@ class RepairTransactionController extends \Controller {
 			$form_field = array("name"=>"date", "id"=>"date", "value"=>date("d-m-Y", strtotime($entity->date)), "content"=>"Transaction date", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
 			$form_fields[] = $form_field;
 			$veh_arr = array();
-			if($entity->contractId>0){
+			/* if($entity->contractId>0){
 				$veh_arr = array();
 				$ass_clientbranches = \Auth::user()->contractIds;
 				$ass_clientbranches = explode(",", $ass_clientbranches);
@@ -288,7 +323,7 @@ class RepairTransactionController extends \Controller {
 				}
 				$form_field = array("name"=>"depot", "id"=>"depot", "content"=>"depot/branch name", "readonly"=>"", "value"=>$contract->depotId, "required"=>"", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>$depots_arr);
 				$form_fields[] = $form_field;
-			}
+			} */
 			
 			/* $form_field = array("name"=>"vehicle", "id"=>"vehicle", "value"=>$entity->vehicleId, "content"=>"Vehicle", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$veh_arr, "class"=>"form-control chosen-select");
 			$form_fields[] = $form_field; */
@@ -384,6 +419,29 @@ class RepairTransactionController extends \Controller {
 			$items = \LookupTypeValues::where("parentId","=",$parentId)->where("status","=","ACTIVE")->get();
 			foreach ($items as $item){
 				$items_arr[$item->id] = $item->name;
+			}
+			
+			if($entity->contractId != "" && $entity->contractId != 0){
+				$veh_arr = array();
+				$ass_clientbranches = \Auth::user()->contractIds;
+				$ass_clientbranches = explode(",", $ass_clientbranches);
+				$contracts_vehs = \ContractVehicle::whereIn("contracts.depotId",$ass_clientbranches)
+				->where("contract_vehicles.status","=","ACTIVE")
+				->join("contracts","contract_vehicles.contractId","=","contracts.id")
+				->join("vehicle","contract_vehicles.vehicleId","=","vehicle.id")
+				->select(array("vehicle.id as id", "vehicle.veh_reg as veh_reg"))->get();
+				foreach ($contracts_vehs as $contracts_veh){
+					$veh_arr[$contracts_veh->id] = $contracts_veh->veh_reg;
+				}
+				$clients =  AppSettingsController::getEmpClients();
+				$clients_arr = array();
+				foreach ($clients as $client){
+					$clients_arr[$client['id']] = $client['name'];
+				}
+				/* $form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+				 $form_fields[] = $form_field;
+				 $form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
+				 $form_fields[] = $form_field; */
 			}
 			
 			
@@ -750,25 +808,25 @@ class RepairTransactionController extends \Controller {
 		$form_fields[] = $form_field;
 		if(isset($values["type"]) && $values["type"]=="contracts"){
 			$veh_arr = array();
-// 			$ass_clientbranches = \Auth::user()->contractIds;
-// 			$ass_clientbranches = explode(",", $ass_clientbranches);
-// 			$contracts_vehs = \ContractVehicle::whereIn("contracts.depotId",$ass_clientbranches)
-// 							->where("contract_vehicles.status","=","ACTIVE")
-// 							->join("contracts","contract_vehicles.contractId","=","contracts.id")	
-// 							->join("vehicle","contract_vehicles.vehicleId","=","vehicle.id")
-// 							->select(array("vehicle.id as id", "vehicle.veh_reg as veh_reg"))->get();
-// 			foreach ($contracts_vehs as $contracts_veh){
-// 				$veh_arr[$contracts_veh->id] = $contracts_veh->veh_reg;
-// 			}
+			$ass_clientbranches = \Auth::user()->contractIds;
+			$ass_clientbranches = explode(",", $ass_clientbranches);
+			$contracts_vehs = \ContractVehicle::whereIn("contracts.depotId",$ass_clientbranches)
+							->where("contract_vehicles.status","=","ACTIVE")
+							->join("contracts","contract_vehicles.contractId","=","contracts.id")	
+							->join("vehicle","contract_vehicles.vehicleId","=","vehicle.id")
+							->select(array("vehicle.id as id", "vehicle.veh_reg as veh_reg"))->get();
+			foreach ($contracts_vehs as $contracts_veh){
+				$veh_arr[$contracts_veh->id] = $contracts_veh->veh_reg;
+			}
 			$clients =  AppSettingsController::getEmpClients();
 			$clients_arr = array();
 			foreach ($clients as $client){
 				$clients_arr[$client['id']] = $client['name'];
 			}
-			$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+			/* $form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
-			$form_fields[] = $form_field;
+			$form_fields[] = $form_field; */
 		}
 		/* $form_field = array("name"=>"vehicle", "content"=>"Vehicle", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$veh_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field; */

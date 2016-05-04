@@ -255,6 +255,26 @@ class EmployeeController extends \Controller {
 			$form_info["form_fields"] = $form_fields;
 			$modals[] = $form_info;
 			
+			$form_info = array();
+			$form_info["name"] = "rejoin";
+				
+			$form_info["action"] = "rejoinemployee";
+			$form_info["method"] = "post";
+			$form_info["class"] = "form-horizontal";
+			
+			$form_fields = array();
+			$form_field = array("name"=>"blockedreson", "readonly"=>"", "content"=>"blocked reson", "required"=>"required", "type"=>"textarea", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"emprejoindate", "content"=>"emp rejoin date", "readonly"=>"",  "required"=>"", "type"=>"text","action"=>array("type"=>"onchange","script"=>"getEmpId()"), "class"=>"form-control date-picker");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"empid2", "content"=>"emp id", "readonly"=>"readonly", "required"=>"required","type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"id2", "content"=>"", "readonly"=>"readonly",  "required"=>"", "type"=>"hidden", "value"=>"", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			
+			$form_info["form_fields"] = $form_fields;
+			$modals[] = $form_info;
+			
 			$values["modals"] = $modals;
 				
 			return View::make('masters.layouts.employeedatatable', array("values"=>$values));
@@ -439,6 +459,31 @@ class EmployeeController extends \Controller {
 		
 	}
 	
+	public function rejoinEmployee()
+	{
+		$values = Input::all();
+		if (\Request::isMethod('post'))
+		{
+			//$values["DSf"];
+			$emp = \Employee::find($values["id2"]);
+			$new_emp = $emp->replicate();
+			$new_emp->joiningDate = date("Y-m-d",strtotime($values["emprejoindate"]));
+			$new_emp->empCode = $values["empid2"];
+			$new_emp->status = "ACTIVE";
+			$new_emp->save();
+			$empid = \Employee::where("empCode","=",$values["empid2"])->first();
+			$table = "SalaryDetails";
+			$fields = array("empId"=>$empid->id);
+			$db_functions_ctrl->insert($table, $fields);
+			\Session::put("message","Operation completed Successfully");
+			return \Redirect::to("employees");
+		}
+		else{
+			\Session::put("message","Operation Could not be completed, Try Again!");
+			return \Redirect::to("employees");
+		}
+	}
+	
 
 
 	/**
@@ -484,6 +529,8 @@ class EmployeeController extends \Controller {
 			echo "NO";
 		}
 	}
+	
+	
 
 
 }

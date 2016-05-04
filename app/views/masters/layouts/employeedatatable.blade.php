@@ -133,12 +133,28 @@
 				$("#page").val(page);
 				$("#paginate").submit();				
 			}
+			( '80',  'M.JAGADISH',  'MST092',  '')
 			function modalTerminateEmployee(id, name, empid){
 				$("#empname").val(name);
 				$("#id").val(id);
 				$("#empid").val(empid);
 				return;
 				
+			}
+			function modalRejoinEmployee(id,fullName,empCode,blockedReson){
+				$("#id2").val(id);
+				$("#blockedreson").val(blockedReson);
+				return;
+				
+			}
+			function getEmpId(){
+				$.ajax({
+			      url: "getempid",
+			      success: function(data) {
+			    	  $("#empid2").val(data);
+			      },
+			      type: 'GET'
+			   });
 			}
 			function modalBlockEmployee(id, name, empid){
 				$("#empname1").val(name);

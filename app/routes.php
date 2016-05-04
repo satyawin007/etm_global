@@ -77,7 +77,11 @@ Route::post('/login', function()
 	$values = Input::All();
 	if (Auth::attempt(array('emailId' => $values["email"], 'password' => $values["password"])))
 	{
-	    $roleid = Auth::user()->rolePrevilegeId;
+	    if(Auth::user()->status != "ACTIVE"){
+	    	Session::flash('message', 'wrong username/password');
+	    	return View::make('masters.login');
+	    }
+		$roleid = Auth::user()->rolePrevilegeId;
 	    $privileges = RolePrivileges::where("roleId","=",$roleid)->get();
 	    $privileges_arr = array();
 	    foreach ($privileges as $privilege){
@@ -143,6 +147,8 @@ Route::get('/employees',"masters\EmployeeController@manageEmployees");
 Route::post('/terminateemployee',"masters\EmployeeController@terminateEmployee");
 
 Route::post('/blockemployee',"masters\EmployeeController@blockEmployee");
+
+Route::post('/rejoinemployee',"masters\EmployeeController@rejoinEmployee");
 
 Route::get('/addemployee', function()
 {
@@ -280,6 +286,10 @@ Route::get('/incometransactions', "transactions\TransactionController@manageInco
 Route::get('/expensetransactions', "transactions\TransactionController@manageExpenseTransactions");
 
 Route::get('/fueltransactions', "transactions\TransactionController@manageFuelTransactions");
+
+Route::get('/getendreading', "transactions\TransactionController@getEndReading");
+
+Route::get('/getpreviouslogs', "transactions\TransactionController@getPreviousLogs");
 
 Route::any('/addtransaction', "transactions\TransactionController@addTransaction");
 
@@ -498,6 +508,10 @@ Route::any('/verifytransactiondateandbranch', "masters\BlockDataEntryController@
 
 Route::get('/showalerts', function() {
 	return View::make('alerts.showalerts');
+});
+
+Route::get('/showempincreamentalerts', function() {
+	return View::make('alerts.showempincrementalerts');
 });
 
 Route::get('/profile', function() {

@@ -599,6 +599,7 @@
 				isEdit = false;
 				editRowId = -1;
 				$("#status option").each(function() { this.selected = (this.value == ""); });
+				$("#vehicles option").each(function() { this.selected = (this.value == ""); });
 				$("#item option").each(function() { this.selected = (this.value == ""); });
 				$("#iteminfo option").each(function() { this.selected = (this.value == ""); });
 				$("#quantity").val("");

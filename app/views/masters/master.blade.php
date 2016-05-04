@@ -54,8 +54,10 @@
 			<?php
 				$total_alerts = 0;
 				$tires_alert_data = "";
+				$tires_alert_data_emp = "";
 				$today = date("Y-m-d");
 				$next_month = date('Y-m-d', strtotime('+1 month'));
+				
 				$sql = "select vehicle.veh_reg,inventory_transaction.alertDate from inventory_transaction join vehicle on vehicle.id=inventory_transaction.toVehicleId where alertDate BETWEEN '".$today."' and '".$next_month."'";
 				$recs = \DB::select(\DB::raw($sql));
 				$total_alerts = $total_alerts+count($recs);
@@ -63,6 +65,25 @@
 					$dt = date('d-m-Y', strtotime($rec->alertDate));
 					$tires_alert_data = $tires_alert_data.'<span class="pull-right">'.$rec->veh_reg.' &nbsp;('.$dt.')</span>';
 				}
+				$one_year_less_date = date('Y-m-d', strtotime('-12 month'));
+				$last_year = date('Y', strtotime($one_year_less_date));
+				$entities = Employee::where("status","=","ACTIVE")->get();
+				$count = 0;
+				foreach ($entities as $entity){
+					$joindate_day = date('d', strtotime($entity->joiningDate));
+					$joindate_month = date('m', strtotime($entity->joiningDate));
+					$one_year_less_join_date = $last_year."-".$joindate_month."-".$joindate_day;
+					$date1=date_create($one_year_less_join_date);
+					$date2=date_create($today);
+					$diff=date_diff($date1,$date2);
+					$date3=date_create($entity->joiningDate);
+					$date4=date_create($today);
+					$diff1=date_diff($date3,$date4);
+					if($diff->format("%a") >= 365 && $diff1->format("%a") >= 365){
+						$count++;
+					}
+				}
+				
 			?>
 
 			<div class="navbar-container" id="navbar-container">
@@ -139,6 +160,15 @@
 																	{{$tires_alert_data}}
 																	</div>
 																</div>
+															</a>
+															<a href="showempincreamentalerts">
+																<div class="clearfix">
+																	<span style="font-size:13px; font-weight: bold;" class="pull-left">Employee Increament Alerts : </span><br/>
+																	<div style="padding: 5px; color: red; font-weight: bold;">
+																	{{$count}}
+																	</div>
+																</div>
+																
 
 																<div class="progress progress-mini">
 																	<div style="width:65%" class="progress-bar"></div>
