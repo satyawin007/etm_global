@@ -56,6 +56,57 @@ use settings\AppSettingsController;
 	@stop
 
 	@section('page_content')
+	<div id="previous_logs">
+		<div class="row" style="margin-top: 0px;">
+                        	<div class=" col-xs-offset-1 col-xs-10  widget-container-col ui-sortable">
+										<div class="widget-box widget-color-blue3">
+											<!-- #section:custom/widget-box.options -->
+					<div class="widget-header">
+						<h4 class="widget-title bigger lighter">
+							<i class="ace-icon fa fa-table"></i>
+							PREAVIOUS FUEL TRANSACTIONS
+						</h4>
+
+						<div class="widget-toolbar widget-toolbar-light no-border">
+						</div>
+					</div>
+
+					<!-- /section:custom/widget-box.options -->
+					<div class="widget-body">
+						<div class="widget-main no-padding">
+							<table class="table table-striped table-bordered table-hover">
+								<thead class="thin-border-bottom">
+									<tr>
+										<th>
+											FILLED DATE
+										</th>
+										<th>
+											METER READING
+										</th>
+										<th>
+											LITERS
+										</th>
+										<th>
+											AMOUNT
+										</th>
+										<th>
+											FULL TANK
+										</th>
+										<th>
+											MILEAGE
+										</th>
+									</tr>
+								</thead>
+								<tbody id="previous_logs_data">
+																								
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+       </div>
+	</div>
 	<?php $form_info = $values["form_info"]; ?>
 	<?php $jobs = Session::get("jobs"); ?>
 	<?php if(($values['bredcum'] == "INCOME TRANSACTIONS" && in_array(301, $jobs)) ||  ($values['bredcum'] == "EXPENSES TRANSACTIONS" && in_array(303, $jobs)) || ($values['bredcum'] == "FUEL TRANSACTIONS" && in_array(305, $jobs)) || ($values['bredcum'] == "CONTRACT FUEL TRANSACTIONS" && in_array(305, $jobs))){?>
@@ -263,6 +314,7 @@ use settings\AppSettingsController;
 			$("#date").on("change",function(){$('#trantypebody').hide(); $("#transactionform").hide(); $('#incomebody').hide(); $('#expensebody').hide(); $('#verify').show();});
 			$("#transtype").val(<?php echo "'".$values["transtype"]."'" ?>);
 			transtype = <?php echo "'".$values["transtype"]."'" ?>;
+			$("#previous_logs").hide();
 
 			function enableIncharge(val){
 				if(val == "YES"){
@@ -273,6 +325,29 @@ use settings\AppSettingsController;
 					$("#incharge").attr("disabled",true);
 					$('.chosen-select').trigger('chosen:updated');
 				}
+			}
+
+			function getendreading(val){
+				$.ajax({
+			      url: "getendreading?id="+val,
+			      success: function(data) {
+			    	  json_data = JSON.parse(data);
+			    	  $("#startreading").val(json_data.endReading);
+			      },
+			      type: 'GET'
+			   });
+			}
+
+			function getpreviouslogs(val){
+				var vehicleid = $("#vehicleno").val();previous_logs_data
+				$.ajax({
+			      url: "getpreviouslogs?date="+val+"&vehicleid="+vehicleid,
+			      success: function(data) {
+			    	  $("#previous_logs").show();
+			    	  $("#previous_logs_data").html(data);
+			      },
+			      type: 'GET'
+			   });
 			}
 			
 			function test(){;

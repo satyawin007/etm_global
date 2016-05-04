@@ -186,6 +186,12 @@ class TransactionController extends \Controller {
 					$contract_veh = $contract_veh[0];
 					$fields["contractId"] = $contract_veh->contractId;
 				}
+				if(isset($values["fulltank"]) && $values["fulltank"] == "YES"){
+					$fields["fullTank"] = "YES";
+				}
+				else{
+					$fields["fullTank"] = "NO";
+				}
 				
 				if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
 					$destinationPath = storage_path().'/uploads/'; // upload path
@@ -1137,7 +1143,7 @@ class TransactionController extends \Controller {
 			$form_fields[] = $form_field;
 		}
 		else{
-			$form_field = array("name"=>"vehicleno", "content"=>"vehicle number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
+			$form_field = array("name"=>"vehicleno", "content"=>"vehicle number", "readonly"=>"", "action"=>array("type"=>"onchange","script"=>"getendreading(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
 			$form_fields[] = $form_field;
 		}
 		/*
@@ -1154,7 +1160,7 @@ class TransactionController extends \Controller {
 			$incharges_arr[$incharge->id] = $incharge->name;
 		}
 		
-		$form_field = array("name"=>"date", "content"=>"filled date", "readonly"=>"",  "required"=>"", "type"=>"text",  "class"=>"form-control date-picker");
+		$form_field = array("name"=>"date", "content"=>"filled date", "readonly"=>"","action"=>array("type"=>"onchange","script"=>"getpreviouslogs(this.value)"), "required"=>"", "type"=>"text",  "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"fuelstationname", "content"=>"fuel station name", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$fuelstations_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
@@ -1181,6 +1187,8 @@ class TransactionController extends \Controller {
 		$form_field = array("name"=>"paymentpaid", "value"=>"No", "content"=>"payment paid", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "action"=>array("type"=>"onChange","script"=>"enablePaymentType(this.value)"), "options"=>array("Yes"=>"YES","No"=>"NO"));
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"fulltank", "content"=>"full tank", "readonly"=>"",  "required"=>"","type"=>"radio", "class"=>"form-control","options"=>array("YES"=>"YES", "NO"=>"NO"));
 		$form_fields[] = $form_field;
 			
 		$form_info["form_fields"] = $form_fields;
@@ -1969,5 +1977,42 @@ class TransactionController extends \Controller {
 			
 		$values["modals"] = $modals;
 		return View::make('transactions.datatable', array("values"=>$values));
+	}
+	
+	public function getEndReading()
+	{
+		$values = Input::all();
+		$json_resp = array();
+		$entity = \ServiceLog::where("contractVehicleId","=",$values['id'])->orderBy("serviceDate","desc")->first();
+		$json_resp["endReading"] = $entity->endReading;
+		echo json_encode($json_resp);
+	}
+	
+	public function getPreviousLogs()
+	{
+		$values = Input::all();
+		$json_resp = array();
+		$table = "";
+		$entities = \FuelTransaction::where("filledDate","<",date("Y-m-d",strtotime($values['date'])))
+								->where("vehicleId","=",$values['vehicleid'])
+								->limit(6)->orderBy("filledDate","desc")->get();
+		$i=0;
+		$cnt = count($entities);
+		if((count($entities)>5)){
+			$cnt = 5;
+		}
+		for($i=0; $i<$cnt; $i++){
+			$table = $table."<tr>";
+			$table = $table."<td>".date("d-m-Y",strtotime($entities[$i]->filledDate))."</td>";
+			$table = $table."<td>".$entities[$i]->startReading."</td>";
+			$table = $table."<td>".$entities[$i]->litres."</td>";
+			$table = $table."<td>".$entities[$i]->amount."</td>";
+			$table = $table."<td>".$entities[$i]->fullTank."</td>";
+			if ($i+1 < $cnt){
+				$table = $table."<td>".round((($entities[$i]->startReading-$entities[$i+1]->startReading)/$entities[$i]->litres), 2)."</td>";
+			}
+			$table = $table."</tr>";
+		}
+		echo $table;
 	}
 }

@@ -91,6 +91,24 @@
 				</div>			
 			</div>
 			<?php } ?>
+			<?php if($form_field['type'] === "checkbox"){ ?>
+				<div class="form-group">
+					<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+					<div class="col-xs-8">
+						<?php 
+						$options = $form_field["options"];
+						foreach ($options as $key=>$value) {
+						?>
+						<div class="checkbox inline">
+							<label>
+								<input name="{{$key}}" id="{{$key}}" value="YES" type="checkbox" class="ace">
+								<span class="lbl">&nbsp;{{$value}} &nbsp;&nbsp;</span>
+							</label>
+						</div>
+						<?php } ?>
+					</div>
+				</div>
+			<?php } ?>	
 			
 			<?php if($form_field['type'] === "select"){ ?>
 			<div class="form-group">

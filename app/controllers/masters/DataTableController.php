@@ -164,9 +164,19 @@ class DataTableController extends \Controller {
 			}
 			//$actions[] = $action;
 		}
+		/* if(in_array(204, $this->jobs)){
+			if(isset($values['action']) && $values['action']=="rejoin") {
+				$action = array("url"=>"#rejoin", "type"=>"modal", "css"=>"pink", "js"=>"modalRejoinEmployee(", "jsdata"=>array("id","fullName","empCode"), "text"=>"Unrejoin");
+			}
+			else{
+				$action = array("url"=>"#rejoin", "type"=>"modal", "css"=>"pink", "js"=>"modalRejoinEmployee(", "jsdata"=>array("id","fullName","empCode"), "text"=>"rejoin");
+			}
+			$actions[] = $action;
+		} */
 		if(in_array(205, $this->jobs)){
 			if(isset($values['action']) && $values['action']=="blocked") {
 				$action = array("url"=>"#block", "type"=>"modal", "css"=>"purple", "js"=>"modalBlockEmployee(", "jsdata"=>array("id","fullName","empCode"),  "text"=>"Unblock");
+				$action = array("url"=>"#rejoin", "type"=>"modal", "css"=>"pink", "js"=>"modalRejoinEmployee(", "jsdata"=>array("id","fullName","empCode","blockedReson"), "text"=>"rejoin");
 			}
 			else{
 				$action = array("url"=>"#block", "type"=>"modal", "css"=>"purple", "js"=>"modalBlockEmployee(", "jsdata"=>array("id","fullName","empCode"),  "text"=>"block");
@@ -200,13 +210,23 @@ class DataTableController extends \Controller {
 				}
 			}
 			if(isset($values['action']) && $values['action']=="blocked"){
+				$select_args[] = "employee_activity.reason as blockedReson";
 				if(isset($values['branch']) && $values['branch'] != ""){
 					$branch = $values['branch'];
-					$entities = \Employee::where("officebranchId","=",$values['branch'])->where("status","=","BLOCKED")->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->select($select_args)->limit($length)->offset($start)->get();
+					$entities = \Employee::where("officebranchId","=",$values['branch'])
+										  ->where("employee.status","=","BLOCKED")
+										  ->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+										  ->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+										  ->leftjoin('employee_activity','employee_activity.empid','=','employee.id')
+										  ->select($select_args)->orderBy("employee_activity.date","desc")->limit($length)->offset($start)->get();
 					$total = \Employee::where("officebranchId","=",$values['branch'])->where("status","=","BLOCKED")->count();
 				}
 				else{
-					$entities = \Employee::where("status","=","BLOCKED")->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->select($select_args)->limit($length)->offset($start)->get();
+					$entities = \Employee::where("employee.status","=","BLOCKED")
+										  ->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+										  ->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+										  ->leftjoin('employee_activity','employee_activity.empid','=','employee.id')
+										  ->select($select_args)->orderBy("employee_activity.date","desc")->limit($length)->offset($start)->get();
 					$total = \Employee::where("status","=","BLOCKED")->count();
 				}
 			}
