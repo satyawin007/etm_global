@@ -319,5 +319,27 @@ class AppSettingsController extends \Controller {
 		return $recs;
 	}
 	
+	public function checkDuplicateEntry(){
+		$values = Input::All();
+		
+		if(!isset($values["table"])){
+			echo "error";
+			return;
+		}
+		$table = $values["table"];
+		unset($values["table"]);
+		$sql = $table::query();
+		foreach($values as  $key=>$val){
+			$sql->where($key,"=",$val);
+		}
+		$count =$sql->count();
+		if($count>0){
+			echo "exists";
+			return;
+		}
+		echo "notexists";
+		return;
+	}
+	
 }
 ?>

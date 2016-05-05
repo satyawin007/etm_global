@@ -208,7 +208,7 @@ class LookupValueController extends \Controller {
 		
 		$form_field = array("name"=>"type", "value"=>$values["type"], "content"=>"type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$types_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"value", "content"=>"value", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"value", "content"=>"value", "readonly"=>"", "action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'LookupTypeValues')"), "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 // 		$form_field = array("name"=>"modules", "content"=>"show in modules", "readonly"=>"",  "required"=>"","type"=>"checkbox", "options"=>array("incharge"=>"YES", "vehicle"=>"YES", "branch"=>"YES", "employee"=>"YES"), "class"=>"form-control");
 // 		$form_fields[] = $form_field;

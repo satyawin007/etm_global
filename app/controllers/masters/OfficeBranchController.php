@@ -104,9 +104,9 @@ class OfficeBranchController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"cityname", "content"=>"city name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"officebranchname", "content"=>"office branch name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"officebranchname", "content"=>"office branch name", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'OfficeBranch')"), "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"officebranchcode", "content"=>"office branch code", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"officebranchcode", "content"=>"office branch code", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$tab = array();
 		$tab['form_fields'] = $form_fields;

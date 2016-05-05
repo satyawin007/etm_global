@@ -181,7 +181,7 @@ class LookupValueController extends \Controller {
 		
 		$form_field = array("name"=>"type", "value"=>$values["type"], "content"=>"type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$types_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"value", "content"=>"value", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"value", "content"=>"value", "readonly"=>"", "action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'InventoryLookupValues')"), "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"remarks", "content"=>"additional information", "readonly"=>"",  "required"=>"","type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -217,7 +217,7 @@ class LookupValueController extends \Controller {
 		$form_info["class"] = "form-horizontal";
 		
 		$form_fields = array();
-		$form_field = array("name"=>"parentvalue", "content"=>"parent Lookup value", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"parentvalue", "content"=>"parent Lookup value", "readonly"=>"","action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'InventoryLookupValues')"), "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"parent", "value"=>"yes", "content"=>"", "readonly"=>"", "required"=>"","type"=>"hiddent", "class"=>"form-control");
 		$form_fields[] = $form_field;

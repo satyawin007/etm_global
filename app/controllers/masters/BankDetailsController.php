@@ -282,7 +282,7 @@ class BankDetailsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"accountname", "content"=>"Account Name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"accountno", "content"=>"account number", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"accountno", "content"=>"account number", "readonly"=>"",  "required"=>"required","action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'BankDetails')"),"type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"accounttype", "content"=>"account type", "readonly"=>"",  "required"=>"required",   "type"=>"select", "class"=>"form-control chosen-select", "options"=>$actype_arr);
 		$form_fields[] = $form_field;

@@ -222,7 +222,7 @@ class ClientController extends \Controller {
 		$form_field = array("name"=>"cityname", "content"=>"city name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$citie_arr);
 		$form_fields[] = $form_field;
 		*/
-		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required","action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'Client')"),"type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"clientcode", "content"=>"client code", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -238,7 +238,7 @@ class ClientController extends \Controller {
 		$form_info["class"] = "form-horizontal";
 		$form_info["back_url"] = "clients";
 		$form_info["bredcum"] = "add client";
-		$form_field = array("name"=>"clientname1", "content"=>"client name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"clientname1", "content"=>"client name", "readonly"=>"",  "required"=>"required",  "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"clientcode1", "content"=>"client code1", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;

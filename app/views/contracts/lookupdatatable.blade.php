@@ -162,6 +162,47 @@
 				$("#paginate").submit();				
 			}
 
+			function checkvalidation(val,id,table){
+				url = "";
+				message ="";
+				if(table == "Client"){
+					url = "checkvalidation?table="+table+"&name="+val;
+					message = "This Client Name: "+val+" is already existed";
+				}
+				else if(table == "Depot"){
+					stateId = $("#statename").val();
+					districtId = $("#districtname").val();
+					cityId = $("#cityname").val();
+					if(stateId != undefined && stateId ==""){
+						alert("Please select state");
+						 $("#"+id).val("");
+						return false;
+					}
+					if(districtId != undefined && districtId ==""){
+						alert("Please select district");
+						 $("#"+id).val("");
+						return false;
+					}
+					if(cityId != undefined && cityId ==""){
+						alert("Please select city");
+						 $("#"+id).val("");
+						return false;
+					}
+					url = "checkvalidation?table="+table+"&name="+val+"&stateId="+stateId+"&cityId="+cityId+"&districtId="+districtId;
+					message = "This Depot Name: "+val+" is already existed";
+				}
+				$.ajax({
+				      url: url,
+				      success: function(data) {
+					      if(data == "exists"){
+					    	  bootbox.alert(message, function(result) {});
+					    	  $("#"+id).val("");
+					      }
+				      },
+				      type: 'GET'
+				   });
+			}
+
 			function modalEditLookupValue(id, value, remarks, modules, fields, enabled, status){
 				$("#value1").val(value);
 				$("#id1").val(id);

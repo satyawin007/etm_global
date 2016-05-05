@@ -209,7 +209,7 @@ class DistrictController extends \Controller {
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state['name'];
 		}
-		$form_field = array("name"=>"districtname", "content"=>"district name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"districtname", "content"=>"district name", "readonly"=>"","action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'District')"),  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"districtcode", "content"=>"district code", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;

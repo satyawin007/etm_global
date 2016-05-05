@@ -157,6 +157,43 @@
 			   });
 			}
 
+			function checkvalidation(val,id,table){
+				url = "";
+				message ="";
+				if(table == "OfficeBranch"){
+					stateId = $("#statename").val();
+					cityId = $("#cityname").val();
+					if(stateId != undefined && stateId ==""){
+						alert("Please select state");
+						 $("#"+id).val("");
+						return false;
+					}
+					if(cityId != undefined && cityId ==""){
+						alert("Please select city");
+						 $("#"+id).val("");
+						return false;
+					}
+					
+					url = "checkvalidation?table="+table+"&name="+val+"&stateId="+stateId+"&cityId="+cityId;
+					message = "This OfficeBranch Name: "+val+" is already existed";
+				}
+				else if(table == "Vehicle"){
+					url = "checkvalidation?table="+table+"&veh_reg="+val;
+					message = "This Vehicle No: "+val+" is already existed";
+				}
+				$.ajax({
+				      url: url,
+				      success: function(data) {
+					      if(data == "exists"){
+					    	  bootbox.alert(message, function(result) {});
+					    	  $("#"+id).val("");
+					      }
+				      },
+				      type: 'GET'
+				   });
+			}
+			
+
 			function changeCity(val){
 				$.ajax({
 			      url: "getbranchbycityid?id="+val,

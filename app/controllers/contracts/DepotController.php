@@ -237,7 +237,7 @@ class DepotController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"cityname", "content"=>"city name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$citie_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"depotname", "content"=>"depot name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"depotname", "content"=>"depot name", "readonly"=>"", "action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'Depot')"), "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"parentofficebranch", "content"=>"parent warehouse", "readonly"=>"",  "required"=>"required","type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr);
 		$form_fields[] = $form_field;

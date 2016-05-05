@@ -177,7 +177,7 @@ class ServiceDetailsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"destinationcity", "content"=>"destination city", "readonly"=>"",  "required"=>"required", "action"=>array("type"=>"onChange", "script"=>""),  "type"=>"select", "class"=>"form-control chosen-select", "options"=>$city_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"serviceno", "content"=>"Service no", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"serviceno", "content"=>"Service no", "readonly"=>"", "action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'ServiceDetails')"), "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"description", "content"=>"description", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
