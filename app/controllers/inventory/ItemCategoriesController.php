@@ -97,7 +97,7 @@ class ItemCategoriesController extends \Controller {
 		$form_info["bredcum"] = "add item category";
 		
 		$form_fields = array();		
-		$form_field = array("name"=>"name", "content"=>"Item Category name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"name", "content"=>"Item Category name", "readonly"=>"","action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'ItemCategories')"),  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"description", "content"=>"description", "readonly"=>"",  "required"=>"","type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;

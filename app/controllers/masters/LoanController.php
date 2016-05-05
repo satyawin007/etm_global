@@ -419,13 +419,13 @@ class LoanController extends \Controller {
 			$fincompanies_arr[$fincompany['id']] = $fincompany->name;
 		}
 		
-		$form_field = array("name"=>"loanno", "id"=>"loanno", "content"=>"Loan no", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"financecompany", "id"=>"financecompany",  "content"=>"finance company", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$fincompanies_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"loanno", "id"=>"loanno", "content"=>"Loan no", "readonly"=>"", "action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'Loan')"),  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"statename", "id"=>"statename",  "content"=>"state name", "readonly"=>"",  "required"=>"required", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"),  "type"=>"select", "class"=>"form-control chosen-select", "options"=>$state_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"cityname", "id"=>"cityname",  "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeCity(this.value);"),  "options"=>array(), "class"=>"form-control chosen-select");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"financecompany", "id"=>"financecompany",  "content"=>"finance company", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$fincompanies_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"loanforvehicle[]", "id"=>"loanforvehicle",  "content"=>"loan for vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$veh_arr, "multiple"=>"multiple", "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;

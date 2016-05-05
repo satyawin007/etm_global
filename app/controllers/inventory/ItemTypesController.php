@@ -103,9 +103,9 @@ class ItemTypesController extends \Controller {
 		}
 		
 		$form_fields = array();		
-		$form_field = array("name"=>"name", "content"=>"item type name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
-		$form_fields[] = $form_field;
 		$form_field = array("name"=>"itemcategory", "content"=>"item category", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$item_cat_arr, "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"name", "content"=>"item type name", "readonly"=>"","action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'ItemTypes')"),  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"description", "content"=>"description", "readonly"=>"",  "required"=>"","type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;

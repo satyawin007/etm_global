@@ -97,7 +97,7 @@ class ManufacturesController extends \Controller {
 		$form_info["bredcum"] = "add manufacturer";
 		
 		$form_fields = array();		
-		$form_field = array("name"=>"name", "content"=>"manufacturer name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"name", "content"=>"manufacturer name", "readonly"=>"","action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'Manufacturers')"),  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"description", "content"=>"description", "readonly"=>"",  "required"=>"","type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;

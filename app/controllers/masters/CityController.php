@@ -256,7 +256,7 @@ class CityController extends \Controller {
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state['name'];
 		}
-		$form_field = array("name"=>"cityname", "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"cityname", "content"=>"city name", "readonly"=>"","action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'City')"),  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"citycode", "content"=>"city code", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;

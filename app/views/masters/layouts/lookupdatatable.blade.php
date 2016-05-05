@@ -190,6 +190,97 @@
 			   });
 			}
 
+			function checkvalidation(val,id,table){
+				url = "";
+				message ="";
+				if(table == "State"){
+					url = "checkvalidation?table="+table+"&name="+val;
+					message = "This State Name: "+val+" is already existed";
+				}
+				else if(table == "District"){
+					url = "checkvalidation?table="+table+"&name="+val;
+					message = "This District Name: "+val+" is already existed";
+				}
+				else if(table == "City"){
+					url = "checkvalidation?table="+table+"&name="+val;
+					message = "This City Name: "+val+" is already existed";
+				}
+				else if(table == "ServiceDetails"){
+					url = "checkvalidation?table="+table+"&serviceNo="+val;
+					message = "This SERVICE NO: "+val+" is already existed";
+				}
+				else if(table == "BankDetails"){
+					url = "checkvalidation?table="+table+"&accountNo="+val;
+					message = "This Account NO: "+val+" is already existed";
+				}
+				else if(table == "FinanceCompany"){
+					url = "checkvalidation?table="+table+"&name="+val;
+					message = "This Finance Company Name: "+val+" is already existed";
+				}
+				else if(table == "CreditSupplier"){
+					stateId = $("#statename").val();
+					cityId = $("#cityname").val();
+					if(stateId != undefined && stateId ==""){
+						alert("Please select state");
+						 $("#"+id).val("");
+						return false;
+					}
+					if(cityId != undefined && cityId ==""){
+						alert("Please select city");
+						 $("#"+id).val("");
+						return false;
+					}
+					url = "checkvalidation?table="+table+"&supplierName="+val+"&stateId="+stateId+"&cityId="+cityId;
+					message = "This Credit Supplier Name: "+val+" is already existed";
+				}
+				else if(table == "FuelStation"){
+					stateId = $("#statename").val();
+					cityId = $("#cityname").val();
+					if(stateId != undefined && stateId ==""){
+						alert("Please select state");
+						 $("#"+id).val("");
+						return false;
+					}
+					if(cityId != undefined && cityId ==""){
+						alert("Please select city");
+						 $("#"+id).val("");
+						return false;
+					}
+					url = "checkvalidation?table="+table+"&name="+val+"&stateId="+stateId+"&cityId="+cityId;
+					message = "This Credit Supplier Name: "+val+" is already existed";
+				}
+				else if(table == "Loan"){
+					financeCompanyId = $("#financecompany").val();
+					if(financeCompanyId != undefined && financeCompanyId ==""){
+						alert("Please select finance company");
+						 $("#"+id).val("");
+						return false;
+					}
+					url = "checkvalidation?table="+table+"&loanNo="+val+"&financeCompanyId="+financeCompanyId;
+					message = "This Loan No: "+val+" is already existed";
+				}
+				else if(table == "LookupTypeValues"){
+					parentId = $("#type").val();
+					if(parentId != undefined && parentId ==""){
+						alert("Please select type");
+						 $("#"+id).val("");
+						return false;
+					}
+					url = "checkvalidation?table="+table+"&name="+val+"&parentId="+parentId;
+					message = "This VALUE: "+val+" is already existed";
+				}
+				$.ajax({
+				      url: url,
+				      success: function(data) {
+					      if(data == "exists"){
+					    	  bootbox.alert(message, function(result) {});
+					    	  $("#"+id).val("");
+					      }
+				      },
+				      type: 'GET'
+				   });
+			}
+
 			function modalEditLookupValue(id, value, remarks, modules, fields, enabled, status){
 				$("#value1").val(value);
 				$("#id1").val(id);

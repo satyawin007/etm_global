@@ -177,7 +177,7 @@ class FinanceCompanyController extends \Controller {
 			$state_arr[$state['id']] = $state->name;
 		}
 		
-		$form_field = array("name"=>"companyname", "content"=>"company Name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"companyname", "content"=>"company Name", "readonly"=>"","action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'FinanceCompany')"),  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"contactperson", "content"=>"contact person", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;

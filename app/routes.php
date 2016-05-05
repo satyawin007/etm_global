@@ -536,6 +536,8 @@ Route::any('/updateemployeepassword', "settings\UserSettingsController@updateEmp
 	
 Route::any('/updatebannersettings', "settings\AppSettingsController@updateBannerSettings");
 
+Route::any('/checkvalidation', "settings\AppSettingsController@checkDuplicateEntry");
+
 Route::get('/contractsmenu', function() {
 	return View::make('masters.contracts');
 });

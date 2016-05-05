@@ -76,7 +76,7 @@ class VehicleController extends \Controller {
 		$form_fields[] = $form_field;		
 		$form_field = array("name"=>"cityname", "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>array(), "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"vehicleregno", "content"=>"Vehicle Regd No ", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"vehicleregno", "content"=>"Vehicle Regd No ", "readonly"=>"", "action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'Vehicle')"), "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"engineno", "content"=>"Engine No ", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;

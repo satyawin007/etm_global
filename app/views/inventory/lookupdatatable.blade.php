@@ -169,6 +169,54 @@
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
 
+			function checkvalidation(val,id,table){
+				url = "";
+				message ="";
+				if(table == "InventoryLookupValues"){
+					//alert("hi");
+					parentId = $("#type").val();
+					if(parentId != undefined && parentId ==""){
+						alert("Please select type");
+						 $("#"+id).val("");
+						return false;
+					}
+					url = "checkvalidation?table="+table+"&name="+val+"&parentId="+parentId;
+					message = "This VALUE: "+val+" is already existed";
+				}
+				else if(table == "Manufacturers"){
+					url = "checkvalidation?table="+table+"&name="+val;
+					message = "This Manufacturers Name: "+val+" is already existed";
+				}
+				else if(table == "ItemCategories"){
+					url = "checkvalidation?table="+table+"&name="+val;
+					message = "This ITEM CATEGORY NAME: "+val+" is already existed";
+				}
+				else if(table == "ItemTypes"){
+					itemCategoryId = $("#itemcategory").val();
+					if(itemCategoryId != undefined && itemCategoryId == ""){
+						alert("Please select ITEM CATEGORY");
+						 $("#"+id).val("");
+						return false;
+					}
+					url = "checkvalidation?table="+table+"&name="+val+"&itemCategoryId="+itemCategoryId;
+					message = "This ITEM TYPE NAME Name: "+val+" is already existed";
+				}
+				else if(table == "Items"){
+					url = "checkvalidation?table="+table+"&name="+val;
+					message = "This ITEM NAME: "+val+" is already existed";
+				}
+				$.ajax({
+				      url: url,
+				      success: function(data) {
+					      if(data == "exists"){
+					    	  bootbox.alert(message, function(result) {});
+					    	  $("#"+id).val("");
+					      }
+				      },
+				      type: 'GET'
+				   });
+			}
+
 			function paginate(page){
 				var myin = document.createElement("input"); 
 				myin.type='hidden'; 

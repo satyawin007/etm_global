@@ -325,17 +325,17 @@ class FuelStationController extends \Controller {
 			$state_arr[$state['id']] = $state->name;
 		}
 		
-		$form_field = array("name"=>"fuelstationname", "content"=>"fuel station name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"statename", "content"=>"state name", "readonly"=>"",  "required"=>"required", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"),  "type"=>"select", "class"=>"form-control chosen-select", "options"=>$state_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"cityname", "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>array(), "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"fuelstationname", "content"=>"fuel station name", "readonly"=>"", "action"=>array("type"=>"onchange","script"=>"checkvalidation(this.value,this.id,'FuelStation')"), "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"balanceamount", "content"=>"balance Amount", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"bankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "options"=>$banks_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>""), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"statename", "content"=>"state name", "readonly"=>"",  "required"=>"required", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"),  "type"=>"select", "class"=>"form-control chosen-select", "options"=>$state_arr);
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"cityname", "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>array(), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"securitydepositamount", "content"=>"security deposit amt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control number");
 		$form_fields[] = $form_field;
