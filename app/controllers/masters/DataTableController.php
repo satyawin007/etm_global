@@ -347,7 +347,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "cities.id as id";
 			
 		$actions = array();
-		if(in_array(209, $this->jobs)){
+		if(in_array(211, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditCity(", "jsdata"=>array("id","cityName","cityCode", "stateName", "status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -462,7 +462,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "serviceproviders.configDetails as configDetails";
 						
 		$actions = array();
-		if(in_array(240, $this->jobs)){
+		if(in_array(242, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditServiceProvider(", "jsdata"=>array("id","branchId","provider","name","number","companyName","configDetails","address","refName","refNumber","status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -525,7 +525,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "officebranch.id as id";
 		
 		$actions = array();
-		if(in_array(211, $this->jobs)){
+		if(in_array(213, $this->jobs)){
 			$action = array("url"=>"editofficebranch?","css"=>"primary", "type"=>"", "text"=>"Edit");
 			$actions[] = $action;
 		}
@@ -586,7 +586,7 @@ class DataTableController extends \Controller {
 		$select_args = array('name', "parentId", "remarks", "modules", "fields", "enabled", "status", "id");
 	
 		$actions = array();
-		if(in_array(224, $this->jobs)){
+		if(in_array(226, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditLookupValue(", "jsdata"=>array("id","name","remarks","modules","fields","enabled","status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -711,11 +711,11 @@ class DataTableController extends \Controller {
 		$select_args[] = "vehicle.id as id";
 			
 		$actions = array();
-		if(in_array(213, $this->jobs)){
+		if(in_array(215, $this->jobs)){
 			$action = array("url"=>"editvehicle?","css"=>"prary", "type"=>"", "text"=>"Edit");
 			$actions[] = $action;
 		}
-		if(in_array(214, $this->jobs)){
+		if(in_array(216, $this->jobs)){
 			if(isset($values['action']) && $values['action']=="blocked") {
 				$action = array("url"=>"#block", "type"=>"modal", "css"=>"purple", "js"=>"modalBlockVehicle(", "jsdata"=>array("id","veh_reg"), "text"=>"Unblock");
 			}
@@ -724,7 +724,7 @@ class DataTableController extends \Controller {
 			}
 			$actions[] = $action;
 		}
-		if(in_array(215, $this->jobs)){
+		if(in_array(217, $this->jobs)){
 			if(isset($values['action']) && $values['action']=="sell") {
 				$action = array("url"=>"#sell", "type"=>"modal", "css"=>"grey", "js"=>"modalSellVehicle(", "jsdata"=>array("id","veh_reg"), "text"=>"sell");
 			}
@@ -733,7 +733,7 @@ class DataTableController extends \Controller {
 			}
 			$actions[] = $action;
 		}
-		if(in_array(216, $this->jobs)){
+		if(in_array(218, $this->jobs)){
 			if(isset($values['action']) && $values['action']=="renew") {
 				$action = array("url"=>"#renew", "type"=>"modal", "css"=>"success", "js"=>"modalRenewVehicle(", "jsdata"=>array("veh_reg"), "text"=>"renew");
 			}
@@ -803,7 +803,7 @@ class DataTableController extends \Controller {
 		$data = array();
 		
 		$actions = array();
-		if(in_array(218, $this->jobs)){
+		if(in_array(220, $this->jobs)){
 			$action = array("url"=>"editemployeebatta?","css"=>"primary", "type"=>"", "text"=>"Edit");
 			$actions[] = $action;
 		}
@@ -872,7 +872,7 @@ class DataTableController extends \Controller {
 		$data = array();
 	
 		$actions = array();
-		if(in_array(220, $this->jobs)){
+		if(in_array(222, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditService(", "jsdata"=>array("id","sourceCity","destinationCity","serviceNo","description","active","serviceStatus"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -934,7 +934,7 @@ class DataTableController extends \Controller {
 	
 		$select_args = array('lookuptypevalues.name as bankName','branchName', "accountName", "accountNo", "lookuptypevalues1.name as accountType", "balanceAmount", "bankdetails.status as status", "bankdetails.id as id");
 		$actions = array();
-		if(in_array(226, $this->jobs)){
+		if(in_array(228, $this->jobs)){
 			$action = array("url"=>"editbankdetails?","css"=>"primary", "type"=>"", "text"=>"Edit");
 			$actions[] = $action;
 		}
@@ -989,7 +989,7 @@ class DataTableController extends \Controller {
 		$data = array();
 	
 		$actions = array();
-		if(in_array(228, $this->jobs)){
+		if(in_array(230, $this->jobs)){
 			$action = array("url"=>"editfinancecompany?","css"=>"primary", "type"=>"", "text"=>"Edit");
 			$actions[] = $action;
 		}
@@ -1048,7 +1048,7 @@ class DataTableController extends \Controller {
 		$data = array();
 	
 		$actions = array();
-		if(in_array(230, $this->jobs)){
+		if(in_array(232, $this->jobs)){
 			$action = array("url"=>"editcreditsupplier?","css"=>"primary", "type"=>"", "text"=>"Edit");
 			$actions[] = $action;
 		}
@@ -1198,7 +1198,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "fuelstationdetails.id as id";
 		
 		$actions = array();
-		if(in_array(234, $this->jobs)){
+		if(in_array(236, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditFuelStation(", "jsdata"=>array("name","paymentType","PaymentExpectedDay","bankAccount","accountNo","cityId","stateId","status","balanceAmount","id"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -1368,7 +1368,7 @@ class DataTableController extends \Controller {
 		$data = array();
 			
 		$actions = array();
-		if(in_array(238, $this->jobs)){
+		if(in_array(240, $this->jobs)){
 			$action = array("url"=>"editdailyfinance?","css"=>"primary", "type"=>"", "text"=>"Edit");
 			$actions[] = $action;
 		}
@@ -1444,12 +1444,13 @@ class DataTableController extends \Controller {
 	private function getRoles($values, $length, $start){
 		$total = 0;
 		$data = array();
-			
 		$actions = array();
-		$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditRole(", "jsdata"=>array("id","roleName","description","status"), "text"=>"EDIT");
-		$actions[] = $action;
-		$action = array("url"=>"jobs?","css"=>"primary", "type"=>"", "text"=>"privilages");
-		$actions[] = $action;
+		if(in_array(244, $this->jobs)){	
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditRole(", "jsdata"=>array("id","roleName","description","status"), "text"=>"EDIT");
+			$actions[] = $action;
+			$action = array("url"=>"jobs?","css"=>"primary", "type"=>"", "text"=>"privilages");
+			$actions[] = $action;
+		}
 		$values["actions"] = $actions;
 			
 		$select_args = array();

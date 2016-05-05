@@ -109,7 +109,7 @@ use settings\AppSettingsController;
 	</div>
 	<?php $form_info = $values["form_info"]; ?>
 	<?php $jobs = Session::get("jobs"); ?>
-	<?php if(($values['bredcum'] == "INCOME TRANSACTIONS" && in_array(301, $jobs)) ||  ($values['bredcum'] == "EXPENSES TRANSACTIONS" && in_array(303, $jobs)) || ($values['bredcum'] == "FUEL TRANSACTIONS" && in_array(305, $jobs)) || ($values['bredcum'] == "CONTRACT FUEL TRANSACTIONS" && in_array(305, $jobs))){?>
+	<?php if(($values['bredcum'] == "INCOME TRANSACTIONS" && in_array(301, $jobs)) ||  ($values['bredcum'] == "EXPENSES TRANSACTIONS" && in_array(303, $jobs)) || ($values['bredcum'] == "FUEL TRANSACTIONS" && in_array(305, $jobs)) || ($values['bredcum'] == "CONTRACT FUEL TRANSACTIONS" && in_array(409, $jobs))){?>
 		<div id="accordion1" class="col-xs-offset-0 col-xs-12 accordion-style1 panel-group" style="width: 99%;">			
 			<div class="panel panel-default">
 				<div class="panel-heading">
@@ -328,6 +328,7 @@ use settings\AppSettingsController;
 			}
 
 			function getendreading(val){
+				$("#startreading").val("");
 				$.ajax({
 			      url: "getendreading?id="+val,
 			      success: function(data) {
@@ -806,7 +807,7 @@ use settings\AppSettingsController;
 			$('#incomebody').hide();
 			$('#expensebody').hide();
 			$('#transactionform').hide();
-			<?php if(($values['bredcum'] == "CONTRACT FUEL TRANSACTIONS" && in_array(305, $jobs))){?>
+			<?php if(($values['bredcum'] == "CONTRACT FUEL TRANSACTIONS" && in_array(409, $jobs))){?>
 				$('#transactionform').show();
 			<?php }?>
 

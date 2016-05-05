@@ -33,63 +33,63 @@
 		<div class="col-xs-12 center">
 		<div class="row" style="margin-top: 20px;">
 			<?php $jobs = Session::get("jobs");?>
-			<?php if(in_array(151, $jobs)){?>
+			<?php if(in_array(451, $jobs)){?>
 			<a href="contracts">
 			<button >
 				<i class="ace-icon fa fa-exchange bigger-300"></i><BR/>
 				&nbsp; &nbsp; &nbsp;  CONTRACTS &nbsp; &nbsp; &nbsp;
 			</button>
 			</a>
-			<?php } if(in_array(152, $jobs)){?>
+			<?php } if(in_array(452, $jobs)){?>
 			<a href="clients">
 			<button >
 				<i class="ace-icon fa fa-users bigger-300"></i><BR/>
 				 &nbsp; &nbsp; &nbsp; CLIENTS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
-			<?php } if(in_array(152, $jobs)){?>
+			<?php } if(in_array(453, $jobs)){?>
 			<a href="depots">
 			<button >
 				<i class="ace-icon fa fa-map-pin bigger-300"></i><BR/>
 				 &nbsp; &nbsp; &nbsp; DEPOTS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
-			<?php } if(in_array(153, $jobs)){?>
+			<?php } if(in_array(454, $jobs)){?>
 			<a href="servicelogs">
 			<button>
 				<i class="ace-icon fa fa-pencil-square-o bigger-300"></i><BR/>
 				&nbsp; &nbsp; &nbsp;  SERVICE LOGS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
-			<?php } if(in_array(153, $jobs)){?>
+			<?php } if(in_array(455, $jobs)){?>
 			<a href="fueltransactions?type=contracts">
 			<button>
 				<i class="ace-icon fa fa-flask bigger-300"></i><BR/>
 				&nbsp; &nbsp; &nbsp;  FUEL TRANSACIONS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
-			<?php } if(in_array(153, $jobs)){?>
+			<?php } if(in_array(456, $jobs)){?>
 			<a href="repairtransactions?type=contracts">
 			<button>
 				<i class="ace-icon fa fa-cogs bigger-300"></i><BR/>
 				&nbsp; &nbsp; &nbsp;  REPAIR TRANSACIONS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
-			<?php } if(in_array(154, $jobs)){?>
+			<?php } if(in_array(457, $jobs)){?>
 			<a href="vehiclemeeters">
 			<button>
 				<i class="ace-icon fa fa-tachometer bigger-300"></i><BR/>
 				&nbsp; &nbsp; &nbsp;  VEHICLE MEETER READING &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
-			<?php } if(in_array(155, $jobs)){?>
+			<?php } if(in_array(458, $jobs)){?>
 			<a href="clientholidays">
 			<button style="PADDING-TOP: 16px;">
 				<i class="ace-icon fa fa-bullhorn bigger-240"></i><BR/>
 				&nbsp; &nbsp; &nbsp;  CLIENT HOLIDAYS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
-			<?php } if(in_array(156, $jobs)){?>
+			<?php } if(in_array(459, $jobs)){?>
 			<a href="servicelogrequests">
 			<button style="PADDING-TOP: 16px;">
 				<i class="ace-icon fa fa-pencil-square-o bigger-240"></i><BR/>

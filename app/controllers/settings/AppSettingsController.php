@@ -292,6 +292,7 @@ class AppSettingsController extends \Controller {
 		 return $entities->toArray();
 	}
 	
+	
 	public static function getEmpBranches(){
 		$entities = null;
 		$branches =  \Auth::user()->officeBranchIds;
@@ -304,6 +305,18 @@ class AppSettingsController extends \Controller {
 // 			$entities = \OfficeBranch::whereIn("id",$emp_branch_arr)->get();
 // 		}
 		return $entities;
+	}
+	
+	public static function getNonContractVehicles(){
+		$entities = \DB::select(\DB::raw("select vehicle.id, vehicle.veh_reg from vehicle where id not in(select vehicleId from contract_vehicles where status='ACTIVE')"));
+		//print_r($entities); die();
+		$recs = array();
+		foreach ($entities as $entity){
+			$rec['id'] = $entity->id;
+			$rec['veh_reg'] = $entity->veh_reg;
+			$recs[] = $rec;
+		}
+		return $recs;
 	}
 	
 }

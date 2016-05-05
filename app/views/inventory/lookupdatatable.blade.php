@@ -41,11 +41,11 @@
 			<div class="col-xs-offset-1 col-xs-10">
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
-				<?php if(($form_info['action']=="addinventorylookupvalue" && in_array(318, $jobs)) or 
-						($form_info['action']=="addmanufacturer" && in_array(320, $jobs)) or
-						($form_info['action']=="additemcategory" && in_array(322, $jobs)) or
-						($form_info['action']=="additemtype" && in_array(324, $jobs)) or
-						($form_info['action']=="additem" && in_array(326, $jobs))
+				<?php if(($form_info['action']=="addinventorylookupvalue" && in_array(320, $jobs)) or 
+						($form_info['action']=="addmanufacturer" && in_array(322, $jobs)) or
+						($form_info['action']=="additemcategory" && in_array(324, $jobs)) or
+						($form_info['action']=="additemtype" && in_array(326, $jobs)) or
+						($form_info['action']=="additem" && in_array(328, $jobs))
 						
 					  ){ ?>
 					  	@include("inventory.addlookupform",$form_info)

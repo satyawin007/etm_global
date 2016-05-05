@@ -484,10 +484,10 @@ class TransactionController extends \Controller {
 					$form_fields[] = $form_field;
 				}
 				if($entity->vehicleIds != ""){
-					$vehicles =  \Vehicle::All();
 					$vehicles_arr = array();
-					foreach ($vehicles as $vehicle){
-						$vehicles_arr[$vehicle->id] = $vehicle->veh_reg;
+					$vehs = AppSettingsController::getNonContractVehicles();
+					foreach ($vehs as $veh){
+						$vehicles_arr[$veh['id']] = $veh['veh_reg'];
 					}
 					$sel_vehs = explode(",", $entity->vehicleIds);
 					$form_field = array("name"=>"vehicle[]", "id"=>"vehicle", "value"=>$sel_vehs, "content"=>"vehicle reg no", "readonly"=>"",  "required"=>"", "multiple"=>"multiple", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
@@ -634,10 +634,10 @@ class TransactionController extends \Controller {
 					$form_fields[] = $form_field;
 				}
 				if($entity->vehicleIds != ""){
-					$vehicles =  \Vehicle::All();
 					$vehicles_arr = array();
-					foreach ($vehicles as $vehicle){
-						$vehicles_arr[$vehicle->id] = $vehicle->veh_reg;
+					$vehs = AppSettingsController::getNonContractVehicles();
+					foreach ($vehs as $veh){
+						$vehicles_arr[$veh['id']] = $veh['veh_reg'];
 					}
 					$sel_vehs = explode(",", $entity->vehicleIds);
 					$form_field = array("name"=>"vehicle[]", "id"=>"vehicle", "value"=>$sel_vehs, "content"=>"vehicle reg no", "readonly"=>"",  "required"=>"", "multiple"=>"multiple", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
@@ -761,10 +761,10 @@ class TransactionController extends \Controller {
 					$state_arr[$state['id']] = $state->name;
 				}
 				
-				$vehicles =  \Vehicle::all();
 				$vehicles_arr = array();
-				foreach ($vehicles as $vehicle){
-					$vehicles_arr[$vehicle['id']] = $vehicle->veh_reg;
+				$vehs = AppSettingsController::getNonContractVehicles();
+				foreach ($vehs as $veh){
+					$vehicles_arr[$veh['id']] = $veh['veh_reg'];
 				}
 				
 				$select_fields = array();
@@ -1096,10 +1096,10 @@ class TransactionController extends \Controller {
 			}
 		}
 		else{
-			$vehicles =  \Vehicle::all();
 			$vehicles_arr = array();
-			foreach ($vehicles as $vehicle){
-				$vehicles_arr[$vehicle['id']] = $vehicle->veh_reg;
+			$vehs = AppSettingsController::getNonContractVehicles();
+			foreach ($vehs as $veh){
+				$vehicles_arr[$veh['id']] = $veh['veh_reg'];
 			}
 		}
 		$select_fields = array();
@@ -1484,10 +1484,10 @@ class TransactionController extends \Controller {
 					$form_fields[] = $form_field;
 				}
 				if(in_array("VEHICLE",$fields)){
-					$vehicles =  \Vehicle::All();
 					$vehicles_arr = array();
-					foreach ($vehicles as $vehicle){
-						$vehicles_arr[$vehicle->id] = $vehicle->veh_reg;
+					$vehs = AppSettingsController::getNonContractVehicles();
+					foreach ($vehs as $veh){
+						$vehicles_arr[$veh['id']] = $veh['veh_reg'];
 					}
 					$form_field = array("name"=>"vehicle[]", "content"=>"vehicle reg no", "readonly"=>"",  "required"=>"", "multiple"=>"multiple", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
 					$form_fields[] = $form_field;

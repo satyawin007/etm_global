@@ -61,7 +61,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "bill_payments.parentBillId as parentBillId";
 			
 		$actions = array();
-		if(in_array(209, $this->jobs)){
+		if(in_array(310, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditBillPayments(", "jsdata"=>array("billNo","billDate","paidDate", "totalAmount", "amountPaid","name","billParticulars", "remarks" ,"status", "id","clientId","parentBillId","transctionType"), "text"=>"EDIT");
 			$actions[] = $action;
 		}

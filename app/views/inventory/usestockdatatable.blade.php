@@ -80,7 +80,7 @@
 		<div class="row col-xs-offset-0 col-xs-12">
 		<?php 
 			$jobs = \Session::get("jobs");
-			if(in_array(330, $jobs)){
+			if(in_array(332, $jobs)){
 		?>
 		<div class="widget-box">
 			<div class="widget-header">

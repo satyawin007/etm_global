@@ -90,7 +90,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "purchase_orders.filePath as filePath";
 		$actions = array();
 		$jobs = \Session::get("jobs");
-		if(in_array(329, $jobs)){
+		if(in_array(331, $jobs)){
 			$action = array("url"=>"editpurchaseorder?", "type"=>"", "css"=>"primary", "js"=>"modalEditPurchaseOrder(", "jsdata"=>array("id"), "text"=>"EDIT");
 			$actions[] = $action;
 			$action = array("url"=>"#","css"=>"danger", "id"=>"deletePurchaseOrder", "type"=>"", "text"=>"DELETE");
@@ -336,7 +336,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "purchase_orders.filePath as filePath";
 		$actions = array();
 		$jobs = \Session::get("jobs");
-		if(in_array(329, $jobs)){
+		if(in_array(331, $jobs)){
 			$action = array("url"=>"editpurchaseorder?", "type"=>"", "css"=>"primary", "js"=>"modalEditPurchaseOrder(", "jsdata"=>array("id"), "text"=>"EDIT");
 			$actions[] = $action;
 			$action = array("url"=>"#","css"=>"danger", "id"=>"deletePurchaseOrder", "type"=>"", "text"=>"DELETE");

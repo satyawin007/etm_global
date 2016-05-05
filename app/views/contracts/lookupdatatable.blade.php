@@ -42,10 +42,10 @@
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
 				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) or 
-						($form_info['action']=="addclient") ||
-						($form_info['action']=="adddepot") ||
-						($form_info['action']=="addvehiclemeeter") ||
-						($form_info['action']=="addclientholidays")
+						($form_info['action']=="addclient" && in_array(403, $jobs)) ||
+						($form_info['action']=="adddepot" && in_array(405, $jobs)) ||
+						($form_info['action']=="addvehiclemeeter" && in_array(413, $jobs)) ||
+						($form_info['action']=="addclientholidays" && in_array(415, $jobs))
 					  ){ ?>
 					@include("contracts.addlookupform",$form_info)
 				<?php } ?>

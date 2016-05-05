@@ -69,7 +69,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "clients.id as id";
 			
 		$actions = array();
-		if(in_array(209, $this->jobs)){
+		if(in_array(404, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditClient(", "jsdata"=>array("id","clientName","clientCode",  "status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -127,7 +127,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "depots.id as id";
 			
 		$actions = array();
-		if(in_array(209, $this->jobs)){
+		if(in_array(406, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditDepot(", "jsdata"=>array("id","depotName","depotCode","parentwarehouse", "cityName", "districtName", "stateName", "status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -187,7 +187,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "vehiclemeterdetails.status as status";
 		$select_args[] = "vehiclemeterdetails.id as id";
 		$actions = array();
-		if(in_array(209, $this->jobs)){
+		if(in_array(414, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditVehicleMeeter(", "jsdata"=>array("id","vehicleId","meterNo", "startDate", "endDate", "startReading", "endReading", "status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -253,7 +253,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "contracts.endDate as endDate";
 			
 		$actions = array();
-		if(in_array(209, $this->jobs)){
+		if(in_array(402, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditContract(", "jsdata"=>array("id"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -352,7 +352,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "clientholidays.id as id";
 			
 		$actions = array();
-		if(in_array(209, $this->jobs)){
+		if(in_array(416, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditClientHolidays(", "jsdata"=>array("id","clientname","depotname", "fromDate", "toDate", "comments", "status", "deleted"), "text"=>"EDIT");
 			$actions[] = $action;
 		}

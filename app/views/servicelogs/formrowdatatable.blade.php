@@ -42,7 +42,7 @@
 				<?php $form_info = $values["form_info"];?>
 				<?php $jobs = Session::get("jobs");?>
 				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) || 
-						($form_info['action']=="addservicelog")
+						($form_info['action']=="addservicelog" && in_array(407, $jobs))
 					  ){ ?>
 					@include("servicelogs.tablerowform",$form_info)
 				<?php } ?>

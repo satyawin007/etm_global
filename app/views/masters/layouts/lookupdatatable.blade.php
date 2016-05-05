@@ -44,19 +44,19 @@
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
 				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) or 
-						($form_info['action']=="addcity" && in_array(208, $jobs)) or
-						($form_info['action']=="addemployeebatta" && in_array(217, $jobs)) or
-						($form_info['action']=="addservicedetails" && in_array(219, $jobs)) or
-						($form_info['action']=="addlookupvalue" && in_array(223, $jobs)) or
-						($form_info['action']=="addbankdetails" && in_array(225, $jobs)) or 
-						($form_info['action']=="addfinancecompany" && in_array(227, $jobs)) or 
-						($form_info['action']=="addcreditsupplier" && in_array(229, $jobs)) or
-						($form_info['action']=="addfuelstation" && in_array(233, $jobs)) or
-						($form_info['action']=="addloan" && in_array(235, $jobs)) or
-						($form_info['action']=="adddailyfinance" && in_array(237, $jobs)) or
-						($form_info['action']=="addserviceprovider" && in_array(239, $jobs)) or
-						($form_info['action']=="adddistrict" && in_array(239, $jobs)) or
-						($form_info['action']=="addrole" && in_array(239, $jobs))
+						($form_info['action']=="addcity" && in_array(210, $jobs)) or
+						($form_info['action']=="addemployeebatta" && in_array(219, $jobs)) or
+						($form_info['action']=="addservicedetails" && in_array(221, $jobs)) or
+						($form_info['action']=="addlookupvalue" && in_array(225, $jobs)) or
+						($form_info['action']=="addbankdetails" && in_array(227, $jobs)) or 
+						($form_info['action']=="addfinancecompany" && in_array(229, $jobs)) or 
+						($form_info['action']=="addcreditsupplier" && in_array(231, $jobs)) or
+						($form_info['action']=="addfuelstation" && in_array(235, $jobs)) or
+						($form_info['action']=="addloan" && in_array(237, $jobs)) or
+						($form_info['action']=="adddailyfinance" && in_array(239, $jobs)) or
+						($form_info['action']=="addserviceprovider" && in_array(241, $jobs)) or
+						($form_info['action']=="adddistrict" && in_array(208, $jobs)) or
+						($form_info['action']=="addrole" && in_array(243, $jobs))
 					  ){ ?>
 					@include("masters.layouts.addlookupform",$form_info)
 				<?php } ?>

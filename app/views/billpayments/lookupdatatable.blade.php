@@ -43,7 +43,7 @@
 			<div class="col-xs-offset-1 col-xs-10">
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
-				<?php if(($form_info['action']=="addbillpayment" && in_array(206, $jobs)) or 
+				<?php if(($form_info['action']=="addbillpayment" && in_array(309, $jobs)) or 
 						($form_info['action']=="addrole" && in_array(239, $jobs))
 					  ){ ?>
 					@include("billpayments.addlookupform",$form_info)

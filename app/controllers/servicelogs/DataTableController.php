@@ -59,7 +59,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "clients.id as id";
 			
 		$actions = array();
-		if(in_array(209, $this->jobs)){
+		if(in_array(404, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditClient(", "jsdata"=>array("id","clientName","clientCode",  "status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -133,7 +133,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "service_logs.startTime as startTime";
 			
 		$actions = array();
-		if(in_array(209, $this->jobs)){
+		if(in_array(408, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditServiceLog(", "jsdata"=>array("vehicleId", "serviceDate", "startTime", "startReading", "endReading", "distance", "repairkms", "remarks", "status", "id"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -216,7 +216,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "servicelogrequests.deleted as deleted";
 		
 		$actions = array();
-		if(in_array(209, $this->jobs)){
+		if(in_array(417, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditServiceLogRequest(", "jsdata"=>array("id", "clientId", "depotId", "vehicleId", "pendingDates", "customDate", "comments", "status", "deleted"), "text"=>"EDIT");
 			$actions[] = $action;
 		}

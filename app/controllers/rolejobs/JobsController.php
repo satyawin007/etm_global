@@ -20,7 +20,6 @@ class JobsController extends \Controller {
 				$affectedRows = \RolePrivileges::where('roleId', '=', $values["roleid"])->delete();
 				foreach($ids as $id){
 					$fields = array();
-					print_r($values);
 					$fields["roleId"] = $roleId;
 					$fields["jobId"] = $id;
 					$db_functions_ctrl = new DBFunctionsController();

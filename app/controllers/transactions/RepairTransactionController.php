@@ -272,9 +272,9 @@ class RepairTransactionController extends \Controller {
 			}
 			
 			$veh_arr = array();
-			$emps = \Vehicle::All();
-			foreach ($emps as $emp){
-				$veh_arr[$emp->id] = $emp->veh_reg;
+			$vehs = AppSettingsController::getNonContractVehicles();
+			foreach ($vehs as $veh){
+				$veh_arr[$veh['id']] = $veh['veh_reg'];
 			}
 		
 			$warehouse_arr = array();
@@ -562,9 +562,9 @@ class RepairTransactionController extends \Controller {
 			}
 			
 			$veh_arr = array();
-			$emps = \Vehicle::All();
-			foreach ($emps as $emp){
-				$veh_arr[$emp->id] = $emp->veh_reg;
+			$vehs = AppSettingsController::getNonContractVehicles();
+			foreach ($vehs as $veh){
+				$veh_arr[$veh['id']] = $veh['veh_reg'];
 			}
 		
 			$warehouse_arr = array();
@@ -779,9 +779,9 @@ class RepairTransactionController extends \Controller {
 		}
 		
 		$veh_arr = array();
-		$emps = \Vehicle::All();
-		foreach ($emps as $emp){
-			$veh_arr[$emp->id] = $emp->veh_reg;
+		$vehs = AppSettingsController::getNonContractVehicles();
+		foreach ($vehs as $veh){
+			$veh_arr[$veh['id']] = $veh['veh_reg'];
 		}
 	
 		$warehouse_arr = array();

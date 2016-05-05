@@ -42,8 +42,8 @@
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
 				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) or 
-						($form_info['action']=="addclient") ||
-						($form_info['action']=="adddepot")
+						($form_info['action']=="addclient" && in_array(403, $jobs)) ||
+						($form_info['action']=="adddepot" && in_array(405, $jobs))
 					  ){ ?>
 					@include("contracts.addlookupform",$form_info)
 				<?php } ?>

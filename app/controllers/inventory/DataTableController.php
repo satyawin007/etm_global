@@ -86,7 +86,7 @@ class DataTableController extends \Controller {
 	
 		$actions = array();
 		
-		if(in_array(321, $this->jobs)){
+		if(in_array(323, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditManufacture(", "jsdata"=>array("id","name","description","status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -141,8 +141,8 @@ class DataTableController extends \Controller {
 	
 		$actions = array();
 	
-		if(in_array(323, $this->jobs)){
-			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditManufacture(", "jsdata"=>array("id","name","description","status"), "text"=>"EDIT");
+		if(in_array(325, $this->jobs)){
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditItemCategories(", "jsdata"=>array("id","name","description","status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
 		$values["actions"] = $actions;
@@ -197,7 +197,7 @@ class DataTableController extends \Controller {
 	
 		$actions = array();
 	
-		if(in_array(325, $this->jobs)){
+		if(in_array(327, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditItemType(", "jsdata"=>array("id","name","itemCategoryId", "description","status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -259,7 +259,7 @@ class DataTableController extends \Controller {
 	
 		$actions = array();
 	
-		if(in_array(327, $this->jobs)){
+		if(in_array(329, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditItem(", "jsdata"=>array("id"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -319,7 +319,7 @@ class DataTableController extends \Controller {
 		$select_args = array('name', "parentId", "remarks", "status", "id");
 	
 		$actions = array();
-		if(in_array(319, $this->jobs)){
+		if(in_array(321, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditLookupValue(", "jsdata"=>array("id","name","remarks","status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
@@ -395,7 +395,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "purchase_orders.id as id";
 		$actions = array();
 		$jobs = \Session::get("jobs");
-		if(in_array(329, $jobs)){
+		if(in_array(331, $jobs)){
 			$action = array("url"=>"editpurchaseorder?", "type"=>"", "css"=>"primary", "js"=>"modalEditPurchaseOrder(", "jsdata"=>array("id"), "text"=>"EDIT");
 			$actions[] = $action;
 			$action = array("url"=>"#","css"=>"danger", "id"=>"deletePurchaseOrder", "type"=>"", "text"=>"DELETE");
@@ -532,7 +532,7 @@ class DataTableController extends \Controller {
 		$actions = array();
 		//$action = array("url"=>"editusedstock?", "type"=>"", "css"=>"primary", "js"=>"modalEditPurchaseOrderItem(", "jsdata"=>array("id","itemId","manufacturerId", "qty", "unitPrice", "itemStatus", "status"), "text"=>"EDIT");
 		//$actions[] = $action;
-		if(in_array(330, $this->jobs)){
+		if(in_array(331, $this->jobs)){
 			$action = array("url"=>"#","css"=>"danger", "id"=>"deleteUsedStockItem", "type"=>"", "text"=>"DELETE");
 			$actions[] = $action;
 		}
@@ -559,7 +559,7 @@ class DataTableController extends \Controller {
 			$select_args[] = "purchase_orders.type as type";
 			$actions = array();
 			$jobs = \Session::get("jobs");
-			if(in_array(329, $jobs)){
+			if(in_array(331, $jobs)){
 				$action = array("url"=>"editpurchaseorder?", "type"=>"", "css"=>"primary", "js"=>"modalEditPurchaseOrder(", "jsdata"=>array("id"), "text"=>"EDIT");
 				$actions[] = $action;
 				$action = array("url"=>"#","css"=>"danger", "id"=>"deletePurchaseOrder", "type"=>"", "text"=>"DELETE");

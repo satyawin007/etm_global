@@ -77,7 +77,7 @@
 			<div class="table-header" style="margin-top: 10px;">
 				Results for "{{$values['bredcum']}}"
 				<?php $jobs = Session::get("jobs");?>			 
-				<div style="float:right;padding-right: 15px;padding-top: 6px;"><a style="color: white;" href="{{$values['home_url']}}"><i class="ace-icon fa fa-home bigger-200"></i></a> <?php if(($values['add_url']=="addofficebranch" && in_array(210, $jobs)) || ($values['add_url']=="addvehicle" && in_array(212, $jobs))){?>&nbsp; &nbsp; &nbsp; <a style="color: white;"  href="{{$values['add_url']}}"><i class="ace-icon fa fa-plus-circle bigger-200"></i></a><?php }?></div>				
+				<div style="float:right;padding-right: 15px;padding-top: 6px;"><a style="color: white;" href="{{$values['home_url']}}"><i class="ace-icon fa fa-home bigger-200"></i></a> <?php if(($values['add_url']=="addofficebranch" && in_array(212, $jobs)) || ($values['add_url']=="addvehicle" && in_array(214, $jobs))){?>&nbsp; &nbsp; &nbsp; <a style="color: white;"  href="{{$values['add_url']}}"><i class="ace-icon fa fa-plus-circle bigger-200"></i></a><?php }?></div>				
 			</div>
 			<!-- div.table-responsive -->
 			<!-- div.dataTables_borderWrap -->

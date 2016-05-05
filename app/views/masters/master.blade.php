@@ -382,7 +382,7 @@
 									EMPLOYEE SALARY
 								</a>
 							</li>
-							<?php } if(in_array(109, $jobs)){?>								
+							<?php } if(in_array(110, $jobs)){?>								
 							<li class="hover">
 								<a href="billpayments">
 									<i class="menu-icon fa fa-caret-right"></i>
@@ -395,7 +395,7 @@
 					</li>
 					
 					<li class="hover">
-						<?php if(in_array(7, $jobs)){?>	
+						<?php if(in_array(4, $jobs)){?>	
 						<a href="contractsmenu">
 							<i class="menu-icon fa fa-list"></i>
 							<span class="menu-text"> CONTRACTS&nbsp; </span>
@@ -405,7 +405,7 @@
 					</li>
 
 					<li class="open hover">
-						<?php if(in_array(4, $jobs)){?>
+						<?php if(in_array(5, $jobs)){?>
 						<a href="#" class="dropdown-toggle">
 							<i class="menu-icon fa fa-tag"></i>
 							<span class="menu-text">
@@ -415,14 +415,14 @@
 						</a>
 						<b class="arrow"></b>
 						<ul class="submenu">
-							<?php if(in_array(112, $jobs)){?>
+							<?php if(in_array(113, $jobs)){?>
 							<li class="hover">
 								<a href="leaves">
 									<i class="menu-icon fa fa-caret-right"></i>
 									EMPLOYEE LEAVES
 								</a>
 							</li>
-							<?php } if(in_array(113, $jobs)){?>
+							<?php } if(in_array(114, $jobs)){?>
 							<li class="hover">
 								<a href="salaryadvances">
 									<i class="menu-icon fa fa-caret-right"></i>
@@ -433,7 +433,7 @@
 						</ul>
 						<?php }?>
 					</li>
-					<?php if(in_array(5, $jobs)){?>	
+					<?php if(in_array(6, $jobs)){?>	
 					<li class="open hover">
 						<a href="#" class="dropdown-toggle">
 							<i class="menu-icon fa fa-list-alt"></i>
@@ -444,56 +444,56 @@
 						</a>
 						<b class="arrow"></b>
 						<ul class="submenu">
-							<?php if(in_array(114, $jobs)){?>
+							<?php if(in_array(115, $jobs)){?>
 							<li class="hover">
 								<a href="inventorylookupvalues">
 									<i class="menu-icon fa fa-caret-right"></i>
 									LOOKUP VALUES
 								</a>
 							</li>
-							<?php } if(in_array(115, $jobs)){?>
+							<?php } if(in_array(116, $jobs)){?>
 							<li class="hover">
 								<a href="manufacturers">
 									<i class="menu-icon fa fa-caret-right"></i>
 									MANUFACTURERS
 								</a>
 							</li>
-							<?php } if(in_array(116, $jobs)){?>
+							<?php } if(in_array(117, $jobs)){?>
 							<li class="hover">
 								<a href="itemcategories">
 									<i class="menu-icon fa fa-caret-right"></i>
 									ITEM CATEGORIES
 								</a>
 							</li>
-							<?php } if(in_array(117, $jobs)){?>
+							<?php } if(in_array(118, $jobs)){?>
 							<li class="hover">
 								<a href="itemtypes">
 									<i class="menu-icon fa fa-caret-right"></i>
 									ITEM TYPES
 								</a>
 							</li>
-							<?php } if(in_array(118, $jobs)){?>
+							<?php } if(in_array(119, $jobs)){?>
 							<li class="hover">
 								<a href="items">
 									<i class="menu-icon fa fa-caret-right"></i>
 									ITEMS
 								</a>
 							</li>
-							<?php } if(in_array(119, $jobs)){?>
+							<?php } if(in_array(120, $jobs)){?>
 							<li class="hover">
 								<a href="purchaseorder">
 									<i class="menu-icon fa fa-caret-right"></i>
 									PURCHASE ORDERS
 								</a>
 							</li>
-							<?php } if(in_array(120, $jobs)){?>
+							<?php } if(in_array(121, $jobs)){?>
 							<li class="hover">
 								<a href="useitems">
 									<i class="menu-icon fa fa-caret-right"></i>
 									USE STOCK ITEMS
 								</a>
 							</li>
-							<?php } if(in_array(119, $jobs)){?>
+							<?php } if(in_array(122, $jobs)){?>
 							<li class="hover">
 								<a href="estimatepurchaseorders">
 									<i class="menu-icon fa fa-caret-right"></i>
@@ -505,7 +505,7 @@
 					</li>
 					<?php } ?>
 					<li class="hover">
-						<?php if(in_array(6, $jobs)){?>	
+						<?php if(in_array(7, $jobs)){?>	
 						<a href="reports">
 							<i class="menu-icon  fa fa-bar-chart-o"></i>
 							<span class="menu-text"> REPORTS </span>
@@ -515,7 +515,7 @@
 					</li>
 					
 					<li class="hover">
-						<?php if(in_array(7, $jobs)){?>	
+						<?php if(in_array(8, $jobs)){?>	
 						<a href="settings">
 							<i class="menu-icon fa fa-cog"></i>
 							<span class="menu-text"> SETTINGS </span>

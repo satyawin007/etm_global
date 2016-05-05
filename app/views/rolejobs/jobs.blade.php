@@ -103,6 +103,7 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "Show ADMINISTRATION Tab";
                                             		$menu_arr[] = "Show INCOME & EXPENSES Tab";
                                             		$menu_arr[] = "Show TRIPS & SERVICES Tab";
+                                            		$menu_arr[] = "Show CONTRACTS Tab";
                                             		$menu_arr[] = "Show OTHERS Tab";
                                             		$menu_arr[] = "Show STOCK & INVENTORY Tab";
                                             		$menu_arr[] = "Show REPORTS Tab";
@@ -152,7 +153,7 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "Show FUEL TRANSACTIONS Tab";
                                             		$menu_arr[] = "Show REPAIR TRANSACTIONS Tab";
                                             		$menu_arr[] = "Show EMPLOYEE SALARY Tab";
-                                            		$menu_arr[] = "Show NEW ITEM PURCHAGES Tab";
+                                            		$menu_arr[] = "Show BILLS & PAYMENTS Tab";
                                             		
                                             		$menu_arr[] = "Show LOCAL TRIPS Tab";
                                             		$menu_arr[] = "Show DAILY TRIPS Tab";
@@ -167,6 +168,7 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "Show ITEMS Tab";
                                             		$menu_arr[] = "Show PURCHASE ORDERS Tab";
                                             		$menu_arr[] = "Show USE STOCK ITEMS Tab";
+                                            		$menu_arr[] = "Show ESTIMATE PURCHASE ORDER Tab";
                                             		$i=101;
                                             		foreach ($menu_arr as $menu_item){
                                             			$chk = "";
@@ -204,6 +206,7 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr = array();
                                             		$menu_arr[] = "Show EMPLOYEES ";
                                             		$menu_arr[] = "Show STATES";
+                                            		$menu_arr[] = "Show DISTRICTS";
                                             		$menu_arr[] = "Show CITIES";
                                             		$menu_arr[] = "Show OFFICE BRANCHES";
                                             		$menu_arr[] = "Show VEHICLES";
@@ -261,6 +264,8 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "block  EMPLOYEE";
                                             		$menu_arr[] = "create STATE";
                                             		$menu_arr[] = "edit STATE";
+                                            		$menu_arr[] = "create DISTRICT";
+                                            		$menu_arr[] = "edit DISTRICT";
                                             		$menu_arr[] = "create CITY";
                                             		$menu_arr[] = "edit CITY";
                                             		$menu_arr[] = "create OFFICE BRANCH";
@@ -294,7 +299,105 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "edit DAILY FINANCES";
                                             		$menu_arr[] = "create SERVICE PROVIDERS";
                                             		$menu_arr[] = "edit SERVICE PROVIDERS";
+                                            		$menu_arr[] = "add ROLE";
+                                            		$menu_arr[] = "edit ROLE";
                                             		$i=201;
+                                            		foreach ($menu_arr as $menu_item){
+                                            			$chk = "";
+                                            			if(in_array($i, $jobs_arr)){
+                                            				$chk = " checked ";
+                                            			}
+                                            	?>
+                                                <div class="col-sm-6 ng-scope" ng-repeat="subPrivlge in privlage[$index].sub_priv">
+                                                    <div class="checkbox" style="margin-bottom: 0px; margin-top: 2px;">
+                                                        <label class="ng-binding">
+                                                        	<input type="checkbox" name="ids[]" value="{{$i}}"  id="{{$i}}" onclick="changeVal(this.value)"  {{$chk}} class="ng-pristine ng-untouched ng-valid">
+                                                            {{$menu_item}}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <?php $i++; }?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div ng-repeat="categry in categoty" class="ng-scope">
+                                    <div class="col-sm-12" style="padding-left: 0px; padding-right: 0px; ">
+                                        <div style="margin-top: 10px; background-color:#666666; color: #ffffff; margin-bottom: 0px; margin-left: -1px; margin-right: -1px;">
+                                            <div class="checkbox" style=" margin-bottom: 0px;padding-left: 40px;">
+                                                <label class="ng-binding">
+                                                    <input type="checkbox" id="tab6" class="ng-pristine ng-untouched ng-valid">
+                                                    Contract Items
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 ng-scope" ng-repeat="privlge in privlage">
+                                            <div ng-if="categry.id===privlge.id" class="col-sm-12 ng-scope">
+                                                <?php 
+                                            		$menu_arr = array();
+                                            		$menu_arr[] = "Show CONTRACTS ";
+                                            		$menu_arr[] = "Show CLIENTS";
+                                            		$menu_arr[] = "Show DEPOTS";
+                                            		$menu_arr[] = "Show SERVICE LOGS";
+                                            		$menu_arr[] = "Show FUEL TRANSACTIONS";
+                                            		$menu_arr[] = "Show REPAIR TRANSACTIONS";
+                                            		$menu_arr[] = "Show VEHICLE MEETER READING";
+                                            		$menu_arr[] = "Show CLIENT HOLIDAYS";
+                                            		$menu_arr[] = "Show SERVICE LOG REQUESTS";
+                                            		$i=451;
+                                            		foreach ($menu_arr as $menu_item){
+                                            			$chk = "";
+                                            			if(in_array($i, $jobs_arr)){
+                                            				$chk = " checked ";
+                                            			}
+                                            	?>
+                                                <div class="col-sm-6 ng-scope" ng-repeat="subPrivlge in privlage[$index].sub_priv">
+                                                    <div class="checkbox" style="margin-bottom: 0px; margin-top: 2px;">
+                                                        <label class="ng-binding">
+                                                        	<input type="checkbox" name="ids[]" value="{{$i}}"  id="{{$i}}" onclick="changeVal(this.value)"  {{$chk}} class="ng-pristine ng-untouched ng-valid">
+                                                            {{$menu_item}}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <?php $i++; }?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                 <div ng-repeat="categry in categoty" class="ng-scope">
+                                    <div class="col-sm-12" style="padding-left: 0px; padding-right: 0px; ">
+                                        <div style="margin-top: 10px; background-color:#666666; color: #ffffff; margin-bottom: 0px; margin-left: -1px; margin-right: -1px;">
+                                            <div class="checkbox" style=" margin-bottom: 0px;padding-left: 40px;">
+                                                <label class="ng-binding">
+                                                    <input type="checkbox" id="tab7" class="ng-pristine ng-untouched ng-valid">
+                                                    Contract operations
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 ng-scope" ng-repeat="privlge in privlage">
+                                            <div ng-if="categry.id===privlge.id" class="col-sm-12 ng-scope">
+                                                 <?php 
+                                            		$menu_arr = array();
+                                            		$menu_arr[] = "create CONTRACT ";
+                                            		$menu_arr[] = "manage  CONTRACT";
+                                            		$menu_arr[] = "create CLIENT";
+                                            		$menu_arr[] = "edit CLIENT";
+                                            		$menu_arr[] = "create  DEPOT";
+                                            		$menu_arr[] = "edit  DEPOT";
+                                            		$menu_arr[] = "create SERVICELOG";
+                                            		$menu_arr[] = "manage SERVICELOG";
+                                            		$menu_arr[] = "create CONTRACT FUEL TRANSACTIONS";
+                                            		$menu_arr[] = "edit CONTRACT FUEL TRANSACTIONS";
+                                            		$menu_arr[] = "create CONTRACT REPAIR TRANSACTION";
+                                            		$menu_arr[] = "edit CONTRACT REPAIR TRANSACTION";
+                                            		$menu_arr[] = "create VEHICLE MEETERS";
+                                            		$menu_arr[] = "edit VEHICLE MEETERS";
+                                            		$menu_arr[] = "create CLIENTHOLIDAYS";
+                                            		$menu_arr[] = "edit CLIENTHOLIDAYS";
+                                            		$menu_arr[] = "edit SERVICE LOG REQUESTS";
+                                            		$i=401;
                                             		foreach ($menu_arr as $menu_item){
                                             			$chk = "";
                                             			if(in_array($i, $jobs_arr)){
@@ -337,6 +440,8 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "manage FUEL TRANSACTION";
                                             		$menu_arr[] = "create REPAIR TRANSACTION";
                                             		$menu_arr[] = "manage REPAIR TRANSACTION";
+                                            		$menu_arr[] = "create BILL PAYMENTS";
+                                            		$menu_arr[] = "manage BILL PAYMENTS";
                                             		
                                             		$menu_arr[] = "create DAILY TRIP";
                                             		$menu_arr[] = "edit DAILY TRIP";
@@ -362,6 +467,8 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "manage PURCHASE ORDERS";
                                             		$menu_arr[] = "create USE STOCK ITEMS";
                                             		$menu_arr[] = "manage USE STOCK ITEMS";
+                                            		$menu_arr[] = "create ESTIMATE PURCHASE ORDER";
+                                            		$menu_arr[] = "manage ESTIMATE PURCHASE ORDER";
                                             		$i=301;
                                             		foreach ($menu_arr as $menu_item){
                                             			$chk = "";
@@ -381,6 +488,7 @@ use Illuminate\Support\Facades\Input;
                                             </div>
                                         </div>
                                     </div>
+                                </div>
                                 </div>
 
                                 <div >
@@ -504,6 +612,34 @@ use Illuminate\Support\Facades\Input;
 				   }
 				   else{
 					   for(i=301;i<350; i++){
+						 $("#"+i).prop("checked",false);
+					   }
+				   }
+				});
+
+			   $("#tab6").on("click",function(){
+				   val = $("#tab6").prop("checked");
+				   if(val){
+					 for(i=451;i<500; i++){
+						 $("#"+i).prop("checked",true);
+					 }
+				   }
+				   else{
+					   for(i=451;i<500; i++){
+						 $("#"+i).prop("checked",false);
+					   }
+				   }
+				});
+
+			   $("#tab7").on("click",function(){
+				   val = $("#tab7").prop("checked");
+				   if(val){
+					 for(i=401;i<450; i++){
+						 $("#"+i).prop("checked",true);
+					 }
+				   }
+				   else{
+					   for(i=401;i<450; i++){
 						 $("#"+i).prop("checked",false);
 					   }
 				   }
