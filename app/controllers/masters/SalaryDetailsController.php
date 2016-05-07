@@ -143,7 +143,7 @@ class SalaryDetailsController extends \Controller {
 			else{
 				$emptype = "Non-Office";
 			}
-			if(date("d-m-Y",strtotime($entity->fromDate)) == "01-01-1970" || date("d-m-Y",strtotime($entity->fromDate)) == ""){
+			if(date("d-m-Y",strtotime($entity->fromDate)) == "01-01-1970" || date("d-m-Y",strtotime($entity->fromDate)) == ""|| date("d-m-Y",strtotime($entity->fromDate)) == "00-00-0000"){
 				$entity->fromDate = "";
 			}
 			else{

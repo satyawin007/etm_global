@@ -47,6 +47,11 @@ class DataTableController extends \Controller {
 			$total = $ret_arr["total"];
 			$data = $ret_arr["data"];
 		}
+		else if(isset($values["name"]) && $values["name"]=="loginlog") {
+			$ret_arr = $this->getLoginLog($values, $length, $start);
+			$total = $ret_arr["total"];
+			$data = $ret_arr["data"];
+		}
 		
 		$json_data = array(
 				"draw"            => intval( $_REQUEST['draw'] ),
@@ -641,6 +646,76 @@ class DataTableController extends \Controller {
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			$data_values = array_values($entity);
+			$actions = $values['actions'];
+			$action_data = "";
+			foreach($actions as $action){
+				if($action["type"] == "modal"){
+					$jsfields = $action["jsdata"];
+					$jsdata = "";
+					$i=0;
+					for($i=0; $i<(count($jsfields)-1); $i++){
+						$jsdata = $jsdata." '".$entity[$jsfields[$i]]."', ";
+					}
+					$jsdata = $jsdata." '".$entity[$jsfields[$i]];
+					$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+				}
+				else {
+					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+				}
+			}
+			$data_values[5] = $action_data;
+			$data[] = $data_values;
+		}
+		return array("total"=>$total, "data"=>$data);
+	}
+	
+	private function getLoginLog($values, $length, $start){
+		$total = 0;
+		$data = array();
+		$select_args = array();
+		$select_args[] = "login_log.user_full_name as name";
+		$select_args[] = "login_log.emailId as emailId";
+		$select_args[] = "login_log.ipaddress as ipaddress";
+		$select_args[] = "login_log.logindate as logindate";
+		$select_args[] = "login_log.logintime as logintime";
+	
+		$actions = array();
+		$values["actions"] = $actions;
+	
+		$search = $_REQUEST["search"];
+		$search = $search['value'];
+		echo "test";
+		die();
+		if(!isset($values["fromdate"]) || !isset($values["todate"])){
+			return array("total"=>0, "data"=>array());
+			die();
+		}
+		$frmdt = date("Y-m-d",strtotime($values["fromdate"]));
+		$todt = date("Y-m-d",strtotime($values["todate"]));
+		if($search != ""){
+			$stations = array();
+			$pss = PoliceStation::where("name", "like", "%$search%")->get();
+			foreach ($pss as $ps){
+				$stations[] = $ps->id;
+			}
+			$entities = \CaseDetails::whereIn("policeStationId",$stations)->join("policestations", "policestations.id","=","case_details.policestationId")->join("courts", "courts.id","=","case_details.courtId")->select($select_args)->get();
+			$total = count($entities);
+		}
+		else{
+			if(isset($values["username"]) && $values["username"] == 0){
+				$entities = LoginLog::wherebetween("logindate",array($frmdt,$todt))->select($select_args)->limit($length)->offset($start)->get();
+				$total = LoginLog::wherebetween("logindate",array($frmdt,$todt))->count();
+			}
+			elseif (isset($values["username"]) && $values["username"] > 0){
+				$entities = LoginLog::wherebetween("logindate",array($frmdt,$todt))->where("user_id","=",$values["username"])->select($select_args)->limit($length)->offset($start)->get();
+				$total = LoginLog::wherebetween("logindate",array($frmdt,$todt))->where("user_id","=",$values["username"])->count();
+			}
+		}
+	
+		$entities = $entities->toArray();
+		foreach($entities as $entity){
+			$entity["logindate"] = date("d-m-Y", strtotime($entity["logindate"]));
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";

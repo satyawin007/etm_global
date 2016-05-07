@@ -445,9 +445,16 @@ class EmployeeController extends \Controller {
 		$table = "Employee";
 		if($db_functions_ctrl->insert($table, $fields)){
 			$empid = \Employee::where("emailId","=",$values["email"])->first();
+			
 			$table = "SalaryDetails";
 			$fields = array("empId"=>$empid->id);
 			$db_functions_ctrl->insert($table, $fields);
+			if($fields["rolePrevilegeId"] == 3){
+				$table = "InchargeAccounts";
+				$fields = array("empid"=>$empid->id,"status"=>"Active");
+				$db_functions_ctrl->insert($table, $fields);
+			}
+			
 			\Session::put("message","Operation completed Successfully");
 			return \Redirect::to("addemployee");
 		}
@@ -474,6 +481,7 @@ class EmployeeController extends \Controller {
 			$empid = \Employee::where("empCode","=",$values["empid2"])->first();
 			$table = "SalaryDetails";
 			$fields = array("empId"=>$empid->id);
+			$db_functions_ctrl = new DBFunctionsController();
 			$db_functions_ctrl->insert($table, $fields);
 			\Session::put("message","Operation completed Successfully");
 			return \Redirect::to("employees");

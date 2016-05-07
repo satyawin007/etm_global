@@ -222,7 +222,8 @@ use Illuminate\Support\Facades\Input;
 								</li>
 								
 								<li>
-									&nbsp;
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=loginlog"> LOGIN DETAILS </a>
 								</li>
 								
 								<li>

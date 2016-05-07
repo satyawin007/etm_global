@@ -83,6 +83,21 @@
 							</div>			
 						</div>
 						<?php } ?>
+						<?php if($form_field['type'] === "daterange"){ ?>				
+						<div class="form-group">
+							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+							<div class="col-xs-7">
+								<div class="input-daterange input-group">
+										<input type="text" id="fromdate"  style="padding-top: 15px;padding-bottom: 18px;" required="required" name="fromdate" <?php if(isset($values["fromdate"])) echo " value=".$values["fromdate"]." "; ?> class="input-sm form-control"/>
+										<span class="input-group-addon">
+											<i class="fa fa-exchange"></i>
+										</span>
+										<input type="text" class="input-sm form-control"  style="padding-top: 15px;padding-bottom: 18px;" id="todate" required="required" <?php if(isset($values["fromdate"])) echo " value=".$values["todate"]." "; ?>  name="todate"/>
+									</div>
+							</div>	
+									
+						</div>
+						<?php } ?>
 						<?php if($form_field['type'] === "textarea"){ ?>				
 						<div class="form-group">
 							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>

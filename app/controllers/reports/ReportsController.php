@@ -150,6 +150,9 @@ class ReportsController extends \Controller {
 		if(isset($values["reporttype"]) && $values["reporttype"] == "dailysettlementreport"){
 			return $this->getDailySettlementReportsReport($values);
 		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "dailyfinancedetailed"){
+			return $this->getDailyFinanceDetailedReport($values);
+		}
 		if(isset($values["reporttype"]) && $values["reporttype"] == "fuel"){
 			return $this->getFuelReport($values);
 		}
@@ -185,6 +188,9 @@ class ReportsController extends \Controller {
 		}
 		if(isset($values["reporttype"]) && $values["reporttype"] == "repairstock"){
 			return $this->getRepairStockReport($values);
+		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "loginlog"){
+			return $this->getLoginLogInfo($values);
 		}
 	}
 	
@@ -2234,6 +2240,100 @@ class ReportsController extends \Controller {
 		return View::make('reports.fuelreport', array("values"=>$values));
 	}
 	
+	private function getDailyFinanceDetailedReport($values){
+		if (\Request::isMethod('post'))
+		{
+			if(!isset($values["fromdate"])){
+				$values["fromdate"] = "10-10-2013";
+			}
+			if(!isset($values["todate"])){
+				$values["todate"] = date("d-m-Y");
+			}
+			$frmDt = date("Y-m-d", strtotime($values["fromdate"]));
+			$toDt = date("Y-m-d", strtotime($values["todate"]));
+			$resp = array();
+			$select_args = array();//'Finance Company',"Loan Amount",'Loan No', "Paid Amount", "Paid Date","Office Branch", "Created By"
+			$select_args[] = "financecompanies.name as name";
+			$select_args[] = "fuelstationdetails.name as fname";
+			$select_args[] = "cities.name as cname";
+			echo json_encode($resp);
+			return;
+		}
+	
+		$values['bredcum'] = strtoupper($values["reporttype"]);
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'getreport';
+		$values['form_action'] = 'getreport';
+		$values['action_val'] = '';
+		$theads = array("Finance Company","Loan No","Loan Amount", "Paid Amount", "Paid Date","Office Branch", "Created By");
+		$values["theads"] = $theads;
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "bankdetails";
+		$form_info["bredcum"] = "add bank details";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+		$form_fields = array();
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$qry = "select df.id as id, name, amountFinanced, installmentAmount, agmtDate, paidInstallments, totalInstallments from dailyfinances df, financecompanies f where df.financeCompanyId=f.id and df.deleted='No' order by name, agmtDate asc";
+				$dailyfinances = \DB::select(\DB::raw($qry));
+				$entity_arr = array();
+				$dfName = '';
+				$i  = 0;
+				$loanNo= 0;
+				foreach ($dailyfinances as $dailyfinance){
+					$id = $dailyfinance->id;
+					$name = $dailyfinance->name;
+					$amountFinanced = $dailyfinance->amountFinanced;
+					$paidInstallments = $dailyfinance->paidInstallments;
+					$installmentAmount = $dailyfinance->installmentAmount;
+					$eqry = "select sum(amount) as paidAmount from expensetransactions where entity='DAILY FINANCE PAYMENT' and entityValue=$id and status='ACTIVE'";
+					$eresults = \DB::select(\DB::raw($eqry));
+					$paidAmount = 0;
+					if(count($eresults)>0){
+						$erow = $eresults[0];
+						$paidAmount = $erow->paidAmount;
+					}
+					if($paidAmount+($paidInstallments*$installmentAmount) >= $amountFinanced)
+						continue;
+					
+					if($i == 0)
+					{
+						$dfName = $name;
+						$loanNo = 1;
+					}
+					else if($dfName === $name)
+					{
+						$loanNo++;
+					}
+					else
+					{
+						$dfName = $name;
+						$loanNo = 1;
+					}
+					$amountFinanced=$dailyfinance->amountFinanced;
+					$installmentAmount=$dailyfinance->installmentAmount;
+					$finName = $name.'-'.$amountFinanced.'-'.$installmentAmount.'- Loan No'.$loanNo;
+					$i++;
+					$entity_arr[$id] = $finName;
+				}
+				$entity_name = "dailyfinance";
+				$entity_text = "daily finance ";
+		$form_field = array("name"=>$entity_name, "content"=>$entity_text, "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$entity_arr);
+		$form_fields[] = $form_field;
+	
+	
+		$form_info["form_fields"] = $form_fields;
+		$values["form_info"] = $form_info;
+		$values["provider"] = "bankdetails";
+		return View::make('reports.dailyfinancedetailed', array("values"=>$values));
+	}
+	
 	private function getCreditSupplierReport($values){
 		if (\Request::isMethod('post'))
 		{
@@ -2851,5 +2951,93 @@ class ReportsController extends \Controller {
 		$values["form_info"] = $form_info;
 		$values["provider"] = "dailysettlement";
 		return View::make('reports.inventoryreport', array("values"=>$values));
+	}
+	
+	private function getLoginLogInfo($values)
+	{
+		if (\Request::isMethod('post'))
+		{
+			//$values["test"];
+			$select_args = array();
+			$select_args[] = "login_log.user_full_name as name";
+			$select_args[] = "login_log.emailId as emailId";
+			$select_args[] = "login_log.ipaddress as ipaddress";
+			$select_args[] = "login_log.logindate as logindate";
+			$select_args[] = "login_log.logintime as logintime";
+			
+			if(!isset($values["fromdate"]) || !isset($values["todate"])){
+				echo json_encode(array("total"=>0, "data"=>array()));
+				return ;
+			}
+			
+			$frmdt = date("Y-m-d",strtotime($values["fromdate"]));
+			$todt = date("Y-m-d",strtotime($values["todate"]));
+			$resp = array();
+			if(isset($values["empname"]) && $values["empname"] == 0){
+				$entities = \LoginLog::whereBetween("logindate",array($frmdt,$todt))->get();
+				$total = \LoginLog::wherebetween("logindate",array($frmdt,$todt))->count();
+			}
+			elseif (isset($values["empname"]) && $values["empname"] > 0){
+				$entities = \LoginLog::wherebetween("logindate",array($frmdt,$todt))->where("user_id","=",$values["empname"])->select($select_args)->sget();
+				$total = \LoginLog::wherebetween("logindate",array($frmdt,$todt))->where("user_id","=",$values["empname"])->count();
+			}
+			foreach ($entities as $entity){
+				$row = array();
+				$row["empid"] = $entity->empid	;
+				$row["user_full_name"] = $entity->user_full_name;
+				$row["ipaddress"] = $entity->ipaddress;
+				$row["logindate"] = date("d-m-Y",strtotime($entity->logindate));
+				$row["logintime"] = $entity->logintime;
+				$row["logouttime"] = $entity->logouttime;
+				$resp[] = $row;
+			}
+			echo json_encode($resp);
+			return;
+			
+		}
+		$values = Input::all();
+		$values['bredcum'] = "USER LOGIN INFORMATION";
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'loginlog';
+		$values['form_action'] = 'loginlog';
+		$values['action_val'] = '#';
+		$theads = array('user name','email', "IP Address", "login date", "login time", "logout time");
+		$values["theads"] = $theads;
+	
+		//$values["test"];
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "users";
+		$form_info["bredcum"] = "loginlog";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+	
+		$emp_arr = array();
+		$emp_arr[0] = "All";
+		$emps = \Employee::where("status","=","ACTIVE")->orderby("fullName")->get();
+		foreach ($emps as $emp){
+			$emp_arr[$emp->id] = $emp->fullName;
+		}
+	
+		$form_fields = array();
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"empname", "content"=>"empname", "readonly"=>"", "required"=>"", "type"=>"select", "options"=>$emp_arr,  "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_info["form_fields"] = $form_fields;
+		$values['form_info'] = $form_info;
+	
+		$form_info["form_fields"] = array();
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
+		//$values['provider'] = "loginlog";
+	
+		return View::make('reports.logininforeport', array("values"=>$values));
 	}
 }

@@ -1138,7 +1138,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "empsalarydetails.batta as batta";
 		$select_args[] = "empsalarydetails.paymentType as paymentType";
 		$select_args[] = "empsalarydetails.status as status";		
-		$select_args[] = "empsalarydetails.id as id";
+		$select_args[] = "employee.id as id";
 		
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
