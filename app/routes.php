@@ -18,6 +18,8 @@ Route::get('/', function()
 
 Route::get('/logout', function()
 {
+	$rec = LoginLog::where("user_id","=",\Auth::user()->id)->orderBy("id","desc")->first();
+	LoginLog::where("id","=",$rec->id)->update(array("logouttime"=>date('H:i:s', time())));
 	Auth::logout();
 	Session::flush();
 	return Redirect::to('/');
@@ -611,3 +613,4 @@ Route::any('/getbillpaymentsdatatabledata', "billpayments\DataTableController@ge
 Route::get('/getbillno',"billpayments\BillPaymentsController@getBillNo");
 
 Route::get('/gettotalamount',"billpayments\BillPaymentsController@getTotalAmount");
+
