@@ -244,7 +244,10 @@
 				}
 
 				var bankaccount = $("#bankaccount").val();
-				if(bankaccount != undefined && bankaccount ==""){
+				var path = $(location).attr('pathname');
+				path = path.split("/"); 
+				path = path[path.length-1];
+				if(bankaccount != undefined && bankaccount =="" && path != "addofficebranch"){
 					alert("Please select bankaccount");
 					return false;
 				}

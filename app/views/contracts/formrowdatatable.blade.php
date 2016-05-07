@@ -187,6 +187,7 @@
 		<!-- inline scripts related to angular JS-->
 		<script>
 			submit_data = "false";
+			$("#updaterowbtn").hide();
 			var app = angular.module('myApp', []);
 			app.controller('myCtrl', function($scope, $http) {
 				$scope.vehicles = [];
@@ -200,7 +201,7 @@
 					index =  -1;	
 					var comArr = eval( $scope.vehicles );
 					for( var i = 0; i < comArr.length; i++ ) {
-						if( comArr[i].vehicle === $scope.vehicle ||  comArr[i].driver1 === $scope.driver1 || comArr[i].driver2 === $scope.driver2 || comArr[i].helper === $scope.helper) {
+						if( comArr[i].vehicle === $scope.vehicle ||  comArr[i].driver1 === $scope.driver1 || (comArr[i].driver2 === $scope.driver2 && $scope.driver2!="") || (comArr[i].helper === $scope.helper  && $scope.helper!="")) {
 							index = i;
 							break;
 						}
@@ -209,11 +210,7 @@
 						alert( "duplicate value" );
 						return;
 					}
-					$scope.vehicles.unshift({ 'vehicle':$scope.vehicle, 'driver1': $scope.driver1, 'driver2':$scope.driver2 , 'helper':$scope.helper });
-					$scope.vehicle='';
-					$scope.driver1='';
-					$scope.driver2='';
-					$scope.helper='';
+					$scope.vehicles.unshift({ 'vehicle':$scope.vehicle, 'driver1': $scope.driver1, 'driver2':$scope.driver2 , 'helper':$scope.helper, 'startdt':$scope.startdt });
 
 					text_arr = [];
 					$scope.ids.forEach(function(entry) {
@@ -221,8 +218,14 @@
 						$("#"+entry).find('option:selected').removeAttr("selected");
 						text_arr[entry] = text;
 					});
+					text_arr['startdt'] = $scope.startdt;
 					$scope.vehicles_text.unshift(text_arr);
 					$('.chosen-select').trigger("chosen:updated");
+					$scope.vehicle='';
+					$scope.driver1='';
+					$scope.driver2='';
+					$scope.helper='';
+					$scope.startdt='';
 				};
 
 				$scope.editRow = function(vehicle){	
@@ -245,14 +248,17 @@
 						$("#"+entry).find('option:selected').attr("selected", "selected"); 
 						$scope[entry]=comArr1[i][entry];
 					});	
-					$('.chosen-select').trigger("chosen:updated");	
+					$scope['startdt']=comArr[i]['startdt'];
+					//$("#startdt").val(comArr1[i]['startdt']);
+					$('.chosen-select').trigger("chosen:updated");
+					$("#addrowbtn").hide();
+					$("#updaterowbtn").show();	
 				};
 
 				$scope.updateRow = function(){	
 					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" || $scope.driver1 === "" || $scope.vehicle === "") {
 						return;
-					}	
-					tempdata = [];
+					}
 					var index = -1;		
 					var comArr = eval( $scope.vehicles );
 					for( var i = 0; i < comArr.length; i++ ) {
@@ -269,6 +275,7 @@
 									$scope.vehicles_text[index][entry] = text;
 								}
 							});
+							$scope.vehicles_text[index]['startdt'] = $scope.startdt;
 							break;
 						}
 					}
@@ -280,8 +287,11 @@
 					$scope.driver1='';
 					$scope.driver2='';
 					$scope.helper='';
+					$scope.startdt='';
 					alert("updated successfully");
 					$('.chosen-select').trigger("chosen:updated");
+					$("#addrowbtn").show();
+					$("#updaterowbtn").hide();	
 				};
 				
 				$scope.removeRow = function(vehicle){	

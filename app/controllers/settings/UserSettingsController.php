@@ -118,6 +118,12 @@ class UserSettingsController extends \Controller {
 				foreach ($privileges as $privilege){
 					$privileges_arr[] = $privilege->jobId;
 				}
+				if($roleid == 3){
+					$empid = \Employee::where("id","=",$values["id"])->first();
+					$table = "InchargeAccounts";
+					$fields = array("empid"=>$empid->id,"status"=>"Active");
+					$db_functions_ctrl->insert($table, $fields);
+				}
 				\Session::put("jobs",$privileges_arr);
 				
 				return \Redirect::to("employeeprofile?id=".$values["id"]);

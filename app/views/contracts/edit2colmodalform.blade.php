@@ -115,8 +115,8 @@
 						else{
 							$veh->inActiveDate = "";
 						}
-						$con_vehs_text_str = $con_vehs_text_str."{ 'vehicle':'".$vehicles_arr[$veh->vehicleId]."', 'driver1':'".$drivers_arr[$veh->driver1Id]."', 'driver2':'".$drv2."', 'helper':'".$helper."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'status':'".$veh->status."', 'id':'".$veh->id."'},";
-						$con_vehs_str = $con_vehs_str."{ 'vehicle':'".$veh->vehicleId."', 'driver1':'".$veh->driver1Id."', 'driver2':'".$veh->driver2Id."', 'helper':'".$veh->helperId."', 'status':'".$veh->status."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'id':'".$veh->id."'},";
+						$con_vehs_text_str = $con_vehs_text_str."{ 'vehicle':'".$vehicles_arr[$veh->vehicleId]."', 'driver1':'".$drivers_arr[$veh->driver1Id]."', 'driver2':'".$drv2."', 'helper':'".$helper."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))."', 'status':'".$veh->status."', 'id':'".$veh->id."'},";
+						$con_vehs_str = $con_vehs_str."{ 'vehicle':'".$veh->vehicleId."', 'driver1':'".$veh->driver1Id."', 'driver2':'".$veh->driver2Id."', 'helper':'".$veh->helperId."', 'status':'".$veh->status."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))."', 'id':'".$veh->id."'},";
 					}
 					$con_vehs_str = $con_vehs_str."]";
 					$con_vehs_text_str = $con_vehs_text_str."]";

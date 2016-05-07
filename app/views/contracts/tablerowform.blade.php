@@ -163,7 +163,7 @@
 					</div>
 					<h3 style="margin-top:-10px;" class="header smaller lighter blue">&nbsp;</h3>
 					<div >
-						<div class="col-xs-5">
+						<div class="col-xs-4">
 						<?php $form_fields = $form_info['add_form_fields'];?>	
 						<?php foreach ($form_fields as $form_field) {?>
 							<div class="col-xs-12">
@@ -258,7 +258,7 @@
 							<div class="col-xs-2"><input class="btn btn-xs" type="button" id="updaterowbtn" ng-click="updateRow()" value="  UPDATE  "/></div>
 						</div>
 						</div>
-						<div class="col-xs-7">
+						<div class="col-xs-8">
 							<table class="table table-striped table-bordered table-hover">
 								<thead>
 									<tr>
@@ -266,6 +266,7 @@
 										<th>DRIVER1</th>
 										<th>DRIVER2</th>
 										<th>HELPER</th>
+										<th>START DT</th>
 										<th>STATUS</th>
 										<th>REMARKS</th>
 										<th>ACTIONS</th>
@@ -276,11 +277,12 @@
 									<td>@{{vehicle.driver1}}</td>
 									<td>@{{vehicle.driver2}}</td>
 									<td>@{{vehicle.helper}}</td>
+									<td>@{{vehicle.startdt}}</td>
 									<td>@{{vehicle.status}} @{{vehicle['date'] ? "("+vehicle['date']+")" : ''}}</td>
+									<td>@{{vehicle.remarks}}</td>
 									<?php 
 										if(isset($form_info['btn_action_type']) && $form_info['btn_action_type']=="edit"){
 									?>
-										<td>@{{vehicle.remarks}}</td>
 										<td>
 											<input type="button" value="Edit" class="btn btn-minier btn-purple" style="margin:2px;" id="editrowbtn" ng-click="editRow(vehicle.id)"/> &nbsp;&nbsp;&nbsp;
 											<input type="button" value="Remove" class="btn btn-minier btn-purple removerowbtn" style="margin:2px;" id="removerowbtn" ng-click="removeRow(vehicle.id)"/>

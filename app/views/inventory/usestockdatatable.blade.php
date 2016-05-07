@@ -691,6 +691,22 @@
 					count = 1;
 					$("#repairreturnbuttons").show();
 					if(val == "TO WAREHOUSE1" || val == "TO VEHICLE1"){
+						if(val=="TO VEHICLE1"){
+							ids = ['creditsupplier1', "item", "vehicle", "itemstatus"];
+							vars = ["itemnumbers", "qty", "remarks"];
+							entities_text = [];
+							entities = [];
+							exe_recs_text = [];
+							condition_elements = ["item","qty"];
+						}
+						if(val=="TO WAREHOUSE1"){
+							ids = ['creditsupplier1', "item", "towarehouse2", "itemstatus"];
+							vars = ["itemnumbers", "qty", "remarks"];
+							entities_text = [];
+							entities = [];
+							exe_recs_text = [];
+							condition_elements = ["item","qty"];
+						}
 						action = val;
 					}
 					else if(val == 0){}
@@ -726,6 +742,7 @@
 				$("#div_itemnumbers").hide();
 				$("#div_alertdate").hide();
 				$("#div_itemactions").hide();
+				$("#qty").attr("readonly",false);
 				$.ajax({
 			      url: "getmanufacturers?itemid="+id,
 			      success: function(data) {
@@ -742,16 +759,32 @@
 			   });
 			}
 
-			function getCreditSupplierItems(value, id){
-				id = id.replace("creditsupplier","item");
+			function getCreditSupplierItems(value){
 				$.ajax({
-			      url: "getrepairitembysupplier?itemid="+value,
+			      url: "getrepairitembysupplier?supplierid="+value,
 			      success: function(data) {
-			    	  $("#"+id).html(data);
+			    	  $("#item").html(data);
 					  $('.chosen-select').trigger('chosen:updated');
 			      },
 			      type: 'GET'
 			   });
+
+// 				$("#div_itemnumbers").hide();
+// 				$("#qty").attr("readonly",false);
+// 				$.ajax({
+// 			      url: "getrepairitembysupplier?supplierid="+id,
+// 			      success: function(data) {
+// 				      //alert(data);
+// 			    	  var obj = JSON.parse(data);
+// 			    	  if(obj.itemnumberstatus=="Yes"){
+// 			    		  $("#qty").attr("readonly",true);
+// 			    		  $("#div_itemnumbers").show();
+// 			    	  }
+// 			    	  $("#manufacturer").html(obj.manufactures);
+// 			    	  $('.chosen-select').trigger('chosen:updated');
+// 			      },
+// 			      type: 'GET'
+// 			   });
 			}
 
 			function enableIncharge(val){
@@ -866,6 +899,7 @@
 				$("#div_itemnumbers").hide();
 				$("#div_alertdate").hide();
 				$("#div_itemactions").hide();
+				$("#qty").attr("readonly",false);
 				$.ajax({
 			      url: "getiteminfo?id="+id,
 			      success: function(data) {
@@ -1312,7 +1346,7 @@
 				var comArr = eval( entities_text );
 				var comArr1 = eval( entities );
 				for( var i = 0; i < comArr.length; i++ ) {
-					alert("editrow : "+comArr[i].rowid+" - "+rowid1);
+					//alert("editrow : "+comArr[i].rowid+" - "+rowid1);
 					if( comArr[i].rowid == rowid1 ) {
 						index = i;
 						editrowid = rowid1;

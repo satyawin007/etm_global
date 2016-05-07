@@ -103,13 +103,13 @@ class VehicleController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"actualcost", "content"=>"actual cost", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"taxlastpaid_ts", "content"=>"tax last paid date ts", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date");
+		$form_field = array("name"=>"taxlastpaid_ts", "content"=>"tax last paid date ts", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"taxlastpaid_ap", "content"=>"tax last paid date ap", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date");
+		$form_field = array("name"=>"taxlastpaid_ap", "content"=>"tax last paid date ap", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"taxlastpaid_kta", "content"=>"tax last paid date kta", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date");
+		$form_field = array("name"=>"taxlastpaid_kta", "content"=>"tax last paid date kta", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"taxlastpaid_tn", "content"=>"tax last paid date tn", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date");
+		$form_field = array("name"=>"taxlastpaid_tn", "content"=>"tax last paid date tn", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"insurancelastpaid", "content"=>"insurance last paid date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date");
 		$form_fields[] = $form_field;

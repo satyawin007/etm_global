@@ -809,12 +809,19 @@ class RepairTransactionController extends \Controller {
 		if(isset($values["type"]) && $values["type"]=="contracts"){
 			$veh_arr = array();
 			$ass_clientbranches = \Auth::user()->contractIds;
-			$ass_clientbranches = explode(",", $ass_clientbranches);
-			$contracts_vehs = \ContractVehicle::whereIn("contracts.depotId",$ass_clientbranches)
-							->where("contract_vehicles.status","=","ACTIVE")
-							->join("contracts","contract_vehicles.contractId","=","contracts.id")	
+			if(\Auth::user()->contractIds == "0" || \Auth::user()->contractIds == ""){
+				$contracts_vehs = \ContractVehicle::where("contract_vehicles.status","=","ACTIVE")
 							->join("vehicle","contract_vehicles.vehicleId","=","vehicle.id")
 							->select(array("vehicle.id as id", "vehicle.veh_reg as veh_reg"))->get();
+			}
+			else{
+				$ass_clientbranches = explode(",", $ass_clientbranches);
+				$contracts_vehs = \ContractVehicle::whereIn("contracts.depotId",$ass_clientbranches)
+								->where("contract_vehicles.status","=","ACTIVE")
+								->join("contracts","contract_vehicles.contractId","=","contracts.id")	
+								->join("vehicle","contract_vehicles.vehicleId","=","vehicle.id")
+								->select(array("vehicle.id as id", "vehicle.veh_reg as veh_reg"))->get();
+			}
 			foreach ($contracts_vehs as $contracts_veh){
 				$veh_arr[$contracts_veh->id] = $contracts_veh->veh_reg;
 			}
@@ -888,7 +895,7 @@ class RepairTransactionController extends \Controller {
 		$form_fields = array();
 		$form_field = array("name"=>"item", "content"=>"item", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$items_arr,  "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"vehicles", "content"=>"Vehicle", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$veh_arr,"multiple"=>"multiple", "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"vehicles", "content"=>"Vehicle", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$veh_arr, "multiple"=>"multiple", "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"quantity", "content"=>"quantity", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
 		$form_fields[] = $form_field;

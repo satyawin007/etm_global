@@ -115,78 +115,66 @@
 	$form_info["theads"] = array("ITEM", 'MANUFACTURER', "VEHICLE", "STATUS", "ITEM NUMBERS", "QTY", "REMARKS", "ACTION");
 ?>
 	@include("inventory.tablerowform",$form_fields);
-<?php } else if($values["action"] == "TO VEHICLE1"){?>
-	<div class="form-group col-xs-6" style="margin-top: 15px; margin-bottom: -10px">
-		<div class="form-group" id="repairbuttons">
-			<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> VEHICLE REG<span style="color:red;">*</span> </label>
-			<div class="col-xs-7">
-				<select class="form-control chosen-select vehicle" id="vehicle" required="required" name="repairvehicle" >
-					<option value="">-- vehicle --</option>
-					<?php 
-						foreach($vehicles_arr as  $key=>$val){
-							echo "<option value='".$key."' >".$val."</option>";
-						}
-					?>
-				</select>
-			</div>			
-		</div>
-	</div>
-	<div class="col-xs-12" style="border: 1px solid #D5D5D5; margin-left: 10px; margin-top: 10px; max-width:98%">
-		<div class="row" style="background-color: #307ECC;">
-			<div style="margin-top: 5px; color:white; float:left;">
-					&nbsp;ADD / REMOVE ROW 
-				</a>
-			</div>
-			<div style="margin-top: 5px; margin-right:10px; float:right; color:white" ><i id="children_add" class="ace-icon fa fa-plus-circle bigger-160"></i> &nbsp;&nbsp; <i id="children_remove" class="ace-icon fa fa-minus-circle bigger-160"></i> &nbsp;&nbsp; <i id="children_refresh" class="ace-icon fa fa-refresh bigger-160"></i></div>
-		</div>
-		<div class="row col-xs-12" id="children_fields_all">
-			<div id="children_fields" style="padding-top: 7px; padding-bottom: 2px;" class="children_fields">
-				<div id="row0" class="">								
-					<div class="form-group inline" style="float:left;width:28%;">
-						<label class="col-xs-2 control-label no-padding-right" for="form-field-1">Supplier&nbsp; </label>
-						<div class="col-xs-10">
-							<select class="form-control creditsupplier chosen-select" id="creditsupplier0" name="creditsupplier[]" onchange="getCreditSupplierItems(this.value, this.id)">
-								<option value="">-- creditsupplier --</option>
-								<?php
-									$creditsuppliers =  CreditSupplier::where("purchase_orders.type","=","TO CREDIT SUPPLIER")
-														->join("purchase_orders","purchase_orders.creditSupplierId", "=", "creditsuppliers.id")
-														->select(array("creditsuppliers.id as id", "creditsuppliers.supplierName as supplierName"))
-														->groupBy("creditsuppliers.id")->get();
-									$creditsuppliers_arr = array();
-									foreach($creditsuppliers as  $creditsupplier){
-										echo "<option value='".$creditsupplier->id."' >".$creditsupplier->supplierName."</option>";
-									}
-								?>
-							</select>
-						</div>
-					</div>
-					<div class="form-group inline" style="float:left; width:22%; margin-left:5px;">
-						<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> Item</label>
-						<div class="col-xs-9">
-							<select class="form-control item chosen-select" id="item0" name="item[]" >
-								<option value="">-- item --</option>
-							</select>
-						</div>
-					</div>
-					<div class="form-group inline" style="float:right; width: 50%; margin-right: 0%; margin-left: 1%;">
-						<label style="width:5%; float:left; margin-right:5px;" class="control-label no-padding-right" for="form-field-1"> QTY </label>
-						<div style="width:15%; float:left; margin-right:15px;">
-							<input type="text" id="qty0" name="qty[]" class="form-control qty" onchange="qtyChange(this.id)">
-						</div>
-						<label style="width:8%;float:left; margin-right:5px;" class=" control-label no-padding-right" for="form-field-1"> STATUS </label>
-						<div style="width:13%; float:left; margin-right:15px;">
-							<select class="form-control  chosen-select warehouse" id="warehouse0" name="status[]" >
-								<option value="Old">USED</option>
-							</select>
-						</div>
-						<div style="width:35%; float:right; ">
-							<input type="text" id="remarks0" placeholder="remarks"  name="remarks[]" class="form-control remarks" >
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+<?php } else if($values["action"] == "TO VEHICLE1"){
+	$creditsuppliers =  CreditSupplier::where("purchase_orders.type","=","TO CREDIT SUPPLIER REPAIR")
+							->join("purchase_orders","purchase_orders.creditSupplierId", "=", "creditsuppliers.id")
+							->select(array("creditsuppliers.id as id", "creditsuppliers.supplierName as supplierName"))
+							->groupBy("creditsuppliers.id")->get();
+	$creditsuppliers_arr = array();
+	foreach($creditsuppliers as  $creditsupplier){
+		$creditsuppliers_arr[$creditsupplier->id] = $creditsupplier->supplierName;
+	}
+	$form_fields = array();
+	$form_field = array("name"=>"creditsupplier1", "id"=>"creditsupplier1",  "content"=>"credit supplier", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getCreditSupplierItems(this.value)"), "options"=>$creditsuppliers_arr);
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"item", "id"=>"item",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getManufacturers(this.value)"), "options"=>array());
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"itemnumbers", "id"=>"itemnumbers",  "content"=>"item numbers", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"calItemCountText(this.value)"), "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"qty", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"vehicle", "id"=>"vehicle",  "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"itemstatus", "id"=>"itemstatus",  "content"=>"item status", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("USED"=>"USED","NEW"=>"NEW"));
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"remarks", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_info = array();
+	$form_info["form_fields"] = $form_fields;
+	$form_info["theads"] = array('CREDIT SUPPLIER', "ITEM", "VEHICLE", "STATUS", "ITEM NUMBERS", "QTY", "REMARKS", "ACTION");
+?>
+	@include("inventory.tablerowform",$form_fields);
+
+<?php } else if($values["action"] == "TO WAREHOUSE1"){
+	$creditsuppliers =  CreditSupplier::where("purchase_orders.type","=","TO CREDIT SUPPLIER REPAIR")
+							->join("purchase_orders","purchase_orders.creditSupplierId", "=", "creditsuppliers.id")
+							->select(array("creditsuppliers.id as id", "creditsuppliers.supplierName as supplierName"))
+							->groupBy("creditsuppliers.id")->get();
+	$creditsuppliers_arr = array();
+	foreach($creditsuppliers as  $creditsupplier){
+		$creditsuppliers_arr[$creditsupplier->id] = $creditsupplier->supplierName;
+	}
+	$form_fields = array();
+	$form_field = array("name"=>"creditsupplier1", "id"=>"creditsupplier1",  "content"=>"credit supplier", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getCreditSupplierItems(this.value)"), "options"=>$creditsuppliers_arr);
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"item", "id"=>"item",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getManufacturers(this.value)"), "options"=>array());
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"itemnumbers", "id"=>"itemnumbers",  "content"=>"item numbers", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"calItemCountText(this.value)"), "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"qty", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"towarehouse2", "id"=>"towarehouse2",  "content"=>"to warehouse", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",   "options"=>$branches_arr);
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"itemstatus", "id"=>"itemstatus",  "content"=>"item status", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("USED"=>"USED","NEW"=>"NEW"));
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"remarks", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
+	$form_fields[] = $form_field;
+	$form_info = array();
+	$form_info["form_fields"] = $form_fields;
+	$form_info["theads"] = array('CREDIT SUPPLIER', "ITEM", "WAREHOUSE", "STATUS", "ITEM NUMBERS", "QTY", "REMARKS", "ACTION");
+?>
+	@include("inventory.tablerowform",$form_fields);	
+	
 <?php } else if($values["action"] == "TO CREDIT SUPPLIER"){?>
 	<?php 
 		$credit_sup_arr = array();

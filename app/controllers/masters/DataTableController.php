@@ -139,7 +139,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "employee.fullName as fullName";
 		$select_args[] = "officebranch.name as officeBranchName";
 		$select_args[] = "employee.mobileNo as mobileNo";
-		$select_args[] = "user_roles_master.name as name";
+		$select_args[] = "role.roleName as name";
 		$select_args[] = "employee.emailid as emailid";
 		$select_args[] = "employee.proofs as proofs";
 		$select_args[] = "employee.fatherName as fatherName";
@@ -190,7 +190,10 @@ class DataTableController extends \Controller {
 		if($search != ""){
 			$entities = \Employee::where('fullName',"like","%$search%")
 								->where("employee.status","=","ACTIVE")
-								->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->select($select_args)->limit($length)->offset($start)->get();
+								->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+								->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+								->leftjoin('role','employee.roleId','=','role.id')
+								->select($select_args)->limit($length)->offset($start)->get();
 			$total = \Employee::where('fullName',"like","%$search%")->count();
 		}
 		else{
@@ -198,13 +201,17 @@ class DataTableController extends \Controller {
 				if(isset($values['branch']) && $values['branch'] != ""){
 					$branch = $values['branch'];
 					$entities = \Employee::whereRaw(" (roleId=20 or roleId=19) and employee.status='ACTIVE' and officebranchId='$branch' ")
-										->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->select($select_args)->limit($length)->offset($start)->get();
+										->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+										->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+										->leftjoin('role','employee.roleId','=','role.id')
+										->select($select_args)->limit($length)->offset($start)->get();
 					$total = \Employee::whereRaw(" (roleId=20 or roleId=19) and officebranchId='$branch' ")->where("employee.status","=","ACTIVE")->count();
 				}
 				else{
 					$entities = \Employee::leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 											->whereRaw(" (roleId=20 or roleId=19) and employee.status='ACTIVE' ")
 											->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+											->leftjoin('role','employee.roleId','=','role.id')
 											->select($select_args)->limit($length)->offset($start)->get();
 					$total = \Employee::where('roleId',"=",20)->orwhere("roleId", "=",19)->where("employee.status","=","ACTIVE")->count();
 				}
@@ -217,6 +224,7 @@ class DataTableController extends \Controller {
 										  ->where("employee.status","=","BLOCKED")
 										  ->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 										  ->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+										  ->leftjoin('role','employee.roleId','=','role.id')
 										  ->leftjoin('employee_activity','employee_activity.empid','=','employee.id')
 										  ->select($select_args)->orderBy("employee_activity.date","desc")->limit($length)->offset($start)->get();
 					$total = \Employee::where("officebranchId","=",$values['branch'])->where("status","=","BLOCKED")->count();
@@ -225,6 +233,7 @@ class DataTableController extends \Controller {
 					$entities = \Employee::where("employee.status","=","BLOCKED")
 										  ->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 										  ->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+										  ->leftjoin('role','employee.roleId','=','role.id')
 										  ->leftjoin('employee_activity','employee_activity.empid','=','employee.id')
 										  ->select($select_args)->orderBy("employee_activity.date","desc")->limit($length)->offset($start)->get();
 					$total = \Employee::where("status","=","BLOCKED")->count();
@@ -233,21 +242,41 @@ class DataTableController extends \Controller {
 			if(isset($values['action']) && $values['action']=="terminated"){
 				if(isset($values['branch']) && $values['branch'] != ""){
 					$branch = $values['branch'];
-					$entities = \Employee::where("officebranchId","=",$values['branch'])->where("status","=","TERMINATED")->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->select($select_args)->limit($length)->offset($start)->get();
+					$entities = \Employee::where("officebranchId","=",$values['branch'])
+								->where("employee.status","=","TERMINATED")
+								->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+								->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+								->leftjoin('role','employee.roleId','=','role.id')
+								->select($select_args)->limit($length)->offset($start)->get();
 					$total = \Employee::where("officebranchId","=",$values['branch'])->where("status","=","TERMINATED")->count();
 				}
 				else{
-					$entities = \Employee::where("status","=","TERMINATED")->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->select($select_args)->limit($length)->offset($start)->get();
+					$entities = \Employee::where("employee.status","=","TERMINATED")
+								->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+								->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+								->leftjoin('role','employee.roleId','=','role.id')
+								->select($select_args)->limit($length)->offset($start)->get();
 					$total = \Employee::where("status","=","TERMINATED")->count();
 				}
 			}
 			if(isset($values['action']) && $values['action']=="all"){
 				if(isset($values['branch']) && $values['branch'] != ""){
-					$entities = \Employee::where('officeBranchId',"=",$values['branch'])->where('roleId',"!=",20)->where("roleId", "!=",19)->where("status", "=","Active")->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->select($select_args)->limit($length)->offset($start)->get();
+					$entities = \Employee::where('officeBranchId',"=",$values['branch'])
+								->where('roleId',"!=",20)->where("roleId", "!=",19)
+								->where("employee.status", "=","Active")
+								->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+								->leftjoin('role','employee.roleId','=','role.id')
+								->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+								->select($select_args)->limit($length)->offset($start)->get();
 					$total = \Employee::where('officeBranchId',"=",$values['branch'])->where('roleId',"!=",20)->where("roleId", "!=",19)->where("status", "=","Active")->count();
 				}
 				else {
-					$entities = \Employee::where('roleId',"!=",20)->where("roleId", "!=",19)->where("status", "=","Active")->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->select($select_args)->select($select_args)->limit($length)->offset($start)->get();
+					$entities = \Employee::where('roleId',"!=",20)->where("roleId", "!=",19)
+									->where("employee.status", "=","Active")
+									->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+									->leftjoin('role','employee.roleId','=','role.id')
+									->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+									->select($select_args)->select($select_args)->limit($length)->offset($start)->get();
 					$total = \Employee::where('roleId',"!=",20)->where("roleId", "!=",19)->where("status", "=","Active")->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->get();
 					$total = count($total);					
 				}
@@ -1138,7 +1167,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "empsalarydetails.batta as batta";
 		$select_args[] = "empsalarydetails.paymentType as paymentType";
 		$select_args[] = "empsalarydetails.status as status";		
-		$select_args[] = "empsalarydetails.id as id";
+		$select_args[] = "employee.id as id";
 		
 		$search = $_REQUEST["search"];
 		$search = $search['value'];

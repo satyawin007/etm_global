@@ -57,6 +57,9 @@ class ContractController extends \Controller {
 					if(isset($jsonitem->helper)){
 						$fields["helperId"] = $jsonitem->helper;
 					}
+					if(isset($jsonitem->startdt)){
+						$fields["vehicleStartDate"] = date("Y-m-d",strtotime($jsonitem->startdt));
+					}
 					$db_functions_ctrl->insert($table, $fields);
 				}
 				
@@ -514,14 +517,14 @@ class ContractController extends \Controller {
 			$clients_arr[$client['id']] = $client['name'];
 		}
 		
-		$services =  \DB::select(\DB::raw("select servicedetails.id as id, city1.name as name1, city2.name as name2, servicedetails.description from servicedetails join cities as city1 on city1.id=servicedetails.sourceCity join cities as city2 on servicedetails.destinationCity=city2.id"));
+		$services =  \DB::select(\DB::raw("select servicedetails.id as id, city1.name as name1, city2.name as name2, servicedetails.serviceNo, servicedetails.description from servicedetails join cities as city1 on city1.id=servicedetails.sourceCity join cities as city2 on servicedetails.destinationCity=city2.id"));
 		$services_arr = array();
 		foreach ($services as $service){
 			$desc = "";
 			if($service->description != ""){
 				$desc = " ".$service->description;
 			}
-			$services_arr[$service->id] = $service->name1."-".$service->name2.$desc;
+			$services_arr[$service->id] = $service->name1."-".$service->name2.$desc."(".$service->serviceNo.")";
 		}
 		
 		$parentId = \LookupTypeValues::where("name", "=", "VEHICLE TYPE")->get();
@@ -618,6 +621,8 @@ class ContractController extends \Controller {
 		$form_field = array("name"=>"driver2", "content"=>"driver2", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"helper", "content"=>"helper", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$helpers_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"startdt", "content"=>"start date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
 		$form_info["add_form_fields"] = $form_fields;
 		$values['form_info'] = $form_info;

@@ -94,51 +94,7 @@ class StockController extends \Controller {
 				echo json_encode($json_resp);
 				return;
 			}
-			if(isset($values["action"]) && $values["action"]=="itemstovehicle"){
-				$field_names = array("action"=>"action","date"=>"date","warehouse"=>"fromWareHouseId");
-				$fields = array();
-				foreach ($field_names as $key=>$val){
-					if(isset($values[$key])){
-						if($key == "date"){
-							$fields[$val] = date("Y-m-d",strtotime($values[$key]));
-						}
-						else{
-							$fields[$val] = $values[$key];
-						}
-					}
-				}
-				\DB::beginTransaction();
-				try{
-					$db_functions_ctrl = new DBFunctionsController();
-					$i = 0;
-					for($i=0; $i<count($values["item"]); $i++){
-						$table = "InventoryTransactions";
-						$fields["stockItemId"] = $values["item"][$i];
-						$fields["toVehicleId"] = $values["vehicle"][$i];
-						$fields["qty"] = $values["qty"][$i];
-						$fields["remarks"] = $values["remarks"][$i];
-						$db_functions_ctrl->insert($table, $fields);
 			
-						$table = "\PurchasedItems";
-						$fields1 = array("id"=>$values["item"][$i]);
-						$qty = $db_functions_ctrl->get($table, $fields1);
-						$qty = $qty[0];
-						$qty = $qty->qty;
-						$qty = $qty - $values["dqty"][$i];
-			
-						$data = array('id'=>$values["item"][$i]);
-						$table = "\PurchasedItems";
-						$fields1 = array("qty"=>$qty);
-						$db_functions_ctrl->update($table, $fields1, $data);
-					}
-				}
-				catch(\Exception $ex){
-					\Session::put("message","Add inventory transaction (Item to Vehicle) : Operation Could not be completed, Try Again!");
-					\DB::rollback();
-					return \Redirect::to($url);
-				}
-				DB::commit();
-			}
 			if(isset($values["action"]) && $values["action"]=="warehousetowarehouse"){
 				//$values["Sd"];
 				$field_names = array("action"=>"action","date"=>"date","warehouse"=>"fromWareHouseId","towarehouse"=>"toWareHouseId","usedqty"=>"qty","remarks"=>"remarks");
@@ -246,6 +202,7 @@ class StockController extends \Controller {
 				echo json_encode($json_resp);
 				return;
 			}
+			
 			if(isset($values["action"]) && $values["action"]=="vehicletovehicle"){
 				$field_names = array("action"=>"action","date"=>"date","warehouse"=>"fromWareHouseId","item"=>"stockItemId","fromvehicleno"=>"fromVehicleId","tovehicleno"=>"toVehicleId","fromaction"=>"fromActionId","toaction"=>"toActionId","usedqty"=>"qty","usedqty"=>"qty","remarks"=>"remarks","alertdate"=>"alertDate");
 				$fields = array();
@@ -272,6 +229,7 @@ class StockController extends \Controller {
 				}
 				DB::commit();
 			}
+			
 			if(isset($values["action"]) && $values["action"]=="vehicletowarehouse" && isset($values["repairtype"]) && $values["repairtype"]=="TO WAREHOUSE"){
 				
 				$field_names = array("repairvehicle"=>"creditSupplierId","warehouse"=>"officeBranchId","receivedby"=>"receivedBy", "paymenttype"=>"paymentType",
@@ -318,6 +276,7 @@ class StockController extends \Controller {
 						$fields["itemId"] = $json_obj->item;
 						$fields["manufacturerId"] = $json_obj->manufacturer;
 						$fields["qty"] = $json_obj->qty;
+						$fields["purchasedQty"] = $json_obj->qty;
 						$fields["itemNumbers"] = $json_obj->itemnumbers;
 						$fields["unitPrice"] = 0;
 						$fields["itemStatus"] = $json_obj->itemstatus;
@@ -340,6 +299,7 @@ class StockController extends \Controller {
 				echo json_encode($json_resp);
 				return;
 			}
+			
 			if(isset($values["action"]) && $values["action"]=="vehicletowarehouse" && isset($values["repairtype"]) && $values["repairtype"]=="TO CREDIT SUPPLIER"){
 				//$values["sdf"];
 				$field_names = array("creditsupplier"=>"creditSupplierId","warehouse"=>"officeBranchId","receivedby"=>"receivedBy", "paymenttype"=>"paymentType",
@@ -386,17 +346,6 @@ class StockController extends \Controller {
 					$db_functions_ctrl = new DBFunctionsController();
 					$table = "PurchasedItems";
 			
-					for($i=0; $i<count($values["item"]);$i++){
-						$fields = array();
-						$fields["purchasedOrderId"] = $recid;
-						$fields["itemId"] = $values["item"][$i];
-						$fields["manufacturerId"] = $values["units"][$i];
-						$fields["qty"] = $values["qty"][$i];
-						$fields["unitPrice"] = 0;
-						$fields["itemStatus"] = $values["status"][$i];
-						$db_functions_ctrl->insert($table, $fields);
-					}
-					
 					$json_data = json_decode($values["jsondata"]);
 					//print_r($json_data);die();
 					foreach($json_data as $json_obj){
@@ -405,6 +354,7 @@ class StockController extends \Controller {
 						$fields["itemId"] = $json_obj->item;
 						$fields["manufacturerId"] = $json_obj->manufacturer;
 						$fields["qty"] = $json_obj->qty;
+						$fields["purchasedQty"] = $json_obj->qty;
 						$fields["itemNumbers"] = $json_obj->itemnumbers;
 						$fields["unitPrice"] = 0;
 						$fields["itemStatus"] = $json_obj->itemstatus;
@@ -429,8 +379,194 @@ class StockController extends \Controller {
 				return;
 			}
 		}
+		
+		if(isset($values["action"]) && $values["action"]=="creditsuppliertowarehouse" && isset($values["repairtype"]) && $values["repairtype"]=="TO VEHICLE1" ){
+			$field_names = array("action"=>"action","date"=>"date","warehouse"=>"fromWareHouseId");
+			$fields = array();
+			foreach ($field_names as $key=>$val){
+				if(isset($values[$key])){
+					if($key == "date"){
+						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+					}
+					else{
+						$fields[$val] = $values[$key];
+					}
+				}
+			}
+			\DB::beginTransaction();
+			try{
+				$db_functions_ctrl = new DBFunctionsController();
+				$i = 0;
+				$json_data = json_decode($values["jsondata"]);
+				//print_r($json_data);die();
+				foreach($json_data as $json_obj){
+					$table = "InventoryTransactions";
+					$fields["toVehicleId"] = $json_obj->vehicle;
+					$fields["stockItemId"] = $json_obj->item;
+					$fields["qty"] = $json_obj->qty;
+					$fields["remarks"] = $json_obj->remarks;
+					if(isset($json_obj->alertdate) && $json_obj->alertdate != ""){
+						$fields["alertDate"] = date("Y-m-d",strtotime($json_obj->alertdate));
+					}
+					if(isset($json_obj->itemactions) && $json_obj->itemactions != ""){
+						$fields["toActionId"] = $json_obj->itemactions;
+					}
+					if(isset($json_obj->itemnumbers) && $json_obj->itemnumbers != ""){
+						$fields["itemNumbers"] = $json_obj->itemnumbers;
+						$table = "\PurchasedItems";
+						$fields1 = array("id"=>$json_obj->item);
+						$itemnumbers = $db_functions_ctrl->get($table, $fields1);
+						$itemnumbers = $itemnumbers[0];
+						$itemnumbers = $itemnumbers->itemNumbers;
+						$itemnumbers = str_replace($json_obj->itemnumbers,"",$itemnumbers);
+							
+						$data = array('id'=>$json_obj->item);
+						$table = "\PurchasedItems";
+						$fields1 = array("itemNumbers"=>$itemnumbers);
+						$db_functions_ctrl->update($table, $fields1, $data);
+					}
+					$table = "InventoryTransactions";
+					$db_functions_ctrl->insert($table, $fields);
+		
+					$table = "\PurchasedItems";
+					$fields1 = array("id"=>$json_obj->item);
+					$qty = $db_functions_ctrl->get($table, $fields1);
+					$qty = $qty[0];
+					$qty = $qty->qty;
+					$qty = $qty - $json_obj->qty;
+		
+					$data = array('id'=>$json_obj->item);
+					$table = "\PurchasedItems";
+					$fields1 = array("qty"=>$qty);
+					$db_functions_ctrl->update($table, $fields1, $data);
+				}
+			}
+			catch(\Exception $ex){
+				\DB::rollback();
+				$json_resp = array();
+				$json_resp["status"] = "fail";
+				$json_resp["message"] = "Add inventory transaction (Credit Supplier to Vehicle) : Operation Could not be completed, Try Again!";
+				echo json_encode($json_resp);
+				return;
+			}
+			DB::commit();
+			$json_resp = array();
+			$json_resp["status"] = "success";
+			$json_resp["message"] = "Operation completed successfully";
+			echo json_encode($json_resp);
+			return;
+		}
+		
+		if(isset($values["action"]) && $values["action"]=="creditsuppliertowarehouse" && isset($values["repairreturntype"]) && $values["repairreturntype"]=="TO WAREHOUSE1" ){
+			//$values["Sd"];
+			$field_names = array("action"=>"action","date"=>"date","warehouse"=>"fromWareHouseId","towarehouse"=>"toWareHouseId","usedqty"=>"qty","remarks"=>"remarks");
+			$fields = array();
+			foreach ($field_names as $key=>$val){
+				if(isset($values[$key])){
+					if($key == "date"){
+						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+					}
+					else{
+						$fields[$val] = $values[$key];
+					}
+				}
+			}
+			\DB::beginTransaction();
+			try{
+				$db_functions_ctrl = new DBFunctionsController();
+				$json_data = json_decode($values["jsondata"]);
+				//print_r($json_data);die();
+				foreach($json_data as $json_obj){
+					$table = "InventoryTransactions";
+					$fields["stockItemId"] = $json_obj->item;
+					$fields["toWareHouseId"] = $json_obj->towarehouse2;
+					$fields["qty"] = $json_obj->qty;
+					$fields["remarks"] = $json_obj->remarks;
+					if(isset($json_obj->itemnumbers) && $json_obj->itemnumbers != ""){
+						$fields["itemNumbers"] = $json_obj->itemnumbers;
+					}
+					$db_functions_ctrl->insert($table, $fields);
+						
+					$table = "\PurchasedItems";
+					$fields1 = array("id"=>$json_obj->item);
+					$qty = $db_functions_ctrl->get($table, $fields1);
+					$qty = $qty[0];
+					$item_qty = $qty->qty;
+					
+					$table = "\PurchasedOrders";
+					$fields1 = array("id"=>$qty->purchasedOrderId);
+					$purchasedOrder = $db_functions_ctrl->get($table, $fields1);
+					$purchasedOrder = $purchasedOrder[0];
+					$purchasedOrdernew = new \PurchasedOrders();
+					$purchasedOrdernew->type = 'TO WAREHOUSE';
+					$purchasedOrdernew->creditSupplierId = $purchasedOrder->creditSupplierId;
+					$purchasedOrdernew->officeBranchId = $json_obj->towarehouse2;
+					$purchasedOrdernew->receivedBy = $purchasedOrder->receivedBy;
+					$purchasedOrdernew->orderDate = date("Y-m-d");
+					$purchasedOrdernew->billNumber = $purchasedOrder->billNumber;
+					$purchasedOrdernew->filePath = $purchasedOrder->filePath;
+					$purchasedOrdernew->inchargeId = $purchasedOrder->inchargeId;
+					$purchasedOrdernew->amountPaid = $purchasedOrder->amountPaid;
+					$purchasedOrdernew->totalAmount = $purchasedOrder->totalAmount;
+					$purchasedOrdernew->comments = $purchasedOrder->comments;
+					$purchasedOrdernew->createdBy = \Auth::user()->fullName;
+					$insertId = $purchasedOrdernew->save();
+					$insertId = $purchasedOrdernew->id;
+					
+					$purchasedItem = new \PurchasedItems;
+					$purchasedItem->purchasedOrderId = $insertId;
+					$purchasedItem->parentOrderItemId = $json_obj->item;
+					$purchasedItem->itemId = $qty->itemId;
+					$purchasedItem->manufacturerId = $qty->manufacturerId;
+					$purchasedItem->unitPrice = $qty->unitPrice;
+					$purchasedItem->itemStatus = $qty->itemStatus;
+					$purchasedItem->itemNumbers = $json_obj->itemnumbers;						
+					$purchasedItem->itemNumbersAll = $json_obj->itemnumbers;
+					
+					if(isset($json_obj->itemnumbers) && $json_obj->itemnumbers != ""){
+						$table = "\PurchasedItems";
+						$fields1 = array("id"=>$json_obj->item);
+						$itemnumbers = $db_functions_ctrl->get($table, $fields1);
+						$itemnumbers = $itemnumbers[0];
+						$itemnumbers = $itemnumbers->itemNumbers;
+						$itemnumbers = str_replace($json_obj->itemnumbers,"",$itemnumbers);
+							
+						$data = array('id'=>$json_obj->item);
+						$table = "\PurchasedItems";
+						$fields1 = array("itemNumbers"=>$itemnumbers);
+						$db_functions_ctrl->update($table, $fields1, $data);
+					}
+					
+					$purchasedItem->qty = $json_obj->qty;
+					$purchasedItem->purchasedQty = $json_obj->qty;
+					$purchasedItem->createdBy = \Auth::user()->fullName;
+					$purchasedItem->save();
+					
+					$qty = $item_qty - $json_obj->qty;
+					$data = array('id'=>$json_obj->item);
+					$table = "\PurchasedItems";
+					$fields1 = array("qty"=>$qty);
+					$db_functions_ctrl->update($table, $fields1, $data);
+				}
+			}
+			catch(\Exception $ex){
+				\DB::rollback();
+				$json_resp = array();
+				$json_resp["status"] = "fail";
+				$json_resp["message"] = "Add inventory transaction (Credit Supplier to Warehouse) : Operation Could not be completed, Try Again!";
+				echo json_encode($json_resp);
+				return;
+			}
+			DB::commit();
+			$json_resp = array();
+			$json_resp["status"] = "success";
+			$json_resp["message"] = "Operation completed successfully";
+			echo json_encode($json_resp);
+			return;
+		}
+		
 		\Session::put("message","Operation completed successfully!");
-		return \Redirect::to($url);	
+		//return \Redirect::to($url);	
 	}
 	
 	/**
@@ -795,10 +931,15 @@ class StockController extends \Controller {
 	
 	public function getRepairItemsBySupplier(){
 		$values = Input::all();
-		$stockitems =  \Items::where("status","=","ACTIVE")->get();
+		$stockitems =  \PurchasedItems::where("purchased_items.status","=","ACTIVE")
+						->where("purchase_orders.creditSupplierId","=",$values["supplierid"])
+						->where("purchase_orders.type","=","TO CREDIT SUPPLIER REPAIR")
+						->join("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
+						->join("items","items.id","=","purchased_items.itemId")
+						->select(array("items.name as name", "items.shortName as shortName", "purchased_items.id as id", "purchased_items.qty as qty"))->get();
 		$stockitems_arr = array();
 		foreach ($stockitems as $stockitem){
-			$stockitems_arr[$stockitem['id']] = $stockitem->name." - ".$stockitem->shortName;
+			$stockitems_arr[$stockitem['id']] = $stockitem->name." (".$stockitem->qty.")";
 		}
 		foreach($stockitems_arr as  $key=>$val){
 			echo "<option value='".$key."' >".$val."</option>";
