@@ -3,7 +3,7 @@
 	<head>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 		<meta charset="utf-8" />
-		<title>Top Menu Style - Ace Admin</title>
+		<title>EASY TRAVEL MANAGEMENT</title>
 
 		<meta name="description" content="top menu &amp; navigation" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
@@ -504,6 +504,44 @@
 						</ul>
 					</li>
 					<?php } ?>
+					
+					<li class="open hover">
+						<?php if(in_array(5, $jobs)){?>
+						<a href="#" class="dropdown-toggle">
+							<i class="menu-icon fa fa-exchange"></i>
+							<span class="menu-text">
+								WORK FLOW &nbsp;
+							</span>
+							<b class="arrow fa fa-angle-down"></b>
+						</a>
+						<b class="arrow"></b>
+						<ul class="submenu">
+							<?php if(in_array(113, $jobs)){?>
+							<li class="hover">
+								<a href="workflow?type=fueltransactions">
+									<i class="menu-icon fa fa-caret-right"></i>
+									FUEL TRANSACTIONS
+								</a>
+							</li>
+							<?php } if(in_array(114, $jobs)){?>
+							<li class="hover">
+								<a href="workflow?type=repairtransactions">
+									<i class="menu-icon fa fa-caret-right"></i>
+									REPAIR TRANSACTIONS
+								</a>
+							</li>
+							<?php } if(in_array(114, $jobs)){?>
+							<li class="hover">
+								<a href="workflow?type=inchargetransactions">
+									<i class="menu-icon fa fa-caret-right"></i>
+									INCHARGE TRANSACTIONS
+								</a>
+							</li>
+							<?php }?>
+						</ul>
+						<?php }?>
+					</li>
+					
 					<li class="hover">
 						<?php if(in_array(7, $jobs)){?>	
 						<a href="reports">

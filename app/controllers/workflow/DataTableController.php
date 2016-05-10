@@ -1,4 +1,4 @@
-<?php namespace transactions;
+<?php namespace workflow;
 
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
@@ -26,7 +26,7 @@ class DataTableController extends \Controller {
 			$total = $ret_arr["total"];
 			$data = $ret_arr["data"];
 		}
-		else if(isset($values["name"]) && $values["name"]=="fuel") {
+		else if(isset($values["name"]) && $values["name"]=="fueltransactions") {
 			$ret_arr = $this->getFuelTransactions($values, $length, $start);
 			$total = $ret_arr["total"];
 			$data = $ret_arr["data"];
@@ -41,8 +41,8 @@ class DataTableController extends \Controller {
 			$total = $ret_arr["total"];
 			$data = $ret_arr["data"];
 		}
-		else if(isset($values["name"]) && $values["name"]=="getrepairtransactionitems") {
-			$ret_arr = $this->getRepairTransactionItems($values, $length, $start);
+		else if(isset($values["name"]) && $values["name"]=="inchargetransactions") {
+			$ret_arr = $this->getInchargeTransactions($values, $length, $start);
 			$total = $ret_arr["total"];
 			$data = $ret_arr["data"];
 		}
@@ -124,12 +124,7 @@ class DataTableController extends \Controller {
 		$data = array();
 		$select_args = array();
 		$select_args[] = "incometransactions.transactionId as id";
-		if(isset($values["contracts"]) && $values["contracts"]=="true"){
-			$select_args[] = "clients.name as clientname";
-		}
-		else{
-			$select_args[] = "officebranch.name as branchId";
-		}
+		$select_args[] = "officebranch.name as branchId";
 		$select_args[] = "lookuptypevalues.name as name";
 		$select_args[] = "incometransactions.date as date";
 		$select_args[] = "incometransactions.amount as amount";
@@ -138,12 +133,6 @@ class DataTableController extends \Controller {
 		$select_args[] = "incometransactions.transactionId as id";
 		$select_args[] = "incometransactions.lookupValueId as lookupValueId";
 		$select_args[] = "incometransactions.branchId as branch";
-		if(isset($values["contracts"]) && $values["contracts"]=="true"){
-			$select_args[] = "depots.name as depotname";
-		}
-		if(!isset($values["daterange"])){
-			return array("total"=>0, "data"=>array());
-		}
 		
 		$actions = array();
 		if(in_array(302, $this->jobs)){
@@ -157,39 +146,14 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->where("branchId","=",$values["branch1"])->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
+								->where("transactionId", "like", "%$search%")
+								->where("branchId","=",$values["branch1"])
+								->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")
+								->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")
+								->select($select_args)->limit($length)->offset($start)->get();
 			$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->count();
 			foreach ($entities as $entity){
-				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
-			}
-		}
-		else if(isset($values["contracts"]) && $values["contracts"]=="true" && isset($values["depot"])){
-			$dtrange = $values["daterange"];
-			$dtrange = explode(" - ", $dtrange);
-			$startdt = date("Y-m-d",strtotime($dtrange[0]));
-			$enddt = date("Y-m-d",strtotime($dtrange[1]));
-		
-			$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
-							->where("contractId",">",0)
-							->where("depots.id","=",$values["depot"])
-							->whereBetween("date",array($startdt,$enddt))
-							->leftjoin("vehicle", "vehicle.id","=","incometransactions.vehicleId")
-							->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")
-							->leftjoin("contracts", "contracts.id","=","incometransactions.contractId")
-							->leftjoin("clients", "clients.id","=","contracts.clientId")
-							->leftjoin("depots", "depots.id","=","contracts.depotId")
-							->select($select_args)->limit($length)->offset($start)->get();
-		
-			$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
-							->where("contractId",">",0)
-							->where("depots.id","=",$values["depot"])
-							->whereBetween("date",array($startdt,$enddt))
-							->leftjoin("vehicle", "vehicle.id","=","incometransactions.vehicleId")
-							->leftjoin("contracts", "contracts.id","=","incometransactions.contractId")
-							->leftjoin("depots", "depots.id","=","contracts.depotId")
-							->where("contractId",">",0)->count();
-			foreach ($entities as $entity){
-				$entity["clientname"] = $entity["depotname"]." (".$entity["clientname"].")";
 				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 			}
 		}
@@ -198,17 +162,8 @@ class DataTableController extends \Controller {
 			$dtrange = explode(" - ", $dtrange);
 			$startdt = date("Y-m-d",strtotime($dtrange[0]));
 			$enddt = date("Y-m-d",strtotime($dtrange[1]));
-			$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
-							->where("branchId","=",$values["branch1"])
-							->where("contractId","=",0)
-							->whereBetween("date",array($startdt,$enddt))
-							->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")
-							->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")
-							->select($select_args)->limit($length)->offset($start)->get();
-			$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
-							->where("contractId","=",0)
-							->where("branchId","=",$values["branch1"])
-							->whereBetween("date",array($startdt,$enddt))->count();
+			$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("branchId","=",$values["branch1"])->whereBetween("date",array($startdt,$enddt))->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
+			$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("branchId","=",$values["branch1"])->whereBetween("date",array($startdt,$enddt))->count();
 			foreach ($entities as $entity){
 				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 			}
@@ -260,7 +215,7 @@ class DataTableController extends \Controller {
 		return array("total"=>$total, "data"=>$data);
 	}
 	
-	private function getVehicleRepairs($values, $length, $start){
+private function getVehicleRepairs($values, $length, $start){
 		$total = 0;
 		$data = array();
 		$select_args = array();
@@ -278,6 +233,8 @@ class DataTableController extends \Controller {
 		$select_args[] = "creditsuppliertransactions.amount as amount";
 		$select_args[] = "creditsuppliertransactions.comments as comments";
 		$select_args[] = "creditsuppliertransdetails.vehicleIds as vehicleIds";
+		$select_args[] = "creditsuppliertransactions.workFlowStatus as workFlowStatus";
+		$select_args[] = "creditsuppliertransactions.workFlowRemarks as workFlowRemarks";
 		$select_args[] = "creditsuppliertransactions.status as status";
 		$select_args[] = "creditsuppliertransactions.labourCharges as labourCharges";
 		$select_args[] = "creditsuppliertransactions.electricianCharges as electricianCharges";
@@ -312,34 +269,25 @@ class DataTableController extends \Controller {
 			$entities = \CreditSupplierTransactions::whereIn("creditsuppliertransactions.branchId",$branchids_arr)->orWhereIn("creditsuppliertransactions.creditSupplierId",$supids_arr)->where("creditsuppliertransactions.deleted","=","No")->leftjoin("vehicle", "vehicle.id","=","creditsuppliertransactions.vehicleId")->leftjoin("officebranch", "officebranch.id","=","creditsuppliertransactions.branchId")->leftjoin("creditsuppliers", "creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")->select($select_args)->limit($length)->offset($start)->get();
 			$total = \CreditSupplierTransactions::whereIn("creditsuppliertransactions.branchId",$branchids_arr)->orWhereIn("creditsuppliertransactions.creditSupplierId",$supids_arr)->where("creditsuppliertransactions.deleted","=","No")->count();
 		}
-		else if(isset($values["type"]) && $values["type"]=="contracts"){
-			$entities = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No")
-							->where("creditsuppliertransdetails.contractIds","!=","")
-							->where("creditsuppliertransdetails.status","=","ACTIVE")
+		else {
+			$qry = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No");
+							if($values["logstatus"] != "All"){
+								$qry->where("creditsuppliertransactions.workFlowStatus","=",$values["logstatus"]);
+							}
+							$qry->where("creditsuppliertransdetails.status","=","ACTIVE")
 							->leftjoin("creditsuppliertransdetails", "creditsuppliertransdetails.creditSupplierTransId","=","creditsuppliertransactions.id")
 							->leftjoin("creditsuppliers", "creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
+							->leftjoin("officebranch", "officebranch.id","=","creditsuppliertransactions.branchId")
 							->leftjoin("contracts", "contracts.id","=","creditsuppliertransactions.contractId")
 							->leftjoin("clients", "clients.id","=","contracts.clientId")
-							->leftjoin("depots", "depots.id","=","contracts.depotId")
-							->select($select_args)->limit($length)->groupBy("id")->offset($start)->get();
+							->leftjoin("depots", "depots.id","=","contracts.depotId");							
+			$entities =    $qry->select($select_args)->limit($length)->groupBy("id")->offset($start)->get();
 			$total = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No")
 							->leftjoin("creditsuppliertransdetails", "creditsuppliertransdetails.creditSupplierTransId","=","creditsuppliertransactions.id")
 							->where("contractId","!=","")->count();
 			foreach ($entities as $entity){
 				$entity["clientname"] = $entity["depotname"]." (".$entity["clientname"].")";
 			}
-		}
-		else{
-			$entities = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No")
-							->where("creditsuppliertransdetails.contractIds","=","")
-							->where("creditsuppliertransdetails.status","=","ACTIVE")
-							->leftjoin("creditsuppliertransdetails", "creditsuppliertransdetails.creditSupplierTransId","=","creditsuppliertransactions.id")
-							->leftjoin("officebranch", "officebranch.id","=","creditsuppliertransactions.branchId")
-							->leftjoin("creditsuppliers", "creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
-							->select($select_args)->groupBy("id")->limit($length)->offset($start)->get();
-			$total = \CreditSupplierTransactions::where("contractId","=","")
-							->leftjoin("creditsuppliertransdetails", "creditsuppliertransdetails.creditSupplierTransId","=","creditsuppliertransactions.id")
-							->where("creditsuppliertransdetails.status","=","ACTIVE")->count();
 		}
 		$entities = $entities->toArray();
 		$vehs_arr = array();
@@ -396,7 +344,8 @@ class DataTableController extends \Controller {
 					}
 				}
 			}
-			$data_values[10] = $action_data;
+			$action_data = '<label> <input name="action[]" type="checkbox" class="ace" value="'.$entity["id"].'"> <span class="lbl">&nbsp;</span></label>';
+			$data_values[11] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);
@@ -407,13 +356,7 @@ class DataTableController extends \Controller {
 		$total = 0;
 		$data = array();
 		$select_args = array();
-		
-		if(isset($values["contracts"]) && $values["contracts"]=="true"){
-			$select_args[] = "clients.name as clientname";
-		}
-		else{
-			$select_args[] = "officebranch.name as branchId";
-		}
+		$select_args[] = "officebranch.name as branchId";
 		$select_args[] = "fuelstationdetails.name as fuelStationName";
 		$select_args[] = "vehicle.veh_reg as vehicleId";
 		$select_args[] = "fueltransactions.filledDate as date";
@@ -421,111 +364,70 @@ class DataTableController extends \Controller {
 		$select_args[] = "fueltransactions.billNo as billNo";
 		$select_args[] = "fueltransactions.paymentType as paymentType";
 		$select_args[] = "fueltransactions.remarks as remarks";
+		$select_args[] = "fueltransactions.workFlowStatus as workFlowStatus";
+		$select_args[] = "fueltransactions.workFlowRemarks as workFlowRemarks";
 		$select_args[] = "fueltransactions.id as id";
 		$select_args[] = "fueltransactions.branchId as branch";
-		if(isset($values["contracts"]) && $values["contracts"]=="true"){
-			$select_args[] = "depots.name as depotname";
-		}
-		
+		$select_args[] = "fueltransactions.contractId as contractId";
+		$select_args[] = "clients.name as clientname";
+		$select_args[] = "depots.name as depotname";
+
 		$actions = array();
-		if(in_array(306, $this->jobs)){
-			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditTransaction(", "jsdata"=>array("id"), "text"=>"EDIT");
-			$actions[] = $action;
-			$action = array("url"=>"#delete", "type"=>"modal", "css"=>"danger", "js"=>"deleteTransaction(", "jsdata"=>array("id"), "text"=>"DELETE");
-			$actions[] = $action;
-		}
 		$values["actions"] = $actions;
 	
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		$entities = \Vehicle::where("id","=",0)->get();
 		if($search != ""){
-			$entities = \Vehicle::where("veh_reg", "like", "%$search%")->where("vehicle.status","=","ACTIVE")->orwhere("vehicle.status","=","INACTIVE")->leftjoin("lookuptypevalues","lookuptypevalues.id", "=", "vehicle.vehicle_type")->select($select_args)->limit($length)->offset($start)->get();
-			$total = \Vehicle::where("veh_reg", "like", "%$search%")->where("vehicle.status","=","ACTIVE")->orwhere("vehicle.status","=","INACTIVE")->count();
+			$entities = \Vehicle::where("veh_reg", "like", "%$search%")
+							->where("vehicle.status","=","ACTIVE")->get();
+			$veh_arr = array();
 			foreach ($entities as $entity){
-				$entity->yearof_pur = date("d-m-Y",strtotime($entity->yearof_pur));
+				$veh_arr[] = $entity->id;
 			}
-		}
-		else if(isset($values["tripid"])){
-			$entities = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")->where("tripId","=",$values["tripid"])->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
-			->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
-			->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")->where("tripId","=",$values["tripid"])->count();
-			foreach ($entities as $entity){
-				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
-			}
-		}
-		else if(isset($values["contracts"]) && $values["contracts"]=="true" && isset($values["depot"])){
-			$dtrange = $values["daterange"];
-			$dtrange = explode(" - ", $dtrange);
-			$startdt = date("Y-m-d",strtotime($dtrange[0]));
-			$enddt = date("Y-m-d",strtotime($dtrange[1]));
+			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+							->whereIn("vehicleId",$veh_arr)
+							->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
+							->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
+							->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
+							->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
+							->leftjoin("clients", "clients.id","=","contracts.clientId")
+							->leftjoin("depots", "depots.id","=","contracts.depotId");
+			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
 			
-			$entities = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-						->where("contractId",">",0)
-						->where("depots.id","=",$values["depot"])
-						->whereBetween("filledDate",array($startdt,$enddt))
+			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+							->whereIn("vehicleId",$veh_arr)->count();
+		}
+		else {
+			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE");
+						if($values["logstatus"] != "All"){
+							$qry->where("fueltransactions.workFlowStatus","=",$values["logstatus"]);
+						}
+						$qry->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
 						->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
 						->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
 						->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
 						->leftjoin("clients", "clients.id","=","contracts.clientId")
-						->leftjoin("depots", "depots.id","=","contracts.depotId")
-						->select($select_args)->limit($length)->offset($start)->get();
+						->leftjoin("depots", "depots.id","=","contracts.depotId");
+			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
 			
-			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-								->where("contractId",">",0)->count();
-			foreach ($entities as $entity){
-				$entity["clientname"] = $entity["depotname"]." (".$entity["clientname"].")";
-				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
-			}
-		}
-		else if(isset($values["branch1"])){
-			$dtrange = $values["daterange"];
-			$dtrange = explode(" - ", $dtrange);
-			$startdt = date("Y-m-d",strtotime($dtrange[0]));
-			$enddt = date("Y-m-d",strtotime($dtrange[1]));
-				
-			$entities = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-							->where("branchId","=",$values["branch1"])
-							->whereBetween("filledDate",array($startdt,$enddt))
-							->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
-							->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
-							->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
-							->select($select_args)->limit($length)->offset($start)->get();
-			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")->where("branchId","=",$values["branch1"])->whereBetween("filledDate",array($startdt,$enddt))->count();
-			foreach ($entities as $entity){
-				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
-			}
+			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE");
+						if($values["logstatus"] != "All"){
+							$qry->where("fueltransactions.workFlowStatus","=",$values["logstatus"]);
+						}
+			$total = $qry->where("fueltransactions.workFlowStatus","=","Requested")->count();
 		}
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
-			$data_values = array_values($entity);
-			$actions = $values['actions'];
-			$action_data = "";
-			$bde = new BlockDataEntryController();
-			$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
-			$valid = $bde->verifyTransactionDateandBranchLocally($values1);
-			foreach($actions as $action){
-				if($action["type"] == "modal"){
-					$jsfields = $action["jsdata"];
-					$jsdata = "";
-					$i=0;
-					for($i=0; $i<(count($jsfields)-1); $i++){
-						$jsdata = $jsdata." '".$entity[$jsfields[$i]]."', ";
-					}
-					$jsdata = $jsdata." '".$entity[$jsfields[$i]];
-					
-					if($valid=="YES"){
-						$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
-					}
-				}
-				else {
-					if($valid=="YES"){
-						$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
-					}
-				}
+			$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
+			if($entity["contractId"]>0){
+				$entity["branchId"] = $entity["depotname"]."(".$entity["clientname"].")";
 			}
-			$data_values[8] = $action_data;
+			
+			$data_values = array_values($entity);
+			$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
+			$action_data = '<label> <input name="action[]" type="checkbox" class="ace" value="'.$entity["id"].'"> <span class="lbl">&nbsp;</span></label>';
+			$data_values[10] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);
@@ -536,13 +438,7 @@ class DataTableController extends \Controller {
 		$data = array();
 		$select_args = array();
 		$select_args[] = "expensetransactions.transactionId as id";
-		
-		if(isset($values["contracts"]) && $values["contracts"]=="true"){
-			$select_args[] = "clients.name as clientname";
-		}
-		else{
-			$select_args[] = "officebranch.name as branchId";
-		}
+		$select_args[] = "officebranch.name as branchId";
 		$select_args[] = "lookuptypevalues.name as name";
 		$select_args[] = "expensetransactions.date as date";
 		$select_args[] = "expensetransactions.amount as amount";
@@ -551,14 +447,8 @@ class DataTableController extends \Controller {
 		$select_args[] = "expensetransactions.transactionId as id";
 		$select_args[] = "expensetransactions.lookupValueId as lookupValueId";
 		$select_args[] = "expensetransactions.branchId as branch";
-		if(isset($values["contracts"]) && $values["contracts"]=="true"){
-			$select_args[] = "depots.name as depotname";
-		}
 	
-		if(!isset($values["daterange"])){
-			return array("total"=>0, "data"=>array());
-		}
-		
+			
 		$actions = array();
 		if(in_array(304, $this->jobs)){
 			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditTransaction(", "jsdata"=>array("id"), "text"=>"EDIT");
@@ -577,52 +467,13 @@ class DataTableController extends \Controller {
 				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 			}
 		}
-		else if(isset($values["contracts"]) && $values["contracts"]=="true" && isset($values["depot"])){
-			$dtrange = $values["daterange"];
-			$dtrange = explode(" - ", $dtrange);
-			$startdt = date("Y-m-d",strtotime($dtrange[0]));
-			$enddt = date("Y-m-d",strtotime($dtrange[1]));
-				
-			$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
-							->where("contractId",">",0)
-							->where("depots.id","=",$values["depot"])
-							->whereBetween("date",array($startdt,$enddt))
-							->leftjoin("vehicle", "vehicle.id","=","expensetransactions.vehicleId")
-							->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","expensetransactions.lookupValueId")
-							->leftjoin("contracts", "contracts.id","=","expensetransactions.contractId")
-							->leftjoin("clients", "clients.id","=","contracts.clientId")
-							->leftjoin("depots", "depots.id","=","contracts.depotId")
-							->select($select_args)->limit($length)->offset($start)->get();
-				
-			$total = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
-							->where("contractId",">",0)
-							->where("depots.id","=",$values["depot"])
-							->whereBetween("date",array($startdt,$enddt))
-							->leftjoin("vehicle", "vehicle.id","=","expensetransactions.vehicleId")
-							->leftjoin("contracts", "contracts.id","=","expensetransactions.contractId")
-							->leftjoin("depots", "depots.id","=","contracts.depotId")
-			->where("contractId",">",0)->count();
-			foreach ($entities as $entity){
-				$entity["clientname"] = $entity["depotname"]." (".$entity["clientname"].")";
-				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
-			}
-		}
 		else{
 			$dtrange = $values["daterange"];
 			$dtrange = explode(" - ", $dtrange);
 			$startdt = date("Y-m-d",strtotime($dtrange[0]));
 			$enddt = date("Y-m-d",strtotime($dtrange[1]));
-			$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
-								->where("branchId","=",$values["branch1"])
-								->where("contractId","=",0)
-								->whereBetween("date",array($startdt,$enddt))
-								->leftjoin("officebranch", "officebranch.id","=","expensetransactions.branchId")
-								->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","expensetransactions.lookupValueId")
-								->select($select_args)->limit($length)->offset($start)->get();
-			$total = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
-								->where("branchId","=",$values["branch1"])
-								->where("contractId","=",0)
-								->whereBetween("date",array($startdt,$enddt))->count();
+			$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")->where("branchId","=",$values["branch1"])->whereBetween("date",array($startdt,$enddt))->leftjoin("officebranch", "officebranch.id","=","expensetransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","expensetransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
+			$total = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")->where("branchId","=",$values["branch1"])->whereBetween("date",array($startdt,$enddt))->count();
 			foreach ($entities as $entity){
 				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 			}
@@ -674,57 +525,131 @@ class DataTableController extends \Controller {
 		return array("total"=>$total, "data"=>$data);
 	}
 	
-	private function getRepairTransactionItems($values, $length, $start){
+	private function getInchargeTransactions($values, $length, $start){
 		$total = 0;
 		$data = array();
 		$select_args = array();
-		$select_args[] = "lookuptypevalues.name as repairedItem";
-		$select_args[] = "creditsuppliertransdetails.quantity as quantity";
-		$select_args[] = "creditsuppliertransdetails.amount as amount";
-		$select_args[] = "creditsuppliertransdetails.comments as comments";
-		$select_args[] = "creditsuppliertransdetails.status as status";
-		$select_args[] = "creditsuppliertransdetails.id as id";
+		$select_args[] = "officebranch.name as branchId";
+		$select_args[] = "employee.fullName as inchargeId";
+		$select_args[] = "incometransactions.amount as amount";
+		$select_args[] = "incometransactions.date as date";
+		$select_args[] = "lookuptypevalues.name as name";
+		$select_args[] = "incometransactions.remarks as remarks";
+		$select_args[] = "incometransactions.workFlowStatus as workFlowStatus";
+		$select_args[] = "incometransactions.workFlowRemarks as workFlowRemarks";
+		$select_args[] = "incometransactions.transactionId as id";
+		$select_args[] = "incometransactions.lookupValueId as lookupValueId";
+		$select_args[] = "incometransactions.branchId as branch";
+		$select_args[] = "clients.name as clientname";
+		$select_args[] = "depots.name as depotname";
+		$select_args[] = "employee.empCode as empCode";
 		
-		$actions = array();
-		$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditPurchaseOrderItem(", "jsdata"=>array("id","repairedItem","quantity", "amount", "comments", "status"), "text"=>"EDIT");
-		$actions[] = $action;
-		$values["actions"] = $actions;
 	
+		$actions = array();
+		$values["actions"] = $actions;
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
-		if($search != ""){
-			$entities = \PurchasedOrders::where("name", "like", "%$search%")->join("inventorylookupvalues","inventorylookupvalues.id","=","items.unitsOfMeasure")->join("item_types","item_types.id","=","items.itemTypeId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = count($entities);
-		}
-		else{
-			$entities = \CreditSupplierTransDetails::where("creditSupplierTransId","=",$values["id"])->join("lookuptypevalues","lookuptypevalues.id","=","creditsuppliertransdetails.repairedItem")->select($select_args)->limit($length)->offset($start)->get();
-			$total = \CreditSupplierTransDetails::where("creditSupplierTransId","=",$values["id"])->count();
-		}
-	
-		$entities = $entities->toArray();
-		foreach($entities as $entity){
-			$data_values = array_values($entity);
-			$actions = $values['actions'];
-			$action_data = "";
-			foreach($actions as $action){
-				if($action["type"] == "modal"){
-					$jsfields = $action["jsdata"];
-					$jsdata = "";
-					$i=0;
-					for($i=0; $i<(count($jsfields)-1); $i++){
-						$jsdata = $jsdata." '".$entity[$jsfields[$i]]."', ";
-					}
-					$jsdata = $jsdata." '".$entity[$jsfields[$i]];
-					$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
-				}
-				else {
-					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+		
+		if(isset($values["inchargereporttype"]) && $values["inchargereporttype"] == "Income"){
+			if($search != ""){
+				$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->where("branchId","=",$values["branch1"])->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
+				$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->count();
+				foreach ($entities as $entity){
+					$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 				}
 			}
-			$data_values[5] = $action_data;
-			$data[] = $data_values;
+			else{
+				$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
+								->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")
+								->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")
+								->leftjoin("contracts", "contracts.id","=","incometransactions.contractId")
+								->leftjoin("employee", "employee.id","=","incometransactions.inchargeId")
+								->leftjoin("clients", "clients.id","=","contracts.clientId")
+								->leftjoin("depots", "depots.id","=","contracts.depotId")
+								->select($select_args)->limit($length)->offset($start)->get();
+				$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->count();
+				foreach ($entities as $entity){
+					$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
+				}
+			}
+		
+			$entities = $entities->toArray();
+			foreach($entities as $entity){
+				$entity["inchargeId"] = $entity["inchargeId"]." (".$entity["empCode"].")";
+				if($entity["lookupValueId"]>900){
+					$expenses_arr = array();
+					$expenses_arr["998"] = "CREDIT SUPPLIER PAYMENT";
+					$expenses_arr["997"] = "FUEL STATION PAYMENT";
+					$expenses_arr["996"] = "LOAN PAYMENT";
+					$expenses_arr["995"] = "RENT";
+					$expenses_arr["994"] = "INCHARGE ACCOUNT CREDIT";
+					$expenses_arr["993"] = "PREPAID RECHARGE";
+					$expenses_arr["992"] = "ONLINE OPERATORS";
+					$expenses_arr["999"] = "PREPAID RECHARGE";
+					$entity["name"] = $expenses_arr[$entity["lookupValueId"]];
+				}
+				$data_values = array_values($entity);
+				$actions = $values['actions'];
+				$action_data = "";
+				$bde = new BlockDataEntryController();
+				$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
+				$valid = $bde->verifyTransactionDateandBranchLocally($values1);
+				$action_data = '<label> <input name="action[]" type="checkbox" class="ace" value="'.$entity["id"].'"> <span class="lbl">&nbsp;</span></label>';
+				$data_values[8] = $action_data;
+				$data[] = $data_values;
+			}
+			return array("total"=>$total, "data"=>$data);
 		}
-		return array("total"=>$total, "data"=>$data);
+		else if(isset($values["inchargereporttype"]) && $values["inchargereporttype"] == "Expense"){
+			if($search != ""){
+				$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->where("branchId","=",$values["branch1"])->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
+				$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->count();
+				foreach ($entities as $entity){
+					$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
+				}
+			}
+			else{
+				$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
+				->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")
+				->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")
+				->leftjoin("contracts", "contracts.id","=","incometransactions.contractId")
+				->leftjoin("employee", "employee.id","=","incometransactions.inchargeId")
+				->leftjoin("clients", "clients.id","=","contracts.clientId")
+				->leftjoin("depots", "depots.id","=","contracts.depotId")
+				->select($select_args)->limit($length)->offset($start)->get();
+				$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->count();
+				foreach ($entities as $entity){
+					$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
+				}
+			}
+		
+			$entities = $entities->toArray();
+			foreach($entities as $entity){
+				$entity["inchargeId"] = $entity["inchargeId"]." (".$entity["empCode"].")";
+				if($entity["lookupValueId"]>900){
+					$expenses_arr = array();
+					$expenses_arr["998"] = "CREDIT SUPPLIER PAYMENT";
+					$expenses_arr["997"] = "FUEL STATION PAYMENT";
+					$expenses_arr["996"] = "LOAN PAYMENT";
+					$expenses_arr["995"] = "RENT";
+					$expenses_arr["994"] = "INCHARGE ACCOUNT CREDIT";
+					$expenses_arr["993"] = "PREPAID RECHARGE";
+					$expenses_arr["992"] = "ONLINE OPERATORS";
+					$expenses_arr["999"] = "PREPAID RECHARGE";
+					$entity["name"] = $expenses_arr[$entity["lookupValueId"]];
+				}
+				$data_values = array_values($entity);
+				$actions = $values['actions'];
+				$action_data = "";
+				$bde = new BlockDataEntryController();
+				$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
+				$valid = $bde->verifyTransactionDateandBranchLocally($values1);
+				$action_data = '<label> <input name="action[]" type="checkbox" class="ace" value="'.$entity["id"].'"> <span class="lbl">&nbsp;</span></label>';
+				$data_values[8] = $action_data;
+				$data[] = $data_values;
+			}
+			return array("total"=>$total, "data"=>$data);
+		}
 	}
 }
 

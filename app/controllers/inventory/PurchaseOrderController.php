@@ -436,7 +436,7 @@ class PurchaseOrderController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"quantity", "content"=>"quantity", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"itemnumbers", "content"=>"item numbers", "readonly"=>"readonly", "required"=>"","type"=>"textarea", "placeholder"=>"Enter item numbers as comma(,) separated value without any spaces like 24A4,1B35", "action"=>array("type"=>"onchange","script"=>"validateInput(this.value)"), "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"itemnumbers", "content"=>"item numbers", "readonly"=>"readonly", "required"=>"","type"=>"textarea", "placeholder"=>"Enter item numbers as comma(,) separated value without any spaces like 24A4,1B35", "action"=>array("type"=>"onchange","script"=>"validateInput(this.value)"), "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"unitprice", "content"=>"price of unit", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
 		$form_fields[] = $form_field;

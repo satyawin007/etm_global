@@ -281,6 +281,8 @@ Route::any('/addserviceprovider', "masters\ServiceProviderController@addServiceP
 
 Route::any('/editserviceprovider', "masters\ServiceProviderController@editServiceProvider");
 
+Route::any('/postfile', "transactions\TransactionController@postFile");
+
 Route::get('/transactions', "transactions\TransactionController@manageTransactions");
 
 Route::get('/incometransactions', "transactions\TransactionController@manageIncomeTransactions");
@@ -613,4 +615,10 @@ Route::any('/getbillpaymentsdatatabledata', "billpayments\DataTableController@ge
 Route::get('/getbillno',"billpayments\BillPaymentsController@getBillNo");
 
 Route::get('/gettotalamount',"billpayments\BillPaymentsController@getTotalAmount");
+
+Route::get('/workflow',"workflow\WorkFlowController@transactionsWorkFlow");
+
+Route::any('/getworkflowdatatabledata', "workflow\DataTableController@getDataTableData");
+
+Route::any('/workflowupdate', "workflow\WorkFlowController@workFlowUpdate");
 

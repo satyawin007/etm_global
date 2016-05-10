@@ -32,6 +32,9 @@ class DBFunctionsController extends \Controller {
 		}
 		$entity["createdBy"] = \Auth::user()->id;
 		$entity->save();
+		if($table == "ExpenseTransaction" || $table == "IncomeTransaction"){
+			return $entity->transactionId;
+		}
 		return $entity->id;
 	}
 	

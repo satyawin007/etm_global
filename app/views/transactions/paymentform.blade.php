@@ -36,7 +36,7 @@
 			<div class="form-group">
 				<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 				<div class="col-xs-7">
-					<input {{$form_field['readonly']}} type="{{$form_field['type']}}" id="{{$form_field['name']}}" {{$form_field['required']}} name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
+					<input {{$form_field['readonly']}} type="{{$form_field['type']}}" id="{{$form_field['name']}}" <?php if($form_field['required']=="required") echo 'required="required"'; ?> name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
 				</div>			
 			</div>
 			<?php } ?>

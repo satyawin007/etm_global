@@ -30,7 +30,7 @@
 	
 	@section('bredcum')	
 		<small>
-			INVENTORY
+			WORKFLOW
 			<i class="ace-icon fa fa-angle-double-right"></i>
 			{{$values['bredcum']}}
 		</small>
@@ -41,62 +41,104 @@
 			<div class="col-xs-offset-1 col-xs-10">
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
-				<?php if(($form_info['action']=="addinventorylookupvalue" && in_array(320, $jobs)) or 
-						($form_info['action']=="addmanufacturer" && in_array(322, $jobs)) or
-						($form_info['action']=="additemcategory" && in_array(324, $jobs)) or
-						($form_info['action']=="additemtype" && in_array(326, $jobs)) or
-						($form_info['action']=="additem" && in_array(328, $jobs))
-						
+				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) or 
+						($form_info['action']=="addclient" && in_array(403, $jobs)) ||
+						($form_info['action']=="adddepot" && in_array(405, $jobs))
 					  ){ ?>
-					  	@include("inventory.addlookupform",$form_info)
+					@include("contracts.addlookupform",$form_info)
 				<?php } ?>
 			</div>
 		</div>
 				
-		<div class="row ">
-		<div class="col-xs-offset-1 col-xs-10">
-			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 10px;">MANAGE {{$values["bredcum"]}}</h3>		
+		<div class="row " style="max-width: 98%;margin-left: 1%;">
+		<div class="col-xs-offset-0 col-xs-12">
 			<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
 			<div class="clearfix">
 				<div class="pull-left">
-					
-					<form action="{{$values['form_action']}}" name="paginate" id="paginate">
-					<?php 
-					if(isset($values['selects'])){
-						$selects = $values['selects'];
-						foreach($selects as $select){
-						?>
-						<label>{{ strtoupper($select["name"]) }}</label>
-						<select class="form-control-inline" id="{{$select['name']}}" style="height: 33px; padding-top: 0px;" name="{{$select["name"]}}" onChage="paginate(1)">
-							<?php 
-								foreach($select["options"] as $key => $value){									
-									$option =  "<option value='".$key."' ";
-									if($key == $values[$select['name']]){
-										$option = $option." selected='selected' ";
-									}
-									$option = $option.">".$value."</option>";
-									echo $option;
-								}
-							?>
-						</select> &nbsp; &nbsp;
-					<?php }} ?>
-					<input type="hidden" name="page" id="page" /> 
-					<?php 
-					if(isset($values['links'])){
-						$links = $values['links'];
-						foreach($links as $link){
-							echo "<a class='btn btn-white btn-success' href=".$link['url'].">".$link['name']."</a> &nbsp; &nbsp; &nbsp";
-						}
-					}
-					?>
-					<?php echo "<input type='hidden' name='action' value='".$values['action_val']."'/>"; ?>					
-					</form>
 				</div>
 				<div class="pull-right tableTools-container"></div>
 			</div>
+			
+			<?php if(isset($form_info["table"]) && $form_info["table"]=="\InchargeTransaction"){?>
+				<div class="row">
+					<div class="col-xs-offset-3 col-xs-8">
+						<div class="col-xs-3">
+							<select name="inchargereporttype" id="inchargereporttype" class="formcontrol chosen-select">
+								<option value="Income">INCOME</option>
+								<option value="Expense">EXPENSE</option>
+							</select>
+						</div>
+						<div class="col-xs-3">
+							<select name="incharge" id="incharge" class="formcontrol chosen-select">
+								<option value="0">All</option>
+								<?php 
+									$incharges = InchargeAccounts::where("inchargeaccounts.status","=","ACTIVE")
+													->join("employee","employee.id","=","inchargeaccounts.empid")
+													->select("empid","fullName","empCode")->get();
+									foreach ($incharges as $incharge){
+										echo '<option value="'.$incharge->empid.'">'.$incharge->fullName.'('.$incharge->empCode.')'.'</option>';
+									}
+								?>
+							</select>
+						</div>
+						<div class="col-xs-3">
+							<select name="logstatus" id="logstatus" class="formcontrol chosen-select">
+								<option value="All">All</option>
+								<option value="Requested">Requested</option>
+								<option value="Sent for Approval">Sent for Approval</option>
+								<option value="Approved">Approved</option>
+								<option value="Rejected">Rejected</option>
+								<option value="Hold">Hold</option>
+							</select>
+						</div>
+						<div class="col-xs-2">
+							<button class="btn btn-xs btn-primary" id="getbtn">&nbsp;&nbsp;GET&nbsp;&nbsp;</button>
+						</div>
+					</div>
+				</div>
+			<?php } else {?>
+				<div class="row">
+					<div class="col-xs-offset-4 col-xs-8">
+						<div class="col-xs-4">
+							<select name="logstatus" id="logstatus" class="formcontrol chosen-select">
+								<option value="All">All</option>
+								<option value="Requested">Requested</option>
+								<option value="Sent for Approval">Sent for Approval</option>
+								<option value="Approved">Approved</option>
+								<option value="Rejected">Rejected</option>
+								<option value="Hold">Hold</option>
+							</select>
+						</div>
+						<div class="col-xs-3">
+							<button class="btn btn-xs btn-primary" id="getbtn">&nbsp;&nbsp;GET&nbsp;&nbsp;</button>
+						</div>
+					</div>
+				</div>
+			<?php }?>
+			<form action="test" method="post" name="workflowform" id="workflowform" onsubmit="return false;">
+			<input type="hidden" name="transactiontype" value="{{$form_info['transactiontype']}}">
+			<input type="hidden" name="table" value="{{$form_info['table']}}">
+			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 5px;">CHANGE STATUS OF {{$values["bredcum"]}} WORK FLOW</h3>
+			<div class="row">
+				<div class="col-xs-offset-1 col-xs-10">
+					<div class="col-xs-4">
+						<select name="workflowstatus" id="workflowstatus" class="formcontrol chosen-select">
+							<option value="Sent for Approval">Sent for Approval</option>
+							<option value="Approved">Approved</option>
+							<option value="Rejected">Rejected</option>
+							<option value="Hold">Hold</option>
+						</select>
+					</div>
+					<div class="col-xs-6">
+						<input type="text" class="formcontrol col-xs-12" name="remarks" placeholder="enter comments (if any)">
+					</div>
+					<div class="col-xs-2">
+						<button class="btn btn-xs btn-primary" id="updatebtn" onclick="postData()">&nbsp;&nbsp;UPDATE&nbsp;&nbsp;</button>
+					</div>
+				</div>
+			</div>
 			<div class="table-header" style="margin-top: 10px;">
 				Results for "{{$values['bredcum']}}"				 
-								
 			</div>
 			<!-- div.table-responsive -->
 			<!-- div.dataTables_borderWrap -->
@@ -114,38 +156,9 @@
 					</thead>
 				</table>								
 			</div>
+			</form>
 		</div>
 		</div>
-
-		<?php 
-			if(isset($values['modals'])) {
-				$modals = $values['modals'];
-				foreach ($modals as $modal){
-		?>
-				@include('masters.layouts.modalform', $modal);
-		<?php }} ?>
-		
-		<div id="edit" class="modal" tabindex="-1">
-			<div class="modal-dialog" style="width: 80%">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal">&times;</button>
-						<h4 class="blue bigger">Please fill the following form fields</h4>
-					</div>
-	
-					<div class="modal-body" id="modal_body">
-					</div>
-	
-					<div class="modal-footer">
-						<button class="btn btn-sm" data-dismiss="modal">
-							<i class="ace-icon fa fa-times"></i>
-							Close
-						</button>
-					</div>
-				</div>
-			</div>
-		</div><!-- PAGE CONTENT ENDS -->
-		
 	@stop
 	
 	@section('page_js')
@@ -169,176 +182,36 @@
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
 
-			function checkvalidation(val,id,table){
-				url = "";
-				message ="";
-				if(table == "InventoryLookupValues"){
-					//alert("hi");
-					parentId = $("#type").val();
-					if(parentId != undefined && parentId ==""){
-						alert("Please select type");
-						 $("#"+id).val("");
-						return false;
-					}
-					url = "checkvalidation?table="+table+"&name="+val+"&parentId="+parentId;
-					message = "This VALUE: "+val+" is already existed";
+			$("#getbtn").on("click",function(){
+				logstatus = $("#logstatus").val();
+				url = "getworkflowdatatabledata?name={{$form_info['transactiontype']}}&logstatus="+logstatus;
+
+				inchargereporttype = $("#inchargereporttype").val();
+				if(inchargereporttype != undefined && inchargereporttype !=""){
+					url = url+"&inchargereporttype="+inchargereporttype;
 				}
-				else if(table == "Manufacturers"){
-					url = "checkvalidation?table="+table+"&name="+val;
-					message = "This Manufacturers Name: "+val+" is already existed";
+				incharge = $("#incharge").val();
+				if(incharge != undefined && incharge !=""){
+					url = url+"&incharge="+incharge;
 				}
-				else if(table == "ItemCategories"){
-					url = "checkvalidation?table="+table+"&name="+val;
-					message = "This ITEM CATEGORY NAME: "+val+" is already existed";
-				}
-				else if(table == "ItemTypes"){
-					itemCategoryId = $("#itemcategory").val();
-					if(itemCategoryId != undefined && itemCategoryId == ""){
-						alert("Please select ITEM CATEGORY");
-						 $("#"+id).val("");
-						return false;
-					}
-					url = "checkvalidation?table="+table+"&name="+val+"&itemCategoryId="+itemCategoryId;
-					message = "This ITEM TYPE NAME Name: "+val+" is already existed";
-				}
-				else if(table == "Items"){
-					url = "checkvalidation?table="+table+"&name="+val;
-					message = "This ITEM NAME: "+val+" is already existed";
-				}
-				$.ajax({
-				      url: url,
-				      success: function(data) {
-					      if(data == "exists"){
-					    	  bootbox.alert(message, function(result) {});
-					    	  $("#"+id).val("");
-					      }
-				      },
-				      type: 'GET'
-				   });
+				myTable.ajax.url(url).load();
+			})
+
+			function postData(evt){
+			 	$.post( 
+                   "workflowupdate",
+                   $("#workflowform").serialize(),
+                   function(data) {
+                       json_obj = JSON.parse(data);
+                       bootbox.alert(json_obj.message);
+                   }
+                );
+				return false;
 			}
 
-			function paginate(page){
-				var myin = document.createElement("input"); 
-				myin.type='hidden'; 
-				myin.name='type'; 
-				myin.value=$("#type").val(); 
-				document.getElementById('paginate').appendChild(myin); 
-				var myin = document.createElement("input"); 
-				myin.type='hidden'; 
-				myin.name='id'; 
-				myin.value=$("#type").val(); 
-				document.getElementById('paginate').appendChild(myin); 
-				$("#page").val(page);
-				$("#paginate").submit();				
-			}
-
-			function modalEditItem(id){
-				//$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
-				url = "edititem?id="+id;
-				var ifr=$('<iframe />', {
-		            id:'MainPopupIframe',
-		            src:url,
-		            style:'seamless="seamless" scrolling="no" display:none;width:100%;height:423px; border:0px solid',
-		            load:function(){
-		                $(this).show();
-		            }
-		        });
-	    	    $("#modal_body").html(ifr);
-			};
-
-
-			function modalEditLookupValue(id, value, remarks, modules, fields, enabled, status){
-				$("#value1").val(value);
-				$("#id1").val(id);
-				$("#remarks1").text(remarks);
-				//var array = modules.split(",");	
-				//$("#modules1[] option").each(function() {alert("dsaf"); this.selected = true; });				
-				if(status=="ACTIVE") {
-					$("#ACTIVE").prop("checked",true);
-				}
-				else{
-					$("#INACTIVE").prop("checked",true);
-				}
-				if(enabled=="YES") {
-					$("#YES").prop("checked",true);
-				}
-				else{
-					$("#NO").prop("checked",true);
-				}
-				return;				
-			}
-
-			function modalEditManufacture(id, name, description, status){
-				$("#name1").val(name);				
-				$("#description1").val(description);
-				$("#status1 option").each(function() { this.selected = (this.text == status); });
-				$("#id1").val(id);		
-			}
-
-			function modalEditItemCategories(id, name, description, status){
-				$("#name1").val(name);				
-				$("#description1").val(description);
-				$("#status1 option").each(function() { this.selected = (this.text == status); });
-				$("#id1").val(id);		
-			}
-
-			function modalEditItemType(id, name, catid, description, status){
-				$("#name1").val(name);				
-				$("#description1").val(description);
-				$("#status1 option").each(function() { this.selected = (this.text == status); });
-				$("#itemcategory1 option").each(function() { this.selected = (this.text == catid); });
-				$("#id1").val(id);	
-				$('.chosen-select').trigger('chosen:updated');
-			}
-
-
-			$("#reset").on("click",function(){
-				$("#{{$form_info['name']}}").reset();
-			});
-
-			$("#submit").on("click",function(){
-				var type = $("#type").val();
-				if(type != undefined && type ==""){
-					alert("Please select type");
-					return false;
-				}
-				var itemcategory = $("#itemcategory").val();
-				if(itemcategory != undefined && itemcategory ==""){
-					alert("Please select itemcategory");
-					return false;
-				}
-				var itemtype = $("#itemtype").val();
-				if(itemtype != undefined && itemtype ==""){
-					alert("Please select itemtype");
-					return false;
-				}
-				
-				$("#{{$form_info['name']}}").submit();
-			});
-
-			$("#type").on("change",function(){
-				if(this.value != ""){
-					window.location.replace('inventorylookupvalues?type='+this.value);
-				}
-			});
-
-			$("#provider").on("change",function(){
-				val = $("#provider option:selected").html();
-				window.location.replace('serviceproviders?provider='+val);
-			});
-
-			function changeState(val){
-				$.ajax({
-			      url: "getcitiesbystateid?id="+val,
-			      success: function(data) {
-			    	  $("#cityname").html(data);
-			      },
-			      type: 'GET'
-			   });
-			}
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.confirm('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 
@@ -388,12 +261,14 @@
 				$(this).prev().focus();
 			});
 
+			$('.input-daterange').datepicker({autoclose:true,todayHighlight: true});
+
 			$('.input-mask-phone').mask('(999) 999-9999');
 			
-
+			var myTable = null;
 			jQuery(function($) {		
 				//initiate dataTables plugin
-				var myTable = 
+				myTable = 
 				$('#dynamic-table')
 				//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
 
@@ -413,7 +288,7 @@
 					"bProcessing": true,
 			        "bServerSide": true,
 					"ajax":{
-		                url :"getinventorydatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
+		                url :"getservicelogsdatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
 		                type: "post",  // method  , by default get
 		                error: function(){  // error handling
 		                    $(".employee-grid-error").html("");

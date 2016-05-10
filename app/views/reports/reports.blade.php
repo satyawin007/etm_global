@@ -135,15 +135,17 @@ use Illuminate\Support\Facades\Input;
 	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
-									<a target="_blank" href="dailyfinancereport"> VEHICLE VERIFICATION REPORT </a>
+									<a target="_blank" href="report?reporttype=vehiclemileage"> VEHICLE MILEAGE REPORT </a>
 								</li>
 								
 								<li>
-									&nbsp;
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=creditsupplier"> VEHICLE MILEAGE REPORT (FULL) </a>
 								</li>
 								
 								<li>
-									&nbsp;
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=vehicleperformance"> VEHICLE PERFORMANCE REPORT  </a>
 								</li>
 							</ul>
 						</div>

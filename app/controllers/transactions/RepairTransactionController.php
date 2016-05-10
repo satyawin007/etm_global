@@ -70,9 +70,9 @@ class RepairTransactionController extends \Controller {
 			}
 			try{
 				$db_functions_ctrl = new DBFunctionsController();
-				$table = "CreditSupplierTransDetails"; 
 				$jsonitems = json_decode($values["jsondata"]);
 				foreach ($jsonitems as $jsonitem){
+					$table = "CreditSupplierTransDetails";
 					$fields = array();
 					$fields["creditSupplierTransId"] = $recid;
 					$fields["repairedItem"] = $jsonitem->i6;

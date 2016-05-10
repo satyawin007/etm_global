@@ -9,7 +9,8 @@
 			    border-radius: 4px;
 			}
 			.dataTables_wrapper .row:last-child {
-			    border-bottom: 0px solid #e0e0e0;
+			    border-bottom: 0px solid #e0e0e0;ser
+			    
 			    padding-top: 5px;
 			    padding-bottom: 0px;
 			    background-color: #EFF3F8;

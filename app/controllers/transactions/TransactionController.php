@@ -5,6 +5,27 @@ use Illuminate\Support\Facades\View;
 use settings\AppSettingsController;
 class TransactionController extends \Controller {
 
+	
+	public function postFile(){
+		$values = Input::All();
+		if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
+			$fields = array();
+			$destinationPath = storage_path().'/uploads/'; // upload path
+			$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension
+			$fileName = uniqid().'.'.$extension; // renameing image
+			Input::file('billfile')->move($destinationPath, $fileName); // upl1oading file to given path
+			$fields["filePath"] = $fileName;
+			$table = $values["table"];
+			if($table == "ExpenseTransaction" || $table == "IncomeTransaction"){
+				$table::where("transactionId","=",$values['id'])->update($fields);
+			}
+			else{
+				$table::where("id","=",$values['id'])->update($fields);
+			}
+		}
+	}
+	
+	
 	/**
 	 * add a new state.
 	 *
@@ -55,6 +76,18 @@ class TransactionController extends \Controller {
 						$fields["entityValue"] = $values[$field_name];
 					}
 				}
+				
+				$fields["contractId"] = 0;
+				if(isset($values["vehicleno"])){
+					$contract_veh = \ContractVehicle::where("vehicleId","=",$values["vehicleno"])
+					->where("status","=","ACTIVE")->get();
+					if(count($contract_veh)>0){
+						$contract_veh = $contract_veh[0];
+						$fields["contractId"] = $contract_veh->contractId;
+						$fields["vehicleId"] = $values["vehicleno"];
+					}
+				}
+				
 				if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
 					$destinationPath = storage_path().'/uploads/'; // upload path
 					$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension
@@ -71,13 +104,17 @@ class TransactionController extends \Controller {
 				$fields["source"] = "income transaction";
 				$db_functions_ctrl = new DBFunctionsController();
 				$table = "IncomeTransaction";
-				if($db_functions_ctrl->insert($table, $fields)){
-					\Session::put("message","Operation completed Successfully");
-					return \Redirect::to("incometransactions");
+				$ret_id = 0;
+				$ret_id = $db_functions_ctrl->insertRetId($table, $fields);
+				if($ret_id != ""){
+					$json_resp = array("status"=>"success","id"=>$ret_id, "table"=>$table, "message"=>"Operation completed Successfully");
+					echo json_encode($json_resp);
+					return;
 				}
 				else{
-					\Session::put("message","Operation Could not be completed, Try Again!");
-					return \Redirect::to("incometransactions");
+					$json_resp = array("status"=>"fail","message"=>"Operation Could not be completed, Try Again!");
+					echo json_encode($json_resp);
+					return;
 				}
 			}
 			if(isset($values["transtype"]) && $values["transtype"] == "expense" ){
@@ -126,6 +163,18 @@ class TransactionController extends \Controller {
 						$fields["entityValue"] = $values[$field_name];
 					}
 				}
+				
+				$fields["contractId"] = 0;
+				if(isset($values["vehicleno"])){
+					$contract_veh = \ContractVehicle::where("vehicleId","=",$values["vehicleno"])
+									->where("status","=","ACTIVE")->get();
+					if(count($contract_veh)>0){
+						$contract_veh = $contract_veh[0];
+						$fields["contractId"] = $contract_veh->contractId;
+						$fields["vehicleId"] = $values["vehicleno"];
+					}
+				}
+				
 				if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
 					$destinationPath = storage_path().'/uploads/'; // upload path
 					$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension
@@ -142,13 +191,17 @@ class TransactionController extends \Controller {
 				$fields["source"] = "expense transaction";
 				$db_functions_ctrl = new DBFunctionsController();
 				$table = "ExpenseTransaction";
-				if($db_functions_ctrl->insert($table, $fields)){
-					\Session::put("message","Operation completed Successfully");
-					return \Redirect::to("expensetransactions");
+				$ret_id = 0;
+				$ret_id = $db_functions_ctrl->insertRetId($table, $fields);
+				if($ret_id != ""){
+					$json_resp = array("status"=>"success","id"=>$ret_id, "table"=>$table, "message"=>"Operation completed Successfully");
+					echo json_encode($json_resp);
+					return;
 				}
 				else{
-					\Session::put("message","Operation Could not be completed, Try Again!");
-					return \Redirect::to("expensetransactions");
+					$json_resp = array("status"=>"fail","message"=>"Operation Could not be completed, Try Again!");
+					echo json_encode($json_resp);
+					return;
 				}
 			}
 			if(isset($values["transtype"]) && $values["transtype"] == "fuel" ){
@@ -180,11 +233,13 @@ class TransactionController extends \Controller {
 				
 				//code to get contractid based on vehicleid
 				$fields["contractId"] = 0;
-				$contract_veh = \ContractVehicle::where("vehicleId","=",$values["vehicleno"])
-									->where("status","=","ACTIVE")->get();
-				if(count($contract_veh)>0){
-					$contract_veh = $contract_veh[0];
-					$fields["contractId"] = $contract_veh->contractId;
+				if(isset($values["vehicleno"])){
+					$contract_veh = \ContractVehicle::where("vehicleId","=",$values["vehicleno"])
+										->where("status","=","ACTIVE")->get();
+					if(count($contract_veh)>0){
+						$contract_veh = $contract_veh[0];
+						$fields["contractId"] = $contract_veh->contractId;
+					}
 				}
 				if(isset($values["fulltank"]) && $values["fulltank"] == "YES"){
 					$fields["fullTank"] = "YES";
@@ -202,31 +257,16 @@ class TransactionController extends \Controller {
 				}
 				$db_functions_ctrl = new DBFunctionsController();
 				$table = "FuelTransaction";
-				if($db_functions_ctrl->insert($table, $fields)){
-					\Session::put("message","Operation completed Successfully");
-					if(isset($values["tripid"]) && $values["triptype"]=="local"){
-						return \Redirect::to("addlocaltripfuel?triptype=LOCAL&transtype=fuel&id=".$values["tripid"]);
-					}
-					else if(isset($values["tripid"])){
-						return \Redirect::to("addtripfuel?transtype=fuel&id=".$values["tripid"]);
-					}
-					else if(isset($fields["contractId"])){
-						return \Redirect::to("fueltransactions?type=contracts");
-					}
-					return \Redirect::to("fueltransactions");
+				$ret_id = 0;
+				if(($ret_id=$db_functions_ctrl->insertRetId($table, $fields))>0){
+					$json_resp = array("status"=>"success","id"=>$ret_id, "table"=>$table, "message"=>"Operation completed Successfully");
+					echo json_encode($json_resp);
+					return;
 				}
 				else{
-					\Session::put("message","Operation Could not be completed, Try Again!");
-					if(isset($values["tripid"]) && $values["triptype"]=="local"){
-						return \Redirect::to("addlocaltripfuel?triptype=LOCAL&transtype=fuel&id=".$values["tripid"]);
-					}
-					else if(isset($values["tripid"])){
-						return \Redirect::to("addtripfuel?transtype=fuel&id=".$values["tripid"]);
-					}
-					else if(isset($fields["contractId"])){
-						return \Redirect::to("fueltransactions?type=contracts");
-					}
-					return \Redirect::to("fueltransactions");
+					$json_resp = array("status"=>"fail","message"=>"Operation Could not be completed, Try Again!");
+					echo json_encode($json_resp);
+					return;
 				}
 			}
 // 			if(isset($values["transtype"]) && $values["transtype"] == "fuel" ){
@@ -461,7 +501,7 @@ class TransactionController extends \Controller {
 				}
 				$incomes_arr["999"] = "PREPAID RECHARGE";
 				
-				$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+				$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 				$incharges_arr = array();
 				foreach ($incharges as $incharge){
 					$incharges_arr[$incharge->id] = $incharge->name;
@@ -475,7 +515,7 @@ class TransactionController extends \Controller {
 				$form_fields[] = $form_field;
 				
 				if($entity->inchargeId != 0){
-					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 					$incharges_arr = array();
 					foreach ($incharges as $incharge){
 						$incharges_arr[$incharge->id] = $incharge->name;
@@ -1296,7 +1336,7 @@ class TransactionController extends \Controller {
 				$values["typeId"] = "995";
 			}
 			if($values["typeId"] == "994"){
-				$entities =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+				$entities =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 				$entity_arr = array();
 				foreach ($entities as $entity){
 					$entity_arr[$entity->id] = $entity->name;
@@ -1475,7 +1515,7 @@ class TransactionController extends \Controller {
 				$showfields = $showfields[0];
 				$fields = explode(",", $showfields->fields);
 				if(in_array("INCHARGE",$fields)){
-					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 					$incharges_arr = array();
 					foreach ($incharges as $incharge){
 						$incharges_arr[$incharge->id] = $incharge->name;
@@ -1559,6 +1599,8 @@ class TransactionController extends \Controller {
 				$form_fields[] = $form_field;
 			}
 			$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -1646,7 +1688,7 @@ class TransactionController extends \Controller {
 			$branches_arr[$branch->id] = $branch->name;
 		}
 		
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;
@@ -1668,58 +1710,14 @@ class TransactionController extends \Controller {
 	{
 		$values = Input::all();
 		$values['bredcum'] = "INCOME TRANSACTIONS";
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$values['bredcum'] = "CONTRACT INCOME TRANSACTIONS";
+		}
 		$values['home_url'] = 'masters';
 		$values['add_url'] = '#';
 		$values['form_action'] = '#';
 		$values['action_val'] = '#';
-	
-		$actions = array();
-		$action = array("url"=>"#edit", "type"=>"modal", "css"=>"inverse", "js"=>"modalEditServiceProvider(", "jsdata"=>array("id","branchId","provider","name","number","companyName","configDetails","address","refName","refNumber"), "text"=>"EDIT");
-		$actions[] = $action;
-		$values["actions"] = $actions;
-	
-		if(isset($values["transtype"]) && $values["transtype"]=="income"){
-			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
-			$values["theads"] = $theads;
-			$url = "income&";
-			if(isset($values["branch1"])){
-				$url = $url."branch1=".$values["branch1"];
-			}
-			if(isset($values["daterange"])){
-				$url = $url."&daterange=".$values["daterange"];
-			}
-			$values["provider"]= $url;
-				
-		}
-		else if(isset($values["transtype"]) && $values["transtype"]=="expense"){
-			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
-			$values["theads"] = $theads;
-			$url = "expense&";
-			if(isset($values["branch1"])){
-				$url = $url."branch1=".$values["branch1"];
-			}
-			if(isset($values["daterange"])){
-				$url = $url."&daterange=".$values["daterange"];
-			}
-			$values["provider"]= $url;
-	
-		}
-		else if(isset($values["transtype"]) && $values["transtype"]=="fuel"){
-			$theads = array('branch', 'fuel station name', 'veh reg No', 'filled date', 'amount', 'bill no', 'payment type', 'remarks', "Actions");
-			$values["theads"] = $theads;
-			$url = "fuel&";
-			if(isset($values["branch1"])){
-				$url = $url."branch1=".$values["branch1"];
-			}
-			$values["provider"]= $url;
-		}
-		else{
-			$values["theads"] = array();
-			$values["tds"] = array();;
-			$entities = array();
-			$total = 0;
-		}
-			
+		
 		$form_info = array();
 		$form_info["name"] = "transactionform";
 		$form_info["action"] = "addtransaction";
@@ -1727,28 +1725,33 @@ class TransactionController extends \Controller {
 		$form_info["class"] = "form-horizontal";
 		$form_info["back_url"] = "masters";
 		$form_info["bredcum"] = "add transaction";
-	
+		
+		$theads = array('trans Id', 'branch/Contract', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
+		$values["theads"] = $theads;
+		$url = "income";
+		$values["provider"]= $url;
+		
 		$form_fields = array();
-	
-		$types_arr = array("Current"=>"Current","Mobile/Dongle"=>"Mobile/Dongle","Internet"=>"Internet","Water Cans/Tankers"=>"Water Cans/Tankers","Computer/Printer Purchases/Repairs"=>"Computer/Printer Purchases/Repairs");
-	
-		$branches =  \OfficeBranch::All();
-		$branches_arr = array();
-		foreach ($branches as $branch){
-			$branches_arr[$branch->id] = $branch->name;
-		}
-	
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
-		$incharges_arr = array();
-		foreach ($incharges as $incharge){
-			$incharges_arr[$incharge->id] = $incharge->name;
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$clients =  AppSettingsController::getEmpClients();
+			$clients_arr = array();
+			foreach ($clients as $client){
+				$clients_arr[$client['id']] = $client['name'];
+			}
+			$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getContractVehicles(this.id);"), "class"=>"form-control chosen-select", "options"=>array());
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"vehicleno", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+			$form_fields[] = $form_field;
+				
+			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
+			$values["theads"] = $theads;
+			$url = "income&type=contracts&contracts=true";
+			$values["provider"]= $url;
 		}
 		$values["transtype"] = "income";
-	
 		$val = "";
-		if(!isset($values["provider"])){
-			$values["provider"] = "";
-		}
 		$form_info["form_fields"] = $form_fields;
 		$values["form_info"] = $form_info;
 		$modals[] = $form_info;
@@ -1761,58 +1764,14 @@ class TransactionController extends \Controller {
 	{
 		$values = Input::all();
 		$values['bredcum'] = "EXPENSES TRANSACTIONS";
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$values['bredcum'] = "CONTRACT EXPENSE TRANSACTIONS";
+		}
 		$values['home_url'] = 'masters';
 		$values['add_url'] = '#';
 		$values['form_action'] = '#';
 		$values['action_val'] = '#';
-	
-		$actions = array();
-		$action = array("url"=>"#edit", "type"=>"modal", "css"=>"inverse", "js"=>"modalEditServiceProvider(", "jsdata"=>array("id","branchId","provider","name","number","companyName","configDetails","address","refName","refNumber"), "text"=>"EDIT");
-		$actions[] = $action;
-		$values["actions"] = $actions;
-	
-		if(isset($values["transtype"]) && $values["transtype"]=="income"){
-			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
-			$values["theads"] = $theads;
-			$url = "income&";
-			if(isset($values["branch1"])){
-				$url = $url."branch1=".$values["branch1"];
-			}
-			if(isset($values["daterange"])){
-				$url = $url."&daterange=".$values["daterange"];
-			}
-			$values["provider"]= $url;
-	
-		}
-		else if(isset($values["transtype"]) && $values["transtype"]=="expense"){
-			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
-			$values["theads"] = $theads;
-			$url = "expense&";
-			if(isset($values["branch1"])){
-				$url = $url."branch1=".$values["branch1"];
-			}
-			if(isset($values["daterange"])){
-				$url = $url."&daterange=".$values["daterange"];
-			}
-			$values["provider"]= $url;
-	
-		}
-		else if(isset($values["transtype"]) && $values["transtype"]=="fuel"){
-			$theads = array('branch', 'fuel station name', 'veh reg No', 'filled date', 'amount', 'bill no', 'payment type', 'remarks', "Actions");
-			$values["theads"] = $theads;
-			$url = "fuel&";
-			if(isset($values["branch1"])){
-				$url = $url."branch1=".$values["branch1"];
-			}
-			$values["provider"]= $url;
-		}
-		else{
-			$values["theads"] = array();
-			$values["tds"] = array();
-			$entities = array();
-			$total = 0;
-		}
-			
+		
 		$form_info = array();
 		$form_info["name"] = "transactionform";
 		$form_info["action"] = "addtransaction";
@@ -1820,28 +1779,33 @@ class TransactionController extends \Controller {
 		$form_info["class"] = "form-horizontal";
 		$form_info["back_url"] = "masters";
 		$form_info["bredcum"] = "add transaction";
-	
+		
+		$theads = array('trans Id', 'branch/Contract', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
+		$values["theads"] = $theads;
+		$url = "expense";
+		$values["provider"]= $url;
+		
 		$form_fields = array();
-	
-		$types_arr = array("Current"=>"Current","Mobile/Dongle"=>"Mobile/Dongle","Internet"=>"Internet","Water Cans/Tankers"=>"Water Cans/Tankers","Computer/Printer Purchases/Repairs"=>"Computer/Printer Purchases/Repairs");
-	
-		$branches =  \OfficeBranch::All();
-		$branches_arr = array();
-		foreach ($branches as $branch){
-			$branches_arr[$branch->id] = $branch->name;
-		}
-	
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
-		$incharges_arr = array();
-		foreach ($incharges as $incharge){
-			$incharges_arr[$incharge->id] = $incharge->name;
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$clients =  AppSettingsController::getEmpClients();
+			$clients_arr = array();
+			foreach ($clients as $client){
+				$clients_arr[$client['id']] = $client['name'];
+			}
+			$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getContractVehicles(this.id);"), "class"=>"form-control chosen-select", "options"=>array());
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"vehicleno", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+			$form_fields[] = $form_field;
+				
+			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
+			$values["theads"] = $theads;
+			$url = "expense&type=contracts&contracts=true";
+			$values["provider"]= $url;
 		}
 		$values["transtype"] = "expense";
-	
 		$val = "";
-		if(!isset($values["provider"])){
-			$values["provider"] = "";
-		}
 		$form_info["form_fields"] = $form_fields;
 		$values["form_info"] = $form_info;
 		$modals[] = $form_info;
@@ -1862,72 +1826,6 @@ class TransactionController extends \Controller {
 		$values['form_action'] = '#';
 		$values['action_val'] = '#';
 	
-		$actions = array();
-		$action = array("url"=>"#edit", "type"=>"modal", "css"=>"inverse", "js"=>"modalEditServiceProvider(", "jsdata"=>array("id","branchId","provider","name","number","companyName","configDetails","address","refName","refNumber"), "text"=>"EDIT");
-		$actions[] = $action;
-		$values["actions"] = $actions;
-	
-		if(isset($values["transtype"]) && $values["transtype"]=="income"){
-			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
-			$values["theads"] = $theads;
-			$url = "income&";
-			if(isset($values["branch1"])){
-				$url = $url."branch1=".$values["branch1"];
-			}
-			if(isset($values["daterange"])){
-				$url = $url."&daterange=".$values["daterange"];
-			}
-			$values["provider"]= $url;
-	
-		}
-		else if(isset($values["transtype"]) && $values["transtype"]=="expense"){
-			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
-			$values["theads"] = $theads;
-			$url = "expense&";
-			if(isset($values["branch1"])){
-				$url = $url."branch1=".$values["branch1"];
-			}
-			if(isset($values["daterange"])){
-				$url = $url."&daterange=".$values["daterange"];
-			}
-			$values["provider"]= $url;
-	
-		}
-		else if((isset($values["clientname1"]) && isset($values["depot1"]))){
-			$theads = array('contract', 'fuel station name', 'veh reg No', 'filled date', 'amount', 'bill no', 'payment type', 'remarks', "Actions");
-			$values["theads"] = $theads;
-			$url = "fuel&type=contracts&contracts=true&";
-			if(isset($values["clientname1"])){
-				$url = $url."client=".$values["clientname1"];
-			}
-			if(isset($values["depot1"])){
-				$url = $url."&depot=".$values["depot1"];
-			}
-			if(isset($values["daterange"])){
-				$url = $url."&daterange=".$values["daterange"];
-			}
-			$values["provider"]= $url;
-		}
-		
-		else if(isset($values["transtype"]) && isset($values["transtype"]) && $values["transtype"]=="fuel"){
-			$theads = array('branch', 'fuel station name', 'veh reg No', 'filled date', 'amount', 'bill no', 'payment type', 'remarks', "Actions");
-			$values["theads"] = $theads;
-			$url = "fuel&";
-			if(isset($values["branch1"])){
-				$url = $url."branch1=".$values["branch1"];
-			}
-			if(isset($values["daterange"])){
-				$url = $url."&daterange=".$values["daterange"];
-			}
-			$values["provider"]= $url;
-		}
-		else{
-			$values["theads"] = array();
-			$values["tds"] = array();;
-			$entities = array();
-			$total = 0;
-		}
-			
 		$form_info = array();
 		$form_info["name"] = "transactionform";
 		$form_info["action"] = "addtransaction";
@@ -1938,6 +1836,11 @@ class TransactionController extends \Controller {
 		if(isset($values["type"]) && $values["type"]=="contracts"){
 			$form_info['iscontractfuel'] = "YES";
 		}
+		
+		$theads = array('Branch', 'fuel station name', 'veh reg No', 'filled date', 'amount', 'bill no', 'payment type', 'remarks', "Actions");
+		$values["theads"] = $theads;
+		$url = "fuel";
+		$values["provider"]= $url;
 	
 		$form_fields = array();
 		if(isset($values["type"]) && $values["type"]=="contracts"){
@@ -1950,21 +1853,15 @@ class TransactionController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getContractFuelFields('fuel');"), "class"=>"form-control chosen-select", "options"=>array());
 			$form_fields[] = $form_field;
+			
+			$theads = array('Contract', 'fuel station name', 'veh reg No', 'filled date', 'amount', 'bill no', 'payment type', 'remarks', "Actions");
+			$values["theads"] = $theads;
+			$url = "fuel&type=contracts&contracts=true";
+			$values["provider"]= $url;
 		}
 	
 		$types_arr = array("Current"=>"Current","Mobile/Dongle"=>"Mobile/Dongle","Internet"=>"Internet","Water Cans/Tankers"=>"Water Cans/Tankers","Computer/Printer Purchases/Repairs"=>"Computer/Printer Purchases/Repairs");
 	
-		$branches =  \OfficeBranch::All();
-		$branches_arr = array();
-		foreach ($branches as $branch){
-			$branches_arr[$branch->id] = $branch->name;
-		}
-	
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
-		$incharges_arr = array();
-		foreach ($incharges as $incharge){
-			$incharges_arr[$incharge->id] = $incharge->name;
-		}
 		$values["transtype"] = "fuel";
 	
 		$val = "";

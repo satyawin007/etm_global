@@ -109,7 +109,12 @@ use settings\AppSettingsController;
 	</div>
 	<?php $form_info = $values["form_info"]; ?>
 	<?php $jobs = Session::get("jobs"); ?>
-	<?php if(($values['bredcum'] == "INCOME TRANSACTIONS" && in_array(301, $jobs)) ||  ($values['bredcum'] == "EXPENSES TRANSACTIONS" && in_array(303, $jobs)) || ($values['bredcum'] == "FUEL TRANSACTIONS" && in_array(305, $jobs)) || ($values['bredcum'] == "CONTRACT FUEL TRANSACTIONS" && in_array(409, $jobs))){?>
+	<?php if(($values['bredcum'] == "INCOME TRANSACTIONS" && in_array(301, $jobs)) ||  
+			($values['bredcum'] == "EXPENSES TRANSACTIONS" && in_array(303, $jobs)) || 
+			($values['bredcum'] == "FUEL TRANSACTIONS" && in_array(305, $jobs)) || 
+			($values['bredcum'] == "CONTRACT FUEL TRANSACTIONS" && in_array(409, $jobs)) || 
+			($values['bredcum'] == "CONTRACT EXPENSE TRANSACTIONS" && in_array(409, $jobs)) ||
+			($values['bredcum'] == "CONTRACT INCOME TRANSACTIONS" && in_array(409, $jobs))) {?>
 		<div id="accordion1" class="col-xs-offset-0 col-xs-12 accordion-style1 panel-group" style="width: 99%;">			
 			<div class="panel panel-default">
 				<div class="panel-heading">
@@ -153,8 +158,35 @@ use settings\AppSettingsController;
 								</div>
 							</div>
 							<div class="col-xs-4">
-								<?php if(($values['bredcum'] != "CONTRACT FUEL TRANSACTIONS" && in_array(305, $jobs))){ ?>
-								<div class="form-group">
+								<?php if(($values['bredcum'] == "CONTRACT FUEL TRANSACTIONS" && in_array(305, $jobs) || 
+										$values['bredcum'] == "CONTRACT EXPENSE TRANSACTIONS" && in_array(305, $jobs) ||
+										$values['bredcum'] == "CONTRACT INCOME TRANSACTIONS" && in_array(305, $jobs))){ ?>
+									<div class="form-group">
+										<div class="col-xs-6">
+											<?php 
+												$form_field = array("name"=>"clientname1", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot1(this.value);"), "class"=>"form-control chosen-select");
+											?>
+											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+												<option value="">-- {{$form_field['name']}} --</option>
+												<?php 
+													$clients =  AppSettingsController::getEmpClients();
+													foreach ($clients as $client){
+														echo '<option value="'.$client['id'].'">'.$client['name'].'</option>'; 
+													}
+												?>
+											</select>
+										</div>
+										<div class="col-xs-6">
+											<?php 
+												$form_field = array("name"=>"depot1", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+											?>
+											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+												<option value="">-- {{$form_field['name']}} --</option>
+											</select>
+										</div>
+									</div>	
+								<?php } else {?>
+									<div class="form-group">
 									<?php 
 										$branches =  AppSettingsController::getEmpBranches();
 										$branches_arr = array();
@@ -182,35 +214,10 @@ use settings\AppSettingsController;
 											?>
 										</select>
 									</div>			
-								</div>	
-								<?php } else {?>
-									<div class="form-group">
-										<div class="col-xs-6">
-											<?php 
-												$form_field = array("name"=>"clientname1", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot1(this.value);"), "class"=>"form-control chosen-select");
-											?>
-											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-												<option value="">-- {{$form_field['name']}} --</option>
-												<?php 
-													$clients =  AppSettingsController::getEmpClients();
-													foreach ($clients as $client){
-														echo '<option value="'.$client['id'].'">'.$client['name'].'</option>'; 
-													}
-												?>
-											</select>
-										</div>
-										<div class="col-xs-6">
-											<?php 
-												$form_field = array("name"=>"depot1", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
-											?>
-											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-												<option value="">-- {{$form_field['name']}} --</option>
-											</select>
-										</div>
-									</div>	
+								</div>
 								<?php } ?>
 							</div>
-							<input type="hidden" name="transtype" id="transtype" value="{{$values['transtype']}}"/>
+							<input type="hidden" name="transtype_h" id="transtype_h" value="{{$values['transtype']}}"/>
 							<div class="col-xs-1" style="margin-top: 0px; margin-left:-20px; margin-bottom: -10px">
 								<div class="form-group">
 									<label class="col-xs-0 control-label no-padding-right" for="form-field-1"> </label>
@@ -360,6 +367,7 @@ use settings\AppSettingsController;
 			}
 
 			function paginate(page){
+				url="gettransactiondatatabledata?name=<?php echo $values["provider"] ?>";
 				if(transtype == ""){
 					alert("select transaction type");
 					return;
@@ -380,44 +388,30 @@ use settings\AppSettingsController;
 					return;
 				}
 				dt = fdt+" - "+tdt;				
-				var myin = document.createElement("input"); 
-				myin.type='hidden'; 
-				myin.name='transtype'; 
-				myin.value=transtype; 
-				document.getElementById('paginate').appendChild(myin); 
-				var myin = document.createElement("input"); 
-				myin.type='hidden'; 
-				myin.name='daterange'; 
-				myin.value=dt; 
-				document.getElementById('paginate').appendChild(myin); 
+				url = url+"&daterange="+dt;
 
+				branch = $("#branch1").val();
+				if(branch != undefined && branch != ""){
+					url = url+'&branch1='+branch; 
+				}
+				
 				client1 = $("#clientname1").val();
 				if(client1 != undefined && client1 != ""){
-					var myin = document.createElement("input"); 
-					myin.type='hidden'; 
-					myin.name='client1'; 
-					myin.value=client1; 
-					document.getElementById('paginate').appendChild(myin);
+					url = url+'&client='+client1; 
 				}
 
 				depot1 = $("#depot1").val();
 				if(depot1 != undefined && depot1 != ""){
-					var myin = document.createElement("input"); 
-					myin.type='hidden'; 
-					myin.name='depot1'; 
-					myin.value=depot1; 
-					document.getElementById('paginate').appendChild(myin);
+					url = url+'&depot='+depot1;
 				}
 				if(client1>0 && depot1>0){
-					var myin = document.createElement("input"); 
-					myin.type='hidden'; 
-					myin.name='type'; 
-					myin.value='contracts'; 
-					document.getElementById('paginate').appendChild(myin);
+					url = url+'&type=contracts'; 
 				}
 
 				$("#page").val(page);
-				$("#paginate").submit();				
+				//alert(url);
+				myTable.ajax.url(url).load();
+				//$("#paginate").submit();				
 			}
 
 			function modalEditLookupValue(id, value){
@@ -492,23 +486,6 @@ use settings\AppSettingsController;
 				$("#formbody").hide();
 				$("#addfields").hide();
 				transtype = val;
-				var myin = document.createElement("input"); 
-				myin.type='hidden'; 
-				myin.name='transtype'; 
-				myin.value=val;
-				document.getElementById('transactionform').appendChild(myin); 
-
-				var myin = document.createElement("input"); 
-				myin.type='hidden'; 
-				myin.name='branch'; 
-				myin.value=$("#branch").val();
-				document.getElementById('transactionform').appendChild(myin); 
-				
-				var myin = document.createElement("input"); 
-				myin.type='hidden'; 
-				myin.name='date1'; 
-				myin.value=$("#date").val();
-				document.getElementById('transactionform').appendChild(myin); 	
 
 				client = $("#clientname").val();
 				clientbranch = $("#depot").val();
@@ -565,6 +542,19 @@ use settings\AppSettingsController;
 				      type: 'GET'
 				   });
 				}	
+			}
+
+			function getContractVehicles(val){
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+				$.ajax({
+			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
+			      success: function(data) {
+			    	  $("#vehicleno").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
 			}
 			
 			function showTranType(val){
@@ -762,7 +752,10 @@ use settings\AppSettingsController;
 						});
 						//pre-show a file name, for example a previously selected file
 						//$('#id-input-file-1').ace_file_input('show_file_list', ['myfile.txt'])
-					  $("#incharge").attr("disabled",true);
+						
+					  if(transtype != "income"){
+					  	$("#incharge").attr("disabled",true);
+					  }
 					  $("#enableincharge").val("NO");
 					  $('.chosen-select').trigger('chosen:updated');
 					  $("#enableincharge").on("change",function(){
@@ -893,9 +886,87 @@ use settings\AppSettingsController;
 					alert("select fuelstationname");
 					return false;
 				}
-			
-				$("#{{$form_info['name']}}").submit();
+				amount = $("#amount").val();
+				if(amount != undefined && amount == ""){
+					alert("enter amount");
+					return false;
+				}
+				//alert("submit");
+				var myin = document.createElement("input"); 
+				myin.type='hidden'; 
+				myin.name='transtype'; 
+				myin.value=$("#transtype_h").val(); 
+				document.getElementById('transactionform').appendChild(myin);
+
+				$.ajax({
+                    url: "{{$form_info['action']}}",
+                    type: "post",
+                    data: $("#{{$form_info['name']}}").serialize(),
+                    success: function(response) {
+                        //alert(response);
+                    	response = jQuery.parseJSON(response);	
+                        if(response.status=="success"){
+                        	var formData = new FormData();
+                        	formData.append('id', response.id);
+                        	formData.append('table', response.table);
+                        	formData.append('billfile', document.getElementById("billfile").files[0]);
+                        	$.ajax({
+                        	    type: "POST",
+                        	    url: "postfile",
+                        	    data: formData,
+                        	    processData: false,
+                        	    contentType: false,
+                        	    success: function(response) {
+                        	        console.log(response);
+                        	    },
+                        	    error: function(errResponse) {
+                        	        console.log(errResponse);
+                        	    }
+                        	});
+                            
+                        	bootbox.alert(response.message);
+                        	resetForm("{{$form_info['name']}}");
+                        }
+                        if(response.status=="fail"){
+                        	bootbox.alert(response.message);
+                        }
+                    }
+                });
+				return false;
+				//$("#{{$form_info['name']}}").submit();
 			});
+
+			function resetForm(formid)
+		    { 
+	            form = $('#'+formid);
+	            element = ['input','select','textarea'];
+	            for(i=0; i<element.length; i++) 
+	            {
+                    $.each( form.find(element[i]), function(){  
+                        switch($(this).attr('class')) {
+                          case 'form-control chosen-select':
+                          	$(this).find('option:first-child').attr("selected", "selected"); 
+                            break;
+                        }
+                        switch($(this).attr('type')) {
+                        case 'text':
+                        case 'select-one':
+                        case 'textarea':
+                        	$(this).val('');
+                        case 'hidden':
+                        case 'file':
+                        	$(this).val('');
+                          break;
+                        case 'checkbox':
+                        case 'radio':
+                        	$(this).attr('checked',false);
+                          break;
+                       
+                      }
+                    });
+	            }
+	            $('.chosen-select').trigger("chosen:updated");	
+		    }
 
 			$("#provider").on("change",function(){
 				val = $("#provider option:selected").html();
@@ -990,10 +1061,10 @@ use settings\AppSettingsController;
 			}
 
 					
-
+			var myTable = null;
 			jQuery(function($) {
 				//initiate dataTables plugin
-				var myTable = 
+				myTable = 
 				$('#dynamic-table')
 				//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
 

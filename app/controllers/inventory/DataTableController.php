@@ -413,10 +413,11 @@ class DataTableController extends \Controller {
 			$entities = \PurchasedOrders::where("purchase_orders.status","ACTIVE")
 						->where("purchase_orders.type","PURCHASE ORDER")
 						->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
-						->join("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+						->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
 						->leftjoin("employee","employee.id","=","purchase_orders.receivedBy")
 						->select($select_args)->limit($length)->offset($start)->get();
-			$total = count($entities);
+			$total = \PurchasedOrders::where("purchase_orders.status","ACTIVE")
+						->where("purchase_orders.type","PURCHASE ORDER")->count();
 		}
 	
 		$entities = $entities->toArray();
