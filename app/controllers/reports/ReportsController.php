@@ -2204,7 +2204,7 @@ class ReportsController extends \Controller {
 		$fuel_rep_arr['payment'] = "Fuel Station Payments";
 		$fuel_rep_arr['tracking'] = "Track By Station";
 		$fuel_rep_arr['vehicleReport'] = "Track By Vehicle";
-		$fuel_rep_arr['employeeReport'] = "Track By Driver";
+		//$fuel_rep_arr['employeeReport'] = "Track By Driver";
 	
 		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -2228,8 +2228,8 @@ class ReportsController extends \Controller {
 		}
 		$form_field = array("name"=>"fuelstation", "content"=>"by station", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$branches_arr, "class"=>"form-control chosen-select");
 		$add_form_fields[] = $form_field;
-		$form_field = array("name"=>"driver", "content"=>"by driver", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$emps_arr, "class"=>"form-control chosen-select");
-		$add_form_fields[] = $form_field;
+		/* $form_field = array("name"=>"driver", "content"=>"by driver", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$emps_arr, "class"=>"form-control chosen-select");
+		$add_form_fields[] = $form_field; */
 		$form_field = array("name"=>"vehicle", "content"=>"by vehicle", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$vehs_arr, "class"=>"form-control chosen-select");
 		$add_form_fields[] = $form_field;
 	
@@ -2500,56 +2500,139 @@ class ReportsController extends \Controller {
 					}
 				}
 			}
-			else if($values["fuelreporttype"] == "tracking"){
-				if($values["fuelstation"] == "0"){
-					$fuelstations =  \FuelStation::OrderBy("name")->get();
-					foreach ($fuelstations as $fuelstation){
-						$row = array();
-						$row["fuelstation"] = $fuelstation->name;
-						$recs = DB::select( DB::raw("SELECT * FROM `temp_fuel_transaction` where (entity='FUEL TRANSACTION') and fuelStation='".$fuelstation->name."'"));
-						foreach($recs as  $rec) {
-							$row["vehicle"] = $rec->veh_reg;
-							$row["date"] = date("d-m-Y",strtotime($rec->date));
-							$row["ltrs"] = $rec->ltrs;
-							$row["amount"] = $rec->amount;
-							$row["info"] = "Source : ".$rec->entity."<br/>"."Payment Type : ". $rec->paymentType;
-							$row["remarks"] = $rec->remarks;
-							$row["createdBy"] = $rec->createdBy;
-							$resp[] = $row;
+			else if($values["supplierreporttype"] == "repairs"){
+				$qry=  \CreditSupplierTransactions::whereBetween("date",array($frmDt,$toDt));
+						if($values["creditsupplier"] != "0"){
+							$qry->where("creditSupplierId","=",$values["creditsupplier"]);
 						}
-					}
+						$qry->join("creditsuppliertransdetails","creditsuppliertransactions.id","=","creditsuppliertransdetails.creditSupplierTransId")		
+							->join("creditsuppliers","creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
+							->join("lookuptypevalues","creditsuppliertransdetails.repairedItem","=","lookuptypevalues.id");
+						
+				$select_args[] = "creditsuppliers.supplierName as creditsuppliername";
+				$select_args[] = "lookuptypevalues.name as itemdetails";
+				$select_args[] = "creditsuppliertransactions.transactionType as transactionType";
+				$select_args[] = "creditsuppliertransdetails.vehicleIds as vehicleIds";
+				$select_args[] = "creditsuppliertransactions.transactionDate as transactionDate";
+				$select_args[] = "creditsuppliertransactions.amount as amount";
+				$select_args[] = "creditsuppliertransactions.labourCharges as labourCharges";
+				$select_args[] = "creditsuppliertransactions.electricianCharges as electricianCharges";
+				$select_args[] = "creditsuppliertransactions.batta as batta";
+				
+				$recs = $qry->select($select_args)->get();
+				
+				$veh_arr = array();
+				$vehicles = \Vehicle::all();
+				foreach ($vehicles as $vehicle){
+					$veh_arr[$vehicle->id] = $vehicle->veh_reg;
 				}
-				else if($values["fuelstation"] > 0){
-					$fuelstations =  \FuelStation::where("id","=",$values["fuelstation"])->get();
-					foreach ($fuelstations as $fuelstation){
-						$row = array();
-						$row["fuelstation"] = $fuelstation->name;
-						$recs = DB::select( DB::raw("SELECT * FROM `temp_fuel_transaction` where (entity='FUEL TRANSACTION') and fuelStation='".$fuelstation->name."'"));
-						foreach($recs as  $rec) {
-							$row["vehicle"] = $rec->veh_reg;
-							$row["date"] = date("d-m-Y",strtotime($rec->date));
-							$row["ltrs"] = $rec->ltrs;
-							$row["amount"] = $rec->amount;
-							$row["info"] = "Source : ".$rec->entity."<br/>"."Payment Type : ". $rec->paymentType;
-							$row["remarks"] = $rec->remarks;
-							$row["createdBy"] = $rec->createdBy;
-							$resp[] = $row;
-						}
-					}
-				}
-			}
-			else if($values["fuelreporttype"] == "vehicleReport"){
-				$recs = DB::select( DB::raw("SELECT * FROM `temp_fuel_transaction` where (entity='FUEL TRANSACTION') and vehicleId='".$values["vehicle"]."'"));
 				foreach($recs as  $rec) {
 					$row = array();
-					$row["fuelstation"] = $rec->fuelStation;
-					$row["vehicle"] = $rec->veh_reg;
-					$row["date"] = date("d-m-Y",strtotime($rec->date));
-					$row["ltrs"] = $rec->ltrs;
-					$row["amount"] = $rec->amount;
-					$row["info"] = "Source : ".$rec->entity."<br/>"."Payment Type : ". $rec->paymentType;
-					$row["remarks"] = $rec->remarks;
-					$row["createdBy"] = $rec->createdBy;
+					$row["creditsuppliername"] = $rec->creditsuppliername;
+					$row["transactionType"] = $rec->transactionType;
+					$veh_arr_str = "";
+					$veh_arr_ids = explode(",", $rec->vehicleIds);
+					foreach ($veh_arr_ids as $veh){
+						if ($veh != ""){
+							$veh_arr_str = $veh_arr_str.$veh_arr[$veh].",";
+						}
+					}
+					$row["vehiclename"] = $veh_arr_str;
+					$row["transactiondate"] = date("d-m-Y",strtotime($rec->transactionDate));
+					$row["itemdetails"] = $rec->itemdetails;
+					$row["repairamount"] = $rec->amount;
+					$row["labourcharge"] = $rec->labourCharges;
+					$row["electriciancharge"] = $rec->electricianCharges;
+					$row["batta"] = $rec->batta;
+					
+					$resp[] = $row;
+				}
+			}
+		else if($values["supplierreporttype"] == "purchase"){
+				$qry=  \PurchasedOrders::whereBetween("orderDate",array($frmDt,$toDt))->where("type","=","PURCHASE ORDER");
+						if($values["creditsupplier"] != "0"){
+							$qry->where("creditSupplierId","=",$values["creditsupplier"]);
+						}
+						$qry->join("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+							->join("purchased_items","purchased_items.purchasedOrderId","=","purchase_orders.id")
+							->join("inventorylookupvalues","inventorylookupvalues.id","=","purchased_items.itemId")
+							->join("manufactures","manufactures.id","=","purchased_items.manufacturerId");
+						
+				$select_args[] = "creditsuppliers.supplierName as creditsuppliername";
+				$select_args[] = "inventorylookupvalues.name as itemname";
+				$select_args[] = "manufactures.name as itemcompany";
+				$select_args[] = "purchased_items.purchasedQty as purchasedQty";
+				$select_args[] = "purchased_items.unitPrice as unitPrice";
+				$select_args[] = "purchase_orders.orderDate as orderDate";
+				
+				$recs = $qry->select($select_args)->get();
+				
+				foreach($recs as  $rec) {
+					$row = array();
+					$row["creditsuppliername"] = $rec->creditsuppliername;
+					$row["itemname"] = $rec->itemname;
+					$row["itemcompany"] = $rec->itemcompany;
+					$row["purchasedQty"] = $rec->purchasedQty;
+					$row["amount"] = ($rec->purchasedQty*$rec->unitPrice);
+					$row["orderDate"] = date("d-m-Y",strtotime($rec->orderDate));
+					
+					$resp[] = $row;
+				}
+			}
+			else if($values["supplierreporttype"] == "vehicleReport"){
+				//$qry=  \CreditSupplierTransactions::whereBetween("date",array($frmDt,$toDt));
+				
+				$qry1 = "select creditsuppliertransdetails.vehicleIds as vehicleIds, creditsuppliers.supplierName as creditsuppliername, creditsuppliertransactions.date as date, lookuptypevalues.name as itemdetails, creditsuppliertransactions.amount as amount from ";
+				$qry1 = $qry1."creditsuppliertransactions left join creditsuppliertransdetails on creditsuppliertransactions.id = creditsuppliertransdetails.creditSupplierTransId";
+				$qry1 = $qry1." left join creditsuppliers on creditsuppliers.id = creditsuppliertransactions.creditSupplierId";
+				$qry1 = $qry1." left join lookuptypevalues on creditsuppliertransdetails.repairedItem = lookuptypevalues.id";
+				$qry1 = $qry1." where date between '$frmDt' and '$toDt' and creditsuppliertransdetails.vehicleIds RLIKE '^".$values["vehicle"].",|,".$values["vehicle"].",'";
+				
+// 				echo $qry1;
+// 				die();
+// 				$qry->join("creditsuppliertransdetails","creditsuppliertransactions.id","="," creditsuppliertransdetails.creditSupplierTransId")
+// 					->join("creditsuppliers","creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
+// 					->join("lookuptypevalues","creditsuppliertransdetails.repairedItem","=","lookuptypevalues.id");
+				
+				
+// 				if($values["vehicle"] != "0"){
+// 					$qry->whereIn($values["vehicle"],"creditsuppliertransdetails.vehicleIds");
+// 				}
+				
+// 				$select_args = array();
+// 				$select_args[] = "creditsuppliertransdetails.vehicleIds as vehicleIds";
+// 				$select_args[] = "creditsuppliers.supplierName as creditsuppliername";
+// 				$select_args[] = "creditsuppliertransactions.transactionType as transactionType";
+// 				$select_args[] = "creditsuppliertransactions.transactionDate as transactionDate";
+// 				$select_args[] = "lookuptypevalues.name as itemdetails";
+// 				$select_args[] = "creditsuppliertransactions.amount as amount";
+			
+				$recs = \DB::select(DB::raw($qry1));
+// 				echo "test";
+// 				die();
+				
+			
+				$veh_arr = array();
+				$vehicles = \Vehicle::all();
+				foreach ($vehicles as $vehicle){
+					$veh_arr[$vehicle->id] = $vehicle->veh_reg;
+				}
+				foreach($recs as  $rec) {
+					$row = array();
+					
+					$veh_arr_str = "";
+					$veh_arr_ids = explode(",", $rec->vehicleIds);
+					foreach ($veh_arr_ids as $veh){
+						if ($veh != ""){
+							$veh_arr_str = $veh_arr_str.$veh_arr[$veh].",";
+						}
+					}
+					$row["vehiclename"] = $veh_arr_str;
+					$row["creditsuppliername"] = $rec->creditsuppliername;
+					$row["transactiondate"] = date("d-m-Y",strtotime($rec->date));
+					$row["itemdetails"] = $rec->itemdetails;
+					$row["repairamount"] = $rec->amount;
+					
 					$resp[] = $row;
 				}
 			}
@@ -2595,7 +2678,7 @@ class ReportsController extends \Controller {
 		$supplier_rep_arr['purchase'] = "Purchases";
 		$supplier_rep_arr['vehicleReport'] = "Track By Vehicle";
 	
-		$form_field = array("name"=>"supplierreporttype", "content"=>"report for ", "readonly"=>"",  "required"=>"required","type"=>"select", "action"=>array("type"=>"onChange","script"=>"showSelectionType(this.value)"), "options"=>$supplier_rep_arr, "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"supplierreporttype", "content"=>"report for ", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange","script"=>"showSelectionType(this.value)"), "options"=>$supplier_rep_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
 		$form_fields[] = $form_field;

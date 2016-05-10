@@ -465,7 +465,7 @@ use Illuminate\Support\Facades\Input;
 			      success: function(data) {
 			    	  var obj = JSON.parse(data);
 			    	  $("#iteminfo").html(obj.manufactures);
-			    	  if(obj.itemnuberstatus=="Yes"){
+			    	  if(obj.itemnumberstatus=="Yes"){
 			    		  $("#itemnumbers").attr("readonly",false);
 			    	  }
 			    	  
