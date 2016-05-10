@@ -14,12 +14,12 @@
 			    padding-bottom: 0px;
 			    background-color: #EFF3F8;
 			}
-			th {
+			/* th {
 			    white-space: nowrap;
 			}
 			td {
 			    white-space: nowrap;
-			}
+			} */
 			table {
 				min-width: 100% !important;
 			}
@@ -180,6 +180,96 @@
 					</div>
 				</div>					
 			</div>
+			<div id="table4">
+				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
+					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
+					<div class="clearfix">
+						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
+					</div>
+					<div class="table-header" style="margin-top: 10px;">
+						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+					</div>
+					<!-- div.table-responsive -->
+					<!-- div.dataTables_borderWrap -->
+					<div>
+						<table id="dynamic-table4" class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<td>CREDIT SUPPLIER</td>
+									<td>TRANSACTION TYPE</td>
+									<td>VEHICLE</td>
+									<td>TRANSACTION DATE</td>
+									<td>ITEM DETAILS</td>
+									<td>REPAIR AMOUNT</td>
+									<td>LABOUR CHARGES</td>
+									<td>ELECTRICIAN CHARGES</td>
+									<td>BATTA</td>
+								</tr>
+							</thead>
+							<tbody id="tbody4">
+							</tbody>
+						</table>								
+					</div>
+				</div>					
+			</div>
+			<div id="table5">
+				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
+					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
+					<div class="clearfix">
+						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
+					</div>
+					<div class="table-header" style="margin-top: 10px;">
+						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+					</div>
+					<!-- div.table-responsive -->
+					<!-- div.dataTables_borderWrap -->
+					<div>
+						<table id="dynamic-table5" class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<td>CREDIT SUPPLIER</td>
+									<td>ITEM NAME</td>
+									<td>ITEM COMPANY</td>
+									<td>QUANTITY</td>
+									<td>AMOUNT</td>
+									<td>PURCHASED DATE</td>
+								</tr>
+							</thead>
+							<tbody id="tbody5">
+							</tbody>
+						</table>								
+					</div>
+				</div>					
+			</div>
+			<div id="table6">
+				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
+					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
+					<div class="clearfix">
+						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
+					</div>
+					<div class="table-header" style="margin-top: 10px;">
+						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+					</div>
+					<!-- div.table-responsive -->
+					<!-- div.dataTables_borderWrap -->
+					<div>
+						<table id="dynamic-table6" class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<td>VEHICLE</td>
+									<td>CREDIT SUPPLIER</td>
+									<td>TRANSACTION DATE</td>
+									<td>ITEM DETAILS</td>
+									<td>AMOUNT</td>
+								</tr>
+							</thead>
+							<tbody id="tbody6">
+							</tbody>
+						</table>								
+					</div>
+				</div>					
+			</div>
+			
 		</div>
 
 		<?php 
@@ -250,7 +340,7 @@
 			}
 
 			function showSelectionType(val){
-				if(val=="balanceSheetNoDt" || val=="payment" || val=="balanceSheet" || val=="repairs"){
+				if(val=="balanceSheetNoDt" || val=="payment" || val=="balanceSheet" || val=="repairs"|| val=="purchase"){
 					$("#creditsupplierid").show();
 					$("#vehicleid").hide();
 					if(val=="balanceSheetNoDt"){
@@ -319,6 +409,9 @@
 							$("#table1").show();
 							$("#table2").hide();
 							$("#table3").hide();
+							$("#table4").hide();
+							$("#table5").hide();
+							$("#table6").hide();
 							if(refresh1 == 0){
 								refresh1 = 1;
 								myTable1.draw();
@@ -330,15 +423,43 @@
 							myTable2.columns.adjust().draw(); // Redraw theDataTable
 							$("#table1").hide();
 							$("#table2").show();	
-							$("#table3").hide();	
+							$("#table3").hide();
+							$("#table4").hide();	
+							$("#table5").hide();
+							$("#table6").hide();
 			        	}
-			        	else if(reporttype == "tracking" || reporttype == "vehicleReport"){
-							myTable3.clear().draw();
-							myTable3.rows.add(arr); // Add new data
-							myTable3.columns.adjust().draw(); // Redraw theDataTable
+			        	else if(reporttype == "vehicleReport"){
+							myTable6.clear().draw();
+							myTable6.rows.add(arr); // Add new data
+							myTable6.columns.adjust().draw(); // Redraw theDataTable
 							$("#table1").hide();
 							$("#table2").hide();
-							$("#table3").show();		
+							$("#table3").hide();
+							$("#table4").hide();
+							$("#table5").hide();
+							$("#table6").show();		
+			        	}
+			        	else if(reporttype == "repairs"){
+							myTable4.clear().draw();
+							myTable4.rows.add(arr); // Add new data
+							myTable4.columns.adjust().draw(); // Redraw theDataTable
+							$("#table1").hide();
+							$("#table2").hide();
+							$("#table3").hide();
+							$("#table4").show();	
+							$("#table5").hide();
+							$("#table6").hide();	
+			        	}
+			        	else if(reporttype == "purchase" ){
+							myTable5.clear().draw();
+							myTable5.rows.add(arr); // Add new data
+							myTable5.columns.adjust().draw(); // Redraw theDataTable
+							$("#table1").hide();
+							$("#table2").hide();
+							$("#table3").hide();
+							$("#table4").hide();	
+							$("#table5").show();
+							$("#table6").hide();		
 			        	}
 						$("#processing").hide();
 			        }
@@ -469,7 +590,11 @@
 
 			var myTable1 = null;
 			var myTable2 = null;
-
+			var myTable4 = null;
+			var myTable5 = null;
+			var myTable6 = null;
+			
+			
 			jQuery(function($) {
 					//initiate dataTables plugin
 					myTable1 = $('#dynamic-table1')
@@ -598,11 +723,134 @@
 							style: 'multi'
 						}
 				    } );
+
+					myTable4 = $('#dynamic-table4')
+					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
+					.DataTable( {
+						dom: 'Bfrtip',
+						buttons: [
+							{
+								extend:'colvis',
+								text : "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>"
+							},
+							{
+								extend: 'excelHtml5',
+								 title: 'reportTitle',
+								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
+								exportOptions: {
+									columns: ':visible'
+								}
+							},
+							{
+								extend: 'pdfHtml5',
+								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
+								exportOptions: {
+									columns: ':visible'
+								}
+							}
+							
+						], 
+						bAutoWidth: false,
+						"aoColumns": [
+						  null, null, null, null, null, null,null,null,null
+						],
+						"aaSorting": [],
+						//"sScrollY": "500px",
+						//"bPaginate": false,
+						"sScrollX" : "true",
+						//"sScrollX": "300px",
+						//"sScrollXInner": "120%",
+						"bScrollCollapse": true,
+						select: {
+							style: 'multi'
+						}
+				    } );
+					myTable5 = $('#dynamic-table5')
+					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
+					.DataTable( {
+						dom: 'Bfrtip',
+						buttons: [
+							{
+								extend:'colvis',
+								text : "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>"
+							},
+							{
+								extend: 'excelHtml5',
+								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
+								exportOptions: {
+									columns: ':visible'
+								}
+							},
+							{
+								extend: 'pdfHtml5',
+								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
+								exportOptions: {
+									columns: ':visible'
+								}
+							}
+							
+						], 
+						bAutoWidth: false,
+						"aoColumns": [
+						  null, null, null,null, null,null
+						],
+						"aaSorting": [],
+						//"sScrollY": "500px",
+						//"bPaginate": false,
+						"sScrollX" : "true",
+						//"sScrollX": "300px",
+						//"sScrollXInner": "120%",
+						"bScrollCollapse": true,
+						select: {
+							style: 'multi'
+						}
+				    } );
+
+					myTable6 = $('#dynamic-table6')
+					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
+					.DataTable( {
+						dom: 'Bfrtip',
+						buttons: [
+							{
+								extend:'colvis',
+								text : "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>"
+							},
+							{
+								extend: 'excelHtml5',
+								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
+								exportOptions: {
+									columns: ':visible'
+								}
+							},
+							{
+								extend: 'pdfHtml5',
+								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
+								exportOptions: {
+									columns: ':visible'
+								}
+							}
+							
+						], 
+						bAutoWidth: false,
+						"aoColumns": [
+						  null, null, null,null, null
+						],
+						"aaSorting": [],
+						//"sScrollY": "500px",
+						//"bPaginate": false,
+						"sScrollX" : "true",
+						//"sScrollX": "300px",
+						//"sScrollXInner": "120%",
+						"bScrollCollapse": true,
+						select: {
+							style: 'multi'
+						}
+				    } );
 					////
 					setTimeout(function() {
-						$("#table1").hide();
-						$("#table2").hide();
-						$("#table3").hide();
+// 						$("#table1").hide();
+// 						$("#table2").hide();
+// 						$("#table3").hide();
 					}, 500);
 				})
 			
