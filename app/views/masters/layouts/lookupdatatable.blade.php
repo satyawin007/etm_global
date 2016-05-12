@@ -177,7 +177,7 @@
 				//alert(val);
 				$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
 				$.ajax({
-			      url: "getpaymentfields?paymenttype="+val,
+			      url: "getmasterspaymentfields?paymenttype="+val,
 			      success: function(data) {
 			    	  $("#addfields").html(data);
 			    	  $('.date-picker').datepicker({

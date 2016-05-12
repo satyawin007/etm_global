@@ -909,22 +909,30 @@ use settings\AppSettingsController;
                         	var formData = new FormData();
                         	formData.append('id', response.id);
                         	formData.append('table', response.table);
-                        	formData.append('billfile', document.getElementById("billfile").files[0]);
-                        	$.ajax({
-                        	    type: "POST",
-                        	    url: "postfile",
-                        	    data: formData,
-                        	    processData: false,
-                        	    contentType: false,
-                        	    success: function(response) {
-                        	        console.log(response);
-                        	    },
-                        	    error: function(errResponse) {
-                        	        console.log(errResponse);
-                        	    }
-                        	});
+                        	var fileName = $("#billfile").val();
+                        	if(fileName != ""){
+	                        	formData.append('billfile', document.getElementById("billfile").files[0]);
+	                        	$.ajax({
+	                        	    type: "POST",
+	                        	    url: "postfile",
+	                        	    data: formData,
+	                        	    processData: false,
+	                        	    contentType: false,
+	                        	    success: function(response1) {
+	                        	    	bootbox.alert(response.message);
+	                        	    	window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
+	                        	    },
+	                        	    error: function(errResponse) {
+	                        	        console.log(errResponse);
+	                        	    }
+	                        	});
+                        	}
+                        	else{
+                        		bootbox.alert(response.message);
+                        		window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
+                        	}
                             
-                        	bootbox.alert(response.message);
+                        	
                         	resetForm("{{$form_info['name']}}");
                         }
                         if(response.status=="fail"){

@@ -43,7 +43,7 @@ class FinanceCompanyController extends \Controller {
 		
 		$form_fields = array();
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;
@@ -111,7 +111,7 @@ class FinanceCompanyController extends \Controller {
 		$entity = \FinanceCompany::where("id","=",$values['id'])->get();
 		if(count($entity)){
 			$entity = $entity[0];
-			$states =  \State::all();
+			$states =  \State::Where("status","=","ACTIVE")->get();
 			$state_arr = array();
 			foreach ($states as $state){
 				$state_arr[$state['id']] = $state->name;
@@ -171,7 +171,7 @@ class FinanceCompanyController extends \Controller {
 		
 		$form_fields = array();
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;

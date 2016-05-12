@@ -605,79 +605,95 @@ class PurchaseOrderController extends \Controller {
 			
 			$form_fields = array();
 			$form_payment_fields= array();
-			$form_field = array("name"=>"creditsupplier", "id"=>"creditsupplier", "value"=>$entity->creditSupplierId, "content"=>"credit supplier", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$credit_sup_arr, "class"=>"form-control chosen-select");
-			$form_fields[] = $form_field;
+			if($entity->type == "PURCHASE ORDER" || $entity->type == "TO CREDIT SUPPLIER REPAIR"){
+				$form_field = array("name"=>"creditsupplier", "id"=>"creditsupplier", "value"=>$entity->creditSupplierId, "content"=>"credit supplier", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$credit_sup_arr, "class"=>"form-control chosen-select");
+				$form_fields[] = $form_field;
+			}
 			$form_field = array("name"=>"warehouse", "id"=>"warehouse", "value"=>$entity->officeBranchId, "content"=>"warehouse", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$warehouse_arr, "class"=>"form-control chosen-select");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"receivedby", "id"=>"receivedby", "value"=>$entity->receivedBy, "content"=>"received by", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
-			$form_fields[] = $form_field;
+			if($entity->type == "PURCHASE ORDER" || $entity->type == "TO CREDIT SUPPLIER REPAIR"){
+				$form_field = array("name"=>"receivedby", "id"=>"receivedby", "value"=>$entity->receivedBy, "content"=>"received by", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+				$form_fields[] = $form_field;
+			}
 			$form_field = array("name"=>"orderdate", "id"=>"orderdate", "value"=> date("d-m-Y",strtotime($entity->orderDate)), "content"=>"order date", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"billnumber", "id"=>"billnumber", "value"=>$entity->billNumber, "content"=>"bill number", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"suspense", "content"=>"suspense", "value"=>$entity->suspense, "readonly"=>"", "required"=>"","type"=>"checkboxslide", "options"=>array("YES"=>" YES","NO"=>" NO"),  "class"=>"form-control");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"billfile", "content"=>"upload bill",  "value"=>$entity->filePath, "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"enableincharge", "id"=>"enableincharge", "content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"incharge", "id"=>"incharge", "value"=>$entity->inchargeId, "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incharges_arr);
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"amountpaid", "id"=>"amountpaid", "value"=>$entity->amountPaid, "content"=>"amount paid", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onChange","script"=>"enablePaymentType(this.value)"), "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
-			$form_fields[] = $form_field;
-			if($entity->amountPaid == "No"){
-				$entity->paymentType = "";
-			}
-			$form_field = array("name"=>"paymenttype", "id"=>"paymenttype", "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD"), "class"=>"form-control");
-			$form_fields[] = $form_field;
-			if($entity->paymentType === "cheque_credit"){
-				$bankacts =  \BankDetails::All();
-				$bankacts_arr = array();
-				foreach ($bankacts as $bankact){
-					$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+			if($entity->type == "PURCHASE ORDER" || $entity->type == "TO CREDIT SUPPLIER REPAIR"){
+				if($entity->type == "TO CREDIT SUPPLIER REPAIR"){
+					$values['bredcum'] = "REPAIRS TO CREDIT SUPPLIER";
 				}
-				$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control",  "options"=>$bankacts_arr);
-				$form_payment_fields[] = $form_field;
-				$form_field = array("name"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"cheque number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
-				$form_payment_fields[] = $form_field;
-				$form_field = array("name"=>"issuedate","value"=>$entity->issueDate, "content"=>"issue date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
-				$form_payment_fields[] = $form_field;
-				$form_field = array("name"=>"transactiondate", "value"=>$entity->transactionDate, "content"=>"transaction date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
-				$form_payment_fields[] = $form_field;
-			}
-			if($entity->paymentType === "cheque_debit"){
-				$bankacts =  \BankDetails::All();
-				$bankacts_arr = array();
-				foreach ($bankacts as $bankact){
-					$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+				$form_field = array("name"=>"billnumber", "id"=>"billnumber", "value"=>$entity->billNumber, "content"=>"bill number", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"suspense", "content"=>"suspense", "value"=>$entity->suspense, "readonly"=>"", "required"=>"","type"=>"checkboxslide", "options"=>array("YES"=>" YES","NO"=>" NO"),  "class"=>"form-control");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"billfile", "content"=>"upload bill",  "value"=>$entity->filePath, "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"enableincharge", "id"=>"enableincharge", "content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"incharge", "id"=>"incharge", "value"=>$entity->inchargeId, "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incharges_arr);
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"amountpaid", "id"=>"amountpaid", "value"=>$entity->amountPaid, "content"=>"amount paid", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onChange","script"=>"enablePaymentType(this.value)"), "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
+				$form_fields[] = $form_field;
+				if($entity->amountPaid == "No"){
+					$entity->paymentType = "";
 				}
-				$form_field = array("name"=>"bankaccount",  "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control",  "options"=>$bankacts_arr);
-				$form_payment_fields[] = $form_field;
-				$form_field = array("name"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"cheque number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
-				$form_payment_fields[] = $form_field;
-				$form_field = array("name"=>"issuedate","value"=>$entity->issueDate, "content"=>"issue date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
-				$form_payment_fields[] = $form_field;
-				$form_field = array("name"=>"transactiondate", "value"=>$entity->transactionDate, "content"=>"transaction date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
-				$form_payment_fields[] = $form_field;
+				$form_field = array("name"=>"paymenttype", "id"=>"paymenttype", "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD"), "class"=>"form-control");
+				$form_fields[] = $form_field;
+				if($entity->paymentType === "cheque_credit"){
+					$bankacts =  \BankDetails::All();
+					$bankacts_arr = array();
+					foreach ($bankacts as $bankact){
+						$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+					}
+					$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control",  "options"=>$bankacts_arr);
+					$form_payment_fields[] = $form_field;
+					$form_field = array("name"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"cheque number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+					$form_payment_fields[] = $form_field;
+					$form_field = array("name"=>"issuedate","value"=>$entity->issueDate, "content"=>"issue date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+					$form_payment_fields[] = $form_field;
+					$form_field = array("name"=>"transactiondate", "value"=>$entity->transactionDate, "content"=>"transaction date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+					$form_payment_fields[] = $form_field;
+				}
+				if($entity->paymentType === "cheque_debit"){
+					$bankacts =  \BankDetails::All();
+					$bankacts_arr = array();
+					foreach ($bankacts as $bankact){
+						$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+					}
+					$form_field = array("name"=>"bankaccount",  "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control",  "options"=>$bankacts_arr);
+					$form_payment_fields[] = $form_field;
+					$form_field = array("name"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"cheque number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+					$form_payment_fields[] = $form_field;
+					$form_field = array("name"=>"issuedate","value"=>$entity->issueDate, "content"=>"issue date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+					$form_payment_fields[] = $form_field;
+					$form_field = array("name"=>"transactiondate", "value"=>$entity->transactionDate, "content"=>"transaction date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+					$form_payment_fields[] = $form_field;
+				}
+				if($entity->paymentType === "dd"){
+					$form_field = array("name"=>"bankname","value"=>$entity->bankName, "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+					$form_payment_fields[] = $form_field;
+					$form_field = array("name"=>"ddnumber","value"=>$entity->ddNumber, "content"=>"dd number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+					$form_payment_fields[] = $form_field;
+					$form_field = array("name"=>"issuedate", "value"=>$entity->issueDate,"content"=>"issue date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+					$form_payment_fields[] = $form_field;
+				}
+				if($entity->paymentType === "ecs" || $entity->paymentType === "neft" || $entity->paymentType === "rtgs"){
+					$form_field = array("name"=>"bankname","value"=>$entity->bankName, "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+					$form_payment_fields[] = $form_field;
+					$form_field = array("name"=>"accountnumber","value"=>$entity->accountNumber, "content"=>"account number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+					$form_payment_fields[] = $form_field;
+				}
+				$form_field = array("name"=>"comments", "id"=>"comments", "value"=>$entity->comments, "content"=>"comments", "readonly"=>"", "required"=>"","type"=>"textarea", "class"=>"form-control ");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"totalamount", "id"=>"totalamount", "value"=>$entity->totalAmount, "content"=>"total amount", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
+				$form_fields[] = $form_field;
 			}
-			if($entity->paymentType === "dd"){
-				$form_field = array("name"=>"bankname","value"=>$entity->bankName, "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
-				$form_payment_fields[] = $form_field;
-				$form_field = array("name"=>"ddnumber","value"=>$entity->ddNumber, "content"=>"dd number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
-				$form_payment_fields[] = $form_field;
-				$form_field = array("name"=>"issuedate", "value"=>$entity->issueDate,"content"=>"issue date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
-				$form_payment_fields[] = $form_field;
+			if($entity->type == "TO WAREHOUSE REPAIR"){
+				$values['bredcum'] = "REPAIRS TO WAREHOUSE";
 			}
-			if($entity->paymentType === "ecs" || $entity->paymentType === "neft" || $entity->paymentType === "rtgs"){
-				$form_field = array("name"=>"bankname","value"=>$entity->bankName, "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
-				$form_payment_fields[] = $form_field;
-				$form_field = array("name"=>"accountnumber","value"=>$entity->accountNumber, "content"=>"account number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
-				$form_payment_fields[] = $form_field;
+			if($entity->type == "TO WAREHOUSE"){
+				$values['bredcum'] = "STOCK MOVED TO WAREHOUSE";
 			}
-			$form_field = array("name"=>"comments", "id"=>"comments", "value"=>$entity->comments, "content"=>"comments", "readonly"=>"", "required"=>"","type"=>"textarea", "class"=>"form-control ");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"totalamount", "id"=>"totalamount", "value"=>$entity->totalAmount, "content"=>"total amount", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
-			$form_fields[] = $form_field;
+			
 			$form_field = array("name"=>"jsondata", "value"=>"", "content"=>"", "readonly"=>"", "required"=>"","type"=>"hidden", "class"=>"form-control ");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"id", "value"=>$entity->id, "content"=>"", "readonly"=>"", "required"=>"required","type"=>"hidden", "class"=>"form-control ");

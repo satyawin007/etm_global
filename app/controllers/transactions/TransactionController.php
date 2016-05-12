@@ -795,7 +795,7 @@ class TransactionController extends \Controller {
 					$branches_arr[$branch->id] = $branch->name;
 				}
 				
-				$states =  \State::all();
+				$states =  \State::Where("status","=","ACTIVE")->get();
 				$state_arr = array();
 				foreach ($states as $state){
 					$state_arr[$state['id']] = $state->name;
@@ -1058,6 +1058,89 @@ class TransactionController extends \Controller {
 		return view::make("transactions.paymentform",array("form_info"=>$form_info));
 	}
 	
+	public function getMastersPaymentFields()
+	{
+		$values = Input::all();
+		$form_fields = array();
+		$form_info = array();
+	
+		if(isset($values["paymenttype"]) && $values["paymenttype"] === "advance"){
+			echo "";
+			return "";
+			/*
+			 $incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+				$incharges_arr = array();
+				foreach ($incharges as $incharge){
+				$incharges_arr[$incharge->id] = $incharge->name;
+				}
+				$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incharges_arr);
+				$form_fields[] = $form_field;
+				$form_info["form_fields"] = $form_fields;
+				*/
+		}
+		if(isset($values["paymenttype"]) && $values["paymenttype"] === ""){
+			echo "";
+			return "";
+		}
+		if(isset($values["paymenttype"]) && $values["paymenttype"] === "cash"){
+			echo "";
+			return "";
+		}
+		if(isset($values["paymenttype"]) && $values["paymenttype"] === "cheque_debit"){
+			$bankacts =  \BankDetails::All();
+			$bankacts_arr = array();
+			foreach ($bankacts as $bankact){
+				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+			}
+			$form_field = array("name"=>"bankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control",  "options"=>$bankacts_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"chequenumber", "content"=>"cheque number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			if(!isset($values["income"])){
+				$form_field = array("name"=>"issuedate", "content"=>"issue date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"transactiondate", "content"=>"transaction date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+				$form_fields[] = $form_field;
+			}
+			$form_info["form_fields"] = $form_fields;
+		}
+		if(isset($values["paymenttype"]) && $values["paymenttype"] === "cheque_credit"){
+			$bankacts =  \BankDetails::All();
+			$bankacts_arr = array();
+			foreach ($bankacts as $bankact){
+				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+			}
+			$form_field = array("name"=>"bankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control",  "options"=>$bankacts_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"chequenumber", "content"=>"cheque number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			if(!isset($values["income"])){
+				$form_field = array("name"=>"issuedate", "content"=>"issue date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"transactiondate", "content"=>"transaction date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+				$form_fields[] = $form_field;
+			}
+			$form_info["form_fields"] = $form_fields;
+		}
+		if(isset($values["paymenttype"]) && $values["paymenttype"] === "dd"){
+			$form_field = array("name"=>"bankname", "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"ddnumber", "content"=>"dd number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"issuedate", "content"=>"issue date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+			$form_fields[] = $form_field;
+			$form_info["form_fields"] = $form_fields;
+		}
+		if(isset($values["paymenttype"]) && ($values["paymenttype"] === "ecs" || $values["paymenttype"] === "neft" || $values["paymenttype"] === "rtgs")){
+			$form_field = array("name"=>"bankname", "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"accountnumber", "content"=>"account number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_info["form_fields"] = $form_fields;
+		}
+		return view::make("masters.layouts.paymentform",array("form_info"=>$form_info));
+	}
+	
 	public function deleteTransaction()
 	{
 		$values = Input::all();
@@ -1117,7 +1200,7 @@ class TransactionController extends \Controller {
 			$branches_arr[$branch->id] = $branch->name;
 		}
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;

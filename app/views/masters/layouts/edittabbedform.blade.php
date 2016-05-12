@@ -36,6 +36,7 @@
 						<form class="form-horizontal" role="form" name="{{$form_info['name']}}" method="post" action="{{$form_info['name']}}" id="{{$form_info['name']}}">
 						<div id="accordion" class="accordion-style1 panel-group">
 							<?php 
+								$i=0;
 								$tabs = $form_info["tabs"];
 								foreach ($tabs as $tab){
 							?>
@@ -114,11 +115,12 @@
 										</div>
 										<?php 
 											}
-										?>								
+										?>
+										<div id="addfields{{$i}}"></div>								
 									</div>
 								</div>
 							</div>
-							<?php }?>
+							<?php $i++; }?>
 						</div>
 						<div class="clearfix form-actions">
 							<div class="col-md-offset-3 col-md-9">
@@ -164,6 +166,23 @@
 			      success: function(data) {
 				      alert(data);
 			    	  $("#branch").html(data);
+			      },
+			      type: 'GET'
+			   });
+			}
+
+			function showPaymentFields(val){
+				//alert(val);
+				$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
+				$.ajax({
+			      url: "getmasterspaymentfields?paymenttype="+val,
+			      success: function(data) {
+			    	  $("#addfields1").html(data);
+			    	  $('.date-picker').datepicker({
+						autoclose: true,
+						todayHighlight: true
+					  });
+			    	  $("#addfields").show();
 			      },
 			      type: 'GET'
 			   });

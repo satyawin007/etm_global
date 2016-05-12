@@ -238,7 +238,7 @@ class TripsController extends \Controller {
 	
 		$form_fields = array();
 	
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;
@@ -397,7 +397,7 @@ class TripsController extends \Controller {
 	
 		$form_fields = array();
 	
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;
@@ -706,7 +706,7 @@ class TripsController extends \Controller {
 			$branches_arr[$branch->id] = $branch->name;
 		}
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;

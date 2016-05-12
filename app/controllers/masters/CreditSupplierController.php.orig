@@ -100,7 +100,7 @@ class CreditSupplierController extends \Controller {
 				$banks_arr [$bank['id']] = $bank->name." - ".$bank->accountNo;
 			}
 			
-			$states =  \State::all();
+			$states =  \State::Where("status","=","ACTIVE")->get();
 			$state_arr = array();
 			foreach ($states as $state){
 				$state_arr[$state['id']] = $state->name;
@@ -167,7 +167,7 @@ class CreditSupplierController extends \Controller {
 		
 		$form_fields = array();
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;

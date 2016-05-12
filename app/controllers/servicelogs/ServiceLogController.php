@@ -88,7 +88,7 @@ class ServiceLogController extends \Controller {
 		
 		$form_fields = array();
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name; 	
@@ -462,13 +462,13 @@ class ServiceLogController extends \Controller {
 		$form_info["bredcum"] = "add servicelog";
 		
 		$form_fields = array();		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state['name'];
 		}
 		
-		$cities =  \City::all();
+		$cities =  \City::Where("status","=","ACTIVE")->get();
 		$citie_arr = array();
 		foreach ($cities as $city){
 			//$citie_arr[$city['id']] = $city['name'];

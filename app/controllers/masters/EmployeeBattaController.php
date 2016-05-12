@@ -43,7 +43,7 @@ class EmployeeBattaController extends \Controller {
 		
 		$form_fields = array();
 		
-		$cities =  \City::all();
+		$cities =  \City::Where("status","=","ACTIVE")->get();
 		$city_arr = array();
 		foreach ($cities as $city){
 			$city_arr[$city['id']] = $city->name;
@@ -123,7 +123,7 @@ class EmployeeBattaController extends \Controller {
 		$entity = \EmployeeBatta::where("id","=",$values['id'])->get();
 		if(count($entity)){
 			$entity = $entity[0];
-			$cities =  \City::all();
+			$cities =  \City::Where("status","=","ACTIVE")->get();
 			$city_arr = array();
 			foreach ($cities as $city){
 				$city_arr[$city['id']] = $city->name;
@@ -198,7 +198,7 @@ class EmployeeBattaController extends \Controller {
 		
 		$form_fields = array();
 		
-		$cities =  \City::all();
+		$cities =  \City::Where("status","=","ACTIVE")->get();
 		$city_arr = array();
 		foreach ($cities as $city){
 			$city_arr[$city['id']] = $city->name;

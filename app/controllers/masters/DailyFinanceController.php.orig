@@ -84,7 +84,7 @@ class DailyFinanceController extends \Controller {
 			$purtype_arr[$purype['value']] = $purype->value;
 		}
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;
@@ -231,7 +231,7 @@ class DailyFinanceController extends \Controller {
 				$veh_arr [$vehicle['id']] = $vehicle->name;
 			}
 			
-			$states =  \State::all();
+			$states =  \State::Where("status","=","ACTIVE")->get();
 			$state_arr = array();
 			foreach ($states as $state){
 				$state_arr[$state['id']] = $state->name;
@@ -253,7 +253,7 @@ class DailyFinanceController extends \Controller {
 				$fincompanies_arr[$fincompany['id']] = $fincompany->name;
 			}
 				
-			$states =  \State::all();
+			$states =  \State::Where("status","=","ACTIVE")->get();
 			$state_arr = array();
 			foreach ($states as $state){
 				$state_arr[$state['id']] = $state->name;
@@ -414,7 +414,7 @@ class DailyFinanceController extends \Controller {
 			$veh_arr [$vehicle['id']] = $vehicle->name;
 		}
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;

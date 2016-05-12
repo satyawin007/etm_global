@@ -317,6 +317,8 @@ Route::any('/deleterepairtransaction', "transactions\RepairTransactionController
 
 Route::get('/getpaymentfields', "transactions\TransactionController@getPaymentFields");
 
+Route::get('/getmasterspaymentfields', "transactions\TransactionController@getMastersPaymentFields");
+
 Route::get('/getfueltransactionfields', "transactions\TransactionController@getFuelTransactionFields");
 
 Route::get('/gettransactionfields', "transactions\TransactionController@getTransactionFields");

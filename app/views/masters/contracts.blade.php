@@ -65,28 +65,28 @@
 			<a href="incometransactions?type=contracts">
 			<button>
 				<i class="ace-icon fa fa-info-circle bigger-300"></i><BR/>
-				&nbsp; &nbsp; &nbsp;  INCOME TRANSACIONS &nbsp; &nbsp; &nbsp; 
+				&nbsp; &nbsp; &nbsp;  INCOME TRANSACTIONS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
 			<?php } if(in_array(455, $jobs)){?>
 			<a href="expensetransactions?type=contracts">
 			<button>
 				<i class="ace-icon fa fa-external-link bigger-300"></i><BR/>
-				&nbsp; &nbsp; &nbsp;  EXPENSE TRANSACIONS &nbsp; &nbsp; &nbsp; 
+				&nbsp; &nbsp; &nbsp;  EXPENSE TRANSACTIONS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
 			<?php } if(in_array(455, $jobs)){?>
 			<a href="fueltransactions?type=contracts">
 			<button>
 				<i class="ace-icon fa fa-flask bigger-300"></i><BR/>
-				&nbsp; &nbsp; &nbsp;  FUEL TRANSACIONS &nbsp; &nbsp; &nbsp; 
+				&nbsp; &nbsp; &nbsp;  FUEL TRANSACTIONS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
 			<?php } if(in_array(456, $jobs)){?>
 			<a href="repairtransactions?type=contracts">
 			<button>
 				<i class="ace-icon fa fa-cogs bigger-300"></i><BR/>
-				&nbsp; &nbsp; &nbsp;  REPAIR TRANSACIONS &nbsp; &nbsp; &nbsp; 
+				&nbsp; &nbsp; &nbsp;  REPAIR TRANSACTIONS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
 			<?php } if(in_array(457, $jobs)){?>

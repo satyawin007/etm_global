@@ -56,7 +56,7 @@ class ParameterController extends \Controller {
 			$actype_arr[$actype['value']] = $actype->value;
 		}
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;
@@ -195,7 +195,7 @@ class ParameterController extends \Controller {
 			$actype_arr [$actype['id']] = $actype->name;
 		}
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;

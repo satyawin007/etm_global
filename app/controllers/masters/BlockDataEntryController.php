@@ -44,7 +44,7 @@ class BlockDataEntryController extends \Controller {
 		
 		$form_fields = array();
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name; 	

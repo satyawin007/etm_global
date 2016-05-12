@@ -80,7 +80,7 @@ class ContractController extends \Controller {
 		
 		$form_fields = array();
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name; 	
@@ -226,7 +226,7 @@ class ContractController extends \Controller {
 	
 		$form_fields = array();
 	
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;
@@ -244,13 +244,13 @@ class ContractController extends \Controller {
 			$form_info['btn_action_type']="edit";
 			
 			$form_fields = array();		
-			$states =  \State::all();
+			$states =  \State::Where("status","=","ACTIVE")->get();
 			$state_arr = array();
 			foreach ($states as $state){
 				$state_arr[$state['id']] = $state['name'];
 			}
 			
-			$cities =  \City::all();
+			$cities =  \City::Where("status","=","ACTIVE")->get();
 			$citie_arr = array();
 			foreach ($cities as $city){
 				$citie_arr[$city['id']] = $city['name'];
@@ -493,13 +493,13 @@ class ContractController extends \Controller {
 		$form_info["bredcum"] = "add contract";
 		
 		$form_fields = array();		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state['name'];
 		}
 		
-		$cities =  \City::all();
+		$cities =  \City::Where("status","=","ACTIVE")->get();
 		$citie_arr = array();
 		foreach ($cities as $city){
 			//$citie_arr[$city['id']] = $city['name'];

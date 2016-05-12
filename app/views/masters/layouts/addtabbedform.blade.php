@@ -41,6 +41,7 @@
 						<div id="accordion" class="accordion-style1 panel-group">
 							<?php 
 								$tabs = $form_info["tabs"];
+								$i=0;
 								foreach ($tabs as $tab){
 							?>
 							<div class="panel panel-default">
@@ -109,15 +110,15 @@
 												</div>			
 											</div>				
 											<?php } ?>
-		
 										</div>
 										<?php 
 											}
-										?>								
+										?>	
+										<div id="addfields{{$i}}"></div>							
 									</div>
 								</div>
 							</div>
-							<?php }?>
+							<?php $i++; }?>
 						</div>
 						<div class="clearfix form-actions">
 							<div class="col-md-offset-3 col-md-9">
@@ -191,6 +192,23 @@
 				      },
 				      type: 'GET'
 				   });
+			}
+
+			function showPaymentFields(val){
+				//alert(val);
+				$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
+				$.ajax({
+			      url: "getmasterspaymentfields?paymenttype="+val,
+			      success: function(data) {
+			    	  $("#addfields1").html(data);
+			    	  $('.date-picker').datepicker({
+						autoclose: true,
+						todayHighlight: true
+					  });
+			    	  $("#addfields").show();
+			      },
+			      type: 'GET'
+			   });
 			}
 			
 

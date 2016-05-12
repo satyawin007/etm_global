@@ -411,7 +411,7 @@ class DataTableController extends \Controller {
 		}
 		else{
 			$entities = \PurchasedOrders::where("purchase_orders.status","ACTIVE")
-						->where("purchase_orders.type","PURCHASE ORDER")
+						->where("purchase_orders.type","=","PURCHASE ORDER")
 						->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
 						->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
 						->leftjoin("employee","employee.id","=","purchase_orders.receivedBy")
@@ -632,7 +632,7 @@ class DataTableController extends \Controller {
 						$action_data = $action_data."<button class='btn btn-minier btn-".$action["css"]."' onclick='".$action["id"]."(".$entity["id"].")' >".strtoupper($action["text"])."</button>&nbsp; &nbsp;" ;
 					}
 					else {
-						$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+						$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&type=repairs&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 					}
 				}
 				$data_values[10] = $action_data;

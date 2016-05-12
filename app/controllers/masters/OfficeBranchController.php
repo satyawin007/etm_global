@@ -69,7 +69,7 @@ class OfficeBranchController extends \Controller {
 		
 		$form_fields = array();
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name; 	
@@ -92,7 +92,7 @@ class OfficeBranchController extends \Controller {
 			$bank_arr[$bank['id']] = $bank->bankName."-".$bank->accountNo;
 		}
 		
-// 		$cities =  \State::all();
+// 		$cities =  \State::Where("status","=","ACTIVE")->get();
 // 		$cities_arr = array();
 // 		foreach ($cities as $city){
 // 			$cities_arr[$city['id']] = $city->name;
@@ -129,10 +129,10 @@ class OfficeBranchController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"bankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"","type"=>"select", "options"=>$bank_arr, "class"=>"form-control chosen-select");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymentexpecteday", "content"=>"payment expected day [1-30]", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
-		$form_fields[] = $form_field;
+// 		$form_field = array("name"=>"bankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"","type"=>"select", "options"=>$bank_arr, "class"=>"form-control chosen-select");
+// 		$form_fields[] = $form_field;
+// 		$form_field = array("name"=>"paymentexpecteday", "content"=>"payment expected day [1-30]", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+// 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"currentbillpaidbyowner", "content"=>"Current Bill paid by Owner", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>array("Yes"=>"Yes","No"=>"No"),  "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"muncipaltaxpaidbyowner", "content"=>"muncipal tax paid by owner", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
@@ -215,7 +215,7 @@ class OfficeBranchController extends \Controller {
 	
 		$form_fields = array();
 	
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;
@@ -245,7 +245,7 @@ class OfficeBranchController extends \Controller {
 		
 		if(count($entity)){
 			$entity = $entity[0];
-			$states =  \State::all();
+			$states =  \State::Where("status","=","ACTIVE")->get();
 			$state_arr = array();
 			foreach ($states as $state){
 				$state_arr[$state['id']] = $state->name;
@@ -310,10 +310,10 @@ class OfficeBranchController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"paymenttype", "id"=>"paymenttype", "value"=>$entity->paymentType,  "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"bank account", "readonly"=>"",  "required"=>"","type"=>"select", "options"=>$bank_arr, "class"=>"form-control");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"paymentexpecteday", "value"=>$entity->paymentExpectedDay, "content"=>"payment expected day [1-30]", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
-			$form_fields[] = $form_field;
+// 			$form_field = array("name"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"bank account", "readonly"=>"",  "required"=>"","type"=>"select", "options"=>$bank_arr, "class"=>"form-control");
+// 			$form_fields[] = $form_field;
+// 			$form_field = array("name"=>"paymentexpecteday", "value"=>$entity->paymentExpectedDay, "content"=>"payment expected day [1-30]", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+// 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"currentbillpaidbyowner", "value"=>$entity->currentBillPaidByOwner, "content"=>"Current Bill paid by Owner", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>array("Yes"=>"Yes","No"=>"No"),  "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"muncipaltaxpaidbyowner", "value"=>$entity->muncipalTaxPaidByOwner, "content"=>"muncipal tax paid by owner", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");

@@ -205,7 +205,7 @@ use Illuminate\Support\Facades\Input;
 														<select class="form-control"   required="" name="state" id="state" onChange="changeState(this.value)" value="{{$sname}}">
 															<option selected="selected" value="">-- Select State --</option>
 															<?php 
-																$states = \State::All();
+																$states = \State::Where("status","=","ACTIVE")->get();
 																foreach ($states as $state){
 																	if($state->name==$sname){
 																		echo "<option value='".$state->id."' selected>".$state->name."</option>";

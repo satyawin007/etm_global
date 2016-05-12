@@ -58,7 +58,7 @@
 											<select class="form-control" name="state" id="state" onChange="changeState(this.value)">
 												<option selected="selected" value="">-- Select State --</option>
 												<?php 
-													$states = \State::All();
+													$states = \State::Where("status","=","ACTIVE")->get();
 													foreach ($states as $state){
 														echo "<option value='".$state->id."'>".$state->name."</option>";
 													}

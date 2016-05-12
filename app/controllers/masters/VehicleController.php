@@ -52,7 +52,7 @@ class VehicleController extends \Controller {
 		$form_info["back_url"] = "vehicles";
 		$form_info["bredcum"] = "add vehicle";
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;
@@ -177,7 +177,7 @@ class VehicleController extends \Controller {
 		$form_info["back_url"] = "vehicles";
 		$form_info["bredcum"] = "edit vehicle";
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;

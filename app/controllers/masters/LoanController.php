@@ -94,7 +94,7 @@ class LoanController extends \Controller {
 			$purtype_arr[$purype['value']] = $purype->value;
 		}
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;
@@ -253,7 +253,7 @@ class LoanController extends \Controller {
 				$fincompanies_arr[$fincompany['id']] = $fincompany->name;
 			}
 				
-			/*$states =  \State::all();
+			/*$states =  \State::Where("status","=","ACTIVE")->get();
 			$state_arr = array();
 			foreach ($states as $state){
 				$state_arr[$state['id']] = $state->name;
@@ -292,8 +292,8 @@ class LoanController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"paymenttype", "value"=>$entity->paymentType, "id"=>"paymenttype", "content"=>"payment type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$type_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"bankaccount", "value"=>$entity->bankAccountId, "id"=>"bankaccount", "content"=>"Bank account", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$banks_arr);
-			$form_fields[] = $form_field;
+// 			$form_field = array("name"=>"bankaccount", "value"=>$entity->bankAccountId, "id"=>"bankaccount", "content"=>"Bank account", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$banks_arr);
+// 			$form_fields[] = $form_field;
 			$form_info["form_fields"] = $form_fields;
 			return View::make("masters.layouts.edit2colform",array("form_info"=>$form_info));
 		}
@@ -407,7 +407,7 @@ class LoanController extends \Controller {
 			$purtype_arr [$purype['name']] = $purype->name;
 		}
 		
-		$states =  \State::all();
+		$states =  \State::Where("status","=","ACTIVE")->get();
 		$state_arr = array();
 		foreach ($states as $state){
 			$state_arr[$state['id']] = $state->name;
@@ -449,8 +449,8 @@ class LoanController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "content"=>"Bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$banks_arr);
-		$form_fields[] = $form_field;
+// 		$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "content"=>"Bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$banks_arr);
+// 		$form_fields[] = $form_field;
 		
 		$form_info["form_fields"] = $form_fields;
 		//return View::make("masters.layouts.add2colform",array("form_info"=>$form_info));
