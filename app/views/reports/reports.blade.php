@@ -158,6 +158,48 @@ use Illuminate\Support\Facades\Input;
 			</div>
 			
 			<div class="col-xs-6 col-sm-3 pricing-box">
+				<div class="widget-box widget-color-blue">
+					<div class="widget-header">
+						<h5 class="widget-title bigger lighter"><a href="#" class="btn btn-block btn-primary">
+								<span>VEHICLE REPORTS</span>
+							</a></h5>
+					</div>
+					<div class="widget-body">
+						<div class="widget-main">
+							<ul class="list-unstyled spaced2">
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=clientvehicletrips"> CLIENT VEHICLE TRIPS REPORT </a>
+								</li>
+	
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=creditsupplier"> CREDIT SUPPLIER REPORT </a>
+								</li>
+	
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="dailyfinancereport"> VEHICLE VERIFICATION REPORT </a>
+								</li>
+								
+								<li>
+									&nbsp;
+								</li>
+								
+								<li>
+									&nbsp;
+								</li>
+							</ul>
+						</div>
+						<div>
+							<a href="#" class="btn btn-block btn-primary">
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-xs-6 col-sm-3 pricing-box">
 				<div class="widget-box widget-color-orange">
 					<div class="widget-header">
 						<h5 class="widget-title bigger lighter"><a href="#" class="btn btn-block btn-warning">SALARY REPORTS</a></h5>
@@ -199,6 +241,13 @@ use Illuminate\Support\Facades\Input;
 				</div>
 			</div>
 			
+			
+			<!-- /section:pages/pricing.large -->
+		</div>
+		
+		<div class="row col-xs-offset-0 col-xs-12">
+			<!-- #section:pages/pricing.large -->
+			
 			<div class="col-xs-6 col-sm-3 pricing-box">
 				<div class="widget-box widget-color-green">
 					<div class="widget-header">
@@ -229,7 +278,8 @@ use Illuminate\Support\Facades\Input;
 								</li>
 								
 								<li>
-									&nbsp;
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=servicelog"> SERVICE LOG DETAILS </a>
 								</li>
 							</ul>
 						</div>
@@ -241,11 +291,8 @@ use Illuminate\Support\Facades\Input;
 					</div>
 				</div>
 			</div>
-			<!-- /section:pages/pricing.large -->
-		</div>
-		
-		<div class="row col-xs-offset-0 col-xs-12">
-			<!-- #section:pages/pricing.large -->
+			
+			
 			
 			<div class="col-xs-6 col-sm-3 pricing-box">
 				<div class="widget-box widget-color-orange">
