@@ -204,6 +204,18 @@
 				<div class="col-xs-3">
 					<input class="btn btn-sm btn-primary" type="button" value="  HISTORY " onclick="getReport3()"/>
 				</div>
+			<?php } else if($form_info['reporttype'] == "servicelog"){?>
+				<div class="col-xs-offset-2 col-xs-3">
+					<input class="btn btn-sm btn-primary" type="button" value="  GENERATE REPORT  " onclick="generateReport()"/>
+				</div>
+								
+				<div class="col-xs-3">
+					<input class="btn btn-sm btn-primary" type="button" value="  VEHICLE SUMMARY  " onclick="getReport2()"/>
+				</div>
+				
+				<div class="col-xs-3">
+					<input class="btn btn-sm btn-primary" type="button" value="  WORKINGDAYS VEHICLE SUMMARY " onclick="getReport3()"/>
+				</div>
 			<?php } else { ?>
 				<div class="col-xs-offset-2 col-xs-3">
 				</div>

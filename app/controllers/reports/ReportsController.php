@@ -199,6 +199,12 @@ class ReportsController extends \Controller {
 		if(isset($values["reporttype"]) && $values["reporttype"] == "vehicleperformance"){
 			return $this->getVehiclePerformance($values);
 		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "clientvehicletrips"){
+			return $this->getClientVehicleTrips($values);
+		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "servicelog"){
+			return $this->getServiceLog($values);
+		}
 	}
 	
 	private function getDailyTransactiosReport($values){
@@ -2604,8 +2610,6 @@ class ReportsController extends \Controller {
 				$qry1 = $qry1." left join lookuptypevalues on creditsuppliertransdetails.repairedItem = lookuptypevalues.id";
 				$qry1 = $qry1." where date between '$frmDt' and '$toDt' and creditsuppliertransdetails.vehicleIds RLIKE '^".$values["vehicle"].",|,".$values["vehicle"].",'";
 				
-// 				echo $qry1;
-// 				die();
 // 				$qry->join("creditsuppliertransdetails","creditsuppliertransactions.id","="," creditsuppliertransdetails.creditSupplierTransId")
 // 					->join("creditsuppliers","creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
 // 					->join("lookuptypevalues","creditsuppliertransdetails.repairedItem","=","lookuptypevalues.id");
@@ -2624,8 +2628,6 @@ class ReportsController extends \Controller {
 // 				$select_args[] = "creditsuppliertransactions.amount as amount";
 			
 				$recs = \DB::select(DB::raw($qry1));
-// 				echo "test";
-// 				die();
 				
 			
 				$veh_arr = array();
@@ -3274,6 +3276,366 @@ class ReportsController extends \Controller {
 		//$values['provider'] = "loginlog";
 	
 		return View::make('reports.vehiclemileagereport', array("values"=>$values));
+	}
+	
+	private function getClientVehicleTrips($values)
+	{
+		if (\Request::isMethod('post'))
+		{
+			//$values["test"];
+			
+			if(!isset($values["fromdate"]) || !isset($values["todate"])){
+				echo json_encode(array("total"=>0, "data"=>array()));
+				return ;
+			}
+			$select_args = array();
+			$select_args[] = "service_logs.serviceDate as serviceDate";
+			$select_args[] = "service_logs.contractVehicleId as contractVehicleId";
+			$select_args[] = "service_logs.tripNumber as tripNumber";
+			$select_args[] = "service_logs.startTime as startTime";
+			$select_args[] = "service_logs.startReading as startReading";
+			$select_args[] = "service_logs.endReading as endReading";
+			$select_args[] = "service_logs.distance as distance";
+			$select_args[] = "service_logs.driver1Id as driver1Id";
+			$select_args[] = "service_logs.driver2Id as driver2Id";
+			$select_args[] = "service_logs.helperId as helperId";
+			$select_args[] = "service_logs.remarks as remarks";
+	
+			$frmdt = date("Y-m-d",strtotime($values["fromdate"]));
+			$todt = date("Y-m-d",strtotime($values["todate"]));
+			$resp = array();
+	
+			$qry=  \ServiceLog::join("contracts","service_logs.contractId","=","contracts.id")
+								->where("contracts.clientId","=",$values["clientname"])
+								->where("contracts.depotId","=",$values["depot"]);
+								
+			
+			$recs = $qry->select($select_args)->orderBy("service_logs.serviceDate","desc")->get();
+			
+			
+			$veh_arr = array();
+			$vehicles = \Vehicle::all();
+			foreach ($vehicles as $vehicle){
+				$veh_arr[$vehicle->id] = $vehicle->veh_reg;
+			}
+			
+			$drivers =  \Employee::where("roleId","=",19)->get();
+			$drivers_arr = array();
+			foreach ($drivers as $driver){
+				
+				$drivers_arr[$driver['id']] = $driver['fullName']." (".$driver->empCode.")";
+				
+			}
+			
+			$helpers =  \Employee::where("roleId","=",20)->get();
+			$helpers_arr = array();
+			foreach ($helpers as $helper){
+					
+				$helpers_arr[$helper['id']] = $helper['fullName']." (".$helper->empCode.")";
+			}
+			
+			$prev_date = "";
+			$prev_veh_no = "";
+			$trip = 1;
+			
+			foreach($recs as  $rec) {
+				if($rec->driver2Id > 0){
+					$rec->driver2Id = $drivers_arr[$rec->driver2Id];
+				}
+				else{
+					$rec->driver2Id = "";
+				}
+				
+				if ($prev_date == date("d-m-Y",strtotime($rec->serviceDate)) && $prev_veh_no == $veh_arr[$rec->contractVehicleId]){
+					$trip++;
+				}
+				if ($prev_date != date("d-m-Y",strtotime($rec->serviceDate))){
+					$trip = 1;
+				}
+				$row = array();
+				$row["serviceDate"] = date("d-m-Y",strtotime($rec->serviceDate));
+				$prev_date = date("d-m-Y",strtotime($rec->serviceDate));
+				$row["contractVehicleId"] = $veh_arr[$rec->contractVehicleId];
+				$prev_veh_no = $veh_arr[$rec->contractVehicleId];
+				$row["tripNumber"] = $trip;
+				$row["startTime"] = $rec->startTime;
+				$row["startReading"] = $rec->startReading;
+				$row["endReading"] = $rec->endReading;
+				$row["distance"] = $rec->distance;
+				$row["driver1Id"] = $drivers_arr[$rec->driver1Id];
+				$row["driver2Id"] = $rec->driver2Id;
+				$row["helperId"] = $helpers_arr[$rec->helperId];
+				$row["remarks"] = $rec->remarks;
+				
+				$resp[] = $row;
+			}
+			echo json_encode($resp);
+			return;
+	
+		}
+		$values['bredcum'] = "CLIENT VEHICLE TRIPS REPORT";
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'loginlog';
+		$values['form_action'] = 'loginlog';
+		$values['action_val'] = '#';
+		$theads = array('service date','vehicle no', "trip number", "start time", "start reading", "end reading", "distance", "driver1", "driver2", "helper", "remarks");
+		$values["theads"] = $theads;
+	
+		//$values["test"];
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "users";
+		$form_info["bredcum"] = "CLIENT VEHICLE TRIPS REPORT";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+	
+		$emp_arr = array();
+		$emp_arr[0] = "All";
+		$emps = \Employee::where("status","=","ACTIVE")->orderby("fullName")->get();
+		foreach ($emps as $emp){
+			$emp_arr[$emp->id] = $emp->fullName;
+		}
+	
+		$clients =  AppSettingsController::getEmpClients();
+		$clients_arr = array();
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+	
+		$form_fields = array();
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_info["form_fields"] = $form_fields;
+		$values['form_info'] = $form_info;
+	
+		$form_info["form_fields"] = array();
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
+		//$values['provider'] = "loginlog";
+	
+		return View::make('reports.clientvehicletripsreport', array("values"=>$values));
+	}
+	
+	private function getServiceLog($values)
+	{
+		if (\Request::isMethod('post'))
+		{
+			//$values["test"];
+				
+			if(!isset($values["fromdate"]) || !isset($values["todate"])){
+				echo json_encode(array("total"=>0, "data"=>array()));
+				return ;
+			}
+			$frmdt = date("Y-m-d",strtotime($values["fromdate"]));
+			$todt = date("Y-m-d",strtotime($values["todate"]));
+			if ($values["reportfor"] == "getreport") {
+			
+				$select_args = array();
+				$select_args[] = "contracts.startDate as startDate";
+				$select_args[] = "contracts.endDate as endDate";
+				$select_args[] = "service_logs.serviceDate as serviceDate";
+				$select_args[] = "service_logs.contractVehicleId as contractVehicleId";
+				$select_args[] = "service_logs.substituteVehicleId as substituteVehicleId";
+				$select_args[] = "service_logs.tripNumber as tripNumber";
+				$select_args[] = "service_logs.startTime as startTime";
+				$select_args[] = "service_logs.startReading as startReading";
+				$select_args[] = "service_logs.endReading as endReading";
+				$select_args[] = "service_logs.distance as distance";
+				$select_args[] = "service_logs.repairkms as repairkms";
+				$select_args[] = "service_logs.driver1Id as driver1Id";
+				$select_args[] = "service_logs.driver2Id as driver2Id";
+				$select_args[] = "service_logs.helperId as helperId";
+				$select_args[] = "service_logs.remarks as remarks";
+		
+				
+				$resp = array();
+		
+				$qry=  \ServiceLog::join("contracts","service_logs.contractId","=","contracts.id")
+				->where("contracts.clientId","=",$values["clientname"])
+				->where("contracts.depotId","=",$values["depot"]);
+		
+					
+				$recs = $qry->select($select_args)->orderBy("service_logs.serviceDate","desc")->get();
+					
+					
+				$veh_arr = array();
+				$vehicles = \Vehicle::all();
+				foreach ($vehicles as $vehicle){
+					$veh_arr[$vehicle->id] = $vehicle->veh_reg;
+				}
+					
+				$drivers =  \Employee::where("roleId","=",19)->get();
+				$drivers_arr = array();
+				foreach ($drivers as $driver){
+		
+					$drivers_arr[$driver['id']] = $driver['fullName']." (".$driver->empCode.")";
+		
+				}
+					
+				$helpers =  \Employee::where("roleId","=",20)->get();
+				$helpers_arr = array();
+				foreach ($helpers as $helper){
+						
+					$helpers_arr[$helper['id']] = $helper['fullName']." (".$helper->empCode.")";
+				}
+					
+				$prev_date = "";
+				$prev_veh_no = "";
+				$trip = 1;
+					
+				foreach($recs as  $rec) {
+					if($rec->driver2Id > 0){
+						$rec->driver2Id = $drivers_arr[$rec->driver2Id];
+					}
+					else{
+						$rec->driver2Id = "";
+					}
+		
+					if ($prev_date == date("d-m-Y",strtotime($rec->serviceDate)) && $prev_veh_no == $veh_arr[$rec->contractVehicleId]){
+						$trip++;
+					}
+					if ($prev_date != date("d-m-Y",strtotime($rec->serviceDate))){
+						$trip = 1;
+					}
+					if ($rec->substituteVehicleId == 0){
+						$rec->substituteVehicleId = "";
+					}
+					else{
+						$rec->substituteVehicleId = $veh_arr[$rec->substituteVehicleId];
+					}
+					$row = array();
+					$row["startDate"] = date("d-m-Y",strtotime($rec->startDate))." to ".date("d-m-Y",strtotime($rec->endDate));
+					$row["serviceDate"] = date("d-m-Y",strtotime($rec->serviceDate));
+					$prev_date = date("d-m-Y",strtotime($rec->serviceDate));
+					$row["contractVehicleId"] = $veh_arr[$rec->contractVehicleId];
+					$prev_veh_no = $veh_arr[$rec->contractVehicleId];
+					$row["substituteVehicleId"] = $rec->substituteVehicleId ;
+					$row["tripNumber"] = $trip;
+					$row["startTime"] = $rec->startTime;
+					$row["startReading"] = $rec->startReading;
+					$row["endReading"] = $rec->endReading;
+					$row["distance"] = $rec->distance;
+					$row["repairkms"] = $rec->repairkms;
+					$row["driver1Id"] = $drivers_arr[$rec->driver1Id];
+					$row["driver2Id"] = $rec->driver2Id;
+					$row["helperId"] = $helpers_arr[$rec->helperId];
+					$row["remarks"] = $rec->remarks;
+		
+					$resp[] = $row;
+				}
+			}
+			else if($values["reportfor"] == "vehiclesummary"){
+				
+				$select_args = array();
+				$select_args[] = "contracts.startDate as startDate";
+				$select_args[] = "contracts.endDate as endDate";
+				$select_args[] = "clients.name as client";
+				$select_args[] = "depots.name as depots";
+				$select_args[] = "service_logs.contractVehicleId as contractVehicleId";
+				$select_args[] = "service_logs.distance as distance";
+				$select_args[] = "service_logs.repairkms as repairkms";
+				
+				$resp = array();
+				
+				$qry=  \ServiceLog::join("contracts","service_logs.contractId","=","contracts.id")
+									->join("clients","contracts.clientId","=","clients.id")
+									->join("depots","contracts.depotId","=","depots.id")
+									->where("contracts.clientId","=",$values["clientname"])
+									->where("contracts.depotId","=",$values["depot"]);
+				
+					
+				$recs = $qry->select($select_args)->orderBy("service_logs.serviceDate","desc")->get();
+					
+					
+				$veh_arr = array();
+				$vehicles = \Vehicle::all();
+				foreach ($vehicles as $vehicle){
+					$veh_arr[$vehicle->id] = $vehicle->veh_reg;
+				}
+					
+					
+				foreach($recs as  $rec) {
+					$row = array();
+					$row["startDate"] = date("d-m-Y",strtotime($rec->startDate))." to ".date("d-m-Y",strtotime($rec->endDate));
+					$row["client"] = $rec->client;
+					$row["depots"] = $rec->depots;
+					$row["contractVehicleId"] = $veh_arr[$rec->contractVehicleId];
+					$row["distance"] = $rec->distance;
+					$row["repairkms"] = $rec->repairkms;
+				
+					$resp[] = $row;
+				}
+					
+			}
+			echo json_encode($resp);
+			return;
+	
+		}
+		$values['bredcum'] = "SERVICE LOG REPORT";
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'loginlog';
+		$values['form_action'] = 'loginlog';
+		$values['action_val'] = '#';
+		$theads1 = array('contract year','service date','vehicle no',"substituteVehicle no", "trip number", "start time", "start reading", "end reading", "distance","Repair KMs", "driver1", "driver2", "helper", "remarks");
+		$values["theads1"] = $theads1;
+		$theads2 = array('contract year','client','client branch',"vehicle no", "distance", "Repair KMs");
+		$values["theads2"] = $theads2;
+	
+		//$values["test"];
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "users";
+		$form_info["bredcum"] = "SERVICE LOG REPORT";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+	
+		$emp_arr = array();
+		$emp_arr[0] = "All";
+		$emps = \Employee::where("status","=","ACTIVE")->orderby("fullName")->get();
+		foreach ($emps as $emp){
+			$emp_arr[$emp->id] = $emp->fullName;
+		}
+	
+		$clients =  AppSettingsController::getEmpClients();
+		$clients_arr = array();
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+	
+		$form_fields = array();
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reportfor", "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_info["form_fields"] = $form_fields;
+		$values['form_info'] = $form_info;
+	
+		$form_info["form_fields"] = array();
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
+		//$values['provider'] = "loginlog";
+	
+		return View::make('reports.servicelogreport', array("values"=>$values));
 	}
 	
 	private function getVehiclePerformance($values)
