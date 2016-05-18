@@ -150,36 +150,6 @@
 					</div>
 				</div>					
 			</div>
-			<div id="table3">
-				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
-					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
-					<div class="clearfix">
-						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
-					</div>
-					<div class="table-header" style="margin-top: 10px;">
-						Results for {{$values['entries']}}				 
-					</div>
-					<!-- div.table-responsive -->
-					<!-- div.dataTables_borderWrap -->
-					<div>
-						<table id="dynamic-table3" class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-								<?php 
-									$theads = $values["theads3"];
-									foreach ($theads as $thead){
-										echo "<th>".strtoupper($thead)."</th>";
-									}
-								?>
-								</tr>
-							</thead>
-							<tbody id="tbody">
-							</tbody>
-						</table>								
-					</div>
-				</div>					
-			</div>
-			
 		</div>
 
 		<?php 
@@ -245,12 +215,7 @@
 			}
 
 			function getReport2(){
-				$("#reportfor").val("vehiclesummary") ;
-				//reporttype = "ticket_corgos_summery";
-				paginate(1);
-			}
-			function getReport3(){
-				$("#reportfor").val("workingdaysvehiclesummary");
+				$("#reportfor").val("summary") ;
 				//reporttype = "ticket_corgos_summery";
 				paginate(1);
 			}
@@ -504,7 +469,6 @@
 
 			var myTable1 = null;
 			var myTable2 = null;
-			var myTable3 = null;
 
 			jQuery(function($) {
 					//initiate dataTables plugin
@@ -536,7 +500,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null,  null, null, null,null,null,null,null,null
+						  null, null, null,  null, null, null,  null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -578,7 +542,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null
+						  null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -593,47 +557,6 @@
 				    } );
 
 
-					myTable3 = $('#dynamic-table3')
-					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
-					.DataTable( {
-						dom: 'Bfrtip',
-						buttons: [
-							{
-								extend:'colvis',
-								text : "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>"
-							},
-							{
-								extend: 'excelHtml5',
-								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							},
-							{
-								extend: 'pdfHtml5',
-								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							}
-							
-						], 
-						bAutoWidth: false,
-						"aoColumns": [
-						  null, null, null,  null, null, null, null, null, null,  null, null, null, null, null, null
-						],
-						"aaSorting": [],
-						//"sScrollY": "500px",
-						//"bPaginate": false,
-						"sScrollX" : "true",
-						//"sScrollX": "300px",
-						//"sScrollXInner": "120%",
-						"bScrollCollapse": true,
-						select: {
-							style: 'multi'
-						}
-				    } );
-					
 					////
 					setTimeout(function() {
 						//$("#table1").hide();

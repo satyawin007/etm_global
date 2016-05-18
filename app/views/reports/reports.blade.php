@@ -278,8 +278,7 @@ use Illuminate\Support\Facades\Input;
 								</li>
 								
 								<li>
-									<i class="ace-icon fa fa-check green"></i>
-									<a target="_blank" href="report?reporttype=servicelog"> SERVICE LOG DETAILS </a>
+									&nbsp;
 								</li>
 							</ul>
 						</div>
@@ -333,6 +332,48 @@ use Illuminate\Support\Facades\Input;
 						</div>
 						<div>
 							<a href="#" class="btn btn-block btn-warning">
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			
+			<div class="col-xs-6 col-sm-3 pricing-box">
+				<div class="widget-box widget-color-blue">
+					<div class="widget-header">
+						<h5 class="widget-title bigger lighter"><a href="#" class="btn btn-block btn-primary">
+								<span>VEHICLE SERVICE REPORTS</span>
+							</a></h5>
+					</div>
+					<div class="widget-body">
+						<div class="widget-main">
+							<ul class="list-unstyled spaced2">
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=servicelog"> SERVICE LOG DETAILS </a>
+								</li>
+	
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=clientholidaysworking"> CLIENT HOLIDAYS WORKING REPORT </a>
+								</li>
+	
+								<li>
+									&nbsp;
+								</li>
+								
+								<li>
+									&nbsp;
+								</li>
+								
+								<li>
+									&nbsp;
+								</li>
+							</ul>
+						</div>
+						<div>
+							<a href="#" class="btn btn-block btn-primary">
 							</a>
 						</div>
 					</div>

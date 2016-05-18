@@ -216,6 +216,14 @@
 				<div class="col-xs-3">
 					<input class="btn btn-sm btn-primary" type="button" value="  WORKINGDAYS VEHICLE SUMMARY " onclick="getReport3()"/>
 				</div>
+			<?php } else if($form_info['reporttype'] == "clientholidaysworking"){?>
+				<div class="col-xs-offset-4 col-xs-3">
+					<input class="btn btn-sm btn-primary" type="button" value="  GENERATE REPORT  " onclick="generateReport()"/>
+				</div>
+								
+				<div class="col-xs-3">
+					<input class="btn btn-sm btn-primary" type="button" value=" SUMMARY  " onclick="getReport2()"/>
+				</div>
 			<?php } else { ?>
 				<div class="col-xs-offset-2 col-xs-3">
 				</div>
