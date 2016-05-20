@@ -462,81 +462,167 @@ class PurchaseOrderController extends \Controller {
 		if (\Request::isMethod('post'))
 		{
 			//$values["sdf"];
-			$url = "editpurchaseorder?id=".$values["id"];
-			$field_names = array("creditsupplier"=>"creditSupplierId","warehouse"=>"officeBranchId","receivedby"=>"receivedBy", "paymenttype"=>"paymentType",
+			if($values["type"] == "repairs"){
+				$url = "editpurchaseorder?&type=repairs&id=".$values["id"];
+				$field_names = array("creditsupplier"=>"creditSupplierId","warehouse"=>"officeBranchId","receivedby"=>"receivedBy", "paymenttype"=>"paymentType",
 						"orderdate"=>"orderDate","billnumber"=>"billNumber","amountpaid"=>"amountPaid","comments"=>"comments","totalamount"=>"totalAmount",
 						"bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate","incharge"=>"inchargeId",
 						"transactiondate"=>"transactionDate", "suspense"=>"suspense","date1"=>"date","accountnumber"=>"accountNumber","bankname"=>"bankName"
-					);
-			$fields = array();
-			foreach ($field_names as $key=>$val){
-				if(isset($values[$key])){
-					if($key == "orderdate" || $key == "date1" || $key == "issuedate" || $key == "transactiondate"){
-						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
-					}
-					else if($key == "suspense"){
-						$sus_vals = array("on"=>"Yes","off"=>"No");
-						$fields[$val] = $sus_vals[$values[$key]];
-					}
-					else{
-						$fields[$val] = $values[$key];
+				);
+				$fields = array();
+				foreach ($field_names as $key=>$val){
+					if(isset($values[$key])){
+						if($key == "orderdate" || $key == "date1" || $key == "issuedate" || $key == "transactiondate"){
+							$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+						}
+						else if($key == "suspense"){
+							$sus_vals = array("on"=>"Yes","off"=>"No");
+							$fields[$val] = $sus_vals[$values[$key]];
+						}
+						else{
+							$fields[$val] = $values[$key];
+						}
 					}
 				}
-			}
-			if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
-				$destinationPath = storage_path().'/uploads/'; // upload path
-				$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension
-				$fileName = uniqid().'.'.$extension; // renameing image
-				Input::file('billfile')->move($destinationPath, $fileName); // upl1oading file to given path
-				$fields["filePath"] = $fileName;
-			}
-			$db_functions_ctrl = new DBFunctionsController();
-			$table = "PurchasedOrders";
-			\DB::beginTransaction();
-			$recid = "";
-			try{
-				$db_functions_ctrl->update($table, $fields, array("id"=>$values["id"]));
-			}
-			catch(\Exception $ex){
-				\Session::put("message","UpdatePurchase order : Operation Could not be completed, Try Again!");
-				\DB::rollback();
-				return \Redirect::to($url);
-			}
-			try{
+				if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
+					$destinationPath = storage_path().'/uploads/'; // upload path
+					$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension
+					$fileName = uniqid().'.'.$extension; // renameing image
+					Input::file('billfile')->move($destinationPath, $fileName); // upl1oading file to given path
+					$fields["filePath"] = $fileName;
+				}
 				$db_functions_ctrl = new DBFunctionsController();
-				$table = "PurchasedItems";
-				$table::where('purchasedOrderId',"=", $values['id'])->update(array("status"=>"DELETED"));
-				
-				$jsonitems = json_decode($values["jsondata"]);
-				
-				foreach ($jsonitems as $jsonitem){
-					$fields = array();
-					$fields["itemId"] = $jsonitem->i7;
-					$fields["manufacturerId"] = $jsonitem->i8;
-					$fields["itemNumbers"] = $jsonitem->i2;
-					$fields["qty"] = $jsonitem->i3;
-					$fields["purchasedQty"] = $jsonitem->i3;
-					$fields["unitPrice"] = $jsonitem->i4;
-					$fields["itemStatus"] = $jsonitem->i5;
-					$fields["status"] = "ACTIVE";
-					if($jsonitem->i6 == "undefined"){
-						$fields["purchasedOrderId"] = $values["id"];
-						$db_functions_ctrl->insert($table, $fields);
+				$table = "PurchasedOrders";
+				\DB::beginTransaction();
+				$recid = "";
+				try{
+					$db_functions_ctrl->update($table, $fields, array("id"=>$values["id"]));
+				}
+				catch(\Exception $ex){
+					\Session::put("message","UpdatePurchase1 order : Operation Could not be completed, Try Again!");
+					\DB::rollback();
+					return \Redirect::to($url);
+				}
+				try{
+					$db_functions_ctrl = new DBFunctionsController();
+					$table = "PurchasedItems";
+					$table::where('purchasedOrderId',"=", $values['id'])->update(array("status"=>"DELETED"));
+						
+					$jsonitems = json_decode($values["jsondata"]);
+						
+					foreach($jsonitems as $jsonitem){
+						$fields = array();
+						$fields["itemId"] = $jsonitem->i9;
+						$fields["manufacturerId"] = $jsonitem->i10;
+						$fields["vehicleId"] = $jsonitem->i11;
+						$fields["qty"] = $jsonitem->i5;
+						$fields["purchasedQty"] = $jsonitem->i5;
+						$fields["itemNumbers"] = $jsonitem->i4;
+						$fields["unitPrice"] = 0;
+						if (isset($jsonitem->i6) && $jsonitem->i6 != "" ){
+							$fields["unitPrice"] = $jsonitem->i6;
+						}
+						$fields["itemStatus"] = $jsonitem->i3;
+						$fields["remarks"] = $jsonitem->i7;
+						
+						if($jsonitem->i12 == "undefined"){
+							$fields["purchasedOrderId"] = $values["id"];
+							$db_functions_ctrl->insert($table, $fields);
+						}
+						else{
+							$data = array("id"=>$jsonitem->i12);
+							$fields["status"] = "ACTIVE";
+							$db_functions_ctrl->update($table, $fields, $data);
+						}
 					}
-					else{
-						$data = array("id"=>$jsonitem->i6);
-						$db_functions_ctrl->update($table, $fields, $data);
+						
+				}
+				catch(\Exception $ex){
+					\Session::put("message","Update Purchase2 Item : Operation Could not be completed, Try Again!");
+					\DB::rollback();
+					return \Redirect::to($url);
+				}
+				\DB::commit();
+				\Redirect::to($url);
+				
+			}
+			else {
+				$url = "editpurchaseorder?id=".$values["id"];
+				$field_names = array("creditsupplier"=>"creditSupplierId","warehouse"=>"officeBranchId","receivedby"=>"receivedBy", "paymenttype"=>"paymentType",
+							"orderdate"=>"orderDate","billnumber"=>"billNumber","amountpaid"=>"amountPaid","comments"=>"comments","totalamount"=>"totalAmount",
+							"bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate","incharge"=>"inchargeId",
+							"transactiondate"=>"transactionDate", "suspense"=>"suspense","date1"=>"date","accountnumber"=>"accountNumber","bankname"=>"bankName"
+						);
+				$fields = array();
+				foreach ($field_names as $key=>$val){
+					if(isset($values[$key])){
+						if($key == "orderdate" || $key == "date1" || $key == "issuedate" || $key == "transactiondate"){
+							$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+						}
+						else if($key == "suspense"){
+							$sus_vals = array("on"=>"Yes","off"=>"No");
+							$fields[$val] = $sus_vals[$values[$key]];
+						}
+						else{
+							$fields[$val] = $values[$key];
+						}
 					}
 				}
-				
+				if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
+					$destinationPath = storage_path().'/uploads/'; // upload path
+					$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension
+					$fileName = uniqid().'.'.$extension; // renameing image
+					Input::file('billfile')->move($destinationPath, $fileName); // upl1oading file to given path
+					$fields["filePath"] = $fileName;
+				}
+				$db_functions_ctrl = new DBFunctionsController();
+				$table = "PurchasedOrders";
+				\DB::beginTransaction();
+				$recid = "";
+				try{
+					$db_functions_ctrl->update($table, $fields, array("id"=>$values["id"]));
+				}
+				catch(\Exception $ex){
+					\Session::put("message","UpdatePurchase order : Operation Could not be completed, Try Again!");
+					\DB::rollback();
+					return \Redirect::to($url);
+				}
+				try{
+					$db_functions_ctrl = new DBFunctionsController();
+					$table = "PurchasedItems";
+					$table::where('purchasedOrderId',"=", $values['id'])->update(array("status"=>"DELETED"));
+					
+					$jsonitems = json_decode($values["jsondata"]);
+					
+					foreach ($jsonitems as $jsonitem){
+						$fields = array();
+						$fields["itemId"] = $jsonitem->i7;
+						$fields["manufacturerId"] = $jsonitem->i8;
+						$fields["itemNumbers"] = $jsonitem->i2;
+						$fields["qty"] = $jsonitem->i3;
+						$fields["purchasedQty"] = $jsonitem->i3;
+						$fields["unitPrice"] = $jsonitem->i4;
+						$fields["itemStatus"] = $jsonitem->i5;
+						$fields["status"] = "ACTIVE";
+						if($jsonitem->i6 == "undefined"){
+							$fields["purchasedOrderId"] = $values["id"];
+							$db_functions_ctrl->insert($table, $fields);
+						}
+						else{
+							$data = array("id"=>$jsonitem->i6);
+							$db_functions_ctrl->update($table, $fields, $data);
+						}
+					}
+					
+				}
+				catch(\Exception $ex){
+					\Session::put("message","Update Purchase Item : Operation Could not be completed, Try Again!");
+					\DB::rollback();
+					return \Redirect::to($url);
+				}
+				\DB::commit();
+				\Redirect::to($url);
 			}
-			catch(\Exception $ex){
-				\Session::put("message","Update Purchase Item : Operation Could not be completed, Try Again!");
-				\DB::rollback();
-				return \Redirect::to($url);
-			}
-			\DB::commit();
-			\Redirect::to($url);
 		}
 		$values['bredcum'] = "EDIT PURCHASE ORDER";
 		$values['home_url'] = '#';
@@ -689,6 +775,10 @@ class PurchaseOrderController extends \Controller {
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"totalamount", "id"=>"totalamount", "value"=>$entity->totalAmount, "content"=>"total amount", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
 				$form_fields[] = $form_field;
+				if($values["type"] == "repairs"){
+					$form_field = array("name"=>"type", "id"=>"type",  "content"=>"type", "value"=>"repairs", "readonly"=>"",  "required"=>"", "type"=>"hidden", "class"=>"form-control");
+					$form_fields[] = $form_field;
+				}
 			}
 			if($entity->type == "TO WAREHOUSE REPAIR"){
 				$values['bredcum'] = "REPAIRS TO WAREHOUSE";
@@ -716,26 +806,62 @@ class PurchaseOrderController extends \Controller {
 				$items_arr[$item->id] = $item->name;
 			}
 			$item_info_arr = array("1"=>"info1","2"=>"info2");
-			$form_fields = array();
-			$form_field = array("name"=>"item", "content"=>"item", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$items_arr, "action"=>array("type"=>"onchange","script"=>"getManufacturers(this.value)"), "class"=>"form-control chosen-select");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"iteminfo", "content"=>"manufacturer", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>array(),  "class"=>"form-control chosen-select");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"quantity", "content"=>"quantity", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"itemnumbers", "content"=>"item numbers", "readonly"=>"readonly", "required"=>"","type"=>"textarea", "placeholder"=>"Enter item numbers as comma(,) separated value without any spaces like 24A4,1B35", "action"=>array("type"=>"onchange","script"=>"validateInput(this.value)"), "class"=>"form-control chosen-select");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"unitprice", "content"=>"price of unit", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"status", "content"=>"status", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>array("New"=>"New","Old"=>"Old"), "class"=>"form-control");
-			$form_fields[] = $form_field;
-			$form_info["form_fields"] = $form_fields;
-			$modals[] = $form_info;
+			
+			
+			if ($values["type"] == "repairs"){
+				$vehicles =  \Vehicle::all();
+				$vehicles_arr = array();
+				foreach ($vehicles as $vehicle){
+					$vehicles_arr[$vehicle['id']] = $vehicle->veh_reg;
+				}
+				
+				$form_fields = array();
+				$form_field = array("name"=>"item1", "id"=>"item1",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getManufacturers(this.value)"), "options"=>$items_arr);
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"iteminfo", "id"=>"iteminfo",  "content"=>"manufacturer", "readonly"=>"readonly",  "required"=>"", "type"=>"select", "options"=>array(), "class"=>"form-control chosen-select");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"itemnumbers1", "id"=>"itemnumbers",  "content"=>"item numbers", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"calItemCountText(this.value)"), "class"=>"form-control");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"qty1", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"unitprice1", "id"=>"unitprice",  "content"=>"unitprice", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"vehicle1", "id"=>"vehicle",  "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"itemstatus1", "id"=>"itemstatus",  "content"=>"item status", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("USED"=>"USED","NEW"=>"NEW"));
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"remarks1", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
+				$form_fields[] = $form_field;
+				$form_info["form_fields"] = $form_fields;
+				$modals[] = $form_info;
+			}
+			else{
+				$form_fields = array();
+				$form_field = array("name"=>"item", "content"=>"item", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$items_arr, "action"=>array("type"=>"onchange","script"=>"getManufacturers(this.value)"), "class"=>"form-control chosen-select");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"iteminfo", "content"=>"manufacturer", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>array(),  "class"=>"form-control chosen-select");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"quantity", "content"=>"quantity", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"itemnumbers", "content"=>"item numbers", "readonly"=>"readonly", "required"=>"","type"=>"textarea", "placeholder"=>"Enter item numbers as comma(,) separated value without any spaces like 24A4,1B35", "action"=>array("type"=>"onchange","script"=>"validateInput(this.value)"), "class"=>"form-control chosen-select");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"unitprice", "content"=>"price of unit", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"status", "content"=>"status", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>array("New"=>"New","Old"=>"Old"), "class"=>"form-control");
+				$form_fields[] = $form_field;
+				$form_info["form_fields"] = $form_fields;
+				$modals[] = $form_info;
+			}
 		
 			$values["provider"] = "purchasedorder";
 		
 			$values["modals"] = $modals;
-			return View::make('inventory.editpurchaseorder', array("values"=>$values));
+			if ($values["type"] == "repairs"){
+				return View::make('inventory.editstockrepairs', array("values"=>$values));
+			}
+			else{
+				return View::make('inventory.editpurchaseorder', array("values"=>$values));
+			}
 		}
 	}
 	

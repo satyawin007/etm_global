@@ -342,6 +342,8 @@
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"qty", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
 	$form_fields[] = $form_field;
+	$form_field = array("name"=>"unitprice", "id"=>"unitprice",  "content"=>"unitprice", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+	$form_fields[] = $form_field;
 	$form_field = array("name"=>"vehicle", "id"=>"vehicle",  "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"itemstatus", "id"=>"itemstatus",  "content"=>"item status", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("USED"=>"USED","NEW"=>"NEW"));
@@ -350,7 +352,7 @@
 	$form_fields[] = $form_field;
 	$form_info = array();
 	$form_info["form_fields"] = $form_fields;
-	$form_info["theads"] = array("ITEM", 'MANUFACTURER', "VEHICLE", "STATUS", "ITEM NUMBERS", "QTY", "REMARKS", "ACTION");
+	$form_info["theads"] = array("ITEM", 'MANUFACTURER', "VEHICLE", "STATUS", "ITEM NUMBERS", "QTY","Unit Price", "REMARKS", "ACTION");
 
 ?>
 @include("inventory.tablerowform",$form_fields);

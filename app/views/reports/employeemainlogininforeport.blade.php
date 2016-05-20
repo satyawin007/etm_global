@@ -99,7 +99,7 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for {{$values['entries']}}				 
+						Results for  USER LOGIN INFORMATION				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -107,70 +107,12 @@
 						<table id="dynamic-table" class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
-								<?php 
-									$theads = $values["theads1"];
-									foreach ($theads as $thead){
-										echo "<th>".strtoupper($thead)."</th>";
-									}
-								?>
-								</tr>
-							</thead>
-							<tbody id="tbody">
-							</tbody>
-						</table>								
-					</div>
-				</div>					
-			</div>
-			<div id="table2">
-				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
-					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
-					<div class="clearfix">
-						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
-					</div>
-					<div class="table-header" style="margin-top: 10px;">
-						Results for {{$values['entries']}}				 
-					</div>
-					<!-- div.table-responsive -->
-					<!-- div.dataTables_borderWrap -->
-					<div>
-						<table id="dynamic-table2" class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-								<?php 
-									$theads = $values["theads2"];
-									foreach ($theads as $thead){
-										echo "<th>".strtoupper($thead)."</th>";
-									}
-								?>
-								</tr>
-							</thead>
-							<tbody id="tbody">
-							</tbody>
-						</table>								
-					</div>
-				</div>					
-			</div>
-			<div id="table3">
-				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
-					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
-					<div class="clearfix">
-						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
-					</div>
-					<div class="table-header" style="margin-top: 10px;">
-						Results for {{$values['entries']}}				 
-					</div>
-					<!-- div.table-responsive -->
-					<!-- div.dataTables_borderWrap -->
-					<div>
-						<table id="dynamic-table3" class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-								<?php 
-									$theads = $values["theads3"];
-									foreach ($theads as $thead){
-										echo "<th>".strtoupper($thead)."</th>";
-									}
-								?>
+									<td>EMPID</td>
+									<td>EMPLOYEE NAME</td>
+									<td>IP ADDRESS</td>
+									<td>LOGIN DATE</td>
+									<td>LOGIN TIME</td>
+									<td>LOGOUT TIME</td>
 								</tr>
 							</thead>
 							<tbody id="tbody">
@@ -239,22 +181,9 @@
 			reporttype = "";
 
 			function generateReport(){
-				$("#reportfor").val("getreport") ;
-				//reporttype = "ticket_corgos_summery";
+				reporttype = "ticket_corgos_summery";
 				paginate(1);
 			}
-
-			function getReport2(){
-				$("#reportfor").val("vehiclesummary") ;
-				//reporttype = "ticket_corgos_summery";
-				paginate(1);
-			}
-			function getReport3(){
-				$("#reportfor").val("workingdaysvehiclesummary");
-				//reporttype = "ticket_corgos_summery";
-				paginate(1);
-			}
-			
 
 			function changeDepot(val){
 				$.ajax({
@@ -270,30 +199,10 @@
 				depotId = $("#depot").val();
 			}
 
-			function getFormData(val){
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-				$.ajax({
-			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
-			      success: function(data) {
-			    	  $("#vehicle").html(data);
-			    	  $('.chosen-select').trigger("chosen:updated");
-			      },
-			      type: 'GET'
-			   });
-			   //myTable1.ajax.url("getservicelogsdatatabledata?name=servicelogs&clientid="+clientId+"&depotid="+depotId).load();
-			}
-
 			function paginate(page){
-
-				reporttype = $("#reportfor").val();
-				if(clientname == ""){
-					alert("select clientname");
-					return;
-				}
-				depot = $("#depot").val();
-				if(depot == ""){
-					alert("select depot");
+				reporttype = $("#incharge").val();
+				if(reporttype == ""){
+					alert("select incharge");
 					return;
 				}
 				fdt = $("#fromdate").val();
@@ -308,7 +217,7 @@
 					return;
 				}
 				dt = fdt+" - "+tdt;	
-				var form = $("#getreport");
+				var form=$("#getreport");
 				/* alert(fdt);
 				alert(tdt);
 				alert(empname); */
@@ -331,35 +240,10 @@
 				            }
 				            arr.push(row);
 			        	}
-			           if(reporttype == "getreport"){
-							myTable1.clear().draw();
-							myTable1.rows.add(arr); // Add new data
-							myTable1.columns.adjust().draw(); // Redraw 
-							$("#table1").show();
-							$("#table2").hide();
-							$("#table3").hide();
-							//$("#table3").hide();
-							/* if(refresh1 == 0){
-								refresh1 = 1;
-								myTable1.draw();
-							}	 */	
-			        	}
-			           else if(reporttype == "vehiclesummary"){
-			        	    myTable2.clear().draw();
-							myTable2.rows.add(arr); // Add new data
-							myTable2.columns.adjust().draw(); // Redraw 
-							$("#table1").hide();
-							$("#table2").show();
-							$("#table3").hide();
-			           }
-			           else if(reporttype == "workingdaysvehiclesummary"){
-			        	    myTable3.clear().draw();
-							myTable3.rows.add(arr); // Add new data
-							myTable3.columns.adjust().draw(); // Redraw 
-							$("#table1").hide();
-							$("#table2").hide();
-							$("#table3").show();
-			           }
+						myTable1.clear().draw();
+						myTable1.rows.add(arr); // Add new data
+						myTable1.columns.adjust().draw(); // Redraw 
+						$("#table1").show();
 						
 						/* var data2 = json["data2"];
 			            var arr1 = [];
@@ -504,7 +388,6 @@
 
 			var myTable1 = null;
 			var myTable2 = null;
-			var myTable3 = null;
 
 			jQuery(function($) {
 					//initiate dataTables plugin
@@ -526,7 +409,6 @@
 							},
 							{
 								extend: 'pdfHtml5',
-								orientation: 'landscape',
 								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
 								exportOptions: {
 									columns: ':visible'
@@ -536,7 +418,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null,  null, null, null,null,null,null,null,null
+						  null, null, null,  null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -578,49 +460,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null
-						],
-						"aaSorting": [],
-						//"sScrollY": "500px",
-						//"bPaginate": false,
-						"sScrollX" : "true",
-						//"sScrollX": "300px",
-						//"sScrollXInner": "120%",
-						"bScrollCollapse": true,
-						select: {
-							style: 'multi'
-						}
-				    } );
-
-
-					myTable3 = $('#dynamic-table3')
-					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
-					.DataTable( {
-						dom: 'Bfrtip',
-						buttons: [
-							{
-								extend:'colvis',
-								text : "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>"
-							},
-							{
-								extend: 'excelHtml5',
-								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							},
-							{
-								extend: 'pdfHtml5',
-								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							}
-							
-						], 
-						bAutoWidth: false,
-						"aoColumns": [
-						  null, null, null,  null, null, null, null, null, null,  null, null, null, null, null, null
+						  null, null, null,  null, null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",

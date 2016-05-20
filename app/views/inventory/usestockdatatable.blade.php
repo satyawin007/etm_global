@@ -630,6 +630,7 @@
 
 			var count = 0;
 			function getItems(val){
+				
 				$("#repairbuttons").hide();
 				$("#repairreturnbuttons").hide();
 				action = $("#action").val();
@@ -673,7 +674,7 @@
 
 						if(val=="TO CREDIT SUPPLIER"){
 							ids = ["item", 'manufacturer', "vehicle", "itemstatus"];
-							vars = ["itemnumbers", "qty", "remarks"];
+							vars = ["itemnumbers", "qty", "unitprice","remarks"];
 							entities_text = [];
 							entities = [];
 							exe_recs_text = [];
@@ -1360,12 +1361,22 @@
 				//alert("indraw Table: "+entities_text.length);
 				table_data = "";
 				comArr = entities_text;
+				total = 0;
+				$("#totalamount").val("0");
 				for(i=0; i<entities_text.length; i++){
 					table_data = table_data+"<tr>";
 					ids.forEach(function(entry) {
 						table_data = table_data+"<td>"+entities_text[i][entry]+"</td>"
 					});
 					vars.forEach(function(entry) {
+						qty = 0;
+						if(entry == "unitprice"){
+							total = $("#totalamount").val();
+							total = Number(total) + (Number(entities_text[i][entry]) * Number(entities_text[i]['qty']));
+							alert(total);
+							$("#totalamount").val(total);
+							$("#totalamount").attr("disabled", true); 
+						}
 						table_data = table_data+"<td>"+entities_text[i][entry]+"</td>"
 					});
 					table_data = table_data+"<td>"+

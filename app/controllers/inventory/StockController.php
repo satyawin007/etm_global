@@ -361,15 +361,18 @@ class StockController extends \Controller {
 						$fields["purchasedOrderId"] = $recid;
 						$fields["itemId"] = $json_obj->item;
 						$fields["manufacturerId"] = $json_obj->manufacturer;
+						$fields["vehicleId"] = $json_obj->vehicle;
 						$fields["qty"] = $json_obj->qty;
 						$fields["purchasedQty"] = $json_obj->qty;
 						$fields["itemNumbers"] = $json_obj->itemnumbers;
 						$fields["unitPrice"] = 0;
+						if (isset($json_obj->unitprice) && $json_obj->unitprice != "" ){
+							$fields["unitPrice"] = $json_obj->unitprice;
+						}
 						$fields["itemStatus"] = $json_obj->itemstatus;
 						$fields["remarks"] = $json_obj->remarks;
 						$db_functions_ctrl->insert($table, $fields);
 					}
-					
 				}
 				catch(\Exception $ex){
 					\DB::rollback();
