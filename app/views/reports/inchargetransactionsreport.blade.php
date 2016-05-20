@@ -141,6 +141,7 @@
 									<td>REPORTED TO BRANCH</td>
 									<td>EXPENSE DATE</td>
 									<td>AMOUNT</td>
+									<td>TYPE</td>
 									<td>PURPOSE</td>
 									<td>PAID TO</td>
 									<td>COMMENTS</td>
@@ -474,7 +475,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null, null
+						  null, null, null, null, null, null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
