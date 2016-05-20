@@ -194,6 +194,7 @@
 				$("#depot1").val(depotId);
 				$("#vehicle1").val(vehicleId);
 				$("#pendingdates1").val(pendingDates);
+				$("#customdate1").val(customDate);
 				$("#comments1").val(comments);
 				$("#status1 option").each(function() { this.selected = (this.text == status); });
 				$("#deleted1 option").each(function() { this.selected = (this.text == deleted); });

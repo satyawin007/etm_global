@@ -503,7 +503,7 @@ class EmployeeController extends \Controller {
 	{
 		$empCode = \Employee::orderBy('id', 'desc')->first();
 		$empCode = $empCode->empCode;
-		$empCode = "MST".(substr($empCode, 3)+1);
+		$empCode = "GT".(substr($empCode, 3)+1);
 		echo $empCode;
 	}
 	

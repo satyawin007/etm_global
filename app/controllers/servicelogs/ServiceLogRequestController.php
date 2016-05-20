@@ -383,6 +383,8 @@ class ServiceLogRequestController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"pendingdates1", "content"=>"pending dates", "readonly"=>"readonly",  "required"=>"required", "type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
+		$form_field = array("name"=>"customdate1", "content"=>"custom date", "readonly"=>"readonly",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
 		$form_field = array("name"=>"comments1", "content"=>"comments", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"status1", "value"=>"", "content"=>"status", "readonly"=>"", "value"=>"", "required"=>"", "type"=>"select", "options"=>array("Requested"=>"Requested","Open"=>"Open","Close"=>"Close"), "class"=>"form-control");

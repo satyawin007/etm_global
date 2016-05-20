@@ -987,6 +987,42 @@
 					return;
 				}
 
+				var item = $("#item").val();
+				if(item != undefined && item ==""){
+					alert("Please select item");
+					return false;
+				}
+
+				var fromvehicleno = $("#fromvehicleno").val();
+				if(fromvehicleno != undefined && fromvehicleno ==""){
+					alert("Please select fromvehicleno");
+					return false;
+				}
+
+				var tovehicleno = $("#tovehicleno").val();
+				if(tovehicleno != undefined && tovehicleno ==""){
+					alert("Please select tovehicleno");
+					return false;
+				}
+
+				var fromaction = $("#fromaction").val();
+				if(fromaction != undefined && fromaction ==""){
+					alert("Please select fromaction");
+					return false;
+				}
+
+				var toaction = $("#toaction").val();
+				if(toaction != undefined && toaction ==""){
+					alert("Please select toaction");
+					return false;
+				}
+
+				var usedqty = $("#usedqty").val();
+				if(usedqty != undefined && usedqty ==""){
+					alert("Please select usedqty");
+					return false;
+				}
+
 				var creditsupplier = $("#creditsupplier").val();
 				if(creditsupplier != undefined && creditsupplier ==""){
 					alert("Please select creditsupplier");

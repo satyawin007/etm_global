@@ -1287,6 +1287,8 @@ class TransactionController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"fuelstationname", "content"=>"fuel station name", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$fuelstations_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
+		$form_field = array("name"=>"previousreading", "content"=>"previous reading", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control number");
+		$form_fields[] = $form_field;
 		$form_field = array("name"=>"startreading", "content"=>"start reading", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"litres", "content"=>"litres", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");

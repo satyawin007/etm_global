@@ -256,7 +256,7 @@
 							$scope[entry] = text;
 						}
 					});	
-					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" ||  typeof $scope.servicedate === "undefined" ||$scope.driver1 === "" || $scope.vehicle === "" || $scope.servicedate === "") {
+					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" ||  typeof $scope.servicedate === "undefined" || typeof $scope.endreading === "undefined" || $scope.driver1 === "" || $scope.vehicle === "" || $scope.servicedate === "" || $scope.endreading == "") {
 						return;
 					}
 					$scope.distance = $("#distance").val();	
@@ -539,6 +539,10 @@
 			      url: url,
 			      success: function(data) {
 			    	  data = JSON.parse(data);
+			    	  if(data[0] == "0"){
+				    	  alert("Please Set start meeter reading for the vehicle");
+				    	  location.reload();
+			    	  }
 			    	  $("#startreading").val(data[0]);
 			    	  $("#servicedate").html(data[1]);
 			    	  angular.element('#myCtrl').scope().exe_recs_text =  data[2];
@@ -646,6 +650,7 @@
 				$('#endreading').on('change', function() { 
 					if($('#endreading').val()<$('#startreading').val()){
 						alert("End Reading must be greater than Start Reading");
+						$('#endreading').val("");
 						return;
 					}
 					dist = $('#endreading').val()-$('#startreading').val();
@@ -656,6 +661,7 @@
 				$('#endreading1').on('change', function() { 
 					if($('#endreading1').val()<$('#startreading1').val()){
 						alert("End Reading must be greater than Start Reading");
+						$('#endreading1').val("");
 						return;
 					}
 					dist = $('#endreading1').val()-$('#startreading1').val();

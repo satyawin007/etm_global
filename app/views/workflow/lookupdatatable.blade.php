@@ -204,6 +204,7 @@
                    function(data) {
                        json_obj = JSON.parse(data);
                        bootbox.alert(json_obj.message);
+                       window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
                    }
                 );
 				return false;

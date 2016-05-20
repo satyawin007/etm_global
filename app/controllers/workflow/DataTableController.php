@@ -282,9 +282,14 @@ private function getVehicleRepairs($values, $length, $start){
 							->leftjoin("clients", "clients.id","=","contracts.clientId")
 							->leftjoin("depots", "depots.id","=","contracts.depotId");							
 			$entities =    $qry->select($select_args)->limit($length)->groupBy("id")->offset($start)->get();
-			$total = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No")
-							->leftjoin("creditsuppliertransdetails", "creditsuppliertransdetails.creditSupplierTransId","=","creditsuppliertransactions.id")
-							->where("contractId","!=","")->count();
+			
+			$qry =  \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No");
+							if($values["logstatus"] != "All"){
+								$qry->where("creditsuppliertransactions.workFlowStatus","=",$values["logstatus"]);
+							}
+							$qry->where("creditsuppliertransdetails.status","=","ACTIVE");
+							$qry->leftjoin("creditsuppliertransdetails", "creditsuppliertransdetails.creditSupplierTransId","=","creditsuppliertransactions.id");
+			$total = $qry->groupBy("creditsuppliertransactions.id")->count();
 			foreach ($entities as $entity){
 				$entity["clientname"] = $entity["depotname"]." (".$entity["clientname"].")";
 			}

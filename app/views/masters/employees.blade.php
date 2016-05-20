@@ -19,7 +19,7 @@
 
 	@section('bredcum')	
 		<small>
-			ADMINISTRATION test
+			ADMINISTRATION
 			<i class="ace-icon fa fa-angle-double-right"></i>
 			MASTERS
 			<i class="ace-icon fa fa-angle-double-right"></i>

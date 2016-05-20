@@ -1625,6 +1625,7 @@ class ReportsController extends \Controller {
 					$row["name"] = $inchargetransaction->name;
 					$resp[] = $row;
 				}
+				
 				$select_args = array();
 				$select_args[] = "officebranch.name as branch";
 				$select_args[] = "expensetransactions.amount as amount";
@@ -1648,7 +1649,193 @@ class ReportsController extends \Controller {
 					$resp[] = $row;
 				}
 				
-				DB::statement(DB::raw("CALL incharge_transaction_report('".$frmDt."', '".$toDt."');"));
+				$select_args = array();
+				$select_args[] = "officebranch.name as branch";
+				$select_args[] = "expensetransactions.amount as amount";
+				$select_args[] = "expensetransactions.date as date";
+				$select_args[] = "lookuptypevalues.name as lookupName";
+				$select_args[] = "expensetransactions.remarks as remarks";
+				$select_args[] = "employee.fullName as name";
+				$select_args[] = "clients.name as clientName";
+				$select_args[] = "depots.name as depotName";
+				$select_args[] = "expensetransactions.branchId as branchId";
+				$select_args[] = "expensetransactions.lookupValueId as lookupValueId";
+				$select_args[] = "expensetransactions.entity as entity";
+				$select_args[] = "expensetransactions.entityValue as entityValue";
+				
+				$inchargetransactions = \ExpenseTransaction::leftjoin("officebranch","officebranch.id","=","expensetransactions.branchId")
+								->leftjoin("employee","employee.id","=","expensetransactions.createdBy")
+								->leftjoin("lookuptypevalues","lookuptypevalues.id","=","expensetransactions.lookupValueId")
+								->leftjoin("contracts","contracts.id","=","expensetransactions.contractId")
+								->leftjoin("clients","contracts.clientId","=","clients.id")
+								->leftjoin("depots","contracts.depotId","=","depots.id")
+								->where("inchargeId","=",$values["incharge"])
+								->where("lookupValueId","!=",251)
+								->whereBetween("date",array($frmDt,$toDt))
+								->OrderBy("date")->select($select_args)->get() ;
+				foreach ($inchargetransactions as $inchargetransaction){
+					$row = array();
+					$row["branch"] = $inchargetransaction->branch;
+					if($inchargetransaction->branchId == 0){
+						$row["branch"] = $inchargetransaction->depotName."(".$inchargetransaction->clientName.")";
+					}
+					$row["date"] = date("d-m-Y",strtotime($inchargetransaction->date));
+					$row["amount"] = $inchargetransaction->amount;
+					$row["type"] =  "<span style='color:red;'>EXPENSE TRANSACTION</span>";
+					$row["purpose"] =  $inchargetransaction->lookupName;
+					
+					if($inchargetransaction->lookupValueId==999){
+						if($inchargetransaction->entityValue>0){
+							$prepaidName = \LookupTypeValues::where("id","=",$inchargetransaction->entityValue)->first();
+							$prepaidName = $prepaidName->name;
+							$row["purpose"] = strtoupper($inchargetransaction->entity)." - ".$prepaidName;
+						}
+						else{
+							$row["purpose"] = strtoupper($inchargetransaction->entity);
+						}
+					}
+					else if($inchargetransaction->lookupValueId==998){
+						if($inchargetransaction->entityValue>0){
+							$creditsupplier = \CreditSupplier::where("id","=",$inchargetransaction->entityValue)->first();
+							$creditsupplier = $creditsupplier->supplierName;
+							$row["purpose"] = strtoupper($inchargetransaction->entity)." - ".$creditsupplier;
+						}
+						else{
+							$row["purpose"] = strtoupper($inchargetransaction->entity);
+						}
+					}
+					else if($inchargetransaction->lookupValueId==997){
+						if($inchargetransaction->entityValue>0){
+							$fuelstation = \FuelStation::where("id","=",$inchargetransaction->entityValue)->first();
+							$fuelstation = $fuelstation->name;
+							$row["purpose"] = strtoupper($inchargetransaction->entity)." - ".$fuelstation;
+						}
+						else{
+							$row["purpose"] = strtoupper($inchargetransaction->entity);
+						}
+					}
+					else if($inchargetransaction->lookupValueId==991){
+						if($inchargetransaction->entityValue>0){
+							$dfid = \DailyFinance::where("id","=",$inchargetransaction->entityValue)->first();
+							$dfid = $dfid->financeCompanyId;
+							$finanacecompany = \FinanceCompany::where("id","=",$dfid)->first();
+							$finanacecompany = $finanacecompany->name;
+							$row["purpose"] = strtoupper($inchargetransaction->entity)." - ".$finanacecompany;
+						}
+						else{
+							$row["purpose"] = strtoupper($inchargetransaction->entity);
+						}
+					}
+					
+					$row["remarks"] = $inchargetransaction->remarks;
+					$row["name"] = $inchargetransaction->name;
+					$resp2[] = $row;
+					
+				}
+				
+				$select_args = array();
+				$select_args[] = "officebranch.name as branch";
+				$select_args[] = "fueltransactions.amount as amount";
+				$select_args[] = "fueltransactions.filledDate as date";
+				$select_args[] = "fuelstationdetails.name as stationName";
+				$select_args[] = "fueltransactions.remarks as remarks";
+				$select_args[] = "employee.fullName as name";
+				$select_args[] = "fueltransactions.branchId as branchId";
+				$select_args[] = "fueltransactions.contractId as contractId";
+				$select_args[] = "clients.name as clientName";
+				$select_args[] = "depots.name as depotName";
+				$select_args[] = "vehicle.veh_reg as veh_reg";
+				
+				$inchargetransactions = \FuelTransaction::leftjoin("officebranch","officebranch.id","=","fueltransactions.branchId")
+								->leftjoin("fuelstationdetails","fuelstationdetails.id","=","fueltransactions.fuelStationId")
+								->leftjoin("employee","employee.id","=","fueltransactions.createdBy")
+								->leftjoin("contracts","contracts.id","=","fueltransactions.contractId")
+								->leftjoin("clients","contracts.clientId","=","clients.id")
+								->leftjoin("depots","contracts.depotId","=","depots.id")
+								->leftjoin("vehicle","vehicle.id","=","fueltransactions.vehicleId")
+								->where("inchargeId","=",$values["incharge"])
+								->whereBetween("filledDate",array($frmDt,$toDt))
+								->OrderBy("filledDate")->select($select_args)->get() ;
+				foreach ($inchargetransactions as $inchargetransaction){
+					$row = array();
+					$row["branch"] = $inchargetransaction->branch;
+					if($inchargetransaction->branchId == 0){
+						$row["branch"] = $inchargetransaction->depotName."(".$inchargetransaction->clientName.")";
+					}
+					$row["date"] = date("d-m-Y",strtotime($inchargetransaction->date));
+					$row["amount"] = $inchargetransaction->amount;
+					$row["type"] =  "<span style='color:red;'>FUEL TRANSACTION &nbsp; (".$inchargetransaction->veh_reg.")</span>";
+					$row["purpose"] =  $inchargetransaction->stationName;
+					$row["remarks"] = $inchargetransaction->remarks;
+					$row["name"] = $inchargetransaction->name;
+					$resp2[] = $row;
+				}
+				
+				$select_args = array();
+				$select_args[] = "officebranch.name as branch";
+				$select_args[] = "creditsuppliertransactions.amount as amount";
+				$select_args[] = "creditsuppliertransactions.date as date";
+				$select_args[] = "creditsuppliers.supplierName as stationName";
+				$select_args[] = "creditsuppliertransactions.comments as comments";
+				$select_args[] = "employee.fullName as name";
+				$select_args[] = "creditsuppliertransactions.branchId as branchId";
+				$select_args[] = "creditsuppliertransactions.contractId as contractId";
+				$select_args[] = "clients.name as clientName";
+				$select_args[] = "depots.name as depotName";
+				
+				$inchargetransactions = \CreditSupplierTransactions::leftjoin("officebranch","officebranch.id","=","creditsuppliertransactions.branchId")
+								->leftjoin("creditsuppliers","creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
+								->leftjoin("employee","employee.id","=","creditsuppliertransactions.createdBy")
+								->leftjoin("contracts","contracts.id","=","creditsuppliertransactions.contractId")
+								->leftjoin("clients","contracts.clientId","=","clients.id")
+								->leftjoin("depots","contracts.depotId","=","depots.id")
+								->where("inchargeId","=",$values["incharge"])
+								->whereBetween("date",array($frmDt,$toDt))
+								->OrderBy("date")->select($select_args)->get() ;
+				foreach ($inchargetransactions as $inchargetransaction){
+					$row = array();
+					$row["branch"] = $inchargetransaction->branch;
+					if($inchargetransaction->branchId == 0){
+						$row["branch"] = $inchargetransaction->depotName."(".$inchargetransaction->clientName.")";
+					}
+					$row["date"] = date("d-m-Y",strtotime($inchargetransaction->date));
+					$row["amount"] = $inchargetransaction->amount;
+					$row["type"] =  "<span style='color:red;'>REPAIR TRANSACTION</span>";
+					$row["purpose"] =  $inchargetransaction->stationName;
+					$row["remarks"] = $inchargetransaction->comments;
+					$row["name"] = $inchargetransaction->name;
+					$resp2[] = $row;
+				}
+				
+				$select_args = array();
+				$select_args[] = "officebranch.name as branch";
+				$select_args[] = "purchase_orders.totalAmount as amount";
+				$select_args[] = "purchase_orders.orderDate as date";
+				$select_args[] = "creditsuppliers.supplierName as stationName";
+				$select_args[] = "purchase_orders.comments as comments";
+				$select_args[] = "employee.fullName as name";
+				$select_args[] = "purchase_orders.type as type";
+				
+				$inchargetransactions = \PurchasedOrders::leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
+								->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+								->leftjoin("employee","employee.id","=","purchase_orders.createdBy")
+								->where("inchargeId","=",$values["incharge"])
+								->whereIn("type",array("TO CREDIT SUPPLIER REPAIR", "PURCHASE ORDER"))
+								->whereBetween("orderDate",array($frmDt,$toDt))
+								->OrderBy("orderDate")->select($select_args)->get() ;
+				foreach ($inchargetransactions as $inchargetransaction){
+					$row = array();
+					$row["branch"] = $inchargetransaction->branch;
+					$row["date"] = date("d-m-Y",strtotime($inchargetransaction->date));
+					$row["amount"] = $inchargetransaction->amount;
+					$row["type"] =  "<span style='color:red;'>".$inchargetransaction->type."</span>";
+					$row["purpose"] =  $inchargetransaction->stationName;
+					$row["remarks"] = $inchargetransaction->comments;
+					$row["name"] = $inchargetransaction->name;
+					$resp2[] = $row;
+				}
+				
+ 				/* DB::statement(DB::raw("CALL incharge_transaction_report('".$frmDt."', '".$toDt."');"));
 				$recs = DB::select( DB::raw("SELECT *,temp_incharge_transaction.name as purpose, temp_incharge_transaction.createdBy as createdBy, officebranch.name as branchname FROM `temp_incharge_transaction` left join officebranch on officebranch.id=temp_incharge_transaction.branchId where inchargeId='".$values["incharge"]."'"));
 				foreach ($recs as $rec){
 					$row = array();
@@ -1714,7 +1901,7 @@ class ReportsController extends \Controller {
 					$row["remarks"] =$rec->remarks;
 					$row["name"] = $rec->createdBy;
 					$resp2[] = $row;
-				}
+				} */
 			}
 			$resp_json = array("data1"=>$resp,"data2"=>$resp2,"total_expenses"=>$totexpenses);
 			echo json_encode($resp_json);

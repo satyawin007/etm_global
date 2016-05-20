@@ -101,23 +101,23 @@
 										</div>
 									</div>
 									<div class="form-group">
-										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Email Address <span style="color:red;">*</span> </label>
+										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Email Address <span style="color:red;"></span> </label>
 										<div class="col-xs-8">
-											<input type="email" id="email"   required="required" name="email" onchange="verifyEmail(this.value)" class="form-control">
+											<input type="email" id="email"   required="true" name="email" readonly="readonly" onchange="verifyEmail(this.value)" class="form-control">
 										</div>
 									</div>
 									<div class="form-group">
-										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Password <span style="color:red;">*</span> </label>
+										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Password <span style="color:red;"></span> </label>
 										<div class="col-xs-8">
-											<input type="password"   required="required" id="password" name="password" class="form-control">
+											<input type="password"   required="true" id="password" name="password" readonly="readonly" class="form-control">
 										</div>
 									</div>
-									<div class="form-group">
-										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Confirm Password <span style="color:red;">*</span> </label>
-										<div class="col-xs-8">
-											<input type="password" id="confirm_password"   required="required" name="confirm_password" class="form-control">
-										</div>
-									</div>
+<!-- 									<div class="form-group"> -->
+<!--										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Confirm Password <span style="color:red;">*</span> </label>
+ 										<div class="col-xs-8"> -->
+<!-- 											<input type="password" id="confirm_password"   required="required" name="confirm_password" class="form-control"> -->
+<!-- 										</div> -->
+<!-- 									</div> -->
 								</div>
 								
 								<div class="col-xs-6">
@@ -163,7 +163,7 @@
 									<div class="form-group">
 										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Employee Type<span style="color:red;">*</span> </label>
 										<div class="col-xs-8">
-											<select class="form-control" name="employeetype"   required="required">
+											<select class="form-control" name="employeetype"   required="required" onchange="enableEmail(this.value)">
 												<option selected="selected" value="">--Select Employee type--</option>
 												<option value="1">Office</option>
 												<option value="2">Non-Office</option>
@@ -368,6 +368,7 @@
 											<input type="text" name="drivingliceneexpiredate" id="drivingliceneexpiredate" class="form-control date-picker">
 										</div>
 									</div>
+									<input type="hidden" name="drivinglicencestatus" id="drivinglicencestatus" value="success">
 								</div>								
 							</div>
 						</div>
@@ -664,10 +665,15 @@
 			      url: "validatedrivinglicense?license="+val,
 			      success: function(data) {
 			    	  if(data == "YES"){
+				    	  $("#drivinglicencestatus").val("fail");
 			    		  bootbox.alert('This driving licence is already exists', function(result) {});
 			    	  }
 			    	  else if(data != "NO"){
+			    		  $("#drivinglicencestatus").val("fail");
 			    		  bootbox.alert(data, function(result) {});
+			    	  }
+			    	  else if(data == "NO"){
+			    		  $("#drivinglicencestatus").val("success");
 			    	  }
 			      },
 			      type: 'GET'
@@ -684,6 +690,17 @@
 			      },
 			      type: 'GET'
 			   });
+			}
+
+			function enableEmail(val){
+				if(val == "1"){
+					$("#email").attr("readonly",false);
+					$("#password").attr("readonly",false);
+				}
+				else{
+					$("#email").attr("readonly",true);
+					$("#password").attr("readonly",true);
+				}
 			}
 
 			function verifyEmail(val){
@@ -750,6 +767,12 @@
 				var branch = $("#branch").val();
 				if(branch != undefined && branch ==""){
 					alert("Please select branch");
+					return false;
+				}
+
+				var drivinglicencestatus = $("#drivinglicencestatus").val();
+				if(drivinglicencestatus != undefined && drivinglicencestatus =="fail"){
+					alert("Driving Licence already Exists");
 					return false;
 				}
 				

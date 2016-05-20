@@ -223,11 +223,19 @@ class StockController extends \Controller {
 					$db_functions_ctrl->insert($table, $fields);
 				}
 				catch(\Exception $ex){
-					\Session::put("message","Add inventory transaction : Operation Could not be completed, Try Again!");
 					\DB::rollback();
-					return \Redirect::to($url);
+					$json_resp = array();
+					$json_resp["status"] = "fail";
+					$json_resp["message"] = "Add Inventory Transaction (vehicle to vehicle) : Operation Could not be completed, Try Again!";
+					echo json_encode($json_resp);
+					return;
 				}
 				DB::commit();
+				$json_resp = array();
+				$json_resp["status"] = "success";
+				$json_resp["message"] = "Operation completed successfully";
+				echo json_encode($json_resp);
+				return;
 			}
 			
 			if(isset($values["action"]) && $values["action"]=="vehicletowarehouse" && isset($values["repairtype"]) && $values["repairtype"]=="TO WAREHOUSE"){

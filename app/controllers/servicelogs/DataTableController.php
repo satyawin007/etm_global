@@ -276,12 +276,20 @@ class DataTableController extends \Controller {
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
-			$entity["customDate"] = date("d-m-Y",strtotime($entity["customDate"]));
+			if($entity["customDate"] != "" && $entity["customDate"] != "1970-01-01"){
+				$entity["customDate"] = date("d-m-Y",strtotime($entity["customDate"]));
+			}
+			else{
+				$entity["customDate"] = "";
+			}
+			
 			$dts = $entity["pendingDates"];
 			$dts = explode(",", $dts);
 			$dts_str = "";
 			foreach ($dts as $dt){
-				$dts_str = $dts_str.date("d-m-Y",strtotime($dt)).", ";
+				if($dt != ""){
+					$dts_str = $dts_str.date("d-m-Y",strtotime($dt)).", ";
+				}
 			}
 			$entity["pendingDates"] = $dts_str;
 			

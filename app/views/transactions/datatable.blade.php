@@ -335,12 +335,12 @@ use settings\AppSettingsController;
 			}
 
 			function getendreading(val){
-				$("#startreading").val("");
+				$("#previousreading").val("");
 				$.ajax({
 			      url: "getendreading?id="+val,
 			      success: function(data) {
 			    	  json_data = JSON.parse(data);
-			    	  $("#startreading").val(json_data.endReading);
+			    	  $("#previousreading").val(json_data.endReading);
 			      },
 			      type: 'GET'
 			   });

@@ -598,7 +598,7 @@ class ContractController extends \Controller {
 			$ex_drivers_arr[] = $ex_driver['driver2Id'];
 			$ex_drivers_arr[] = $ex_driver['helperId'];
 		}
-		$drivers =  \Employee::where("roleId","=",19)->get();
+		$drivers =  \Employee::where("roleId","=",19)->where("status","=","ACTIVE")->get();
 		$drivers_arr = array();
 		foreach ($drivers as $driver){
 			if(!in_array($driver['id'],$ex_drivers_arr)){
@@ -606,7 +606,7 @@ class ContractController extends \Controller {
 			}
 			
 		}
-		$helpers =  \Employee::where("roleId","=",20)->get();
+		$helpers =  \Employee::where("roleId","=",20)->where("status","=","ACTIVE")->get();
 		$helpers_arr = array();
 		foreach ($helpers as $helper){
 			if(!in_array($helper['id'],$ex_drivers_arr)){

@@ -108,15 +108,15 @@ class FuelStationController extends \Controller {
 		$values = Input::all();
 		if (\Request::isMethod('post'))
 		{
-			$field_names = array("fuelstationname"=>"name","balanceamount"=>"balanceAmount", "bankaccount"=>"bankAccount",
-									"paymenttype"=>"paymentType","paymentexpectedday"=>"paymentExpectedDay","cityname"=>"cityId",
-									"statename"=>"stateId","securitydepositamount"=>"securityDepositAmount","securitypaymenttype"=>"securityPaymentType",
-									"securitypaymentdate"=>"securityPaymentDate","bankname"=>"bankName","accountnumber"=>"accountNumber",
-									"chequenumber"=>"chequeNumber","issuedate"=>"issueDate","transactiondate"=>"transactionDate"
+			$field_names = array("fuelstationname1"=>"name","balanceamount1"=>"balanceAmount", "bankaccount1"=>"bankAccount",
+									"paymenttype1"=>"paymentType","paymentexpectedday1"=>"paymentExpectedDay","cityname1"=>"cityId",
+									"statename1"=>"stateId","securitydepositamount1"=>"securityDepositAmount","securitypaymenttype1"=>"securityPaymentType",
+									"securitypaymentdate1"=>"securityPaymentDate","bankname1"=>"bankName","accountnumber1"=>"accountNumber",
+									"chequenumber1"=>"chequeNumber","issuedate1"=>"issueDate","transactiondate1"=>"transactionDate"
 								);
 			$fields = array();
 			foreach ($field_names as $key=>$val){
-				if(isset($values[$key])){
+				if(isset($values[$key])){http://localhost/etm_global/public/fuelstations#edit
 					if ($key == "transactiondate" || $key=="securitypaymentdate" || $key=="issuedate"){
 						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 					}
@@ -127,14 +127,14 @@ class FuelStationController extends \Controller {
 			}
 			$db_functions_ctrl = new DBFunctionsController();
 			$table = "\FuelStation";
-			$data = array("id"=>$values['id']);
+			$data = array("id"=>$values['id1']);
 			if($db_functions_ctrl->update($table, $fields, $data)){
 				\Session::put("message","Operation completed Successfully");
-				return \Redirect::to("editfuelstation?id=".$data['id']);
+				return \Redirect::to("fuelstations");
 			}
 			else{
 				\Session::put("message","Operation Could not be completed, Try Again!");
-				return \Redirect::to("editfuelstation?id=".$data['id']);
+				return \Redirect::to("fuelstations");
 			}
 		}
 	
@@ -148,7 +148,7 @@ class FuelStationController extends \Controller {
 	
 		$form_fields = array();
 	
-		$entity = \FuelStation::where("id","=",$values['id'])->get();
+		$entity = \FuelStation::where("id","=",$values['id1'])->get();
 		if(count($entity)){
 			$entity = $entity[0];
 			

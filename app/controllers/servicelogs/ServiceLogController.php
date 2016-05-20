@@ -223,7 +223,9 @@ class ServiceLogController extends \Controller {
 			}
 			$dates = "<option value=''> --select service date-- </option>";
 			foreach ($dates_arr as $dt=>$val){
-				$dates = $dates."<option value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+				if($dt != "" && $dt!= "1970-01-01"){
+					$dates = $dates."<option value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+				}
 			}
 			//$dates_arr = array_reverse($dates_arr);
 			$opendts = \ServiceLogRequest::where("contractId","=",$contractId)
@@ -232,7 +234,7 @@ class ServiceLogController extends \Controller {
 			foreach ($opendts as $opendt){
 				$opendt_arr = explode(",", $opendt->pendingDates);
 				foreach ($opendt_arr as $opendt_arr_item){
-					if($opendt_arr_item != " "){
+					if($opendt_arr_item != ""){
 						$dates = $dates."<option value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
 					}
 				}
@@ -294,11 +296,13 @@ class ServiceLogController extends \Controller {
 		
 		$dates = "";
 		foreach ($dates_arr as $dt=>$val){
-			if($values["servicedate"]==$dt){
-				$dates = $dates."<option selected value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
-			}
-			else{
-				$dates = $dates."<option value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+			if($dt != "" && $dt != "1970-01-01"){
+				if($values["servicedate"]==$dt){
+					$dates = $dates."<option selected value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+				}
+				else{
+					$dates = $dates."<option value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+				}
 			}
 		}
 		
@@ -309,8 +313,13 @@ class ServiceLogController extends \Controller {
 		foreach ($opendts as $opendt){
 			$opendt_arr = explode(",", $opendt->pendingDates);
 			foreach ($opendt_arr as $opendt_arr_item){
-				if($opendt_arr_item != " "){
-					$dates = $dates."<option value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
+				if($opendt_arr_item != ""){
+					if($values["servicedate"]==$opendt_arr_item){
+						$dates = $dates."<option selected value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
+					}
+					else {
+						$dates = $dates."<option value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
+					}
 				}
 			}
 		}
