@@ -1649,7 +1649,7 @@ class ReportsController extends \Controller {
 					$resp[] = $row;
 				}
 				
-				$select_args = array();
+				/* $select_args = array();
 				$select_args[] = "officebranch.name as branch";
 				$select_args[] = "expensetransactions.amount as amount";
 				$select_args[] = "expensetransactions.date as date";
@@ -1833,18 +1833,70 @@ class ReportsController extends \Controller {
 					$row["remarks"] = $inchargetransaction->comments;
 					$row["name"] = $inchargetransaction->name;
 					$resp2[] = $row;
-				}
+				} */
 				
- 				/* DB::statement(DB::raw("CALL incharge_transaction_report('".$frmDt."', '".$toDt."');"));
-				$recs = DB::select( DB::raw("SELECT *,temp_incharge_transaction.name as purpose, temp_incharge_transaction.createdBy as createdBy, officebranch.name as branchname FROM `temp_incharge_transaction` left join officebranch on officebranch.id=temp_incharge_transaction.branchId where inchargeId='".$values["incharge"]."'"));
+ 				DB::statement(DB::raw("CALL incharge_transaction_report('".$frmDt."', '".$toDt."');"));
+				$recs = DB::select( DB::raw("SELECT *,temp_incharge_transaction.entity as entity, temp_incharge_transaction.name as purpose, temp_incharge_transaction.createdBy as createdBy, officebranch.name as branchname FROM `temp_incharge_transaction` left join officebranch on officebranch.id=temp_incharge_transaction.branchId where inchargeId=".$values["incharge"]." order by date"));
 				foreach ($recs as $rec){
 					$row = array();
 					$row["branch"] = $rec->branchname;
+					if($rec->branchname == ""){
+						$row["branch"] = $rec->depotName."(".$rec->clientName.")";
+					}
 					$row["date"] = date("d-m-Y",strtotime($rec->date));
 					$row["amount"] =  $rec->amount;
 					$totexpenses = $totexpenses+$rec->amount;
-					$row["purpose"] =  $rec->purpose;
-					$row["paidto"] =  $rec->entityValue;//$rec->type." - ".$rec->tripId." - ".$rec->entityValue;
+					$row["type"] =  strtoupper($rec->type);
+					$row["purpose"] =  strtoupper($rec->purpose);
+					if($rec->purpose == ""){
+						$row["purpose"] = $rec->entity;
+					}
+					$row["paidto"] =  strtoupper($rec->entityValue);
+					if($rec->type=="expense"){
+						if($rec->lookupValueId==999){
+							if($inchargetransaction->entityValue>0){
+								$prepaidName = \LookupTypeValues::where("id","=",$rec->entityValue)->first();
+								$prepaidName = $prepaidName->name;
+								$row["purpose"] = strtoupper($rec->entity)." - ".$prepaidName;
+							}
+							else{
+								$row["purpose"] = strtoupper($rec->entity);
+							}
+						}
+						else if($rec->lookupValueId==998){
+							if($rec->entityValue>0){
+								$creditsupplier = \CreditSupplier::where("id","=",$rec->entityValue)->first();
+								$creditsupplier = $creditsupplier->supplierName;
+								$row["purpose"] = strtoupper($rec->entity)." - ".$creditsupplier;
+							}
+							else{
+								$row["purpose"] = strtoupper($rec->entity);
+							}
+						}
+						else if($rec->lookupValueId==997){
+							if($rec->entityValue>0){
+								$fuelstation = \FuelStation::where("id","=",$rec->entityValue)->first();
+								$fuelstation = $fuelstation->name;
+								$row["purpose"] = strtoupper($rec->entity);
+								$row["paidto"] =  strtoupper($fuelstation);
+							}
+							else{
+								$row["purpose"] = strtoupper($rec->entity);
+							}
+						}
+						else if($rec->lookupValueId==991){
+							if($rec->entityValue>0){
+								$dfid = \DailyFinance::where("id","=",$rec->entityValue)->first();
+								$dfid = $dfid->financeCompanyId;
+								$finanacecompany = \FinanceCompany::where("id","=",$dfid)->first();
+								$finanacecompany = $finanacecompany->name;
+								$row["purpose"] = strtoupper($rec->entity)." - ".$finanacecompany;
+							}
+							else{
+								$row["purpose"] = strtoupper($inchargetransaction->entity);
+							}
+						}
+					}
 					$vehreg = "";
 					if($rec->type == "LOCAL"){
 						$row["purpose"] = "LOCAL TRIP ADVANCE : <br/>";
@@ -1901,7 +1953,7 @@ class ReportsController extends \Controller {
 					$row["remarks"] =$rec->remarks;
 					$row["name"] = $rec->createdBy;
 					$resp2[] = $row;
-				} */
+				} 
 			}
 			$resp_json = array("data1"=>$resp,"data2"=>$resp2,"total_expenses"=>$totexpenses);
 			echo json_encode($resp_json);

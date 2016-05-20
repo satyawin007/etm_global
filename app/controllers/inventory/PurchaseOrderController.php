@@ -36,6 +36,9 @@ class PurchaseOrderController extends \Controller {
 					}
 				}
 			}
+// 			if(isset($values["incharge"]) && $values["incharge"]>0){
+// 				DB::statement(DB::raw("CALL update_incharge_amount(".$values["incharge"].", -".$values["totalamount"].");"));
+// 			}
 			if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
 				$destinationPath = storage_path().'/uploads/'; // upload path
 				$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension

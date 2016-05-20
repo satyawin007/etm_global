@@ -417,6 +417,13 @@
 						<ul class="submenu">
 							<?php if(in_array(113, $jobs)){?>
 							<li class="hover">
+								<a href="attendence">
+									<i class="menu-icon fa fa-caret-right"></i>
+									ATTENDENCE
+								</a>
+							</li>
+							<?php } if(in_array(113, $jobs)){?>
+							<li class="hover">
 								<a href="leaves">
 									<i class="menu-icon fa fa-caret-right"></i>
 									EMPLOYEE LEAVES

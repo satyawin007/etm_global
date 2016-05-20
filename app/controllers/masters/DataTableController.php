@@ -1240,10 +1240,16 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \FuelStation::where("fuelstationdetails.name","like","%$search%")->join("cities","cities.id","=","fuelstationdetails.cityId")->join("states","states.id","=","fuelstationdetails.stateId")->join("bankdetails","bankdetails.id","=","fuelstationdetails.bankAccount")->select($select_args)->limit($length)->offset($start)->get();;
+			$entities = \FuelStation::where("fuelstationdetails.name","like","%$search%")
+							->leftjoin("cities","cities.id","=","fuelstationdetails.cityId")
+							->leftjoin("states","states.id","=","fuelstationdetails.stateId")
+							->leftjoin("bankdetails","bankdetails.id","=","fuelstationdetails.bankAccount")
+							->select($select_args)->limit($length)->offset($start)->get();;
 			$total = \FuelStation::where("fuelstationdetails.name","like","%$search%")->count();
 			foreach ($entities as $entity){
-				$bank =  \BankDetails::where("bankdetails.bankName", "=", $entity->bankAccount)->join("lookuptypevalues","lookuptypevalues.id","=","bankdetails.bankName")->select("bankdetails.id as id", "bankdetails.accountNo as accountNo", "lookuptypevalues.name as name")->get();
+				$bank =  \BankDetails::where("bankdetails.bankName", "=", $entity->bankAccount)
+							->leftjoin("lookuptypevalues","lookuptypevalues.id","=","bankdetails.bankName")
+							->select("bankdetails.id as id", "bankdetails.accountNo as accountNo", "lookuptypevalues.name as name")->get();
 				if(count($bank)>0){
 					$bank = $bank[0];
 					$entity->bankAccount = $bank->name." - ".$bank->accountNo;
@@ -1251,10 +1257,15 @@ class DataTableController extends \Controller {
 			}
 		}
 		else{
-			$entities = \FuelStation::join("cities","cities.id","=","fuelstationdetails.cityId")->join("states","states.id","=","fuelstationdetails.stateId")->join("bankdetails","bankdetails.id","=","fuelstationdetails.bankAccount")->select($select_args)->limit($length)->offset($start)->get();;
+			$entities = \FuelStation::leftjoin("cities","cities.id","=","fuelstationdetails.cityId")
+						->leftjoin("states","states.id","=","fuelstationdetails.stateId")
+						->leftjoin("bankdetails","bankdetails.id","=","fuelstationdetails.bankAccount")
+						->select($select_args)->limit($length)->offset($start)->get();;
 			$total = \FuelStation::count();
 			foreach ($entities as $entity){
-				$bank =  \BankDetails::where("bankdetails.bankName", "=", $entity->bankAccount)->join("lookuptypevalues","lookuptypevalues.id","=","bankdetails.bankName")->select("bankdetails.id as id", "bankdetails.accountNo as accountNo", "lookuptypevalues.name as name")->get();
+				$bank =  \BankDetails::where("bankdetails.bankName", "=", $entity->bankAccount)
+						->join("lookuptypevalues","lookuptypevalues.id","=","bankdetails.bankName")
+						->select("bankdetails.id as id", "bankdetails.accountNo as accountNo", "lookuptypevalues.name as name")->get();
 				if(count($bank)>0){
 					$bank = $bank[0];
 					$entity->bankAccount = $bank->name." - ".$bank->accountNo;

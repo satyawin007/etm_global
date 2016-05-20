@@ -624,3 +624,7 @@ Route::any('/getworkflowdatatabledata', "workflow\DataTableController@getDataTab
 
 Route::any('/workflowupdate', "workflow\WorkFlowController@workFlowUpdate");
 
+Route::any('/attendence', "attendence\AttendenceController@manageAttendence");
+
+Route::any('/getattendencedatatabledata', "attendence\DataTableController@getDataTableData");
+
