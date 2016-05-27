@@ -42,7 +42,7 @@
 			<div class="col-xs-offset-0 col-xs-12">
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
-				<?php if(($form_info['action']=="attendence" && in_array(206, $jobs)) or 
+				<?php if(($form_info['action']=="addattendence" && in_array(206, $jobs)) or 
 						($form_info['action']=="addclient" && in_array(403, $jobs))
 					  ){ ?>
 					@include("attendence.addlookupform",$form_info)
@@ -71,19 +71,43 @@
 					<thead>
 						<tr>
 							<?php
-								echo "<th>EMPLOYEE (EMPCODE)</th>";
-								$date = date_create(date('d-m-Y',strtotime("first day of this month")));
-								$today = date_create(date("d-m-Y"));
-								$diff=date_diff($date,$today);
-								$diff =  $diff->format("%a");
-								for($i=0; $i<=$diff; $i++){
-									if(date_format($date, 'D') == "Sun"){
-										echo "<th style='color: red; background-color: #D0D0D6;'>".strtoupper(date_format($date, 'd D'))."</th>";
+								if(isset($values["startdate"]) && $values["startdate"] != ""){
+									echo "<th>EMPLOYEE (EMPCODE)</th>";
+									$date = date_create(date('d-m-Y',strtotime($values["startdate"])));
+									$month = date("m",strtotime($values["startdate"]));
+									if($month === date("m")){
+										$today = date_create(date("d-m-Y"));
 									}
 									else{
-										echo "<th>".strtoupper(date_format($date, 'd D'))."</th>";
+										$today = date_create(date("t-m-Y", strtotime($values["date"])));
 									}
-									$date = date_add($date, date_interval_create_from_date_string('1 days'));
+									$diff=date_diff($date,$today);
+									$diff =  $diff->format("%a");
+									for($i=0; $i<=$diff; $i++){
+										if(date_format($date, 'D') == "Sun"){
+											echo "<th style='color: red; background-color: #D0D0D6;'>".strtoupper(date_format($date, 'd D'))."</th>";
+										}
+										else{
+											echo "<th>".strtoupper(date_format($date, 'd D'))."</th>";
+										}
+										$date = date_add($date, date_interval_create_from_date_string('1 days'));
+									}
+								}
+								else{
+									echo "<th>EMPLOYEE (EMPCODE)</th>";
+									$date = date_create(date('d-m-Y',strtotime("first day of this month")));
+									$today = date_create(date("d-m-Y"));
+									$diff=date_diff($date,$today);
+									$diff =  $diff->format("%a");
+									for($i=0; $i<=$diff; $i++){
+										if(date_format($date, 'D') == "Sun"){
+											echo "<th style='color: red; background-color: #D0D0D6;'>".strtoupper(date_format($date, 'd D'))."</th>";
+										}
+										else{
+											echo "<th>".strtoupper(date_format($date, 'd D'))."</th>";
+										}
+										$date = date_add($date, date_interval_create_from_date_string('1 days'));
+									}
 								}
 							?>
 						</tr>
@@ -92,6 +116,132 @@
 			</div>
 			</form>
 		</div>
+		
+		<div id="edit" class="modal" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="blue bigger">Please fill the following form fields</h4>
+					</div>
+					<div class="modal-body">
+						<div class="row">
+							<div class="col-xs-12">
+								<div name="edit" id="editform" class="form-horizontal" action="edit"  method="post">	
+									<div class="form-group">
+										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> SUBSTITUTE </label>
+										<div class="col-xs-7">
+											<select class="form-control chosen-select" name="substitute"  id="substitute">
+												<option value="">-- substitute --</option>
+												<?php 
+													$employees = Employee::where("status","=","ACTIVE")
+																	->whereIn("roleId",array(19,20))->get();
+													foreach($employees as $employee){
+														echo '<option value="'.$employee->id.'">'.$employee->fullName.'('.$employee->empCode.')</option>';
+													}
+												?>
+											</select>
+										</div>			
+									</div>				
+									<div class="form-group">
+										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> COMMENTS </label>
+										<div class="col-xs-7">
+											<textarea  id="comments"  name=""comments"" class="form-control" ></textarea>
+										</div>			
+									</div>
+									<input type="hidden" name="empid" id="empid" value="" />
+												
+									<div class="modal-footer">
+										<button class="btn btn-sm" data-dismiss="modal">
+											<i class="ace-icon fa fa-times"></i>
+											Cancel
+										</button>
+						
+										<button class="btn btn-sm btn-primary" data-dismiss="modal" onclick="formValues()">
+											<i class="ace-icon fa fa-check"></i>
+											Save
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<a class="" href="#edit" id="modaledit" data-toggle="modal"></a>
+		
+		<div id="update1" class="modal" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="blue bigger">Please fill the following form fields</h4>
+					</div>
+					<div class="modal-body">
+						<div class="row">
+							<div class="col-xs-12">
+								<div name="update" id="update" class="form-horizontal" action="update"  method="post">	
+									<div class="form-group">
+										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> SUBSTITUTE </label>
+										<div class="col-xs-7">
+											<select class="form-control chosen-select" name="substitute1"  id="substitute1">
+												<option value="">-- substitute --</option>
+												<?php 
+													$employees = Employee::where("status","=","ACTIVE")
+																	->whereIn("roleId",array(19,20))->get();
+													foreach($employees as $employee){
+														echo '<option value="'.$employee->id.'">'.$employee->fullName.'('.$employee->empCode.')</option>';
+													}
+												?>
+											</select>
+										</div>			
+									</div>				
+									<div class="form-group">
+										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> ATTENDENCE STATUS </label>
+										<div class="col-xs-7">
+											<select class="form-control chosen-select" name="attendence_status"  id="attendence_status">
+												<option value="">-- attendence status --</option>
+												<option value="A">A</option>
+												<option value="PL">PL</option>
+												<option value="P">P</option>
+											</select>
+										</div>			
+									</div>
+									<div class="form-group">
+										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> COMMENTS </label>
+										<div class="col-xs-7">
+											<textarea  id="comments1"  name="comments1" class="form-control" ></textarea>
+										</div>			
+									</div>
+									<div class="form-group">
+										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> STATUS CHANGE COMMENTS </label>
+										<div class="col-xs-7">
+											<textarea  id="statuschangecomments1"  name="statuschangecomments1" class="form-control" ></textarea>
+										</div>			
+									</div>
+									<input type="hidden" name="recid" id="recid" value="" />
+									<input type="hidden" name="cellid" id="cellid" value="" />
+												
+									<div class="modal-footer">
+										<button class="btn btn-sm" data-dismiss="modal">
+											<i class="ace-icon fa fa-times"></i>
+											Cancel
+										</button>
+						
+										<button class="btn btn-sm btn-primary" data-dismiss="modal" onclick="formValuesUpdate()">
+											<i class="ace-icon fa fa-check"></i>
+											Save
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<a class="" href="#update1" id="modalupdate" data-toggle="modal"></a>
 		</div>
 	@stop
 	
@@ -106,6 +256,7 @@
 		<script src="../assets/js/dataTables/extensions/buttons/buttons.colVis.js"></script>
 		<script src="../assets/js/dataTables/extensions/select/dataTables.select.js"></script>
 		<script src="../assets/js/date-time/bootstrap-datepicker.js"></script>
+		<script src="../assets/js/date-time/moment.js"></script>
 		<script src="../assets/js/bootbox.js"></script>
 		<script src="../assets/js/chosen.jquery.js"></script>
 		<script src="../assets/js/jquery.maskedinput.js"></script>
@@ -114,7 +265,14 @@
 	@section('inline_js')
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
+			var attendence_data = [];
+			attendence_data_update = [];
+			data = [];
 			$("#entries").on("change",function(){paginate(1);});
+
+			$("#clientname").attr("disabled",true);
+			$("#depot").attr("disabled",true);
+			$("#officebranch").attr("disabled",true);
 
 			$("#getbtn").on("click",function(){
 				logstatus = $("#logstatus").val();
@@ -131,28 +289,203 @@
 				myTable.ajax.url(url).load();
 			})
 
-			function postData(evt){
-				return;
-			 	$.post( 
-                   "workflowupdate",
-                   $("#workflowform").serialize(),
-                   function(data) {
-                       json_obj = JSON.parse(data);
-                       bootbox.alert(json_obj.message);
-                       window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
-                   }
-                );
-				return false;
+			function postData(){
+				$.ajax({
+                    url: "getattendencelog",
+                    type: "post",
+                    data: $("#attendence").serialize(),
+                    success: function(response) {
+                    	response = jQuery.parseJSON(response);	
+                        if(response.status=="success" && response.rec_count==0){
+	                    	$.ajax({
+	                            url: "addattendencelog",
+	                            type: "post",
+	                            data: $("#attendence").serialize(),
+	                            success: function(response) {
+	                            	response = jQuery.parseJSON(response);	
+	                                if(response.status=="success"){
+	                                	bootbox.alert(response.message);
+	                                	window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
+	                                }
+	                                if(response.status=="fail"){
+	                                	bootbox.alert(response.message);
+	                                }
+	                            }
+	                        });
+	                    }
+                        else if(response.status=="fail"){
+                        	bootbox.alert(response.message);
+                        }
+                        else{
+                        	if(attendence_data.length == 0){
+                        		bootbox.alert("attendence is already given for the session");
+                        	}
+                        }
+                
+                    }
+                });
+				if(attendence_data.length == 0){
+					return;
+				}
+				$('#jsondata').val(JSON.stringify(attendence_data));
+				$.ajax({
+                    url: "addattendence",
+                    type: "post",
+                    data: $("#attendence").serialize(),
+                    success: function(response) {
+                    	response = jQuery.parseJSON(response);	
+                        if(response.status=="success"){
+                        	bootbox.alert(response.message);
+                        	window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
+                        }
+                        if(response.status=="fail"){
+                        	bootbox.alert(response.message);
+                        }
+                    }
+                });
+			}
+
+			function postDataUpdate(){
+				if(attendence_data_update.length== 0){
+					alert("No data to SEND");
+					return;
+				}
+				$('#jsondata').val(JSON.stringify(attendence_data_update));
+				$.ajax({
+                    url: "updateattendence",
+                    type: "post",
+                    data: $("#attendence").serialize(),
+                    success: function(response) {
+                    	response = jQuery.parseJSON(response);	
+                        if(response.status=="success"){
+                        	bootbox.alert(response.message);
+                        	window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
+                        }
+                        if(response.status=="fail"){
+                        	bootbox.alert(response.message);
+                        }
+                    }
+                });
+			}
+
+			function formValues(){
+				data = {};
+				data["empid"] = $("#empid").val();
+				data["Substitute"] = $("#substitute").val();
+				data["comments"] = $("#comments").val();
+				attendence_data.push(data);
+				$("#comments").val("");
+				$("#substitute").find('option:selected').removeAttr("selected");
+				$('.chosen-select').trigger('chosen:updated');
+			}
+
+			function formValuesUpdate(){
+				data = {};
+				data["recid"] = $("#recid").val();
+				data["Substitute"] = $("#substitute1").val();
+				data["comments"] = $("#comments1").val();
+				data["statuschangecomments"] = $("#statuschangecomments1").val();
+				data["attendence_status"] = $("#attendence_status").val();
+
+				var index = -1;		
+				for( var i = 0; i<attendence_data_update.length; i++ ) {
+					if( attendence_data_update[i]["recid"] == $("#recid").val() ) {
+						index = i;
+						break;
+					}
+				}
+				if( index != -1 ) {
+					attendence_data_update.splice(index, 1);
+				}
+				attendence_data_update.push(data);
+				
+				$("#comments1").val("");
+				$("#substitute1").find('option:selected').removeAttr("selected");
+				$('.chosen-select').trigger('chosen:updated');
+
+				id = $("#cellid").val();
+				if($("#attendence_status").val() == "PL"){
+					$("#"+id).html("PL");
+					$("#"+id).css("color","orange");
+				}
+				if($("#attendence_status").val() == "P"){
+					$("#"+id).html("P");
+					$("#"+id).css("color","green");
+				}
+				if($("#attendence_status").val() == "A"){
+					$("#"+id).html("A");
+					$("#"+id).css("color","red");
+				}
+			}
+
+			function printtable(){
+				for(i=0; i<attendence_data.length; i++){
+					alert(attendence_data[i][0]+" "+attendence_data[i][1]+" "+attendence_data[i][2]);
+				}
+			}
+
+			function showData(substitute, comments){
+				bootbox.alert("Substitute : "+substitute+"<br/>"+"Comments : "+comments);
 			}
 
 			function changeValue(id, empid, type){
 				//alert(id+" "+empid+" "+type);
+				$("#empid").val(empid);
 				$text = $("#"+id).html();
 				$("#"+id).html("P");
 				$("#"+id).css("color","green");
 				if($text == "P"){
+					if(type == "driver"|| type == "helper"){
+						$("#modaledit").click();
+					}
+					else{
+						data = {};
+						data["empid"] = empid;
+						data["Substitute"] = 0;
+						data["comments"] = "";
+						attendence_data.push(data);
+					}
 					$("#"+id).html("A");
 					$("#"+id).css("color","red");
+				}
+				if($text == "A"){
+					var index = -1;		
+					for( var i = 0; i<attendence_data.length; i++ ) {
+						if( attendence_data[i]["empid"] == empid ) {
+							index = i;
+							break;
+						}
+					}
+					if( index === -1 ) {
+						return;
+					}
+					attendence_data.splice(index, 1);	
+				}
+			}
+
+			function updateAttendenceValues(id, type, substitute, status, comments, comments1, recid){
+				text = $("#"+id).html();
+				$("#cellid").val(id);
+				$("#recid").val(recid);
+				if(type == "driver"|| type == "helper"){
+					$("#substitute1").attr("disabled",false);
+					$("#comments1").attr("disabled",false);
+					$("#substitute1 option").each(function() { this.selected = (this.text == substitute); });
+					$("#attendence_status option").each(function() { this.selected = (this.text == status); });
+					$("#comments1").val(comments);
+					$("#statuschangecomments1").val(comments1);
+					$("#recid").val(recid);
+					$('.chosen-select').trigger("chosen:updated");
+					$("#modalupdate").click();
+				}
+				else {
+					$("#substitute1").attr("disabled",true);
+					$("#attendence_status option").each(function() { this.selected = (this.text == status); });
+					$("#comments1").attr("disabled",true);
+					$("#statuschangecomments1").val(comments1);
+					$("#recid").val(recid);
+					$('.chosen-select').trigger("chosen:updated");
+					$("#modalupdate").click();
 				}
 			}
 
@@ -172,6 +505,122 @@
 					return;
 				}
 				url = url+"&officebranch="+officebranch;
+
+				clientname = $('#clientname').val();
+				clientbranch = $('#depot').val();
+				if(employeetype == "CLIENT BRANCH" && (clientname=="" || clientbranch=="")){
+					alert("please select client name and  branch");
+					return;
+				}
+				url = url+"&client="+clientname+"&depot="+clientbranch;
+				
+				date = $('#date').val();
+				if(date == ""){
+					alert("please select date");
+					return;
+				}
+				url = url+"&date="+date;
+				
+				session = $('input[name=session]:radio:checked').val();
+				if(session == undefined){
+					alert("please select session");
+					return;
+				}
+				url = url+"&session="+session;
+				
+				day = $('input[name=day]:radio:checked').val();
+				if(day == undefined){
+					alert("please select day");
+					return;
+				}
+				url = url+"&day="+day;
+
+				holidayreason = $("#holidayreason").val();
+				if(!$("#holidayreason").attr("readonly") && holidayreason==""){
+					alert("please enter holiday reason");
+					return;
+				}
+				url = url+"&holidayreason="+holidayreason;
+
+				dt1 = new Date();
+				dt1 = dt1.getMonth()+1;
+				dt2 = date.split("-");
+				dt2 = parseInt(dt2[1]);
+				if(dt2<dt1){
+					url = url.replace('getattendencedatatabledata?name=getattendence','attendence?');
+					window.location.href = url;
+					return;
+				}
+				$("#get").show();
+				$("#modify").show();
+				$("#add").show();
+				myTable.ajax.url(url).load();
+
+				$.ajax({
+                    url: "getdaytotalattendence",
+                    data: $("#attendence").serialize(),
+                    type: "post",
+                    success: function(response) {
+                    	response = jQuery.parseJSON(response);	
+                    	$("#noofpresents").val(response.noofpresents);
+                    	$("#noofabsents").val(response.noofabsents);
+                    }
+                });
+			}
+
+			function changeDepot(val){
+				$.ajax({
+			      url: "getdepotsbyclientId?id="+val,
+			      success: function(data) {
+			    	  $("#depot").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			    });
+
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+			}
+
+			function enableClientDepot(val){
+				if(val == "OFFICE"){
+					$("#clientname").attr("disabled",true);
+					$("#depot").attr("disabled",true);
+					$("#officebranch").attr("disabled",false);
+					$('.chosen-select').trigger("chosen:updated");
+				}
+				else if(val == "CLIENT BRANCH"){
+					$("#clientname").attr("disabled",false);
+					$("#depot").attr("disabled",false);
+					$("#officebranch").attr("disabled",true);
+					$('.chosen-select').trigger("chosen:updated");
+				}
+			}
+
+			function getEmployeesToUpdate(){
+				url = "getattendencedatatabledata?name=getattendencetoupdate";
+				
+				employeetype = $('#employeetype').val();
+				if(employeetype == ""){
+					alert("please select employee type");
+					return;
+				}
+				url = url+"&employeetype="+employeetype;
+				
+				officebranch = $('#officebranch').val();
+				if(employeetype == "OFFICE" && officebranch==""){
+					alert("please select office branch");
+					return;
+				}
+				url = url+"&officebranch="+officebranch;
+
+				clientname = $('#clientname').val();
+				clientbranch = $('#depot').val();
+				if(employeetype == "CLIENT BRANCH" && (clientname=="" || clientbranch=="")){
+					alert("please select client name and  branch");
+					return;
+				}
+				url = url+"&client="+clientname+"&depot="+clientbranch;
 				
 				date = $('#date').val();
 				if(date == ""){
@@ -198,6 +647,17 @@
 				$("#modify").show();
 				$("#add").show();
 				myTable.ajax.url(url).load();
+
+				$.ajax({
+                    url: "getdaytotalattendence",
+                    data: $("#attendence").serialize(),
+                    type: "post",
+                    success: function(response) {
+                    	response = jQuery.parseJSON(response);	
+                    	$("#noofpresents").val(response.noofpresents);
+                    	$("#noofabsents").val(response.noofabsents);
+                    }
+                });
 			}
 
 			<?php 
@@ -259,6 +719,16 @@
 			
 			var myTable = null;
 			jQuery(function($) {		
+
+				$('input[type=radio][name=day]').change(function() {
+			        if (this.value == 'HOLIDAY') {
+			            $("#holidayreason").attr("readonly",false);
+			        }
+			        else {
+			        	$("#holidayreason").attr("readonly",true);
+			        }
+			    });
+				
 				//initiate dataTables plugin
 				myTable = 
 				$('#dynamic-table')

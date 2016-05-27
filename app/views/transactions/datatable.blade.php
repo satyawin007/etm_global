@@ -661,6 +661,7 @@ use settings\AppSettingsController;
 							});
 						  $("#incharge").attr("disabled",true);
 						  $("#enableincharge").val("NO");
+						  $("#paymenttype").attr("disabled",true);
 						  $('.chosen-select').trigger('chosen:updated');
 						  $("#enableincharge").on("change",function(){
 							  	val = $("#enableincharge").val();

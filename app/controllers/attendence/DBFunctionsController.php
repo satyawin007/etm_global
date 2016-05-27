@@ -1,4 +1,4 @@
-<?php namespace contracts;
+<?php namespace attendence;
 
 class DBFunctionsController extends \Controller {
 

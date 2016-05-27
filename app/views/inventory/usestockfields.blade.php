@@ -1,11 +1,28 @@
 <?php 
 	use Illuminate\Support\Facades\View;
-	$branches =  \OfficeBranch::where("isWareHouse","=","Yes")->get();
-	$branches_arr = array();
-	foreach ($branches as $branch){
-		if($values["warehouseid"] != $branch->id){
-			$branches_arr[$branch->id] = $branch->name;
+// 	$branches =  \OfficeBranch::where("isWareHouse","=","Yes")->get();
+// 	$branches_arr = array();
+// 	foreach ($branches as $branch){
+// 		if($values["warehouseid"] != $branch->id){
+// 			$branches_arr[$branch->id] = $branch->name;
+// 		}
+// 	}
+	
+	$warehouse_arr_total = array();
+	$warehouse_arr = array();
+	$warehouses = \OfficeBranch::where("isWareHouse","=","Yes")->get();
+	foreach ($warehouses as $warehouse){
+		$warehouse_arr[$warehouse->id] = $warehouse->name;
+	}
+	$warehouse_arr_total["main warehouses"] = $warehouse_arr;
+	foreach ($warehouses as $warehouse){
+		$warehouse_arr = array();
+		$sub_warehouses = \Depot::where("status","=","ACTIVE")
+		->where("ParentWarehouse","=",$warehouse->id)->get();
+		foreach ($sub_warehouses as $sub_warehouse){
+			$warehouse_arr[$sub_warehouse->id] = $sub_warehouse->name."(".$sub_warehouse->code.")";
 		}
+		$warehouse_arr_total[$warehouse->name] = $warehouse_arr;
 	}
 	
 	$vehicles =  \Vehicle::all();
@@ -83,7 +100,7 @@
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"qty", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
 	$form_fields[] = $form_field;
-	$form_field = array("name"=>"towarehouse", "id"=>"towarehouse",  "content"=>"to warehouse", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",   "options"=>$branches_arr);
+	$form_field = array("name"=>"towarehouse", "id"=>"towarehouse",  "content"=>"to warehouse", "readonly"=>"",  "required"=>"required", "type"=>"selectgroup", "class"=>"form-control chosen-select",   "options"=>$warehouse_arr_total);
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"remarks", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 	$form_fields[] = $form_field;
@@ -163,7 +180,7 @@
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"qty", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
 	$form_fields[] = $form_field;
-	$form_field = array("name"=>"towarehouse2", "id"=>"towarehouse2",  "content"=>"to warehouse", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",   "options"=>$branches_arr);
+	$form_field = array("name"=>"towarehouse2", "id"=>"towarehouse2",  "content"=>"to warehouse", "readonly"=>"",  "required"=>"required", "type"=>"selectgroup", "class"=>"form-control chosen-select",   "options"=>$warehouse_arr_total);
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"itemstatus", "id"=>"itemstatus",  "content"=>"item status", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("USED"=>"USED","NEW"=>"NEW"));
 	$form_fields[] = $form_field;

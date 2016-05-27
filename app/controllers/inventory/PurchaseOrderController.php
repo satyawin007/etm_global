@@ -779,6 +779,10 @@ class PurchaseOrderController extends \Controller {
 					$form_field = array("name"=>"type", "id"=>"type",  "content"=>"type", "value"=>"repairs", "readonly"=>"",  "required"=>"", "type"=>"hidden", "class"=>"form-control");
 					$form_fields[] = $form_field;
 				}
+				else{
+					$form_field = array("name"=>"type", "id"=>"type",  "content"=>"type", "value"=>"", "readonly"=>"",  "required"=>"", "type"=>"hidden", "class"=>"form-control");
+					$form_fields[] = $form_field;
+				}
 			}
 			if($entity->type == "TO WAREHOUSE REPAIR"){
 				$values['bredcum'] = "REPAIRS TO WAREHOUSE";

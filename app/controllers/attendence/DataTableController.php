@@ -26,8 +26,8 @@ class DataTableController extends \Controller {
 			$total = $ret_arr["total"];
 			$data = $ret_arr["data"];
 		}
-		else if(isset($values["name"]) && $values["name"]=="fueltransactions") {
-			$ret_arr = $this->getFuelTransactions($values, $length, $start);
+		else if(isset($values["name"]) && $values["name"]=="getattendencetoupdate") {
+			$ret_arr = $this->getEmployeesToUpdate($values, $length, $start);
 			$total = $ret_arr["total"];
 			$data = $ret_arr["data"];
 		}
@@ -57,9 +57,10 @@ class DataTableController extends \Controller {
 	}
 	
 	private function getEmployees($values, $length, $start){
+		//$values["DSF"];
 		$total = 0;
 		$data = array();
-		$select_args = array("id", "fullName", "empCode");
+		$select_args = array("employee.id", "employee.fullName", "employee.empCode");
 	
 		$actions = array();
 		$values["actions"] = $actions;
@@ -79,25 +80,76 @@ class DataTableController extends \Controller {
 			$total = \LookupTypeValues::where("name", "like", "%$search%")->count();
 		}
 		else{
-			$entities = \Employee::where("officeBranchId", "=",$values["officebranch"])
-					->select($select_args)->limit($length)->offset($start)->get();
-			$total = \Employee::where("officeBranchId", "=",$values["officebranch"])->count();
+			if($values["employeetype"] == "CLIENT BRANCH"){
+				$entities = \ContractVehicle::where("contract_vehicles.status", "=","ACTIVE")
+							->where("contracts.clientId","=",$values["client"])
+							->where("contracts.depotId","=",$values["depot"])
+							->join("contracts", "contract_vehicles.contractId", "=", "contracts.id")
+							->join("employee", "contract_vehicles.driver1Id", "=", "employee.id")
+							->select($select_args)->limit($length)->offset($start)->get();
+				$total = \ContractVehicle::where("contract_vehicles.status", "=","ACTIVE")
+							->where("contracts.clientId","=",$values["client"])
+							->where("contracts.depotId","=",$values["depot"])
+							->join("contracts", "contract_vehicles.contractId", "=", "contracts.id")
+							->join("employee", "contract_vehicles.driver1Id", "=", "employee.id")->count();
+			}
+			else{
+				$entities = \Employee::where("officeBranchId", "=",$values["officebranch"])
+							->whereNotIn("roleId",array(19,20))
+							->select($select_args)->limit($length)->offset($start)->get();
+				$total = \Employee::where("officeBranchId", "=",$values["officebranch"])->count();
+			}
 		}
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
 			$data_values = array();
 			$data_values[] = $entity["fullName"]."(".$entity["empCode"].")";
-			$date = date_create(date('d-m-Y',strtotime("first day of this month")));
-			$today = date_create(date("d-m-Y"));
-			$diff=date_diff($date,$today);
+			$month = date("m",strtotime($values["date"]));
+			$year = date("Y",strtotime($values["date"]));
+			$date = date_create(date("d-m-Y",strtotime("01"."-".$month."-".$year)));
+			if($month === date("m")){
+				$today = date_create(date("d-m-Y"));
+			}
+			else{
+				$today = date_create(date("t-m-Y", strtotime($values["date"])));
+			}
+			$diff = date_diff($date,$today);
 			$diff =  $diff->format("%a");
+			
+			$emptype ="office";
+			if($values["employeetype"] == "CLIENT BRANCH"){
+				$emptype = "driver";
+			}
+			
 			for($i=0; $i<=$diff; $i++){
 				if(date_format($date, 'd-m-Y') == $values["date"]){
-					$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:green' id='".$entity["id"]."_".$i."' onclick='changeValue(this.id, \"".$entity["id"]."\", \"driver\")'>P</span>";
+					$emp = \Attendence::where("empId","=",$entity["id"])->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime($values["date"])))->get();
+					if(count($emp)>0){
+						$emp = $emp[0];
+						if($emp->substituteId>0){
+							$substitute = \Employee::where("id","=",$emp->substituteId)->first();
+							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
+						}
+						$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-13px; margin-bottom:-17px;' src='../assets/img/corner.png'/></span>";
+					}
+					else{
+						$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:blue' id='".$entity["id"]."_".$i."' onclick='changeValue(this.id, \"".$entity["id"]."\", \"".$emptype."\")'>P</span>";
+					}
 				}
 				else{
-					$data_values[] =  "<span style='font-weight:bold; color:green'>P</span>";
+					$emp = \Attendence::where("empId","=",$entity["id"])->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime(date_format($date, 'd-m-Y'))))->get();
+					if(count($emp)>0){
+						$emp = $emp[0];
+						if($emp->substituteId>0){
+							$substitute = \Employee::where("id","=",$emp->substituteId)->first();
+							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
+						}
+						$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-24px;' src='../assets/img/corner.png'/></span>";
+					}
+					else{
+						$data_values[] =  "<span style='font-weight:bold; color:green'>P</span>";
+					}
 				}
 				$date = date_add($date, date_interval_create_from_date_string('1 days'));
 			}
@@ -106,103 +158,112 @@ class DataTableController extends \Controller {
 		return array("total"=>$total, "data"=>$data);
 	}
 	
-	private function getIncomeTransactions($values, $length, $start){
+	private function getEmployeesToUpdate($values, $length, $start){
+		//$values["DSF"];
 		$total = 0;
 		$data = array();
-		$select_args = array();
-		$select_args[] = "incometransactions.transactionId as id";
-		$select_args[] = "officebranch.name as branchId";
-		$select_args[] = "lookuptypevalues.name as name";
-		$select_args[] = "incometransactions.date as date";
-		$select_args[] = "incometransactions.amount as amount";
-		$select_args[] = "incometransactions.paymentType as paymentType";
-		$select_args[] = "incometransactions.remarks as remarks";
-		$select_args[] = "incometransactions.transactionId as id";
-		$select_args[] = "incometransactions.lookupValueId as lookupValueId";
-		$select_args[] = "incometransactions.branchId as branch";
-		
+		$select_args = array("employee.id", "employee.fullName", "employee.empCode");
+	
 		$actions = array();
-		if(in_array(302, $this->jobs)){
-			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditTransaction(", "jsdata"=>array("id"), "text"=>"EDIT");
-			$actions[] = $action;
-			$action = array("url"=>"#delete", "type"=>"modal", "css"=>"danger", "js"=>"deleteTransaction(", "jsdata"=>array("id"), "text"=>"DELETE");
-			$actions[] = $action;
-		}
 		$values["actions"] = $actions;
 	
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
-								->where("transactionId", "like", "%$search%")
-								->where("branchId","=",$values["branch1"])
-								->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")
-								->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")
-								->select($select_args)->limit($length)->offset($start)->get();
-			$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->count();
-			foreach ($entities as $entity){
-				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
+			$entities = \LookupTypeValues::where("name", "like", "%$search%")->select($select_args)->limit($length)->offset($start)->get();
+			$parentName = \LookupTypeValues::where("id","=",$values["type"])->get();
+			if(count($parentName)>0){
+				$parentName = $parentName[0];
+				$parentName = $parentName->name;
+				foreach ($entities as $entity){
+					$entity->parentId = $parentName;
+				}
 			}
+			$total = \LookupTypeValues::where("name", "like", "%$search%")->count();
 		}
 		else{
-			$dtrange = $values["daterange"];
-			$dtrange = explode(" - ", $dtrange);
-			$startdt = date("Y-m-d",strtotime($dtrange[0]));
-			$enddt = date("Y-m-d",strtotime($dtrange[1]));
-			$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("branchId","=",$values["branch1"])->whereBetween("date",array($startdt,$enddt))->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("branchId","=",$values["branch1"])->whereBetween("date",array($startdt,$enddt))->count();
-			foreach ($entities as $entity){
-				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
+			if($values["employeetype"] == "CLIENT BRANCH"){
+				$entities = \ContractVehicle::where("contract_vehicles.status", "=","ACTIVE")
+							->where("contracts.clientId","=",$values["client"])
+							->where("contracts.depotId","=",$values["depot"])
+							->join("contracts", "contract_vehicles.contractId", "=", "contracts.id")
+							->join("employee", "contract_vehicles.driver1Id", "=", "employee.id")
+							->select($select_args)->limit($length)->offset($start)->get();
+				$total = \ContractVehicle::where("contract_vehicles.status", "=","ACTIVE")
+							->where("contracts.clientId","=",$values["client"])
+							->where("contracts.depotId","=",$values["depot"])
+							->join("contracts", "contract_vehicles.contractId", "=", "contracts.id")
+							->join("employee", "contract_vehicles.driver1Id", "=", "employee.id")->count();
+			}
+			else{
+				$entities = \Employee::where("officeBranchId", "=",$values["officebranch"])
+							->whereNotIn("roleId",array(19,20))
+							->select($select_args)->limit($length)->offset($start)->get();
+				$total = \Employee::where("officeBranchId", "=",$values["officebranch"])->count();
 			}
 		}
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
-			if($entity["lookupValueId"]>900){
-				$expenses_arr = array();
-				$expenses_arr["998"] = "CREDIT SUPPLIER PAYMENT";
-				$expenses_arr["997"] = "FUEL STATION PAYMENT";
-				$expenses_arr["996"] = "LOAN PAYMENT";
-				$expenses_arr["995"] = "RENT";
-				$expenses_arr["994"] = "INCHARGE ACCOUNT CREDIT";
-				$expenses_arr["993"] = "PREPAID RECHARGE";
-				$expenses_arr["992"] = "ONLINE OPERATORS";
-				$expenses_arr["999"] = "PREPAID RECHARGE";
-				$entity["name"] = $expenses_arr[$entity["lookupValueId"]];
+			$data_values = array();
+			$data_values[] = $entity["fullName"]."(".$entity["empCode"].")";
+			$month = date("m",strtotime($values["date"]));
+			$year = date("Y",strtotime($values["date"]));
+			$date = date_create(date("d-m-Y",strtotime("01"."-".$month."-".$year)));
+			if($month === date("m")){
+				$today = date_create(date("d-m-Y"));
 			}
-			$data_values = array_values($entity);
-			$actions = $values['actions'];
-			$action_data = "";
-			$bde = new BlockDataEntryController();
-			$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
-			$valid = $bde->verifyTransactionDateandBranchLocally($values1);
-			foreach($actions as $action){
-				if($action["type"] == "modal"){
-					$jsfields = $action["jsdata"];
-					$jsdata = "";
-					$i=0;
-					for($i=0; $i<(count($jsfields)-1); $i++){
-						$jsdata = $jsdata." '".$entity[$jsfields[$i]]."', ";
+			else{
+				$today = date_create(date("t-m-Y", strtotime($values["date"])));
+			}
+			$diff = date_diff($date,$today);
+			$diff =  $diff->format("%a");
+				
+			$emptype ="office";
+			if($values["employeetype"] == "CLIENT BRANCH"){
+				$emptype = "driver";
+			}
+				
+			for($i=0; $i<=$diff; $i++){
+				if(date_format($date, 'd-m-Y') == $values["date"]){
+					$emp = \Attendence::where("empId","=",$entity["id"])->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime($values["date"])))->get();
+					if(count($emp)>0){
+						$emp = $emp[0];
+						if($emp->substituteId>0){
+							$substitute = \Employee::where("id","=",$emp->substituteId)->first();
+							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
+						}
+						//$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'>A</span>";
+						$data_values[] =  "<span style='font-weight:bold; color:red' id='_".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",\"".$emp["substituteId"]."\", \"".$emp["attendenceStatus"]."\", \"".$emp["comments"]."\", \"".$emp["attendenceStatusComments"]."\", ".$emp["id"].")'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
 					}
-					$jsdata = $jsdata." '".$entity[$jsfields[$i]];
-					
-					if($valid=="YES"){
-						$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+					else{
+																													//(id, type, substitute, comments, status, empid)
+						$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:blue' id='".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",".$entity["id"]."\", \"".$emptype."\")'>P</span>";
+						//$data_values[] =  "<span style='font-weight:bold; color:red'>A</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='updateAttendenceValues(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
 					}
 				}
-				else {
-					if($valid=="YES"){
-						$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+				else{
+					$emp = \Attendence::where("empId","=",$entity["id"])->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime(date_format($date, 'd-m-Y'))))->get();
+					if(count($emp)>0){
+						$emp = $emp[0];
+						if($emp->substituteId>0){
+							$substitute = \Employee::where("id","=",$emp->substituteId)->first();
+							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
+						}
+						$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+					}
+					else{
+						$data_values[] =  "<span style='font-weight:bold; color:green'>P</span>";
 					}
 				}
+				$date = date_add($date, date_interval_create_from_date_string('1 days'));
 			}
-			$data_values[7] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);
 	}
 	
-private function getVehicleRepairs($values, $length, $start){
+	private function getVehicleRepairs($values, $length, $start){
 		$total = 0;
 		$data = array();
 		$select_args = array();

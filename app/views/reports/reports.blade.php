@@ -84,11 +84,6 @@ use Illuminate\Support\Facades\Input;
 	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
-									<a target="_blank" href="printdailytransactions"> PRINT DAILY TRANSACTION </a>
-								</li>
-	
-								<li>
-									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=dailyfinance"> DAILY FINANCE REPORT </a>
 								</li>
 	
@@ -96,10 +91,13 @@ use Illuminate\Support\Facades\Input;
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=dailyfinancedetailed"> DAILY FINANCE DETAILS REPORT </a>
 								</li>
+								
+								<li>
+									&nbsp;
+								</li>
 	
 								<li>
-									<i class="ace-icon fa fa-check green"></i>
-									<a target="_blank" href="branchverification"> BRANCH VERIFICATION </a>
+									&nbsp;
 								</li>
 							</ul>
 						</div>

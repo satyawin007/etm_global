@@ -225,7 +225,7 @@ class DepotController extends \Controller {
 			$districts_arr[$district['id']] = $district['name'];
 		}
 		
-		$branches =  \OfficeBranch::all();
+		$branches =  \OfficeBranch::where("status","=","ACTIVE")->where("isWarehouse","=","Yes")->get();
 		$branches_arr = array();
 		foreach ($branches as $branch){
 			$branches_arr[$branch['id']] = $branch['name'];

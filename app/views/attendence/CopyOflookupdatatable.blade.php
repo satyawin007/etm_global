@@ -14,8 +14,8 @@
 			    padding-bottom: 0px;
 			    background-color: #EFF3F8;
 			}
-			th, td {
-				white-space: nowrap;
+			th,td{
+				text-align: center;
 			}
 			.chosen-container{
 			  width: 100% !important;
@@ -30,24 +30,25 @@
 	
 	@section('bredcum')	
 		<small>
-			WORKFLOW
+			HOME
 			<i class="ace-icon fa fa-angle-double-right"></i>
-			{{$values['bredcum']}}
+			ATTENDENCE
 		</small>
 	@stop
 
 	@section('page_content')
+		<div class="row " style="max-width: 96%;margin-left: 2%;">
 		<div class="row ">
-			<div class="col-xs-offset-1 col-xs-10">
+			<div class="col-xs-offset-0 col-xs-12">
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
-				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) or 
-						($form_info['action']=="addclient" && in_array(403, $jobs)) ||
-						($form_info['action']=="adddepot" && in_array(405, $jobs))
+				<?php if(($form_info['action']=="addattendence" && in_array(206, $jobs)) or 
+						($form_info['action']=="addclient" && in_array(403, $jobs))
 					  ){ ?>
-					@include("contracts.addlookupform",$form_info)
+					@include("attendence.addlookupform",$form_info)
 				<?php } ?>
 			</div>
+		</div>
 		</div>
 				
 		<div class="row " style="max-width: 98%;margin-left: 1%;">
@@ -58,85 +59,8 @@
 				</div>
 				<div class="pull-right tableTools-container"></div>
 			</div>
-			
-			<?php if(isset($form_info["table"]) && $form_info["table"]=="\InchargeTransaction"){?>
-				<div class="row">
-					<div class="col-xs-offset-3 col-xs-8">
-						<div class="col-xs-3">
-							<select name="inchargereporttype" id="inchargereporttype" class="formcontrol chosen-select">
-								<option value="Income">INCOME</option>
-								<option value="Expense">EXPENSE</option>
-							</select>
-						</div>
-						<div class="col-xs-3">
-							<select name="incharge" id="incharge" class="formcontrol chosen-select">
-								<option value="0">All</option>
-								<?php 
-									$incharges = InchargeAccounts::where("inchargeaccounts.status","=","ACTIVE")
-													->join("employee","employee.id","=","inchargeaccounts.empid")
-													->select("empid","fullName","empCode")->get();
-									foreach ($incharges as $incharge){
-										echo '<option value="'.$incharge->empid.'">'.$incharge->fullName.'('.$incharge->empCode.')'.'</option>';
-									}
-								?>
-							</select>
-						</div>
-						<div class="col-xs-3">
-							<select name="logstatus" id="logstatus" class="formcontrol chosen-select">
-								<option value="All">All</option>
-								<option value="Requested">Requested</option>
-								<option value="Sent for Approval">Sent for Approval</option>
-								<option value="Approved">Approved</option>
-								<option value="Rejected">Rejected</option>
-								<option value="Hold">Hold</option>
-							</select>
-						</div>
-						<div class="col-xs-2">
-							<button class="btn btn-xs btn-primary" id="getbtn">&nbsp;&nbsp;GET&nbsp;&nbsp;</button>
-						</div>
-					</div>
-				</div>
-			<?php } else {?>
-				<div class="row">
-					<div class="col-xs-offset-4 col-xs-8">
-						<div class="col-xs-4">
-							<select name="logstatus" id="logstatus" class="formcontrol chosen-select">
-								<option value="All">All</option>
-								<option value="Requested">Requested</option>
-								<option value="Sent for Approval">Sent for Approval</option>
-								<option value="Approved">Approved</option>
-								<option value="Rejected">Rejected</option>
-								<option value="Hold">Hold</option>
-							</select>
-						</div>
-						<div class="col-xs-3">
-							<button class="btn btn-xs btn-primary" id="getbtn">&nbsp;&nbsp;GET&nbsp;&nbsp;</button>
-						</div>
-					</div>
-				</div>
-			<?php }?>
 			<form action="test" method="post" name="workflowform" id="workflowform" onsubmit="return false;">
-			<input type="hidden" name="transactiontype" value="{{$form_info['transactiontype']}}">
-			<input type="hidden" name="table" value="{{$form_info['table']}}">
-			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 5px;">CHANGE STATUS OF {{$values["bredcum"]}} WORK FLOW</h3>
-			<div class="row">
-				<div class="col-xs-offset-1 col-xs-10">
-					<div class="col-xs-4">
-						<select name="workflowstatus" id="workflowstatus" class="formcontrol chosen-select">
-							<option value="Sent for Approval">Sent for Approval</option>
-							<option value="Approved">Approved</option>
-							<option value="Rejected">Rejected</option>
-							<option value="Hold">Hold</option>
-						</select>
-					</div>
-					<div class="col-xs-6">
-						<input type="text" class="formcontrol col-xs-12" name="remarks" placeholder="enter comments (if any)">
-					</div>
-					<div class="col-xs-2">
-						<button class="btn btn-xs btn-primary" id="updatebtn" onclick="postData()">&nbsp;&nbsp;UPDATE&nbsp;&nbsp;</button>
-					</div>
-				</div>
-			</div>
+			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 5px;">CHANGE STATUS OF {{$values["bredcum"]}}</h3>
 			<div class="table-header" style="margin-top: 10px;">
 				Results for "{{$values['bredcum']}}"				 
 			</div>
@@ -146,10 +70,20 @@
 				<table id="dynamic-table" class="table table-striped table-bordered table-hover">
 					<thead>
 						<tr>
-							<?php 
-								$theads = $values['theads'];
-								foreach($theads as $thead){
-									echo "<th>".strtoupper($thead)."</th>";
+							<?php
+								echo "<th>EMPLOYEE (EMPCODE)</th>";
+								$date = date_create(date('d-m-Y',strtotime("first day of this month")));
+								$today = date_create(date("d-m-Y"));
+								$diff=date_diff($date,$today);
+								$diff =  $diff->format("%a");
+								for($i=0; $i<=$diff; $i++){
+									if(date_format($date, 'D') == "Sun"){
+										echo "<th style='color: red; background-color: #D0D0D6;'>".strtoupper(date_format($date, 'd D'))."</th>";
+									}
+									else{
+										echo "<th>".strtoupper(date_format($date, 'd D'))."</th>";
+									}
+									$date = date_add($date, date_interval_create_from_date_string('1 days'));
 								}
 							?>
 						</tr>
@@ -158,6 +92,60 @@
 			</div>
 			</form>
 		</div>
+		
+		<div id="edit" class="modal" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="blue bigger">Please fill the following form fields</h4>
+					</div>
+					<div class="modal-body">
+						<div class="row">
+							<div class="col-xs-12">
+								<div name="edit" id="edit" class="form-horizontal" action="edit"  method="post">	
+									<div class="form-group">
+										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> SUBSTITUTE </label>
+										<div class="col-xs-7">
+											<select class="form-control chosen-select" name="substitute"  id="substitute">
+												<option value="">-- substitute --</option>
+												<?php 
+													$employees = Employee::where("status","=","ACTIVE")
+																	->whereIn("roleId",array(19,20))->get();
+													foreach($employees as $employee){
+														echo '<option value="'.$employee->id.'">'.$employee->fullName.'('.$employee->empCode.')</option>';
+													}
+												?>
+											</select>
+										</div>			
+									</div>				
+									<div class="form-group">
+										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> COMMENTS </label>
+										<div class="col-xs-7">
+											<textarea  id="comments"  name=""comments"" class="form-control" ></textarea>
+										</div>			
+									</div>
+									<input type="hidden" name="empid" id="empid" value="" />
+												
+									<div class="modal-footer">
+										<button class="btn btn-sm" data-dismiss="modal">
+											<i class="ace-icon fa fa-times"></i>
+											Cancel
+										</button>
+						
+										<button class="btn btn-sm btn-primary" data-dismiss="modal" onclick="formValues()">
+											<i class="ace-icon fa fa-check"></i>
+											Save
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<a class="" href="#edit" id="modaledit" data-toggle="modal"></a>
 		</div>
 	@stop
 	
@@ -180,11 +168,13 @@
 	@section('inline_js')
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
+			var attendence_data = [];
+			data = [];
 			$("#entries").on("change",function(){paginate(1);});
 
 			$("#getbtn").on("click",function(){
 				logstatus = $("#logstatus").val();
-				url = "getworkflowdatatabledata?name={{$form_info['transactiontype']}}&logstatus="+logstatus;
+				url = "";
 
 				inchargereporttype = $("#inchargereporttype").val();
 				if(inchargereporttype != undefined && inchargereporttype !=""){
@@ -197,17 +187,128 @@
 				myTable.ajax.url(url).load();
 			})
 
-			function postData(evt){
-			 	$.post( 
-                   "workflowupdate",
-                   $("#workflowform").serialize(),
-                   function(data) {
-                       json_obj = JSON.parse(data);
-                       bootbox.alert(json_obj.message);
-                       window.setTimeout(function(){location.reload();}, 2000 );
-                   }
-                );
-				return false;
+			function postData(){
+				if(attendence_data.length== 0){
+					alert("No data to SEND");
+					return;
+				}
+				$('#jsondata').val(JSON.stringify(attendence_data));
+				$.ajax({
+                    url: "addattendence",
+                    type: "post",
+                    data: $("#attendence").serialize(),
+                    success: function(response) {
+                    	response = jQuery.parseJSON(response);	
+                        if(response.status=="success"){
+                        	bootbox.alert(response.message);
+                        	window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
+                        }
+                        if(response.status=="fail"){
+                        	bootbox.alert(response.message);
+                        }
+                    }
+                });
+			}
+
+			function formValues(){
+				data = {};
+				data["empid"] = $("#empid").val();
+				data["Substitute"] = $("#substitute").val();
+				data["comments"] = $("#comments").val();
+				attendence_data.push(data);
+				$("#comments").val("");
+				$("#substitute").find('option:selected').removeAttr("selected");
+				$('.chosen-select').trigger('chosen:updated');
+			}
+
+			function printtable(){
+				alert("in printtable "+attendence_data.length);
+				for(i=0; i<attendence_data.length; i++){
+					alert(attendence_data[i][0]+" "+attendence_data[i][1]+" "+attendence_data[i][2]);
+				}
+			}
+
+			function showData(substitute, comments){
+				bootbox.alert("Substitute : "+substitute+"<br/>"+"Comments : "+comments);
+			}
+
+			function changeValue(id, empid, type){
+				//alert(id+" "+empid+" "+type);
+				$("#empid").val(empid);
+				$text = $("#"+id).html();
+				$("#"+id).html("P");
+				$("#"+id).css("color","green");
+				if($text == "P"){
+					if(type == "driver"|| type == "helper"){
+						$("#modaledit").click();
+					}
+					else{
+						data = {};
+						data["empid"] = empid;
+						data["Substitute"] = 0;
+						data["comments"] = "";
+						attendence_data.push(data);
+					}
+					$("#"+id).html("A");
+					$("#"+id).css("color","red");
+				}
+				if($text == "A"){
+					var index = -1;		
+					for( var i = 0; i<attendence_data.length; i++ ) {
+						if( attendence_data[i]["empid"] == empid ) {
+							index = i;
+							break;
+						}
+					}
+					if( index === -1 ) {
+						return;
+					}
+					attendence_data.splice(index, 1);	
+				}
+			}
+
+			function getEmployees(){
+				url = "getattendencedatatabledata?name=getattendence";
+				
+				employeetype = $('#employeetype').val();
+				if(employeetype == ""){
+					alert("please select employee type");
+					return;
+				}
+				url = url+"&employeetype="+employeetype;
+				
+				officebranch = $('#officebranch').val();
+				if(employeetype == "OFFICE" && officebranch==""){
+					alert("please select office branch");
+					return;
+				}
+				url = url+"&officebranch="+officebranch;
+				
+				date = $('#date').val();
+				if(date == ""){
+					alert("please select date");
+					return;
+				}
+				url = url+"&date="+date;
+				
+				session = $('input[name=session]:radio:checked').val();
+				if(session == undefined){
+					alert("please select session");
+					return;
+				}
+				url = url+"&session="+session;
+				
+				day = $('input[name=day]:radio:checked').val();
+				if(day == undefined){
+					alert("please select day");
+					return;
+				}
+				url = url+"&day="+day;
+
+				$("#get").show();
+				$("#modify").show();
+				$("#add").show();
+				myTable.ajax.url(url).load();
 			}
 
 			<?php 
@@ -254,6 +355,7 @@
 			//datepicker plugin
 			//link
 			$('.date-picker').datepicker({
+				 endDate: '+0d',
 				autoclose: true,
 				todayHighlight: true
 			})
@@ -280,7 +382,7 @@
 					"bPaginate": true, "bDestroy": true,
 					bInfo: true,
 					"aoColumns": [
-					  <?php $cnt=count($values["theads"]); for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
+					  <?php $cnt=$diff; $cnt++; for($i=0; $i<=$cnt; $i++){ echo '{ "bSortable": false },'; }?>
 					],
 					"aaSorting": [],
 					oLanguage: {
@@ -289,7 +391,7 @@
 					"bProcessing": true,
 			        "bServerSide": true,
 					"ajax":{
-		                url :"getservicelogsdatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
+		                url :"getattendencedatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
 		                type: "post",  // method  , by default get
 		                error: function(){  // error handling
 		                    $(".employee-grid-error").html("");
@@ -309,11 +411,6 @@
 					//you may want to wrap the table inside a "div.dataTables_borderWrap" element
 			
 					//"iDisplayLength": 50
-			
-			
-					select: {
-						style: 'multi'
-					}
 			    } );
 			
 				
@@ -392,55 +489,6 @@
 						else $(this).tooltip({container: 'body', title: $(this).text()});
 					});
 				}, 500);
-				
-				
-				
-				
-				
-				myTable.on( 'select', function ( e, dt, type, index ) {
-					if ( type === 'row' ) {
-						$( myTable.row( index ).node() ).find('input:checkbox').prop('checked', true);
-					}
-				} );
-				myTable.on( 'deselect', function ( e, dt, type, index ) {
-					if ( type === 'row' ) {
-						$( myTable.row( index ).node() ).find('input:checkbox').prop('checked', false);
-					}
-				} );
-			
-			
-			
-			
-				/////////////////////////////////
-				//table checkboxes
-				$('th input[type=checkbox], td input[type=checkbox]').prop('checked', false);
-				
-				//select/deselect all rows according to table header checkbox
-				$('#dynamic-table > thead > tr > th input[type=checkbox], #dynamic-table_wrapper input[type=checkbox]').eq(0).on('click', function(){
-					var th_checked = this.checked;//checkbox inside "TH" table header
-					
-					$('#dynamic-table').find('tbody > tr').each(function(){
-						var row = this;
-						if(th_checked) myTable.row(row).select();
-						else  myTable.row(row).deselect();
-					});
-				});
-				
-				//select/deselect a row when the checkbox is checked/unchecked
-				$('#dynamic-table').on('click', 'td input[type=checkbox]' , function(){
-					var row = $(this).closest('tr').get(0);
-					if(!this.checked) myTable.row(row).deselect();
-					else myTable.row(row).select();
-				});
-			
-			
-			
-				$(document).on('click', '#dynamic-table .dropdown-toggle', function(e) {
-					e.stopImmediatePropagation();
-					e.stopPropagation();
-					e.preventDefault();
-				});
-				
 				
 				
 				//And for the first simple table, which doesn't have TableTools or dataTables

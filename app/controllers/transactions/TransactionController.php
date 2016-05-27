@@ -1049,9 +1049,16 @@ class TransactionController extends \Controller {
 			$form_info["form_fields"] = $form_fields;
 		}
 		if(isset($values["paymenttype"]) && ($values["paymenttype"] === "ecs" || $values["paymenttype"] === "neft" || $values["paymenttype"] === "rtgs")){
-			$form_field = array("name"=>"bankname", "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"accountnumber", "content"=>"account number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+// 			$form_field = array("name"=>"bankname", "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+// 			$form_fields[] = $form_field;
+// 			$form_field = array("name"=>"accountnumber", "content"=>"account number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+// 			$form_fields[] = $form_field;
+			$bankacts =  \BankDetails::where("Status","=","ACTIVE")->get();
+			$bankacts_arr = array();
+			foreach ($bankacts as $bankact){
+				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+			}
+			$form_field = array("name"=>"bankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
 			$form_fields[] = $form_field;
 			$form_info["form_fields"] = $form_fields;
 		}		

@@ -149,19 +149,27 @@
 					<div class="clearfix">
 						<div class="col-md-offset-0 col-md-12 form-actions" style="margin: 0px">
 							<div class="col-md-offset-4 col-md-5">
-								<div class="btn primary" id="add" onclick="postData()">
-									<i class="ace-icon fa fa-cross bigger-110"></i>
-									ADD
-								</div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-								
 								<div class="btn primary" id="get" onclick="getEmployees()" >
 									<i class="ace-icon fa fa-cross bigger-110"></i>
 									GET
 								</div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								
-								<div class="btn primary" id="modify" onclick="updateData()">
+								<div class="btn primary" id="add" onclick="postData()">
+									<i class="ace-icon fa fa-cross bigger-110"></i>
+									ADD
+								</div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+								
+								
+								
+								<div class="btn primary" id="modify" onclick="getEmployeesToUpdate()">
 									<i class="ace-icon fa fa-cross bigger-110"></i>
 									MODIFY
+								</div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+								
+								<div class="btn primary" id="update" onclick="postDataUpdate()">
+									<i class="ace-icon fa fa-cross bigger-110"></i>
+									UPDATE
 								</div>
 							</div>
 						</div>

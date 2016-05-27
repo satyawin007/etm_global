@@ -3125,6 +3125,8 @@ class ReportsController extends \Controller {
 			$select_args[] = "employee.fullName as receivedBy";
 			$select_args[] = "purchased_items.unitPrice as unitPrice";
 			$select_args[] = "purchase_orders.filePath as filePath";
+			$select_args[] = "depots.name as depotName";
+			$select_args[] = "officebranch.id as branchId";
 			if(isset($values["inventoryreporttype"])){
 				if($values["inventoryreporttype"] == "find_available_items" ){
 					$query = \PurchasedItems::where("purchased_items.status","=","ACTIVE")
@@ -3142,7 +3144,8 @@ class ReportsController extends \Controller {
 					$query->join("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
 						->join("items","items.id","=","purchased_items.itemId")
 						->join("manufactures","manufactures.id","=","purchased_items.manufacturerId")
-						->join("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
+						->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
+						->leftjoin("depots","depots.id","=","purchase_orders.officeBranchId")
 						->join("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
 						->leftjoin("employee","employee.id","=","purchase_orders.createdBy")
 						->leftjoin("employee as employee1","employee1.id","=","purchase_orders.inchargeId");
@@ -3150,6 +3153,9 @@ class ReportsController extends \Controller {
 					foreach ($entities as $entity){
 						$row = array();
 						$row["officeBranchId"] = $entity->officeBranchId;
+						if($entity->officeBranchId == "" || $entity->officeBranchId == 0 || $entity->officeBranchId == "null"){
+							$row["officeBranchId"] = $entity->depotName;
+						}
 						$row["item"] = $entity->item;
 						$row["qty"] = $entity->qty;
 						$row["manufacturer"] = $entity->manufacturer;
@@ -3188,6 +3194,9 @@ class ReportsController extends \Controller {
 					$select_args[] = "purchased_items.unitPrice as unitPrice";
 					$select_args[] = "purchase_orders.filePath as filePath";
 					$select_args[] = "vehicle.veh_reg as veh_reg";
+					$select_args[] = "depots.name as depotName";
+					$select_args[] = "depots1.name as depot1Name";
+					$select_args[] = "officebranch.id as branchId";
 					if($values["inventoryreporttype"] == "history" ){
 						$fromdt = date("Y-m-d",strtotime($values['fromdate']));
 						$todt = date("Y-m-d",strtotime($values['todate']));
@@ -3200,20 +3209,28 @@ class ReportsController extends \Controller {
 							$query->where("items.id","=",$values["item"]);
 						}
 						$query->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")
-							->leftjoin("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
-							->leftjoin("items","items.id","=","purchased_items.itemId")
-							->leftjoin("vehicle","vehicle.id","=","inventory_transaction.toVehicleId")
-							->leftjoin("vehicle as vehicle1","vehicle1.id","=","inventory_transaction.fromVehicleId")
-							->leftjoin("manufactures","manufactures.id","=","purchased_items.manufacturerId")
-							->leftjoin("officebranch","officebranch.id","=","inventory_transaction.fromWareHouseId")
-							->leftjoin("officebranch as officebranch1","officebranch1.id","=","inventory_transaction.toWareHouseId")
-							->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
-							->leftjoin("employee","employee.id","=","purchase_orders.createdBy");
+									->leftjoin("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
+									->leftjoin("items","items.id","=","purchased_items.itemId")
+									->leftjoin("vehicle","vehicle.id","=","inventory_transaction.toVehicleId")
+									->leftjoin("vehicle as vehicle1","vehicle1.id","=","inventory_transaction.fromVehicleId")
+									->leftjoin("manufactures","manufactures.id","=","purchased_items.manufacturerId")
+									->leftjoin("officebranch","officebranch.id","=","inventory_transaction.fromWareHouseId")
+									->leftjoin("officebranch as officebranch1","officebranch1.id","=","inventory_transaction.toWareHouseId")
+									->leftjoin("depots","depots.id","=","inventory_transaction.fromWareHouseId")
+									->leftjoin("depots as depots1","depots1.id","=","inventory_transaction.toWareHouseId")
+									->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+									->leftjoin("employee","employee.id","=","purchase_orders.createdBy");
 						$entities = $query->select($select_args)->orderBy("inventory_transaction.date","desc")->get();
-		
 						foreach ($entities as $entity){
 							$row = array();
 							$row["officeBranchId"] = $entity->officebranch;
+							if($entity->officebranch == "" || $entity->officebranch == "0" || $entity->officebranch == "null"){
+								$row["officeBranchId"] = $entity->depotName;
+							}
+							if($entity->depot1Name != ""){
+								$entity->toWareHouseId = $entity->depot1Name;
+							}
+							
 							$row["item"] = $entity->item;
 							$row["qty"] = $entity->qty;
 							$row["manufacturer"] = $entity->manufacturer;

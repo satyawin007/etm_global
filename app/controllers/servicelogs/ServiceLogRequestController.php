@@ -105,6 +105,10 @@ class ServiceLogRequestController extends \Controller {
 					}
 				}
 			}
+			if($values["status1"] == "Open"){
+				$fields["openedBy"] = \Auth::user()->id;
+				$fields["opened_at"] = date("Y-m-d h:s:i");
+			}
 			$db_functions_ctrl = new DBFunctionsController();
 			$table = "\ServiceLogRequest";
 			$data = array("id"=>$values['id1']);

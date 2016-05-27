@@ -628,3 +628,13 @@ Route::any('/attendence', "attendence\AttendenceController@manageAttendence");
 
 Route::any('/getattendencedatatabledata', "attendence\DataTableController@getDataTableData");
 
+Route::any('/addattendence', "attendence\AttendenceController@addAttendence");
+
+Route::any('/updateattendence', "attendence\AttendenceController@updateAttendence");
+
+Route::any('/addattendencelog', "attendence\AttendenceController@addAttendenceLog");
+
+Route::any('/getattendencelog', "attendence\AttendenceController@getAttendenceLog");
+
+Route::any('/getdaytotalattendence', "attendence\AttendenceController@getDayTotalAttendence");
+

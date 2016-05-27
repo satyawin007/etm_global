@@ -621,6 +621,7 @@ use settings\AppSettingsController;
 						todayHighlight: true
 					  });
 			    	  $("#addfields").show();
+			    	  $('.chosen-select').chosen();
 			      },
 			      type: 'GET'
 			   });

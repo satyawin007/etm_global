@@ -712,18 +712,30 @@ class StockController extends \Controller {
 		$form_info["back_url"] = "items";
 		$form_info["bredcum"] = "USE STOCK ";
 		
+		$warehouse_arr_total = array();
 		$warehouse_arr = array();
 		$warehouses = \OfficeBranch::where("isWareHouse","=","Yes")->get();
 		foreach ($warehouses as $warehouse){
 			$warehouse_arr[$warehouse->id] = $warehouse->name;
 		}
+		$warehouse_arr_total["main warehouses"] = $warehouse_arr;
+		foreach ($warehouses as $warehouse){
+			$warehouse_arr = array();
+			$sub_warehouses = \Depot::where("status","=","ACTIVE")
+								->where("ParentWarehouse","=",$warehouse->id)->get();
+			foreach ($sub_warehouses as $sub_warehouse){
+				$warehouse_arr[$sub_warehouse->id] = $sub_warehouse->name."(".$sub_warehouse->code.")";
+			}
+			$warehouse_arr_total[$warehouse->name] = $warehouse_arr;
+		}
+				
 		
 		$form_fields = array();		
 		$form_field = array("name"=>"action", "id"=>"action",  "content"=>"select action", "readonly"=>"", "required"=>"required", "type"=>"select", "action"=>array("type"=>"onchange","script"=>"getItems(this.value)"), "options"=>array("itemtovehicles"=>"item","warehousetowarehouse"=>"warehouse","vehicletovehicle"=>"vehicle to vehicle","vehicletowarehouse"=>"repairs","creditsuppliertowarehouse"=>"repairs return"), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"date", "id"=>"date",  "content"=>"date", "readonly"=>"", "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"warehouse", "id"=>"warehouse",  "content"=>"warehouse", "readonly"=>"", "action"=>array("type"=>"onchange","script"=>"getItems(this.value)"), "required"=>"required", "type"=>"select", "options"=>$warehouse_arr, "class"=>"form-control");
+		$form_field = array("name"=>"warehouse", "id"=>"warehouse",  "content"=>"warehouse", "readonly"=>"", "action"=>array("type"=>"onchange","script"=>"getItems(this.value)"), "required"=>"required", "type"=>"selectgroup", "options"=>$warehouse_arr_total, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"jsondata", "id"=>"jsondata", "value"=>"",  "content"=>"", "readonly"=>"", "required"=>"", "type"=>"hidden", "class"=>"form-control");
 		$form_fields[] = $form_field;

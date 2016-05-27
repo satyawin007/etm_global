@@ -145,6 +145,26 @@
 							</div>			
 						</div>				
 						<?php } ?>
+						<?php if($form_field['type'] === "selectgroup"){ ?>
+						<div class="form-group">
+							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+							<div class="col-xs-7">
+								<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['id']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+									<option value="">-- {{$form_field['name']}} --</option>
+									<?php 
+										$options_arr = $form_field["options"];
+										foreach($options_arr as $key => $values_arr){
+											echo '<optgroup label="'.strtoupper($key).'">';
+											foreach($values_arr as $key => $value){
+												echo "<option value='$key'>$value</option>";
+											}
+											echo '</optgroup>';
+										}
+									?>
+								</select>
+							</div>			
+						</div>				
+						<?php } ?>
 						</div>
 					<?php } ?>
 					<div class="form-group col-xs-6" style="margin-top: 15px; margin-bottom: -10px">
@@ -226,28 +246,39 @@
 								<div class="col-xs-4">
 									<div class="form-group">
 										<?php 
-											$branches_arr = array();
+											$warehouse_arr_total = array();
+											$warehouse_arr = array();
 											$warehouses = \OfficeBranch::where("isWareHouse","=","Yes")->get();
 											foreach ($warehouses as $warehouse){
-												$branches_arr[$warehouse->id] = $warehouse->name;
+												$warehouse_arr[$warehouse->id] = $warehouse->name;
+											}
+											$warehouse_arr_total["main warehouses"] = $warehouse_arr;
+											foreach ($warehouses as $warehouse){
+												$warehouse_arr = array();
+												$sub_warehouses = \Depot::where("status","=","ACTIVE")
+																	->where("ParentWarehouse","=",$warehouse->id)->get();
+												foreach ($sub_warehouses as $sub_warehouse){
+													$warehouse_arr[$sub_warehouse->id] = $sub_warehouse->name."(".$sub_warehouse->code.")";
+												}
+												$warehouse_arr_total[$warehouse->name] = $warehouse_arr;
 											}
 											if(!isset($values['warehouse1'])){
 												$values["warehouse1"] = 0;
 											}
 										?>
-										<?php $form_field = array("name"=>"warehouse1", "value"=>$values["warehouse1"], "content"=>"warehouse", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select1", "options"=>$branches_arr); ?>
+										<?php $form_field = array("name"=>"warehouse1", "value"=>$values["warehouse1"], "content"=>"warehouse", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$warehouse_arr_total); ?>
 										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 										<div class="col-xs-9">
-											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+											<select class="{{$form_field['class']}}"  {{$form_field['required']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}"  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
 												<option value="">-- {{$form_field['name']}} --</option>
 												<?php 
-													foreach($form_field["options"] as $key => $value){
-														if(isset($form_field['value']) && $form_field['value']==$key) { 
-															echo "<option selected='selected' value='$key'>$value</option>";
-														}
-														else{
+													$options_arr = $form_field["options"];
+													foreach($options_arr as $key => $values_arr){
+														echo '<optgroup label="'.strtoupper($key).'">';
+														foreach($values_arr as $key => $value){
 															echo "<option value='$key'>$value</option>";
 														}
+														echo '</optgroup>';
 													}
 												?>
 											</select>
@@ -328,28 +359,39 @@
 								<div class="col-xs-4">
 									<div class="form-group">
 										<?php 
-											$branches_arr = array();
+											$warehouse_arr_total = array();
+											$warehouse_arr = array();
 											$warehouses = \OfficeBranch::where("isWareHouse","=","Yes")->get();
 											foreach ($warehouses as $warehouse){
-												$branches_arr[$warehouse->id] = $warehouse->name;
+												$warehouse_arr[$warehouse->id] = $warehouse->name;
 											}
-											if(!isset($values['warehouse1'])){
-												$values["warehouse1"] = 0;
+											$warehouse_arr_total["main warehouses"] = $warehouse_arr;
+											foreach ($warehouses as $warehouse){
+												$warehouse_arr = array();
+												$sub_warehouses = \Depot::where("status","=","ACTIVE")
+																	->where("ParentWarehouse","=",$warehouse->id)->get();
+												foreach ($sub_warehouses as $sub_warehouse){
+													$warehouse_arr[$sub_warehouse->id] = $sub_warehouse->name."(".$sub_warehouse->code.")";
+												}
+												$warehouse_arr_total[$warehouse->name] = $warehouse_arr;
+											}
+											if(!isset($values['warehouse2'])){
+												$values["warehouse2"] = 0;
 											}
 										?>
-										<?php $form_field = array("name"=>"warehouse2", "value"=>$values["warehouse1"], "content"=>"warehouse", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select1", "options"=>$branches_arr); ?>
+										<?php $form_field = array("name"=>"warehouse2", "value"=>$values["warehouse2"], "content"=>"warehouse", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$warehouse_arr_total); ?>
 										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 										<div class="col-xs-9">
-											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+											<select class="{{$form_field['class']}}"  {{$form_field['required']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}"  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
 												<option value="">-- {{$form_field['name']}} --</option>
 												<?php 
-													foreach($form_field["options"] as $key => $value){
-														if(isset($form_field['value']) && $form_field['value']==$key) { 
-															echo "<option selected='selected' value='$key'>$value</option>";
-														}
-														else{
+													$options_arr = $form_field["options"];
+													foreach($options_arr as $key => $values_arr){
+														echo '<optgroup label="'.strtoupper($key).'">';
+														foreach($values_arr as $key => $value){
 															echo "<option value='$key'>$value</option>";
 														}
+														echo '</optgroup>';
 													}
 												?>
 											</select>
@@ -578,13 +620,15 @@
                         success: function(response) {
                         	response = jQuery.parseJSON(response);	
                             if(response.status=="success"){
-                            	bootbox.alert(response.message, function(result) {});
+                            	bootbox.alert(response.message);
+                            	window.setTimeout(function(){location.reload();}, 2000 );
                             	resetForm("{{$form_info['name']}}");
                             	$scope.vehicles= [];	
-            					$scope.vehicles_text = [];		
+            					$scope.vehicles_text = [];	
+            					
                             }
                             if(response.status=="fail"){
-                            	bootbox.alert(response.message, function(result) {});
+                            	bootbox.alert(response.message);
                             }
                         }
                     });
@@ -942,7 +986,7 @@
 						      else{
 						    	  bootbox.alert('ADDED STOCK ITEM COULD NOT BE DELETED!', function(result) {});
 						      }
-						      location.reload();	
+						      window.setTimeout(function(){location.reload();}, 3000 );	
 					      },
 					      type: 'GET'
 					   });	
@@ -989,9 +1033,9 @@
 				}
 
 				var item = $("#item").val();
-				if(item != undefined && item ==""){
-					alert("Please select item");
-					return false;
+				if(item != undefined && item == ""){
+// 					alert("Please select item");
+// 					return false;
 				}
 
 				var fromvehicleno = $("#fromvehicleno").val();
@@ -1494,7 +1538,8 @@
 	                success: function(response) {
 	                	response = jQuery.parseJSON(response);	
 	                    if(response.status=="success"){
-	                    	bootbox.alert(response.message, function(result) {});
+	                    	bootbox.alert(response.message);
+                        	window.setTimeout(function(){location.reload();}, 2000 );
 	                    	resetForm("{{$form_info['name']}}");
 	                    	entities= [];	
 	                    	entities_text = [];	

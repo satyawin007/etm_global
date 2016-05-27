@@ -236,7 +236,7 @@ class DataTableController extends \Controller {
 										  ->leftjoin('role','employee.roleId','=','role.id')
 										  ->leftjoin('employee_activity','employee_activity.empid','=','employee.id')
 										  ->select($select_args)->orderBy("employee_activity.date","desc")->limit($length)->offset($start)->get();
-					$total = \Employee::where("status","=","BLOCKED")->count();
+					$total = \Employee::where("employee.status","=","BLOCKED")->count();
 				}
 			}
 			if(isset($values['action']) && $values['action']=="terminated"){
@@ -256,7 +256,7 @@ class DataTableController extends \Controller {
 								->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
 								->leftjoin('role','employee.roleId','=','role.id')
 								->select($select_args)->limit($length)->offset($start)->get();
-					$total = \Employee::where("status","=","TERMINATED")->count();
+					$total = \Employee::where("employee.status","=","TERMINATED")->count();
 				}
 			}
 			if(isset($values['action']) && $values['action']=="all"){
@@ -268,7 +268,7 @@ class DataTableController extends \Controller {
 								->leftjoin('role','employee.roleId','=','role.id')
 								->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 								->select($select_args)->limit($length)->offset($start)->get();
-					$total = \Employee::where('officeBranchId',"=",$values['branch'])->where('roleId',"!=",20)->where("roleId", "!=",19)->where("status", "=","Active")->count();
+					$total = \Employee::where('officeBranchId',"=",$values['branch'])->where('roleId',"!=",20)->where("roleId", "!=",19)->where("employee.status", "=","Active")->count();
 				}
 				else {
 					$entities = \Employee::where('roleId',"!=",20)->where("roleId", "!=",19)
@@ -277,7 +277,7 @@ class DataTableController extends \Controller {
 									->leftjoin('role','employee.roleId','=','role.id')
 									->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 									->select($select_args)->select($select_args)->limit($length)->offset($start)->get();
-					$total = \Employee::where('roleId',"!=",20)->where("roleId", "!=",19)->where("status", "=","Active")->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->get();
+					$total = \Employee::where('roleId',"!=",20)->where("roleId", "!=",19)->where("employee.status", "=","Active")->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->get();
 					$total = count($total);					
 				}
 			}
@@ -563,7 +563,12 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \OfficeBranch::where("officebranch.name", "like", "%$search%")->leftjoin("rentdetails", "rentdetails.officeBranchId", "=", "officebranch.id")->join("states","states.id", "=", "officebranch.stateId")->join("cities","cities.id", "=", "officebranch.cityId")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \OfficeBranch::where("states.name", "like", "%$search%")
+							->orWhere("cities.name", "like", "%$search%")
+							->leftjoin("rentdetails", "rentdetails.officeBranchId", "=", "officebranch.id")
+							->join("states","states.id", "=", "officebranch.stateId")
+							->join("cities","cities.id", "=", "officebranch.cityId")
+							->select($select_args)->limit($length)->offset($start)->get();
 			foreach($entities as $entry){
 				if($entry["occupiedDate"] != "0000-00-00" &&  $entry["occupiedDate"] != "" )
 					$entry["occupiedDate"] = date("d-m-Y", strtotime($entry["occupiedDate"]));
@@ -961,7 +966,7 @@ class DataTableController extends \Controller {
 		$total = 0;
 		$data = array();
 	
-		$select_args = array('lookuptypevalues.name as bankName','branchName', "accountName", "accountNo", "lookuptypevalues1.name as accountType", "balanceAmount", "bankdetails.status as status", "bankdetails.id as id");
+		$select_args = array('bankName','branchName', "accountName", "accountNo", "accountType", "balanceAmount", "bankdetails.status as status", "bankdetails.id as id");
 		$actions = array();
 		if(in_array(228, $this->jobs)){
 			$action = array("url"=>"editbankdetails?","css"=>"primary", "type"=>"", "text"=>"Edit");
@@ -972,20 +977,15 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$bankids = \LookupTypeValues::where("name", "like", "%$search%")->select("id")->get();
-			$bankids_arr = array();
-			foreach($bankids as $bankid){
-				$bankids_arr[] = $bankid->id;
-			}
-			$entities = \BankDetails::whereIn("bankName",$bankids_arr)->join("lookuptypevalues","lookuptypevalues.id","=","bankdetails.bankName")
-									->join("lookuptypevalues as lookuptypevalues1","lookuptypevalues1.id","=","bankdetails.accountType")
-									->select($select_args)->limit($length)->offset($start)->get();
-			$total = \BankDetails::count();
+			$entities = \BankDetails::where("bankName", "like", "%$search%")
+								->where("status", "=", "ACTIVE")
+								->select($select_args)->limit($length)->offset($start)->get();
+			$total = \BankDetails::where("bankName", "like", "%$search%")->where("status", "=", "ACTIVE")->count();
 		}
 		else{
 			//$entities = \BankDetails::join("cities","cities.id","=","servicedetails.sourceCity")->join("cities as cities1","cities1.id","=","servicedetails.destinationCity")->select($select_args)->limit($length)->offset($start)->get();
-			$entities = \BankDetails::leftjoin("lookuptypevalues","lookuptypevalues.id","=","bankdetails.bankName")->leftjoin("lookuptypevalues as lookuptypevalues1","lookuptypevalues1.id","=","bankdetails.accountType")->select($select_args)->limit($length)->offset($start)->get();
-			$total = \BankDetails::count();
+			$entities = \BankDetails::where("status", "=", "ACTIVE")->select($select_args)->limit($length)->offset($start)->get();
+			$total = \BankDetails::where("status", "=", "ACTIVE")->count();
 		}
 		$entities = $entities->toArray();
 		foreach($entities as $entity){

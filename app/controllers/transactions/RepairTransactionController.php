@@ -425,11 +425,21 @@ class RepairTransactionController extends \Controller {
 				$veh_arr = array();
 				$ass_clientbranches = \Auth::user()->contractIds;
 				$ass_clientbranches = explode(",", $ass_clientbranches);
-				$contracts_vehs = \ContractVehicle::whereIn("contracts.depotId",$ass_clientbranches)
-				->where("contract_vehicles.status","=","ACTIVE")
-				->join("contracts","contract_vehicles.contractId","=","contracts.id")
-				->join("vehicle","contract_vehicles.vehicleId","=","vehicle.id")
-				->select(array("vehicle.id as id", "vehicle.veh_reg as veh_reg"))->get();
+				
+				$ass_clientbranches = \Auth::user()->contractIds;
+				if(\Auth::user()->contractIds == "0" || \Auth::user()->contractIds == ""){
+					$contracts_vehs = \ContractVehicle::where("contract_vehicles.status","=","ACTIVE")
+											->join("vehicle","contract_vehicles.vehicleId","=","vehicle.id")
+											->select(array("vehicle.id as id", "vehicle.veh_reg as veh_reg"))->get();
+				}
+				else{
+					$ass_clientbranches = explode(",", $ass_clientbranches);
+					$contracts_vehs = \ContractVehicle::whereIn("contracts.depotId",$ass_clientbranches)
+											->where("contract_vehicles.status","=","ACTIVE")
+											->join("contracts","contract_vehicles.contractId","=","contracts.id")
+											->join("vehicle","contract_vehicles.vehicleId","=","vehicle.id")
+											->select(array("vehicle.id as id", "vehicle.veh_reg as veh_reg"))->get();
+				}
 				foreach ($contracts_vehs as $contracts_veh){
 					$veh_arr[$contracts_veh->id] = $contracts_veh->veh_reg;
 				}

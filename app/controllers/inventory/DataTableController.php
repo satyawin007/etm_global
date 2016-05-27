@@ -682,6 +682,10 @@ class DataTableController extends \Controller {
 		foreach ($warehouses as $warehouse){
 			$warehouse_arr[$warehouse->id] = $warehouse->name;
 		}
+		$warehouses =  \Depot::All();
+		foreach ($warehouses as $warehouse){
+			$warehouse_arr[$warehouse->id] = $warehouse->name;
+		}
 		
 		$vehactions_arr = array();
 		$vehactions =  \InventoryLookupValues::All();
