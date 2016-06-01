@@ -435,7 +435,7 @@ Route::any('/deletepurchaseorder', "inventory\PurchaseOrderController@deletePurc
 
 Route::any('/estimatepurchaseorders', "inventory\EstimatePurchaseOrderController@manageEstimatePurchaseOrders");
 
-Route::any('/addestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@addEstimatePurchaseOrder");
+Route::any('/addestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@addEstimatePurchaseOrders");
 
 Route::any('/editestimatepurchaseorder', "inventory\EstimatePurchaseOrderController@editEstimatePurchaseOrder");
 

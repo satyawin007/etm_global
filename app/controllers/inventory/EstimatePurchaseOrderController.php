@@ -373,6 +373,244 @@ class EstimatePurchaseOrderController extends \Controller {
 		}
 		echo $response;
 	}
+	
+	public function addEstimatePurchaseOrders()
+	{
+		if (\Request::isMethod('post'))
+		{
+			//$values["DSF"];
+			$values = Input::all();
+			$url = "purchaseorder";
+			$field_names = array("branch"=>"branchId","date"=>"date");
+					
+			$fields = array();
+			foreach ($field_names as $key=>$val){
+				 if(isset($values[$key])){
+					if($key == "date"){
+						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+					}
+					else{
+						$fields[$val] = $values[$key];
+					}
+				} 
+			}
+// 			if(isset($values["incharge"]) && $values["incharge"]>0){
+// 				DB::statement(DB::raw("CALL update_incharge_amount(".$values["incharge"].", -".$values["totalamount"].");"));
+// 			}
+			/* if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
+				$destinationPath = storage_path().'/uploads/'; // upload path
+				$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension
+				$fileName = uniqid().'.'.$extension; // renameing image
+				Input::file('billfile')->move($destinationPath, $fileName); // upl1oading file to given path
+				$fields["filePath"] = $fileName;
+			} */
+			$db_functions_ctrl = new DBFunctionsController();
+			$table = "EstimatePurchaseOrder";
+			\DB::beginTransaction();
+			$recid = "";
+			try{
+				$recid = $db_functions_ctrl->insertRetId($table, $fields);
+			}
+			catch(\Exception $ex){
+				\DB::rollback();
+				$json_resp = array();
+				$json_resp["status"] = "fail";
+				$json_resp["message"] = "Add Estimate Purchase Order Operation Could not be completed, Try Again!";
+				echo json_encode($json_resp);
+				return;
+			}
+			try{
+				$db_functions_ctrl = new DBFunctionsController();
+				$table = "EstimatePurchaseOrderDetails";
+				$jsonitems = json_decode($values["jsondata"]);
+				foreach ($jsonitems as $jsonitem){
+					$fields = array();
+					$fields["estimate_purchase_order_id"] = $recid;
+					$fields["itemId"] = $jsonitem->item;
+					$fields["manufactureId"] = $jsonitem->manufacturer;
+					$fields["quantity"] = $jsonitem->quantity;
+					$fields["unitprice"] = $jsonitem->unitprice;
+					$fields["creditsupplierId"] = $jsonitem->creditsupplier;
+					$fields["remarks"] = $jsonitem->remarks;
+					$db_functions_ctrl->insert($table, $fields);
+				}
+				
+			}
+			catch(\Exception $ex){
+				$json_resp = array();
+				$json_resp["status"] = "fail";
+				$json_resp["message"] = "Add Estimate Purchase Order Details Operation Could not be completed, Try Again!";
+				echo json_encode($json_resp);
+				return;
+			}
+			\DB::commit();
+		}
+		$json_resp = array();
+		$json_resp["status"] = "success";
+		$json_resp["message"] = "Operation completed successfully";
+		echo json_encode($json_resp);
+		return;
+	}
+	
+	public function editEstimatePurchaseOrder()
+	{
+		$values = Input::all();
+		if (\Request::isMethod('post'))
+		{
+			//$values["DSF"];
+			$values = Input::all();
+			$url = "purchaseorder";
+			$field_names = array("branch"=>"branchId","date"=>"date");
+					
+			$fields = array();
+			foreach ($field_names as $key=>$val){
+				 if(isset($values[$key])){
+					if($key == "date"){
+						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+					}
+					else{
+						$fields[$val] = $values[$key];
+					}
+				} 
+			}
+// 			if(isset($values["incharge"]) && $values["incharge"]>0){
+// 				DB::statement(DB::raw("CALL update_incharge_amount(".$values["incharge"].", -".$values["totalamount"].");"));
+// 			}
+			/* if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
+				$destinationPath = storage_path().'/uploads/'; // upload path
+				$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension
+				$fileName = uniqid().'.'.$extension; // renameing image
+				Input::file('billfile')->move($destinationPath, $fileName); // upl1oading file to given path
+				$fields["filePath"] = $fileName;
+			} */
+			$db_functions_ctrl = new DBFunctionsController();
+			$table = "EstimatePurchaseOrder";
+			\DB::beginTransaction();
+			$recid = "";
+			try{
+				$recid = $db_functions_ctrl->insertRetId($table, $fields);
+			}
+			catch(\Exception $ex){
+				\DB::rollback();
+				$json_resp = array();
+				$json_resp["status"] = "fail";
+				$json_resp["message"] = "Add Estimate Purchase Order Operation Could not be completed, Try Again!";
+				echo json_encode($json_resp);
+				return;
+			}
+			try{
+				$db_functions_ctrl = new DBFunctionsController();
+				$table = "EstimatePurchaseOrderDetails";
+				$jsonitems = json_decode($values["jsondata"]);
+				foreach ($jsonitems as $jsonitem){
+					$fields = array();
+					$fields["estimate_purchase_order_id"] = $recid;
+					$fields["itemId"] = $jsonitem->item;
+					$fields["manufactureId"] = $jsonitem->manufacturer;
+					$fields["quantity"] = $jsonitem->quantity;
+					$fields["unitprice"] = $jsonitem->unitprice;
+					$fields["creditsupplierId"] = $jsonitem->creditsupplier;
+					$fields["remarks"] = $jsonitem->remarks;
+					$db_functions_ctrl->insert($table, $fields);
+				}
+				
+			}
+			catch(\Exception $ex){
+				$json_resp = array();
+				$json_resp["status"] = "fail";
+				$json_resp["message"] = "Add Estimate Purchase Order Details Operation Could not be completed, Try Again!";
+				echo json_encode($json_resp);
+				return;
+			}
+			\DB::commit();
+			$json_resp = array();
+			$json_resp["status"] = "success";
+			$json_resp["message"] = "Operation completed successfully";
+			echo json_encode($json_resp);
+			return;
+		}
+	
+		$form_info = array();
+		$form_info["name"] = "editestimatepurchaseorder";
+		$values["form_action"] = "editestimatepurchaseorder";
+		$form_info["method"] = "post";
+		$form_info["action"] = "editcontract";
+		$values["action_val"] = "test";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "contracts";
+		$values["bredcum"] = "EDIT CONTRACT";
+	
+		$form_fields = array();
+	
+		$states =  \State::Where("status","=","ACTIVE")->get();
+		$state_arr = array();
+		foreach ($states as $state){
+			$state_arr[$state['id']] = $state->name;
+		}
+		$entity = \EstimatePurchaseOrder::where("id","=",$values['id'])->get();
+// 		echo "test";
+// 		die();
+		if(count($entity)>0){
+			$entity = $entity[0];
+			$form_info = array();
+			$form_info["name"] = "editestimatepurchaseorder";
+			$form_info["action"] = "editestimatepurchaseorder";
+			$form_info["method"] = "post";
+			$form_info["class"] = "form-horizontal";
+			$form_info["back_url"] = "contracts";
+			$form_info["bredcum"] = "edit estimate purchase order";
+			$form_info['btn_action_type']="edit";
+				
+			$form_fields = array();
+			
+				
+			$branch_arr = array();
+			$branches = \OfficeBranch::where("status","=","ACTIVE")->get();
+			foreach ($branches as $branch){
+				$branch_arr[$branch->id]=$branch->name;
+			}
+			
+			$form_field = array("name"=>"branch", "value"=>$branch_arr[$entity->branchId], "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branch_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"date", "value"=>date("d-m-Y",strtotime($entity->date)), "content"=>"date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"contractvehicles", "content"=>"", "readonly"=>"", "value"=>"", "required"=>"","type"=>"hidden", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"id1", "content"=>"", "readonly"=>"", "value"=>$entity->id, "required"=>"","type"=>"hidden", "class"=>"form-control");
+			$form_fields[] = $form_field;
+				
+			$form_info["form_fields"] = $form_fields;
+			
+			$items =  \Items::all();
+			$items_arr = array();
+			foreach ($items as $item){
+				$items_arr[$item->id] = $item->name;
+			}
+			$suppliers_arr = array();
+			$suppliers =  \CreditSupplier::all();
+			foreach ($suppliers as $supplier){
+				$suppliers_arr[$supplier->id] = $supplier->supplierName;
+			}
+			
+			$form_fields =  array();
+			$form_field = array("name"=>"item", "id"=>"item",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getManufacturers(this.value)"), "options"=>$items_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"manufacturer", "id"=>"manufacturer",  "content"=>"manufacturer", "readonly"=>"readonly",  "required"=>"", "type"=>"select", "options"=>array(), "class"=>"form-control chosen-select");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"quantity", "content"=>"quantity", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"unitprice", "content"=>"unit price", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"creditsupplier", "content"=>"creditsupplier", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$suppliers_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_info["add_form_fields"] = $form_fields;
+			$values['form_info'] = $form_info;
+				
+			return View::make('contracts.edit2colmodalform', array("values"=>$values));
+		}
+	}
 
 	/**
 	 * manage all states.
@@ -387,7 +625,7 @@ class EstimatePurchaseOrderController extends \Controller {
 		$values['add_url'] = '';
 		$values['form_action'] = 'estmatepurchaseorder';
 		$values['action_val'] = '';
-		$theads = array('client Name', "depot/branch name", "route", "Assinged Vehicles", "veh type", "distance", "contract type", "contract duration",  "floor rate", "status","Actions");
+		$theads = array("Item","manufacturer","creditsupplier","quantity","unitprice","remarks","amount","actions");
 		$values["theads"] = $theads;
 			
 		$actions = array();
@@ -467,19 +705,20 @@ class EstimatePurchaseOrderController extends \Controller {
 		}
 		
 		$form_fields =  array();
-		$form_field = array("name"=>"item", "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$items_arr);
+		$form_field = array("name"=>"item", "id"=>"item",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getManufacturers(this.value)"), "options"=>$items_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"manufacturer", "content"=>"manufacturer", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$items_arr);
+		$form_field = array("name"=>"manufacturer", "id"=>"manufacturer",  "content"=>"manufacturer", "readonly"=>"readonly",  "required"=>"", "type"=>"select", "options"=>array(), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"quantity", "content"=>"quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"quantity", "content"=>"quantity", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"unitprice", "content"=>"unit price", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"unitprice", "content"=>"unit price", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"creditsupplier", "content"=>"creditsupplier", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$suppliers_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_info["add_form_fields"] = $form_fields;
+		$form_info["form_fields"] = $form_fields;
+		$form_info["theads"] = $theads;
 		$values['form_info'] = $form_info;
 		
 		$form_info = array();

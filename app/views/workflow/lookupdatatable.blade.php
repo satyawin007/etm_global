@@ -116,8 +116,8 @@
 				</div>
 			<?php }?>
 			<form action="test" method="post" name="workflowform" id="workflowform" onsubmit="return false;">
-			<input type="hidden" name="transactiontype" value="{{$form_info['transactiontype']}}">
-			<input type="hidden" name="table" value="{{$form_info['table']}}">
+			<input type="hidden" id="transactiontype" name="transactiontype" value="{{$form_info['transactiontype']}}">
+			<input type="hidden" id="table" name="table" value="{{$form_info['table']}}">
 			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 5px;">CHANGE STATUS OF {{$values["bredcum"]}} WORK FLOW</h3>
 			<div class="row">
 				<div class="col-xs-offset-1 col-xs-10">
@@ -198,6 +198,16 @@
 			})
 
 			function postData(evt){
+				var transactiontype = $("#transactiontype").val();
+				if(transactiontype == "inchargetransactions"){
+					var type = $("#inchargereporttype").val();
+					if(type == "Income"){
+						$("#table").val("IncomeTransaction");
+					}
+					else{
+						$("#table").val("ExpenseTransaction");
+					}
+				}
 			 	$.post( 
                    "workflowupdate",
                    $("#workflowform").serialize(),

@@ -123,15 +123,25 @@ class WorkFlowController extends \Controller {
 	
 	public function workFlowUpdate(){
 		$values = Input::all();
+		//$values["test"];
 		$json_data = array();
 		$json_data["status"] = "fail";
 		$json_data["message"] = "operation could not be completed";
 		if(isset($values["transactiontype"]) && isset($values["table"])){
+// 			echo "Test";
+// 			die();
 			if(isset($values["action"])){
 				$update_dt = array("workFlowStatus"=>$values["workflowstatus"], "workFlowRemarks"=>$values["remarks"]);
 				$table = $values["table"];
-				foreach($values["action"] as $rec){
-					$table::where("id","=",$rec)->update($update_dt);
+				if($values["transactiontype"] == "inchargetransactions"){
+					foreach($values["action"] as $rec){
+						$table::where("transactionId","=",$rec)->update($update_dt);
+					}
+				}
+				else{
+					foreach($values["action"] as $rec){
+						$table::where("id","=",$rec)->update($update_dt);
+					}
 				}
 				$json_data["status"] = "success";
 				$json_data["message"] = "operation completed successfully";
