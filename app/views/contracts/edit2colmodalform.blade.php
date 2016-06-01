@@ -45,7 +45,8 @@
 				<?php $jobs = Session::get("jobs");?>
 				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) or 
 						($form_info['action']=="addcontract" && in_array(401, $jobs)) ||
-						($form_info['action']=="editcontract" && in_array(402, $jobs))
+						($form_info['action']=="editcontract" && in_array(402, $jobs)) or
+						($form_info['action']=="editestimatepurchaseorder" && in_array(402, $jobs))
 					  ){ ?>
 					@include("contracts.tablerowform",$form_info)
 				<?php } ?>

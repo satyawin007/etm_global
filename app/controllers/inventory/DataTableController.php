@@ -65,6 +65,11 @@ class DataTableController extends \Controller {
 			$total = $ret_arr["total"];
 			$data = $ret_arr["data"];
 		}
+		else if(isset($values["name"]) && $values["name"]=="estimatepurchaseorder") {
+			$ret_arr = $this->getEstimatePurchaseOrder($values, $length, $start);
+			$total = $ret_arr["total"];
+			$data = $ret_arr["data"];
+		}
 		$json_data = array(
 				"draw"            => intval( $_REQUEST['draw'] ),
 				"recordsTotal"    => intval( $total ),
@@ -755,6 +760,84 @@ class DataTableController extends \Controller {
 				}
 			}
 			$data_values[12] = $action_data;
+			$data[] = $data_values;
+		}
+		return array("total"=>$total, "data"=>$data);
+	}
+	
+	private function getEstimatePurchaseOrder($values, $length, $start){
+		$total = 0;
+		$data = array();
+		$select_args = array();
+		$select_args[] = "items.name as itemsname";
+		$select_args[] = "manufactures.name as manufacturesname";
+		$select_args[] = "creditsuppliers.supplierName as supplierName";
+		$select_args[] = "estimate_purchase_order_details.quantity as quantity";
+		$select_args[] = "estimate_purchase_order_details.unitprice as unitprice";
+		$select_args[] = "estimate_purchase_order_details.remarks as remarks";
+		$select_args[] = "estimatepurchaseorder.id as id";
+			
+		$actions = array();
+		if(in_array(402, $this->jobs)){
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditEstimatePurchaseOrder(", "jsdata"=>array("id"), "text"=>"EDIT");
+			$actions[] = $action;
+		}
+		$values["actions"] = $actions;
+	
+		$search = $_REQUEST["search"];
+		$search = $search['value'];
+		if($search != ""){
+			$entities =\EstimatePurchaseOrder::join("estimate_purchase_order_details","estimatepurchaseorder.id", "=", "estimate_purchase_order_details.estimate_purchase_order_id")
+												->join("items","items.id", "=", "estimate_purchase_order_details.itemId")
+												->join("manufactures","manufactures.id", "=", "estimate_purchase_order_details.manufactureId")
+												->join("creditsuppliers","creditsuppliers.id", "=", "estimate_purchase_order_details.creditsupplierId")
+												->where("creditsuppliers.supplierName","like","%$search%")
+												->select($select_args)->limit($length)->offset($start)->get();
+			$total = \EstimatePurchaseOrder::where("estimatepurchaseorder.id",">",0)->count();
+		}
+		else{
+			if(isset($values["branchid"]) && $values["branchid"] == 0){
+				$entities =\EstimatePurchaseOrder::join("estimate_purchase_order_details","estimatepurchaseorder.id", "=", "estimate_purchase_order_details.estimate_purchase_order_id")
+												->join("items","items.id", "=", "estimate_purchase_order_details.itemId")
+												->join("manufactures","manufactures.id", "=", "estimate_purchase_order_details.manufactureId")
+												->join("creditsuppliers","creditsuppliers.id", "=", "estimate_purchase_order_details.creditsupplierId")
+												->where("estimatepurchaseorder.id",">",0)
+												->select($select_args)->limit($length)->offset($start)->get();
+				$total = \EstimatePurchaseOrder::where("estimatepurchaseorder.id",">",0)->count();
+			}
+			else{
+				$entities =\EstimatePurchaseOrder::join("estimate_purchase_order_details","estimatepurchaseorder.id", "=", "estimate_purchase_order_details.estimate_purchase_order_id")
+												->join("items","items.id", "=", "estimate_purchase_order_details.itemId")
+												->join("manufactures","manufactures.id", "=", "estimate_purchase_order_details.manufactureId")
+												->join("creditsuppliers","creditsuppliers.id", "=", "estimate_purchase_order_details.creditsupplierId")
+												->where("estimatepurchaseorder.branchId","=",$values["branchid"])
+												->select($select_args)->limit($length)->offset($start)->get();
+				$total = \EstimatePurchaseOrder::where("estimatepurchaseorder.id",">",0)->count();
+			}
+				
+		}
+	
+		$entities = $entities->toArray();
+		foreach($entities as $entity){
+			$data_values = array_values($entity);
+			$actions = $values['actions'];
+			$action_data = "";
+			foreach($actions as $action){
+				if($action["type"] == "modal"){
+					$jsfields = $action["jsdata"];
+					$jsdata = "";
+					$i=0;
+					for($i=0; $i<(count($jsfields)-1); $i++){
+						$jsdata = $jsdata." '".$entity[$jsfields[$i]]."', ";
+					}
+					$jsdata = $jsdata." '".$entity[$jsfields[$i]];
+					$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+				}
+				else {
+					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+				}
+			}
+			$data_values[7] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

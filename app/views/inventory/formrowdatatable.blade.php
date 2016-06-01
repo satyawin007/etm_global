@@ -1,6 +1,13 @@
 @extends('masters.master')
 	@section('inline_css')
 		<style>
+			label {
+			    font-weight: normal;
+			    font-size: 13px;
+			}
+			.chosen-container{
+			  width: 100% !important;
+			}
 			.pagination {
 			    display: inline-block;
 			    padding-left: 0;
@@ -15,10 +22,13 @@
 			    background-color: #EFF3F8;
 			}
 			th, td {
-				white-space: normal;
+				white-space: nowrap;
 			}
 			.chosen-container{
 			  width: 100% !important;
+			}
+			.col-xs-12 {
+				margin-bottom : 10px;
 			}
 		</style>
 	@stop
@@ -26,6 +36,7 @@
 	@section('page_css')
 		<link rel="stylesheet" href="../assets/css/bootstrap-datepicker3.css"/>
 		<link rel="stylesheet" href="../assets/css/chosen.css" />
+		<link rel="stylesheet" href="../assets/css/jquery-ui.custom.css" />
 	@stop
 	
 	@section('bredcum')	
@@ -40,7 +51,37 @@
 
 	@section('page_content')
 		<div class="row ">
-			<div class="col-xs-offset-1 col-xs-10">
+			<form action="addestimatepurchaseorder" name="addform" id="addform">
+					<div class="form-group col-xs-offset-3 col-xs-3" style="margin-top: 15px; margin-bottom: -10px">
+							<div class="form-group">
+								<label class="col-xs-2 control-label no-padding-right" for="form-field-1"> Branch<span style="color:red;">*</span> </label>
+								<div class="col-xs-10">
+									<!-- <input  type="text" id="branch"  name="branch" class="form-control" > -->
+									<select id="branch"  name="branch" class="form-control chosen-select" >
+										<option value="">-- select branch--</option>
+									<?php 
+										$branch_arr = array();
+										$branches = OfficeBranch::where("status","=","ACTIVE")->get();
+										foreach ($branches as $branch){
+											$branch_arr[$branch->id]=$branch->name;
+											echo '<option value="'.$branch->id.'">'.$branch->name.'</option>';
+										}
+									?>
+									</select>
+								</div>			
+							</div>
+					</div>
+					<div class="form-group col-xs-3" style="margin-top: 15px; margin-bottom: -10px">
+							<div class="form-group">
+								<label class="col-xs-2 control-label no-padding-right" for="form-field-1"> Date<span style="color:red;">*</span> </label>
+								<div class="col-xs-10">
+									<input  type="text" id="date"  name="date" class="form-control date-picker" >
+								</div>			
+							</div>
+					</div>
+					<input type="hidden" id="jsondata" name="jsondata">
+				</form>
+			<div class="col-xs-offset-0 col-xs-12">
 				<?php $form_info = $values["form_info"];?>
 				<?php $jobs = Session::get("jobs");?>
 				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) || 
@@ -49,10 +90,27 @@
 					@include("inventory.tablerowform",$form_info)
 				<?php } ?>
 			</div>
+			
+			<div class="clearfix" >
+						<div class="col-md-12" style="background-color: #E6DFDF;border-top: 2px solid #D2CDCD; margin-top: 10px;">
+						<div class="col-md-offset-4 col-md-8" style="margin-top: 2%; margin-bottom: 1%">
+							<button class="btn primary" id="submit" onClick="postData()">
+								<i class="ace-icon fa fa-check bigger-110"></i>
+								SUBMIT
+							</button>
+							<!--  <input type="submit" class="btn btn-info" type="button" value="SUBMIT"> -->
+							&nbsp; &nbsp; &nbsp;
+							<button id="reset" class="btn" type="reset">
+								<i class="ace-icon fa fa-undo bigger-110"></i>
+								RESET
+							</button>
+						</div>
+						</div>
+					</div>
 		</div>
 				
 		<div class="row ">
-		<div class="col-xs-offset-1 col-xs-10">
+		<div class="col-xs-offset-0 col-xs-12">
 			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 10px;">MANAGE {{$values["bredcum"]}}</h3>		
 			<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
 			<div class="clearfix">
@@ -64,7 +122,7 @@
 						$selects = $values['selects'];
 						foreach($selects as $select){
 						?>
-						<label>{{ strtoupper($select["name"]) }}</label>
+						<label>Branch </label>
 						<select class="form-control-inline" id="{{$select['name']}}" style="height: 33px; padding-top: 0px;" name="{{$select["name"]}}" onChage="paginate(1)">
 							<?php 
 								foreach($select["options"] as $key => $value){									
@@ -78,7 +136,7 @@
 							?>
 						</select> &nbsp; &nbsp;
 					<?php }} ?>
-					<input type="hidden" name="page" id="page" /> 
+					<input type="hidden" name="page" id="page" />
 					<?php 
 					if(isset($values['links'])){
 						$links = $values['links'];
@@ -87,7 +145,7 @@
 						}
 					}
 					?>
-					<?php echo "<input type='hidden' name='action' value='".$values['action_val']."'/>"; ?>					
+					<?php echo "<input type='hidden' name='action' value='".$values['action_val']."'/>"; ?>				
 					</form>
 				</div>
 				<div class="pull-right tableTools-container"></div>
@@ -98,11 +156,12 @@
 						<select name="clientid" id="clientid" class="formcontrol chosen-select">
 							<option value="0">ALL</option>
 						<?php 
-							$clients =  \Client::all();
-							$clients_arr = array();
-							foreach ($clients as $client){
-								echo "<option value='".$client['id']."'>".$client['name']."</option>";
-							}
+								$branch_arr = array();
+								$branches = OfficeBranch::where("status","=","ACTIVE")->get();
+								foreach ($branches as $branch){
+									$branch_arr[$branch->id]=$branch->name;
+									echo '<option value="'.$branch->id.'">'.$branch->name.'</option>';
+								}
 						?>
 						</select>
 					</div>
@@ -189,18 +248,20 @@
 			submit_data = "false";
 			var app = angular.module('myApp', []);
 			app.controller('myCtrl', function($scope, $http) {
-				$scope.vehicles = [];
 				$scope.ids = ['item', 'manufacturer', 'creditsupplier'];
 				$scope.vars = ['quantity','unitprice', 'remarks' ];
 				$scope.vehicles_text = [];
+				//alert($scope.ids[0]);
 				$scope.addRow = function(){
+					alert("test");
 					$scope.ids.forEach(function(entry) {
 						text = $("#"+entry+" option:selected").val();
 						if(entry != "item"){
 							$scope[entry] = text;
 						}
 					});	
-					if(typeof $scope.item === "undefined" || typeof $scope.quanity === "undefined" || $scope.item === "" || $scope.quantity) {
+					
+					if(typeof $scope.item === "undefined" || typeof $scope.quanity === "undefined" || $scope.item === "" ) {
 						return;
 					}
 					alert("DSF");
@@ -378,9 +439,9 @@
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
 	
-			function modalEditContract(id){
+			function modalEditEstimatePurchaseOrder(id){
 				//$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
-				url = "editcontract?id="+id;
+				url = "editestimatepurchaseorder?id="+id;
 				var ifr=$('<iframe />', {
 		            id:'MainPopupIframe',
 		            src:url,
@@ -413,7 +474,8 @@
 
 			$("#getbtn").on("click",function(){
 				clientid = $("#clientid").val();
-				myTable.ajax.url("getcontractsdatatabledata?name=contracts&clientid="+clientid).load();
+				alert(clientid);
+				myTable.ajax.url("getinventorydatatabledata?name=estimatepurchaseorder&branchid="+clientid).load();
 			})
 			$("#reset").on("click",function(){
 				$("#{{$form_info['name']}}").reset();
@@ -495,6 +557,27 @@
 			      success: function(data) {
 			    	  $("#cityname").html(data);
 			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
+			}
+
+			function getManufacturers(id){
+				$("#div_itemnumbers").hide();
+				$("#div_alertdate").hide();
+				$("#div_itemactions").hide();
+				$("#qty").attr("readonly",false);
+				$.ajax({
+			      url: "getmanufacturers?itemid="+id,
+			      success: function(data) {
+				      //alert(data);
+			    	  var obj = JSON.parse(data);
+			    	  if(obj.itemnumberstatus=="Yes"){
+			    		  $("#qty").attr("readonly",true);
+			    		  $("#div_itemnumbers").show();
+			    	  }
+			    	  $("#manufacturer").html(obj.manufactures);
+			    	  $('.chosen-select').trigger('chosen:updated');
 			      },
 			      type: 'GET'
 			   });
@@ -788,6 +871,252 @@
 				$('<button style="margin-top:-5px;" class="btn btn-minier btn-primary" id="refresh"><i style="margin-top:-2px; padding:6px; padding-right:5px;" class="ace-icon fa fa-refresh bigger-110"></i></button>').appendTo('div.dataTables_filter');
 				$("#refresh").on("click",function(){ myTable.search( '', true ).draw(); });
 			});
+
+			var ids = ['item', 'manufacturer', 'creditsupplier'];
+			var vars = ['quantity','unitprice', 'remarks',"amount"];
+			var entities_text = [];
+			var entities = [];
+			var hide_fields_text = [];
+			var condition_elements = ['item','quantity'];
+			var rowid=0;
+			var editrowid=-1;
+			var submit_data=false;
+			
+			function addRow(){
+				//alert("in addRow "+condition_elements);
+				/* ids.forEach(function(entry) {
+					text = $("#"+entry+" option:selected").val();
+				}); */
+				add_condition = false;	
+				var isReturn = false;
+				condition_elements.forEach(function(entry) {
+					itemm_val = $("#"+entry).val();
+					if(typeof itemm_val === "undefined" || itemm_val == ""){
+						alert("select "+entry);
+						isReturn=true;
+					}
+					else if(entry=="qty" && itemm_val==0){
+						alert("select "+entry);
+						isReturn=true;
+					}
+				});
+				if(isReturn){
+					return;
+				}
+				text_arr = new Array();
+				veh_arr = new Array();
+				ids.forEach(function(entry) {
+					text = $("#"+entry+" option:selected").text();
+					if(entry=="itemnumbers"){
+						text = "";
+						$('#itemnumbers option:selected').each(function(){ 
+							text = text+$(this).text()+","; 
+						});
+					}
+					val = $("#"+entry+" option:selected").val();
+					veh_arr[entry] = val;
+					$("#"+entry).find('option:selected').removeAttr("selected");
+					if(val==""){
+						text="";
+					}
+					text_arr[entry] = text;
+				});
+				vars.forEach(function(entry) {
+					text_arr[entry] = $("#"+entry).val();
+					veh_arr[entry] = $("#"+entry).val();
+					$("#"+entry).val("");
+				});
+				text_arr["rowid"]=rowid;
+				rowid++;
+				entities_text.unshift(text_arr);
+				entities.unshift(veh_arr);
+				$('.chosen-select').trigger("chosen:updated");
+				drawTable()
+			}
+
+			function drawTable(){
+				//alert("indraw Table: "+entities_text.length);
+				table_data = "";
+				comArr = entities_text;
+				total = 0;
+				for(i=0; i<entities_text.length; i++){
+					table_data = table_data+"<tr>";
+					ids.forEach(function(entry) {
+						table_data = table_data+"<td>"+entities_text[i][entry]+"</td>"
+					});
+					vars.forEach(function(entry) {
+						qty = 0;
+						if(entry == "amount"){
+							total = (Number(entities_text[i]['unitprice']) * Number(entities_text[i]['quantity']));
+							table_data = table_data+"<td>"+total+"</td>"
+						}
+						else{
+							table_data = table_data+"<td>"+entities_text[i][entry]+"</td>"
+						}
+					});
+					table_data = table_data+"<td>"+
+											'<span   style="margin:2px; color: #428bca" id="editrowbtn" onclick="editRow(\''+entities_text[i].rowid+'\')"><i class="ace-icon fa fa-pencil-square-o bigger-150"></i> </span>&nbsp;'+
+											'<span   style="margin:2px;color: #d12723" id="removerowbtn" onclick="removeRow(\''+entities_text[i].rowid+'\')"><i class="ace-icon fa fa-trash-o bigger-150"></i></span>'
+										+"</td>";
+					table_data = table_data+"</tr>";
+				}
+				$("#rowtable").html(table_data);
+			}
+	
+			function editRow(rowid1){	
+				var index = -1;		
+				var comArr = eval( entities_text );
+				var comArr1 = eval( entities );
+				for( var i = 0; i < comArr.length; i++ ) {
+					//alert("editrow : "+comArr[i].rowid+" - "+rowid1);
+					if( comArr[i].rowid == rowid1 ) {
+						index = i;
+						editrowid = rowid1;
+						break;
+					}
+				}
+				if( index === -1 ) {
+					alert( "Something gone wrong" );
+					return;
+				}
+				vars.forEach(function(entry) {
+					$("#"+entry).val(comArr1[index][entry]);
+				});	
+				ids.forEach(function(entry) {
+					$("#"+entry+" option").each(function() {   this.selected =(this.value == comArr1[index][entry])});
+					$("#"+entry).find('option:selected').attr("selected", "selected"); 
+				});	
+				$('.chosen-select').trigger("chosen:updated");	
+			};
+	
+			function updateRow(){	
+				tempdata = [];
+				var index = -1;		
+				var comArr = eval( entities_text );
+				for( var i = 0; i < comArr.length; i++ ) {
+					if( comArr[i].rowid == editrowid ) {
+						index = i;
+						ids.forEach(function(entry) {
+							text = $("#"+entry+" option:selected").text();
+							if(entry != "item"){
+								if(text != ""){
+									entities_text[index][entry] = text;
+								}
+								entities[index][entry] = $("#"+entry).val();
+							}
+							$("#"+entry).find('option:selected').removeAttr("selected");
+						});
+						vars.forEach(function(entry) {
+							entities_text[index][entry] = $("#"+entry).val();
+							entities[index][entry] = $("#"+entry).val();
+							$("#"+entry).val("");
+						});
+						break;
+					}
+				}
+				if( index === -1 ) {
+					alert( "Vehicle can not be updated / Something gone wrong" );
+					return;
+				}
+				alert("updated successfully");
+				$('.chosen-select').trigger("chosen:updated");
+				drawTable()	
+			};
+			
+			function removeRow(rowid1){	
+				var index = -1;		
+				var comArr = eval(entities_text);
+				for( var i = 0; i < comArr.length; i++ ) {
+					if( comArr[i].rowid == rowid1 ) {
+						index = i;
+						break;
+					}
+				}
+				if( index === -1 ) {
+					alert( "Something gone wrong" );
+					return;
+				}
+				entities.splice( index, 1 );	
+				entities_text.splice( index, 1 );	
+				drawTable()	
+			};
+	
+			function postData() {
+				//alert("test");
+				var jsonobj = {};
+				for(i=0; i<entities.length; i++){
+					var item = {} ;
+					ids.forEach(function(entry) {
+						if(entry=="itemnumbers"){
+							item[entry] = entities_text[i][entry];
+						}
+						else{
+							item[entry] = entities[i][entry];
+						}
+					});
+					vars.forEach(function(entry) {
+						if(entry == "amount"){
+							item[entry] = (Number(entities[i]['unitprice']) * Number(entities[i]['quantity']));
+						}
+						else{
+							item[entry] = entities[i][entry];
+						}
+					});
+					jsonobj[i]=  item;
+					
+				}
+				$('#jsondata').val(JSON.stringify(jsonobj));
+				$.ajax({
+	                url: "addestimatepurchaseorder",
+	                type: "post",
+	                data: $("#addform").serialize(),
+	                success: function(response) {
+	                	response = jQuery.parseJSON(response);	
+	                    if(response.status=="success"){
+	                    	bootbox.alert(response.message);
+                        	window.setTimeout(function(){location.reload();}, 2000 );
+	                    	resetForm("{{$form_info['name']}}");
+	                    	entities= [];	
+	                    	entities_text = [];	
+	                    	drawTable();	
+	                    }
+	                    if(response.status=="fail"){
+	                    	bootbox.alert(response.message, function(result) {});
+	                    }
+	                }
+	            });
+			};
+	
+			function resetForm(formid)
+		    { 
+	            form = $('#'+formid);
+	            element = ['input','select','textarea'];
+	            for(i=0; i<element.length; i++) 
+	            {
+	                $.each( form.find(element[i]), function(){
+	                    switch($(this).attr('class')) {
+	                      case 'form-control chosen-select':
+	                      	$(this).find('option:first-child').attr("selected", "selected");
+	                        break;
+	                    }
+	                    switch($(this).attr('type')) {
+	                    case 'text':
+	                    case 'select-one':
+	                    case 'textarea':
+	                    case 'hidden':
+	                    case 'file':
+	                    	$(this).val('');
+	                      break;
+	                    case 'checkbox':
+	                    case 'radio':
+	                    	$(this).attr('checked',false);
+	                      break;
+	                   
+	                  }
+	                });
+	            }
+	            $('.chosen-select').trigger("chosen:updated");	
+		    }
 			
 		</script>
 	@stop
