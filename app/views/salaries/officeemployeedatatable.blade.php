@@ -98,7 +98,7 @@ use Illuminate\Support\Facades\Input;
 				</div>
 				<?php 
 					$values = Input::All();
-					if(isset($values["paymenttype"]) && isset($values["month"]) && isset($values["paymentdate"])){		
+					if(isset($values["paymenttype"]) && isset($values["month"]) && isset($values["paymentdate"]) && isset($values["fromdate"])){		
 				?>	
 	
 				<!-- div.table-responsive -->
@@ -117,6 +117,12 @@ use Illuminate\Support\Facades\Input;
 						if(isset($values["paymenttype"])){
 							$url = $url."&paymenttype=".$values["paymenttype"];
 						}
+						if(isset($values["fromdate"])){
+							$url = $url."&fromdate=".$values["fromdate"];
+						}
+						if(isset($values["todate"])){
+							$url = $url."&todate=".$values["todate"];
+						}
 						if(isset($values["bankaccount"])){ $url = $url."&bankaccount=".$values["bankaccount"];}
 						if(isset($values["chequenumber"])){ $url = $url."&chequenumber=".$values["chequenumber"];}
 						if(isset($values["bankname"])){ $url = $url."&bankname=".$values["bankname"];}
@@ -129,29 +135,39 @@ use Illuminate\Support\Facades\Input;
 					<table id="dynamic-table" class="table table-striped table-bordered table-hover">
 					<thead>
 						<tr>
-							<th class="center">
-							</th>
+							<th class="center"></th>
 							<th>Emp Name</th>
-							<th>Details</th>
-							<th>PF opted</th>
+							<th>Role</th>
 							<th>Salary</th>
+							<th>Summary</th>
+							<th style="min-width:140px;">Due/Leave Amount</th>
 							<th>Leaves</th>
-							<th>Leave amount</th>
-							<th>Due amount</th>
-							<th>Leave deduction</th>
+							<th>Casual Leaves</th>
+							<th>Due Deductions</th>
+							<th>Leave Deductions</th>
+							<th>PF Details</th>
+							<th>Travel/Other Amt</th>
+							<th>Net Salary</th>
+							<th>Gross Salary</th>
+							<th>Card No</th>
 							<th>comments</th>
 						</tr>
 					</thead>
 						<tbody>
-						<?php 
-							$entities = \Employee::where("roleId","!=",19)->where("roleId","!=",20)->get();
+						<?php
+							$entities = Employee::where("roleId","!=",19)
+													->where("roleId","!=",20)
+													->where("officeBranchId","=",$values["branch"])
+													->where("status","=","ACTIVE")->get();
 							$i = 0;
+							$fromdt = date("Y-m-d",strtotime($values["fromdate"]));
+							$todt = date("Y-m-d",strtotime($values["todate"]));
 							foreach($entities as $entity){
-								if($entity->roleId == 19){
-									$entity->roleId = "DRIVER";
-								}
-								else if($entity->roleId == 20){
-									$entity->roleId = "HELPER";
+								$role_name = "";
+								$role = Role::where("id","=",$entity->roleId)->get();
+								if(count($role)>0){
+									$role = $role[0];
+									$entity->roleId = $role->roleName;
 								}
 								$dt_salary = 0;
 								$dt_allowance = 0;
@@ -168,7 +184,7 @@ use Illuminate\Support\Facades\Input;
 							<tr>
 								<td class="center" style="font-weight: bold; vertical-align: middle">
 									<label class="pos-rel">
-										<input type="hidden" name="ids[]" id="ids_{{$i}}" value="-1">
+										<input type="checkbox" class="ace" name="ids[]" id="ids_{{$i}}" value="{{$i}}"/>
 										<span class="lbl"></span>
 									</label>
 									<input type="hidden" name="id[]" id="id_{{$i}}" value="{{$entity->id}}" />
@@ -176,31 +192,74 @@ use Illuminate\Support\Facades\Input;
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
 									<span style="color: red; font-weight: bold; font-size:14px;">{{$entity->fullName}} - {{$entity->empCode}} </span>
-								</td> 
-								<td style="font-weight: bold; vertical-align: middle; min-width:120px;"><span id="editbtn"><a class="btn btn-minier btn-success" onclick="return editRecord({{$i}},{{$entity->id}},'{{$entity->roleId}}');">Edit</a></span> &nbsp;&nbsp; <span id="detailsbtn"><a href="#modal-table" role="button" data-toggle="modal" onclick="return viewDetails({{$i}},{{$entity->id}},'{{$entity->roleId}}')"  class="btn btn-minier btn-info">Details</a></span></td>
+								</td>
+								<?php 
+									$salary_amt = 0;
+									$salary = SalaryDetails::where("empId","=",$entity->id)->get();
+									if(count($salary)>0){
+										$salary = $salary[0];
+										$salary_amt = $salary->salary;
+									}
+								?> 
+								<td style="font-weight: bold; vertical-align: middle">{{$entity->roleId}}</td>
+								<td style="font-weight: bold; vertical-align: middle">
+									<input type="text" style="max-width:70px;"  name="emp_salary[]" id="{{$i}}_emp_salary" readonly="readonly" value="{{$salary_amt}}"/>
+								</td>
+								<td style="font-weight: bold; vertical-align: middle; min-width:120px;"><span id="{{$i}}_editbtn"><a class="btn btn-minier btn-success" onclick="return editRecord({{$i}},{{$entity->id}},'{{$entity->roleId}}');">Edit</a></span> &nbsp;&nbsp; <span id="{{$i}}_detailsbtn"><a href="#modal-table" role="button" data-toggle="modal" onclick="return viewDetails({{$entity->id}},'{{$entity->roleId}}')"  class="btn btn-minier btn-info">Details</a></span></td>
+								<?php 
+									$due_amt = "0.00";
+									$recs1 = DB::select( DB::raw("SELECT SUM(`amount`) amt FROM `empdueamount` WHERE empId = ".$entity->id." and deleted='No'") );
+									foreach ($recs1 as $rec1){
+										$due_amt = $rec1->amt;
+										if($due_amt == ""){
+											$due_amt = "0.00";
+										}
+									}
+								?>
+								<td style="font-weight: bold; vertical-align: middle">Due Amt : {{$due_amt}}</td>
+								
+								<?php 
+									$leaves = 0;
+									$leaves_amt = 0;
+									$recs1 = DB::select( DB::raw($sql = "select count(*) as cnt from attendence where attendence.empId='".$entity->id."' and (attendenceStatus = 'A') and date between '$fromdt' and '$todt'") );
+									foreach ($recs1 as $rec1){
+										$leaves = $rec1->cnt;
+										$leaves = $leaves/2;
+										
+										$date1=date_create($fromdt);
+										$date2=date_create($todt);
+										$diff=date_diff($date1,$date2);
+										$working_days =  $diff->format("%a");
+										$leaves_amt = ($salary_amt/$working_days)*$leaves;
+										$leaves_amt = intval($leaves_amt);
+									}
+								?>
+								<td >
+									<input type="text" style="max-width:70px;" name="leaves[]" id="{{$i}}_leaves" readonly="readonly" value="{{$leaves}}"/>	
+								</td>
+								<td>
+									<input type="text" style="max-width:70px;"  name="casual_leaves[]" id="{{$i}}_casual_leaves" readonly="readonly" value="0"/>	
+								</td>
+								<td>
+									<input type="text" style="max-width:70px;"  name="due_deductions[]" id="{{$i}}_due_deductions"readonly="readonly" onchange="calcSalary(this.id)" value="{{$rec->dueDeductions}}"/>	
+								</td>
+								<td>
+									<input type="text" style="max-width:70px;" name="leave_deductions[]" id="{{$i}}_leave_deductions" readonly="readonly" vonchange="calcSalary(this.id)" value="{{$rec->leaveDeductions}}"/>	
+								</td>
 								<td>
 									<select name="pfopted[]" id="pfopted_{{$i}}" class="form-control" >
-										<option <?php if($rec->pfopted== "Yes"){ echo " selected "; } ?> value="Yes">Yes</option>
-										<option <?php if($rec->pfopted== "No"){ echo " selected "; } ?> value="No">No</option>
+										<option value="Yes">Yes</option>
+										<option selected value="No">No</option>
 									</select>
 								</td>
-								<td >
-									<input type="text" style="max-width:100px;" name="emp_salary[]" id="{{$i}}_emp_salary" value="{{$rec->actualSalary}}" readonly="readonly"/>	
-								</td>
 								<td>
-									<input type="text" style="max-width:100px;"  name="leaves[]" id="{{$i}}_leaves"  value=""/ readonly="readonly">	
+									<input type="text" style="min-width:70px;" name="other_amt[]" id="{{$i}}_other_amt" readonly="readonly" onchange="calcSalary(this.id)" value="{{$rec->otherAmount}}"/>	
 								</td>
+								<td style="font-weight: bold; vertical-align: middle" id="{{$i}}_netsalary">{{$rec->actualSalary}}</td>
+								<td style="font-weight: bold; vertical-align: middle">{{$rec->salaryPaid}}</td>
+								<td style="font-weight: bold; vertical-align: middle; min-width:150px;">{{$entity->salaryCardNo}}</td>
 								<td>
-									<input type="text" style="max-width:100px;"  name="leave_amount[]" id="{{$i}}_leave_amount" value="{{$rec->leaveAmount}}"  readonly="readonly"/>	
-								</td>
-								<td>
-									<input type="text" style="max-width:100px;" name="deductions[]" id="{{$i}}_deductions" value="{{$rec->dueDeductions}}"  readonly="readonly"/>	
-								</td>
-								<td>
-									<input type="text" style="max-width:100px;" name="leave_deductions[]" id="{{$i}}_leave_deductions" value="{{$rec->leaveDeductions}}"  readonly="readonly"/>	
-								</td>
-								<td>
-									<input type="text" style="min-width:300px;" name="comments[]" id="{{$i}}_comments" value="{{$rec->remarks}}"  readonly="readonly"/>	
+									<input type="text" style="min-width:270px;" name="comments[]" readonly="readonly" id="{{$i}}_comments" value="{{$rec->comments}}"/>	
 								</td>
 							</tr>
 							<?php } else  { ?>
@@ -215,31 +274,78 @@ use Illuminate\Support\Facades\Input;
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
 									<span style="color: red; font-weight: bold; font-size:14px;">{{$entity->fullName}} - {{$entity->empCode}} </span>
-								</td> 
-								<td style="font-weight: bold; vertical-align: middle; min-width:120px;"><a class="btn btn-minier btn-purple"  onclick="calcSalary({{$i}},{{$entity->id}},'{{$entity->roleId}}');">Calc</a> &nbsp;&nbsp; <a href="#modal-table" role="button" data-toggle="modal" onclick="return viewDetails({{$i}},{{$entity->id}},'{{$entity->roleId}}')" class="btn btn-minier btn-info">Details</a></td>
+								</td>
+								<?php 
+									$salary_amt = 0;
+									$salary = SalaryDetails::where("empId","=",$entity->id)->get();
+									if(count($salary)>0){
+										$salary = $salary[0];
+										$salary_amt = $salary->salary;
+									}
+								?> 
+								<td style="font-weight: bold; vertical-align: middle">{{$entity->roleId}}</td>
+								<td style="font-weight: bold; vertical-align: middle">
+									<input type="text" style="max-width:70px;"  name="emp_salary[]" id="{{$i}}_emp_salary" readonly="readonly" value="{{$salary_amt}}"/>
+								</td>
+								<td style="font-weight: bold; vertical-align: middle; min-width:70px;"><a href="#modal-table" role="button" data-toggle="modal" onclick="return viewDetails({{$i}},{{$entity->id}},'{{$entity->roleId}}')" class="btn btn-minier btn-info">Details</a></td>
+								
+								<?php 
+									$due_amt = "0.00";
+									$recs = DB::select( DB::raw("SELECT SUM(`amount`) amt FROM `empdueamount` WHERE empId = ".$entity->id." and deleted='No'") );
+									foreach ($recs as $rec){
+										$due_amt = $rec->amt;
+										if($due_amt == ""){
+											$due_amt = "0.00";
+										}
+									}
+								?>
+								<td style="font-weight: bold; vertical-align: middle">Due Amt : {{$due_amt}}</td>
+								
+								<?php 
+									$leaves = 0;
+									$leaves_amt = 0;
+									$recs = DB::select( DB::raw($sql = "select count(*) as cnt from attendence where attendence.empId='".$entity->id."' and (attendenceStatus = 'A') and date between '$fromdt' and '$todt'") );
+									foreach ($recs as $rec){
+										$leaves = $rec->cnt;
+										$leaves = $leaves/2;
+										
+										$date1=date_create($fromdt);
+										$date2=date_create($todt);
+										$diff=date_diff($date1,$date2);
+										$working_days =  $diff->format("%a");
+										$leaves_amt = ($salary_amt/$working_days)*$leaves;
+										$leaves_amt = intval($leaves_amt);
+									}
+								?>
+								<td >
+									<input type="text" style="max-width:70px;" name="leaves[]" id="{{$i}}_leaves" readonly="readonly" value="{{$leaves}}"/>	
+								</td>
+								<td>
+									<input type="text" style="max-width:70px;"  name="casual_leaves[]" id="{{$i}}_casual_leaves"  value="0"/>	
+								</td>
+								<td>
+									<input type="text" style="max-width:70px;"  name="due_deductions[]" id="{{$i}}_due_deductions" onchange="calcSalary(this.id)" value="{{$due_amt}}"/>	
+								</td>
+								<td>
+									<input type="text" style="max-width:70px;" name="leave_deductions[]" id="{{$i}}_leave_deductions" onchange="calcSalary(this.id)" value="{{$leaves_amt}}"/>	
+								</td>
 								<td>
 									<select name="pfopted[]" id="pfopted_{{$i}}" class="form-control" >
 										<option value="Yes">Yes</option>
 										<option selected value="No">No</option>
 									</select>
 								</td>
-								<td >
-									<input type="text" style="max-width:100px;" name="emp_salary[]" id="{{$i}}_emp_salary" value=""/>	
-								</td>
 								<td>
-									<input type="text" style="max-width:100px;"  name="leaves[]" id="{{$i}}_leaves"  value=""/>	
+									<input type="text" style="min-width:70px;" name="other_amt[]" id="{{$i}}_other_amt" onchange="calcSalary(this.id)" value="0.00"/>	
 								</td>
+								<?php 
+									$net_salary = $salary_amt-($leaves_amt+$due_amt);
+								?>
+								<td style="font-weight: bold; vertical-align: middle" id="{{$i}}_netsalary">{{$net_salary}}</td>
+								<td style="font-weight: bold; vertical-align: middle">{{$salary_amt}}</td>
+								<td style="font-weight: bold; vertical-align: middle; min-width:150px;">{{$entity->salaryCardNo}}</td>
 								<td>
-									<input type="text" style="max-width:100px;"  name="leave_amount[]" id="{{$i}}_leave_amount" value=""/>	
-								</td>
-								<td>
-									<input type="text" style="max-width:100px;" name="deductions[]" id="{{$i}}_deductions" value=""/>	
-								</td>
-								<td>
-									<input type="text" style="max-width:100px;" name="leave_deductions[]" id="{{$i}}_leave_deductions" value=""/>	
-								</td>
-								<td>
-									<input type="text" style="min-width:300px;" name="comments[]" id="{{$i}}_comments" value=""/>	
+									<input type="text" style="min-width:270px;" name="comments[]" id="{{$i}}_comments" value=""/>	
 								</td>
 							</tr>
 							<?php }?>
@@ -408,24 +514,29 @@ use Illuminate\Support\Facades\Input;
 					alert("select payment date");
 					return;
 				}
+				fromdate = $("#fromdate").val();
+				if(fromdate == ""){
+					alert("select fromdate");
+					return;
+				}
+				todate = $("#todate").val();
+				if(todate == ""){
+					alert("select to date");
+					return;
+				}
 				$('#verify').hide();
-				location.replace("payofficeemployeesalary?branch="+branch+"&paymenttype="+pmttype+"&month="+month+"&paymentdate="+dt);
+				location.replace("payofficeemployeesalary?branch="+branch+"&paymenttype="+pmttype+"&month="+month+"&paymentdate="+dt+"&fromdate="+fromdate+"&todate="+todate);
 			}
 
-			function calcSalary(rowid, eid,type){
-				month = $("#month").val();
-				$.ajax({
-			      url: "getcalofficeempsalary?eid="+eid+"&dt="+month,
-			      success: function(data) {
-			    	  var obj = JSON.parse(data);
-			    	  $("#"+rowid+"_emp_salary").val(obj.salary);
-			    	  $("#"+rowid+"_leaves").val(obj.leaves);
-			    	  $("#"+rowid+"_leave_amount").val(obj.leaveamt);
-			    	  $("#"+rowid+"_deductions").val(obj.due);
-			    	  $("#"+rowid+"_leave_deductions").val(obj.leaveamt);
-			      },
-			      type: 'GET'
-			   });
+			function calcSalary(id){
+				id = id.split("_")[0];
+				salary = $("#"+id+"_emp_salary").val();
+				other_amount = $("#"+id+"_other_amt").val();
+				due_deductions = $("#"+id+"_due_deductions").val();
+				leave_deductions = $("#"+id+"_leave_deductions").val();
+				//alert(id+" "+salary+" "+other_amount+" "+due_deductions+" "+leave_deductions);
+				salary = (parseInt(salary)+parseInt(other_amount))-(parseInt(due_deductions)+parseInt(leave_deductions));
+				$("#"+id+"_netsalary").html(salary);			
 			}
 
 			function viewDetails(rowid, eid,type){
@@ -441,12 +552,12 @@ use Illuminate\Support\Facades\Input;
 			}
 
 			function editRecord(rowid, eid,type){
-				$("#editbtn").html('<a class="btn btn-minier btn-success" onclick="return saveRecord('+rowid+','+eid+',\''+type+'\');">Save</a>');
-				$("#detailsbtn").html('<a class="btn btn-minier btn-danger" onclick="return cancelSave('+rowid+','+eid+',\''+type+'\');">Cancel</a>');
-				$("#"+rowid+"_emp_salary").attr("readonly",false);
-		    	$("#"+rowid+"_leaves").attr("readonly",false);
+				$("#"+rowid+"_editbtn").html('<a class="btn btn-minier btn-success" onclick="return saveRecord('+rowid+','+eid+',\''+type+'\');">Save</a>');
+				$("#"+rowid+"_detailsbtn").html('<a class="btn btn-minier btn-danger" onclick="return cancelSave('+rowid+','+eid+',\''+type+'\');">Cancel</a>');
+				$("#"+rowid+"_emp_salary").attr("readonly",true);
+		    	$("#"+rowid+"_other_amt").attr("readonly",false);
 		    	$("#"+rowid+"_leave_amount").attr("readonly",false);
-		    	$("#"+rowid+"_deductions").attr("readonly",false);
+		    	$("#"+rowid+"_due_deductions").attr("readonly",false);
 		    	$("#"+rowid+"_leave_deductions").attr("readonly",false);
 		    	$("#"+rowid+"_comments").attr("readonly",false);
 				
@@ -457,15 +568,15 @@ use Illuminate\Support\Facades\Input;
 				pfopted = $("#"+rowid+"_pfopted").val();
 				emp_salary = $("#"+rowid+"_emp_salary").val();
 				leaves = $("#"+rowid+"_leaves").val();
-				leave_amount = $("#"+rowid+"_leave_amount").val();
-				deductions = $("#"+rowid+"_deductions").val();
+				other_amount = $("#"+rowid+"_other_amt").val();
+				deductions = $("#"+rowid+"_due_deductions").val();
 				leave_deductions = $("#"+rowid+"_leave_deductions").val();
 				comments = $("#"+rowid+"_comments").val();
 				url = "editsalarytransaction?";
 				url = url+"eid="+eid;
 				url = url+"&pfopted="+pfopted;
 				url = url+"&deductions="+deductions;
-				url = url+"&leave_amount="+leave_amount;
+				url = url+"&other_amt="+other_amount;
 				url = url+"&leave_deductions="+leave_deductions;
 				url = url+"&emp_salary="+emp_salary;
 				url = url+"&comments="+comments;
@@ -475,32 +586,32 @@ use Illuminate\Support\Facades\Input;
 			      url: url,
 			      success: function(data) {
 			    	  if(data=="success"){
-			    		  bootbox.confirm("operation completed successfully!", function(result) {});
+			    		  bootbox.alert("operation completed successfully!", function(result) {});
 				   	  }
 			    	  if(data=="fail"){
-			    		  bootbox.confirm("operation could not be completed successfully!", function(result) {});
+			    		  bootbox.alert("operation could not be completed successfully!", function(result) {});
 				   	  }
 			      },
 			      type: 'GET'
 			    });
 
 				$("#"+rowid+"_emp_salary").attr("readonly",true);
-		    	$("#"+rowid+"_leaves").attr("readonly",true);
+		    	$("#"+rowid+"_other_amt").attr("readonly",true);
 		    	$("#"+rowid+"_leave_amount").attr("readonly",true);
-		    	$("#"+rowid+"_deductions").attr("readonly",true);
+		    	$("#"+rowid+"_due_deductions").attr("readonly",true);
 		    	$("#"+rowid+"_leave_deductions").attr("readonly",true);
 		    	$("#"+rowid+"_comments").attr("readonly",true);
-				$("#editbtn").html('<a class="btn btn-minier btn-success" onclick="return editRecord('+rowid+','+eid+',\''+type+'\');">Edit</a>');
-				$("#detailsbtn").html('<a href="#modal-table" role="button" data-toggle="modal" class="btn btn-minier btn-info" onclick="return viewDetails('+rowid+','+eid+',\''+type+'\');">Details</a>');
+				$("#"+rowid+"_editbtn").html('<a class="btn btn-minier btn-success" onclick="return editRecord('+rowid+','+eid+',\''+type+'\');">Edit</a>');
+				$("#"+rowid+"_detailsbtn").html('<a href="#modal-table" role="button" data-toggle="modal" class="btn btn-minier btn-info" onclick="return viewDetails('+rowid+','+eid+',\''+type+'\');">Details</a>');
 			}
 
 			function cancelSave(rowid, eid,type){
-				$("#editbtn").html('<a class="btn btn-minier btn-success" onclick="return editRecord('+rowid+','+eid+',\''+type+'\');">Edit</a>');
-				$("#detailsbtn").html('<a href="#modal-table" role="button" data-toggle="modal" class="btn btn-minier btn-info" onclick="return viewDetails('+rowid+','+eid+',\''+type+'\');">Details</a>');
+				$("#"+rowid+"_editbtn").html('<a class="btn btn-minier btn-success" onclick="return editRecord('+rowid+','+eid+',\''+type+'\');">Edit</a>');
+				$("#"+rowid+"_detailsbtn").html('<a href="#modal-table" role="button" data-toggle="modal" class="btn btn-minier btn-info" onclick="return viewDetails('+rowid+','+eid+',\''+type+'\');">Details</a>');
 				$("#"+rowid+"_emp_salary").attr("readonly",true);
-		    	$("#"+rowid+"_leaves").attr("readonly",true);
+		    	$("#"+rowid+"_other_amt").attr("readonly",true);
 		    	$("#"+rowid+"_leave_amount").attr("readonly",true);
-		    	$("#"+rowid+"_deductions").attr("readonly",true);
+		    	$("#"+rowid+"_due_deductions").attr("readonly",true);
 		    	$("#"+rowid+"_leave_deductions").attr("readonly",true);
 		    	$("#"+rowid+"_comments").attr("readonly",true);
 			}
@@ -547,6 +658,8 @@ use Illuminate\Support\Facades\Input;
 				this.value = this.value.replace(/[^0-9.]/g, ''); 
 				this.value = this.value.replace(/(\..*)\./g, '$1');
 			});
+
+			$('.input-daterange').datepicker({autoclose:true,todayHighlight: true});
 		
 			//datepicker plugin
 			//link
@@ -625,9 +738,8 @@ use Illuminate\Support\Facades\Input;
 				.DataTable( {
 					bAutoWidth: false,
 					"aoColumns": [
-					  { "bSortable": false },
 					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },{ "bSortable": false },{ "bSortable": false },{ "bSortable": false },{ "bSortable": false },{ "bSortable": false },
-					  { "bSortable": false }
+					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },{ "bSortable": false },{ "bSortable": false },{ "bSortable": false },{ "bSortable": false },{ "bSortable": false }
 					],
 					"aaSorting": [],
 					

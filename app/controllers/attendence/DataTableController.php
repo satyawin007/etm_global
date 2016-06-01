@@ -123,6 +123,13 @@ class DataTableController extends \Controller {
 			}
 			
 			for($i=0; $i<=$diff; $i++){
+				$isHoliday = false;
+				$at_log = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'))
+											->where("day","=","HOLIDAY")
+											->where("session","=",$values["session"])->get();
+				if(count($at_log)>0){
+					$isHoliday = true;
+				}
 				if(date_format($date, 'd-m-Y') == $values["date"]){
 					$emp = \Attendence::where("empId","=",$entity["id"])->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime($values["date"])))->get();
 					if(count($emp)>0){
@@ -131,10 +138,20 @@ class DataTableController extends \Controller {
 							$substitute = \Employee::where("id","=",$emp->substituteId)->first();
 							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
 						}
-						$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-13px; margin-bottom:-17px;' src='../assets/img/corner.png'/></span>";
+						if(($emp->day=="HOLIDAY" && $emp->session==$values["session"]) || $isHoliday || $values["day"]=="HOLIDAY"){
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:black'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-13px; margin-bottom:-17px;' src='../assets/img/corner.png'/></span>";
+						}
+						else{
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-13px; margin-bottom:-17px;' src='../assets/img/corner.png'/></span>";
+						}
 					}
 					else{
-						$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:blue' id='".$entity["id"]."_".$i."' onclick='changeValue(this.id, \"".$entity["id"]."\", \"".$emptype."\")'>P</span>";
+						if($isHoliday || $values["day"]=="HOLIDAY"){
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:black' id='".$entity["id"]."_".$i."' onclick='changeValue(this.id, \"".$entity["id"]."\", \"".$emptype."\")'>P</span>";
+						}
+						else{
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:blue' id='".$entity["id"]."_".$i."' onclick='changeValue(this.id, \"".$entity["id"]."\", \"".$emptype."\")'>P</span>";
+						}
 					}
 				}
 				else{
@@ -145,10 +162,20 @@ class DataTableController extends \Controller {
 							$substitute = \Employee::where("id","=",$emp->substituteId)->first();
 							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
 						}
-						$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-24px;' src='../assets/img/corner.png'/></span>";
+						if(($emp->day=="HOLIDAY" && $emp->session==$values["session"]) || $isHoliday){
+							$data_values[] =  "<span style='font-weight:bold; color:black'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-24px;' src='../assets/img/corner.png'/></span>";
+						}
+						else{
+							$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-24px;' src='../assets/img/corner.png'/></span>";
+						}
 					}
 					else{
-						$data_values[] =  "<span style='font-weight:bold; color:green'>P</span>";
+						if($isHoliday){
+							$data_values[] =  "<span style='font-weight:bold; color:black'>P</span>";
+						}
+						else{
+							$data_values[] =  "<span style='font-weight:bold; color:green'>P</span>";
+						}
 					}
 				}
 				$date = date_add($date, date_interval_create_from_date_string('1 days'));
@@ -225,6 +252,13 @@ class DataTableController extends \Controller {
 			}
 				
 			for($i=0; $i<=$diff; $i++){
+				$isHoliday = false;
+				$at_log = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'))
+											->where("day","=","HOLIDAY")
+											->where("session","=",$values["session"])->get();
+				if(count($at_log)>0){
+					$isHoliday = true;
+				}
 				if(date_format($date, 'd-m-Y') == $values["date"]){
 					$emp = \Attendence::where("empId","=",$entity["id"])->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime($values["date"])))->get();
 					if(count($emp)>0){
@@ -233,13 +267,20 @@ class DataTableController extends \Controller {
 							$substitute = \Employee::where("id","=",$emp->substituteId)->first();
 							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
 						}
-						//$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'>A</span>";
-						$data_values[] =  "<span style='font-weight:bold; color:red' id='_".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",\"".$emp["substituteId"]."\", \"".$emp["attendenceStatus"]."\", \"".$emp["comments"]."\", \"".$emp["attendenceStatusComments"]."\", ".$emp["id"].")'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+						if(($emp->day=="HOLIDAY" && $emp->session==$values["session"]) || $isHoliday || $values["day"]=="HOLIDAY"){
+							$data_values[] =  "<span style='font-weight:bold; color:black' id='_".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",\"".$emp["substituteId"]."\", \"".$emp["attendenceStatus"]."\", \"".$emp["comments"]."\", \"".$emp["attendenceStatusComments"]."\", ".$emp["id"].")'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+						}
+						else{
+							$data_values[] =  "<span style='font-weight:bold; color:red' id='_".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",\"".$emp["substituteId"]."\", \"".$emp["attendenceStatus"]."\", \"".$emp["comments"]."\", \"".$emp["attendenceStatusComments"]."\", ".$emp["id"].")'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+						}
 					}
 					else{
-																													//(id, type, substitute, comments, status, empid)
-						$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:blue' id='".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",".$entity["id"]."\", \"".$emptype."\")'>P</span>";
-						//$data_values[] =  "<span style='font-weight:bold; color:red'>A</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='updateAttendenceValues(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+						if($isHoliday || $values["day"]=="HOLIDAY"){																							//(id, type, substitute, comments, status, empid)
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:black' id='".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",".$entity["id"]."\", \"".$emptype."\")'>P</span>";
+						}
+						else{
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:blue' id='".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",".$entity["id"]."\", \"".$emptype."\")'>P</span>";
+						}
 					}
 				}
 				else{
@@ -250,10 +291,20 @@ class DataTableController extends \Controller {
 							$substitute = \Employee::where("id","=",$emp->substituteId)->first();
 							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
 						}
-						$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+						if(($emp->day=="HOLIDAY" && $emp->session==$values["session"]) || $isHoliday){
+							$data_values[] =  "<span style='font-weight:bold; color:black'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+						}
+						else{
+							$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+						}
 					}
 					else{
-						$data_values[] =  "<span style='font-weight:bold; color:green'>P</span>";
+						if($isHoliday){
+							$data_values[] =  "<span style='font-weight:bold; color:black'>P</span>";
+						}
+						else{
+							$data_values[] =  "<span style='font-weight:bold; color:green'>P</span>";
+						}
 					}
 				}
 				$date = date_add($date, date_interval_create_from_date_string('1 days'));

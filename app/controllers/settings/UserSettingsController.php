@@ -68,7 +68,7 @@ class UserSettingsController extends \Controller {
 					"idproofnumber"=>"idCardNumber","presentaddress"=>"presentAddress","joiningdate"=>"joiningDate",
 					"aadhdaarnumber"=>"aadharNumber","rationcardnumber"=>"rationCardNumber", "drivinglicence"=>"drivingLicence",
 					"drivingliceneexpiredate"=>"drvLicenceExpDate","accountnumber"=>"accountNumber", "bankname"=>"bankName",
-					"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchId", 
+					"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchIds", 
 					"empbranches"=>"officeBranchIds", "clientbranches"=>"contractIds", "roleprevilage"=>"rolePrevilegeId",
 					"emailid"=>"emailId","salarycardno"=>"salaryCardNo"
 			);
@@ -80,7 +80,7 @@ class UserSettingsController extends \Controller {
 					if($val == "dob" || $val == "drvLicenceExpDate" || $val == "joiningDate"){
 						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 					}
-					else if($key == "clientbranches" || $key == "empcontracts"){
+					else if($key == "clientbranches" || $key == "empcontracts" || $key == "officebranch"){
 						$field_val = "";
 						$i = 0;
 						for($i=0; $i<count($values[$key]); $i++){

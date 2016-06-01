@@ -41,7 +41,7 @@ class TransactionController extends \Controller {
 			if(isset($values["transtype"]) && $values["transtype"] == "income" ){
 				$field_names = array("branch"=>"branchId","amount"=>"amount","paymenttype"=>"paymentType", "transtype"=>"name", "type"=>"lookupValueId",
 						"branch1"=>"branchId1","incharge"=>"inchargeId","employee"=>"employeeId","vehicle"=>"vehicleIds", "bankId"=>"bankId",
-						"remarks"=>"remarks","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate",
+						"remarks"=>"remarks","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate","billno"=>"billNo",
 						"transactiondate"=>"transactionDate", "suspense"=>"suspense", "date1"=>"date","accountnumber"=>"accountNumber","bankname"=>"bankName"
 					);
 				$fields = array();
@@ -120,7 +120,7 @@ class TransactionController extends \Controller {
 			if(isset($values["transtype"]) && $values["transtype"] == "expense" ){
 				$field_names = array("branch"=>"branchId","amount"=>"amount","paymenttype"=>"paymentType", "transtype"=>"name", "type"=>"lookupValueId",
 						"branch1"=>"branchId1","incharge"=>"inchargeId","employee"=>"employeeId","vehicle"=>"vehicleIds", "bankId"=>"bankId",
-						"remarks"=>"remarks","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate",
+						"remarks"=>"remarks","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate","billno"=>"billNo",
 						"transactiondate"=>"transactionDate","suspense"=>"suspense","date1"=>"date","accountnumber"=>"accountNumber","bankname"=>"bankName"
 				);
 				$fields = array();
@@ -311,7 +311,7 @@ class TransactionController extends \Controller {
 		{
 			if(isset($values["type1"]) && $values["type1"] == "income" ){
 				$field_names = array("branch"=>"branchId","amount"=>"amount","paymenttype"=>"paymentType", "transtype"=>"name", "type"=>"lookupValueId",
-						"branch1"=>"branchId1","incharge"=>"inchargeId","employee"=>"employeeId","vehicle"=>"vehicleIds",
+						"branch1"=>"branchId1","incharge"=>"inchargeId","employee"=>"employeeId","vehicle"=>"vehicleIds","billno"=>"billNo",
 						"remarks"=>"remarks","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate",
 						"transactiondate"=>"date", "suspense"=>"suspense", "date1"=>"date","accountnumber"=>"accountNumber","bankname"=>"bankName"
 				);
@@ -362,7 +362,7 @@ class TransactionController extends \Controller {
 			}
 			if(isset($values["type1"]) && $values["type1"] == "expense" ){
 				$field_names = array("branch"=>"branchId","amount"=>"amount","paymenttype"=>"paymentType", "transtype"=>"name", "type"=>"lookupValueId",
-						"branch1"=>"branchId1","incharge"=>"inchargeId","employee"=>"employeeId","vehicle"=>"vehicleIds",
+						"branch1"=>"branchId1","incharge"=>"inchargeId","employee"=>"employeeId","vehicle"=>"vehicleIds","billno"=>"billNo",
 						"remarks"=>"remarks","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate",
 						"transactiondate"=>"transactionDate","suspense"=>"suspense", "date1"=>"date","accountnumber"=>"accountNumber","bankname"=>"bankName"
 				);
@@ -566,6 +566,8 @@ class TransactionController extends \Controller {
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"amount", "id"=>"amount",  "value"=>$entity->amount, "content"=>"amount", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");
 				$form_fields[] = $form_field;
+				$form_field = array("name"=>"billno", "value"=>$entity->billNo, "id"=>"billno", "content"=>"bill no", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+				$form_fields[] = $form_field;
 				$form_field = array("name"=>"billfile", "content"=>"upload bill", "value"=>$entity->filePath, "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
@@ -715,6 +717,8 @@ class TransactionController extends \Controller {
 				$form_field = array("name"=>"suspense", "content"=>"suspense", "value"=>$entity->suspense, "readonly"=>"", "required"=>"","type"=>"checkboxslide", "options"=>array("YES"=>" YES","NO"=>" NO"),  "class"=>"form-control");
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"amount", "id"=>"amount",  "value"=>$entity->amount, "content"=>"amount", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"billno", "value"=>$entity->billNo, "id"=>"billno", "content"=>"bill no", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"billfile", "content"=>"upload bill", "value"=>$entity->filePath, "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
 				$form_fields[] = $form_field;
@@ -1117,31 +1121,31 @@ class TransactionController extends \Controller {
 			foreach ($bankacts as $bankact){
 				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
 			}
-			$form_field = array("name"=>"bankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control",  "options"=>$bankacts_arr);
+			$form_field = array("name"=>"bankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control",  "options"=>$bankacts_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"chequenumber", "content"=>"cheque number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"chequenumber", "content"=>"cheque number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			if(!isset($values["income"])){
-				$form_field = array("name"=>"issuedate", "content"=>"issue date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+				$form_field = array("name"=>"issuedate", "content"=>"issue date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
 				$form_fields[] = $form_field;
-				$form_field = array("name"=>"transactiondate", "content"=>"transaction date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+				$form_field = array("name"=>"transactiondate", "content"=>"transaction date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
 				$form_fields[] = $form_field;
 			}
 			$form_info["form_fields"] = $form_fields;
 		}
 		if(isset($values["paymenttype"]) && $values["paymenttype"] === "dd"){
-			$form_field = array("name"=>"bankname", "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"bankname", "content"=>"bank name", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"ddnumber", "content"=>"dd number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"ddnumber", "content"=>"dd number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"issuedate", "content"=>"issue date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+			$form_field = array("name"=>"issuedate", "content"=>"issue date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
 			$form_fields[] = $form_field;
 			$form_info["form_fields"] = $form_fields;
 		}
 		if(isset($values["paymenttype"]) && ($values["paymenttype"] === "ecs" || $values["paymenttype"] === "neft" || $values["paymenttype"] === "rtgs")){
 			$form_field = array("name"=>"bankname", "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"accountnumber", "content"=>"account number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"accountnumber", "content"=>"account number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_info["form_fields"] = $form_fields;
 		}
@@ -1589,6 +1593,8 @@ class TransactionController extends \Controller {
 // 				$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incharges_arr);
 // 				$form_fields[] = $form_field;
 			}
+			$form_field = array("name"=>"billno", "content"=>"bill no", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
 			$form_field = array("name"=>"billfile", "content"=>"upload bill", "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
@@ -1654,6 +1660,8 @@ class TransactionController extends \Controller {
 			}
 			$form_field = array("name"=>"amount", "content"=>"amount", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");
 			$form_fields[] = $form_field;
+			$form_field = array("name"=>"billno", "content"=>"bill no", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
 			$form_field = array("name"=>"billfile", "content"=>"upload bill", "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
 			$form_fields[] = $form_field;
 			if($values["transtype"] == "expense"){
@@ -1677,6 +1685,8 @@ class TransactionController extends \Controller {
 		}
 		else{
 			$form_field = array("name"=>"amount", "content"=>"amount", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"billno", "content"=>"bill no", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"billfile", "content"=>"upload bill", "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
 			$form_fields[] = $form_field;
@@ -1818,7 +1828,7 @@ class TransactionController extends \Controller {
 		$form_info["back_url"] = "masters";
 		$form_info["bredcum"] = "add transaction";
 		
-		$theads = array('trans Id', 'branch/Contract', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
+		$theads = array('trans Id', 'branch/Contract', 'transaction name', 'date', 'amount', 'payment type', 'bill no', 'remarks', "Actions");
 		$values["theads"] = $theads;
 		$url = "income";
 		$values["provider"]= $url;
@@ -1837,7 +1847,7 @@ class TransactionController extends \Controller {
 			$form_field = array("name"=>"vehicleno", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
 			$form_fields[] = $form_field;
 				
-			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
+			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type',  'bill no',  'remarks', "Actions");
 			$values["theads"] = $theads;
 			$url = "income&type=contracts&contracts=true";
 			$values["provider"]= $url;
@@ -1872,7 +1882,7 @@ class TransactionController extends \Controller {
 		$form_info["back_url"] = "masters";
 		$form_info["bredcum"] = "add transaction";
 		
-		$theads = array('trans Id', 'branch/Contract', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
+		$theads = array('trans Id', 'branch/Contract', 'transaction name', 'date', 'amount', 'payment type', 'bill No', 'remarks', "Actions");
 		$values["theads"] = $theads;
 		$url = "expense";
 		$values["provider"]= $url;
@@ -1891,7 +1901,7 @@ class TransactionController extends \Controller {
 			$form_field = array("name"=>"vehicleno", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
 			$form_fields[] = $form_field;
 				
-			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type', 'remarks', "Actions");
+			$theads = array('trans Id', 'branch', 'transaction name', 'date', 'amount', 'payment type', 'bill no',  'remarks', "Actions");
 			$values["theads"] = $theads;
 			$url = "expense&type=contracts&contracts=true";
 			$values["provider"]= $url;

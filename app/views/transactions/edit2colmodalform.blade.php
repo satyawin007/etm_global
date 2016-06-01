@@ -282,10 +282,16 @@
 			  $("#enableincharge").on("change",function(){
 				  	val = $("#enableincharge").val();
 				  	if(val == "YES"){
+				  		$("#paymentpaid").val("Yes");
+					  	$("#paymentpaid").attr("disabled",true);
+					  	$("#paymenttype").attr("disabled",true);
 						$("#incharge").attr("disabled",false);
 						$('.chosen-select').trigger('chosen:updated');
 					}
 					else{
+						$("#paymentpaid").val("No");
+						$("#paymentpaid").attr("disabled",false);
+						$("#paymenttype").attr("disabled",false);
 						$("#incharge").attr("disabled",true);
 						$('.chosen-select').trigger('chosen:updated');
 					}

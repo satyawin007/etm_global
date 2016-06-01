@@ -173,10 +173,11 @@
 									<div class="form-group">
 										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Employee Branch<span style="color:red;"></span> </label>
 										<div class="col-xs-8">
-											<select class="form-control chosen-select"   id="officebranch" name="officebranch" > 
+											<select class="form-control chosen-select"   id="officebranch" name="officebranch[]" multiple="multiple"> 
 												<option value="">-- Employee Branch --</option>
 												<?php 
 													$roles = \OfficeBranch::All();
+													echo "<option value=''>ALL</option>";
 													foreach ($roles as $role){
 														echo "<option value='".$role->id."'>".$role->name."</option>";
 													}

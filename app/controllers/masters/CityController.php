@@ -169,8 +169,8 @@ class CityController extends \Controller {
 						->select(array("depots.id as id","depots.name as name"))->get();
 		}
 		else{
-		$emp_contracts = explode(",", $emp_contracts);
-		$entities = \Depot::whereIn("depots.id",$emp_contracts)
+			$emp_contracts = explode(",", $emp_contracts);
+			$entities = \Depot::whereIn("depots.id",$emp_contracts)
 						->where("clientId","=",$values['id'])
 						->join("contracts", "depots.id", "=","contracts.depotId")
 						->join("clients", "clients.id", "=","contracts.clientId")

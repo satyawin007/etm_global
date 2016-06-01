@@ -90,7 +90,7 @@ class RepairTransactionItemController extends \Controller {
 		$values['action_val'] = $action_val;
 		$values['links'] = $links;
 	
-		$theads = array('repair type', "quantity", "amount", "comments", "status", "Actions");
+		$theads = array('repair type', "quantity", "amount", "comments", "bill no", "status", "Actions");
 		$values["theads"] = $theads;
 	
 		//Code to add modal forms

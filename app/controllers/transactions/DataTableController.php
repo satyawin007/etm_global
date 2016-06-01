@@ -134,10 +134,12 @@ class DataTableController extends \Controller {
 		$select_args[] = "incometransactions.date as date";
 		$select_args[] = "incometransactions.amount as amount";
 		$select_args[] = "incometransactions.paymentType as paymentType";
+		$select_args[] = "incometransactions.billNo as billNo";
 		$select_args[] = "incometransactions.remarks as remarks";
 		$select_args[] = "incometransactions.transactionId as id";
 		$select_args[] = "incometransactions.lookupValueId as lookupValueId";
 		$select_args[] = "incometransactions.branchId as branch";
+		$select_args[] = "incometransactions.filePath as filePath";
 		if(isset($values["contracts"]) && $values["contracts"]=="true"){
 			$select_args[] = "depots.name as depotname";
 		}
@@ -216,6 +218,9 @@ class DataTableController extends \Controller {
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			if($entity["billNo"] != ""){
+				$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
+			}
 			if($entity["lookupValueId"]>900){
 				$expenses_arr = array();
 				$expenses_arr["998"] = "CREDIT SUPPLIER PAYMENT";
@@ -254,7 +259,7 @@ class DataTableController extends \Controller {
 					}
 				}
 			}
-			$data_values[7] = $action_data;
+			$data_values[8] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);
@@ -284,6 +289,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "creditsuppliertransactions.batta as batta";
 		$select_args[] = "creditsuppliertransactions.id as id";
 		$select_args[] = "creditsuppliertransactions.branchId as branch";
+		$select_args[] = "creditsuppliertransactions.filePath as filePath";
 		if(isset($values["type"]) && $values["type"]=="contracts"){
 			$select_args[] = "depots.name as depotname";
 		}
@@ -367,6 +373,9 @@ class DataTableController extends \Controller {
 				$entity["vehicleIds"] = $entity["vehicleIds"]."<span style='color:red;' >VEHICLES : ".$vehs_arr_str."</span><br/>";
 				$entity["vehicleIds"] = $entity["vehicleIds"]."<span style='color:green;' >REPAIRED ITEM : ".$trans_item->itemname."</span><br/>";
 			}
+			if($entity["billNumber"] != ""){
+				$entity["billNumber"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNumber"]."</a>";
+			}
 			$entity["vehicleIds"] = $entity["vehicleIds"]."Labour Charges : ".$entity["labourCharges"]."<br/>";
 			$entity["vehicleIds"] = $entity["vehicleIds"]."Electricial Charges : ".$entity["electricianCharges"]."<br/>";
 			$entity["vehicleIds"] = $entity["vehicleIds"]."Batta : ".$entity["batta"]."<br/>";
@@ -423,6 +432,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "fueltransactions.remarks as remarks";
 		$select_args[] = "fueltransactions.id as id";
 		$select_args[] = "fueltransactions.branchId as branch";
+		$select_args[] = "fueltransactions.filePath as filePath";
 		if(isset($values["contracts"]) && $values["contracts"]=="true"){
 			$select_args[] = "depots.name as depotname";
 		}
@@ -499,6 +509,9 @@ class DataTableController extends \Controller {
 		}
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			if($entity["billNo"] != ""){
+				$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
+			}
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
@@ -547,10 +560,13 @@ class DataTableController extends \Controller {
 		$select_args[] = "expensetransactions.date as date";
 		$select_args[] = "expensetransactions.amount as amount";
 		$select_args[] = "expensetransactions.paymentType as paymentType";
+		$select_args[] = "expensetransactions.billNo as billNo";
 		$select_args[] = "expensetransactions.remarks as remarks";
 		$select_args[] = "expensetransactions.transactionId as id";
 		$select_args[] = "expensetransactions.lookupValueId as lookupValueId";
 		$select_args[] = "expensetransactions.branchId as branch";
+		$select_args[] = "expensetransactions.filePath as filePath";
+		
 		if(isset($values["contracts"]) && $values["contracts"]=="true"){
 			$select_args[] = "depots.name as depotname";
 		}
@@ -642,6 +658,9 @@ class DataTableController extends \Controller {
 				$expenses_arr["991"] = "DAILY FINANCE PAYMENT";
 				$entity["name"] = $expenses_arr[$entity["lookupValueId"]];
 			}
+			if($entity["billNo"] != ""){
+				$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
+			}
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
@@ -668,7 +687,7 @@ class DataTableController extends \Controller {
 					}
 				}
 			}
-			$data_values[7] = $action_data;
+			$data_values[8] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

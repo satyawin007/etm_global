@@ -188,6 +188,7 @@ class BlockDataEntryController extends \Controller {
 		$todayHours = date("H");
 		$todayDate = date("Y-m-d");
 		$yesterDay = date("Y-m-d", strtotime("-1 days"));
+		return "YES";
 		if($blockDate == $todayDate)
 		{
 			return "YES";

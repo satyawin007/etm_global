@@ -82,7 +82,7 @@ use settings\AppSettingsController;
 										$branches = AppSettingsController::getEmpBranches();
 										$branches_arr = array();
 										foreach ($branches as $branch){
-											$branches_arr[$branch->id] = $branch->name;
+											$branches_arr[$branch["id"]] = $branch["name"];
 										}
 									?>
 									<?php $form_field = array("name"=>"branch2", "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>
@@ -572,10 +572,16 @@ use settings\AppSettingsController;
 
 			function enableIncharge(val){
 				if(val == "YES"){
+			  		$("#amountpaid").val("Yes");
+				  	$("#amountpaid").attr("disabled",true);
+				  	$("#paymenttype").attr("disabled",false);
 					$("#incharge").attr("disabled",false);
 					$('.chosen-select').trigger('chosen:updated');
 				}
 				else{
+					$("#amountpaid").val("No");
+				  	$("#amountpaid").attr("disabled",false);
+				  	$("#paymenttype").attr("disabled",true);
 					$("#incharge").attr("disabled",true);
 					$('.chosen-select').trigger('chosen:updated');
 				}

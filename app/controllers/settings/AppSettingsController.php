@@ -295,16 +295,15 @@ class AppSettingsController extends \Controller {
 	
 	public static function getEmpBranches(){
 		$entities = null;
-		$branches =  \Auth::user()->officeBranchIds;
-		$entities = \OfficeBranch::all();
-// 		if($branches==0|| $branches==""){
-// 			$entities = \OfficeBranch::all();
-// 		}
-// 		else{
-// 			$emp_branch_arr = explode(",", $branches);
-// 			$entities = \OfficeBranch::whereIn("id",$emp_branch_arr)->get();
-// 		}
-		return $entities;
+		$emp_branches = \Auth::user()->officeBranchIds;
+		if($emp_branches=="" || $emp_branches==0){
+			$entities = \OfficeBranch::All();
+		}
+		else{
+			$emp_branches = explode(",", $emp_branches);
+			$entities = \OfficeBranch::whereIn("id",$emp_branches)->get();
+		}
+		return $entities->toArray();
 	}
 	
 	public static function getNonContractVehicles(){

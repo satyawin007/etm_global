@@ -235,12 +235,13 @@ use Illuminate\Support\Facades\Input;
 												<div class="form-group">
 													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Employee Branch<span style="color:red;"></span> </label>
 													<div class="col-xs-8">
-														<select class="form-control chosen-select"   id="officebranch" name="officebranch"> 
+														<select class="form-control chosen-select"   id="officebranch" name="officebranch[]" multiple="multiple"> 
 															<option value="">-- Employee Branch --</option>
 															<?php 
 																$roles = \OfficeBranch::All();
+																$branches = explode(",", $employee->officeBranchIds);
 																foreach ($roles as $role){
-																	if($role->id==$employee->officeBranchId){
+																	if(in_array($role->id,$branches)){
 																		echo "<option selected value='".$role->id."'>".$role->name."</option>";
 																	}
 																	else{

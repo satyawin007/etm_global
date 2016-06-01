@@ -191,7 +191,7 @@ use settings\AppSettingsController;
 										$branches =  AppSettingsController::getEmpBranches();
 										$branches_arr = array();
 										foreach ($branches as $branch){
-											$branches_arr[$branch->id] = $branch->name;
+											$branches_arr[$branch["id"]] = $branch["name"];
 										}
 										if(!isset($values['branch1'])){
 											$values["branch1"] = 0;
@@ -528,10 +528,16 @@ use settings\AppSettingsController;
 						  $("#enableincharge").on("change",function(){
 							  	val = $("#enableincharge").val();
 							  	if(val == "YES"){
+							  		$("#paymentpaid").val("Yes");
+								  	$("#paymentpaid").attr("disabled",true);
+								  	$("#paymenttype").attr("disabled",true);
 									$("#incharge").attr("disabled",false);
 									$('.chosen-select').trigger('chosen:updated');
 								}
 								else{
+									$("#paymentpaid").val("No");
+									$("#paymentpaid").attr("disabled",false);
+									$("#paymenttype").attr("disabled",false);
 									$("#incharge").attr("disabled",true);
 									$('.chosen-select').trigger('chosen:updated');
 								}
@@ -666,10 +672,16 @@ use settings\AppSettingsController;
 						  $("#enableincharge").on("change",function(){
 							  	val = $("#enableincharge").val();
 							  	if(val == "YES"){
+							  		$("#paymentpaid").val("Yes");
+								  	$("#paymentpaid").attr("disabled",true);
+								  	$("#paymenttype").attr("disabled",false);
 									$("#incharge").attr("disabled",false);
 									$('.chosen-select').trigger('chosen:updated');
 								}
 								else{
+									$("#paymentpaid").val("No");
+								  	$("#paymentpaid").attr("disabled",false);
+								  	$("#paymenttype").attr("disabled",true);
 									$("#incharge").attr("disabled",true);
 									$('.chosen-select').trigger('chosen:updated');
 								}

@@ -406,7 +406,7 @@ class EmployeeController extends \Controller {
 				"idproofnumber"=>"idCardNumber","joiningdate"=>"joiningDate", "rtaoffice"=>"rtaBranch",
 				"aadhdaarnumber"=>"aadharNumber","rationcardnumber"=>"rationCardNumber", "drivinglicence"=>"drivingLicence",
 				"drivingliceneexpiredate"=>"drvLicenceExpDate","accountnumber"=>"accountNumber", "bankname"=>"bankName",
-				"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchId", 
+				"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchIds", 
 				"clientbranches"=>"contractIds", "presentaddress"=>"presentAddress","dateofbirth"=>"dob","salarycardno"=>"salaryCardNo"
 			);
 		$fields = array();
@@ -418,7 +418,7 @@ class EmployeeController extends \Controller {
 				else if($val == "password"){
 					$fields[$val] = \Hash::make($values[$key]);
 				}
-				else if($key == "clientbranches" || $key == "empcontracts"){
+				else if($key == "clientbranches" || $key == "empcontracts" || $key == "officebranch"){
 					$field_val = "";
 					$i = 0;
 					for($i=0; $i<count($values[$key]); $i++){

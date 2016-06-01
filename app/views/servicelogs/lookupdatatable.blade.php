@@ -50,8 +50,8 @@
 			</div>
 		</div>
 				
-		<div class="row ">
-		<div class="col-xs-offset-1 col-xs-10">
+		<div class="row">
+		<div class="col-xs-offset-0 col-xs-12">
 			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 10px;">MANAGE {{$values["bredcum"]}}</h3>		
 			<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
 			<div class="clearfix">
@@ -109,6 +109,7 @@
 					<div class="col-xs-4">
 						<select name="logstatus" id="logstatus" class="formcontrol chosen-select">
 							<option value="All">All</option>
+							<option value="Send for Approval">Send for Approval</option>
 							<option value="Requested">Requested</option>
 							<option value="Open">Open</option>
 							<option value="Closed">Closed</option>

@@ -199,7 +199,7 @@ class DataTableController extends \Controller {
 		if(!isset($values['clientid']) || !isset($values['depotid'])){
 			return array("total"=>$total, "data"=>$data);
 		}
-		$logstatus_arr = array("Requested","Open","Closed");
+		$logstatus_arr = array("Send for Approval", "Requested","Open","Closed");
 		if(isset($values['logstatus']) && $values['logstatus']!="All"){
 			$logstatus_arr = array($values['logstatus']);
 		}
@@ -212,6 +212,8 @@ class DataTableController extends \Controller {
 		$select_args[] = "servicelogrequests.comments as comments";
 		$select_args[] = "employee.fullName as fullName";
 		$select_args[] = "servicelogrequests.status as status";
+		$select_args[] = "employee1.fullName as fullName1";
+		$select_args[] = "servicelogrequests.opened_at as opened_at";
 		$select_args[] = "servicelogrequests.id as id";
 		$select_args[] = "servicelogrequests.deleted as deleted";
 		
@@ -237,6 +239,7 @@ class DataTableController extends \Controller {
 					->join("depots","depots.id", "=", "contracts.depotId")
 					->join("vehicle","vehicle.id", "=", "servicelogrequests.vehicleId")
 					->join("employee","employee.id", "=", "servicelogrequests.createdBy")
+					->leftjoin("employee as employee1","employee1.id", "=", "servicelogrequests.openedBy")
 					->select($select_args)->limit($length)->offset($start)->get();
 			$total = \ServiceLogRequest::wherein("servicelogrequests.vehicleId",$contract_arr)
 					->where("servicelogrequests.deleted", "=", "No")->count();
@@ -256,6 +259,7 @@ class DataTableController extends \Controller {
 						->join("depots","depots.id", "=", "contracts.depotId")
 						->join("vehicle","vehicle.id", "=", "servicelogrequests.vehicleId")
 						->join("employee","employee.id", "=", "servicelogrequests.createdBy")
+						->leftjoin("employee as employee1","employee1.id", "=", "servicelogrequests.openedBy")
 						->select($select_args)->limit($length)->offset($start)->get();
 				$total = \ServiceLogRequest::wherein("servicelogrequests.vehicleId",$contract_arr)
 						->where("servicelogrequests.deleted", "=", "No")->count();
@@ -268,6 +272,7 @@ class DataTableController extends \Controller {
 						->join("depots","depots.id", "=", "contracts.depotId")
 						->join("vehicle","vehicle.id", "=", "servicelogrequests.vehicleId")
 						->join("employee","employee.id", "=", "servicelogrequests.createdBy")
+						->leftjoin("employee as employee1","employee1.id", "=", "servicelogrequests.openedBy")
 						->select($select_args)->limit($length)->offset($start)->get();
 				$total = \ServiceLogRequest::where("servicelogrequests.deleted", "=", "No")->count();
 			}
@@ -281,6 +286,12 @@ class DataTableController extends \Controller {
 			}
 			else{
 				$entity["customDate"] = "";
+			}
+			if($entity["fullName1"] != ""){
+				$entity["opened_at"] = date("d-m-Y H:i",strtotime($entity["opened_at"]));
+			}
+			else{
+				$entity["opened_at"] = "";
 			}
 			
 			$dts = $entity["pendingDates"];
@@ -311,7 +322,7 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[8] = $action_data;
+			$data_values[10] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

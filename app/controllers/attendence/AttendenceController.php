@@ -22,7 +22,7 @@ class AttendenceController extends \Controller {
 			if( $values["session"]=="MORNING" && date('H:i:s') > $time){
 				return json_encode(['status' => 'fail', 'message' => 'Attendence for MORNING SESSION is closed']);
 			}
-			$time = date('H:i:s',strtotime("4 PM"));
+			$time = date('H:i:s',strtotime("6 PM"));
 			if( $values["session"]=="AFTERNOON" && date('H:i:s') > $time){
 				return json_encode(['status' => 'fail', 'message' => 'Attendence for AFTERNOON SESSION is closed']);
 			}
@@ -70,7 +70,7 @@ class AttendenceController extends \Controller {
 		if( $values["session"]=="MORNING" && date('H:i:s') > $time){
 			return json_encode(['status' => 'fail', 'message' => 'Attendence for MORNING SESSION is closed']);
 		}
-		$time = date('H:i:s',strtotime("4 PM"));
+		$time = date('H:i:s',strtotime("6 PM"));
 		if( $values["session"]=="AFTERNOON" && date('H:i:s') > $time){
 			return json_encode(['status' => 'fail', 'message' => 'Attendence for AFTERNOON SESSION is closed']);
 		}
@@ -87,7 +87,7 @@ class AttendenceController extends \Controller {
 		$fields["time"] = date("H:i:s");
 		$fields["holidayReason"] = $values["holidayreason"];
 		if($values["employeetype"] == "CLIENT BRANCH"){
-			$fields["clientId"] = $values["client"];
+			$fields["clientId"] = $values["clientname"];
 			$fields["depotId"] = $values["depot"];
 		}
 		else{
@@ -111,7 +111,7 @@ class AttendenceController extends \Controller {
 		if( $values["session"]=="MORNING" && date('H:i:s') > $time){
 			return json_encode(['status' => 'fail', 'message' => 'Attendence for MORNING SESSION is closed']);
 		}
-		$time = date('H:i:s',strtotime("4 PM"));
+		$time = date('H:i:s',strtotime("6 PM"));
 		if( $values["session"]=="AFTERNOON" && date('H:i:s') > $time){
 			return json_encode(['status' => 'fail', 'message' => 'Attendence for AFTERNOON SESSION is closed']);
 		}
@@ -122,7 +122,7 @@ class AttendenceController extends \Controller {
 		$fields["date"] = date("Y-m-d", strtotime($values["date"]));
 		$fields["time"] = date("H:i:s");
 		if($values["employeetype"] == "CLIENT BRANCH"){
-			$fields["clientId"] = $values["client"];
+			$fields["clientId"] = $values["clientname"];
 			$fields["depotId"] = $values["depot"];
 		}
 		else{
@@ -132,7 +132,7 @@ class AttendenceController extends \Controller {
 					->where("session","=",$values["session"])
 					->where("date","=",date("Y-m-d", strtotime($values["date"])));
 					if($values["employeetype"] == "CLIENT BRANCH"){
-						$qry->where("clientId","=",$values["client"]);
+						$qry->where("clientId","=",$values["clientname"]);
 						$qry->where("depotId","=",$values["depot"]);
 					}
 					else{

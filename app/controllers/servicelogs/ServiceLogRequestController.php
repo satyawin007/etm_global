@@ -105,9 +105,9 @@ class ServiceLogRequestController extends \Controller {
 					}
 				}
 			}
-			if($values["status1"] == "Open"){
+			if($values["status1"] == "Open" || $values["status1"] == "Close"){
 				$fields["openedBy"] = \Auth::user()->id;
-				$fields["opened_at"] = date("Y-m-d h:s:i");
+				$fields["opened_at"] = date("Y-m-d h:i:s");
 			}
 			$db_functions_ctrl = new DBFunctionsController();
 			$table = "\ServiceLogRequest";
@@ -344,7 +344,7 @@ class ServiceLogRequestController extends \Controller {
 		$values['form_action'] = 'servicelogs';
 		$values['action_val'] = '';
 		$values["showsearchrow"]="servlogrequests";
-		$theads = array('client name', "client branch", "vehicle", "Pending Dates", "Custom Date", "comments", "Requested By", "status","Actions");
+		$theads = array('client name', "client branch", "vehicle", "Pending Dates", "Custom Date", "comments", "Requested By", "status", "Opened/Closed By", "Opended On", "Actions");
 		$values["theads"] = $theads;
 			
 		$actions = array();
@@ -391,7 +391,7 @@ class ServiceLogRequestController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"comments1", "content"=>"comments", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"status1", "value"=>"", "content"=>"status", "readonly"=>"", "value"=>"", "required"=>"", "type"=>"select", "options"=>array("Requested"=>"Requested","Open"=>"Open","Close"=>"Close"), "class"=>"form-control");
+		$form_field = array("name"=>"status1", "value"=>"", "content"=>"status", "readonly"=>"", "value"=>"", "required"=>"", "type"=>"select", "options"=>array("Requested"=>"Requested","Open"=>"Open","Closed"=>"Close"), "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"deleted1", "value"=>"", "content"=>"deleted", "readonly"=>"", "value"=>"", "required"=>"", "type"=>"select", "options"=>array("No"=>"No","Yes"=>"Yes"), "class"=>"form-control");
 		$form_fields[] = $form_field;

@@ -46,10 +46,10 @@
 			<div class="col-xs-6">
 				<div class="form-group">
 					<?php 
-						$branches =  AppSettingsController::getEmpBranches();
+						$branches = AppSettingsController::getEmpBranches();
 						$branches_arr = array();
 						foreach ($branches as $branch){
-							$branches_arr[$branch->id] = $branch->name;
+							$branches_arr[$branch["id"]] = $branch["name"];
 						}
 					?>
 					<?php $form_field = array("name"=>"branch", "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>

@@ -227,7 +227,7 @@ private function getVehicleRepairs($values, $length, $start){
 		}
 		$select_args[] = "creditsuppliers.supplierName as creditSupplierId";
 		$select_args[] = "creditsuppliertransactions.date as date";
-		$select_args[] = "creditsuppliertransactions.billNumber as billNumber";
+		$select_args[] = "creditsuppliertransactions.billNumber as billNo";
 		$select_args[] = "creditsuppliertransactions.paymentPaid as paymentPaid";
 		$select_args[] = "creditsuppliertransactions.paymentType as paymentType";
 		$select_args[] = "creditsuppliertransactions.amount as amount";
@@ -241,6 +241,7 @@ private function getVehicleRepairs($values, $length, $start){
 		$select_args[] = "creditsuppliertransactions.batta as batta";
 		$select_args[] = "creditsuppliertransactions.id as id";
 		$select_args[] = "creditsuppliertransactions.branchId as branch";
+		$select_args[] = "creditsuppliertransactions.filePath as filePath";
 		if(isset($values["type"]) && $values["type"]=="contracts"){
 			$select_args[] = "depots.name as depotname";
 		}
@@ -302,6 +303,9 @@ private function getVehicleRepairs($values, $length, $start){
 		}
 		//print_r($entities);die();
 		foreach($entities as $entity){
+			if($entity["billNo"] != ""){
+				$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
+			}
 			$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 			$trans_items = \CreditSupplierTransDetails::where("creditSupplierTransId","=",$entity["id"])
 								->where("creditsuppliertransdetails.status","=","ACTIVE")
@@ -377,6 +381,7 @@ private function getVehicleRepairs($values, $length, $start){
 		$select_args[] = "fueltransactions.contractId as contractId";
 		$select_args[] = "clients.name as clientname";
 		$select_args[] = "depots.name as depotname";
+		$select_args[] = "fueltransactions.filePath as filePath";
 
 		$actions = array();
 		$values["actions"] = $actions;
@@ -429,7 +434,9 @@ private function getVehicleRepairs($values, $length, $start){
 			if($entity["contractId"]>0){
 				$entity["branchId"] = $entity["depotname"]."(".$entity["clientname"].")";
 			}
-			
+			if($entity["billNo"] != ""){
+				$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
+			}
 			$data_values = array_values($entity);
 			$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
 			$action_data = '<label> <input name="action[]" type="checkbox" class="ace" value="'.$entity["id"].'"> <span class="lbl">&nbsp;</span></label>';
@@ -449,10 +456,12 @@ private function getVehicleRepairs($values, $length, $start){
 		$select_args[] = "expensetransactions.date as date";
 		$select_args[] = "expensetransactions.amount as amount";
 		$select_args[] = "expensetransactions.paymentType as paymentType";
+		$select_args[] = "expensetransactions.billNo as billNo";
 		$select_args[] = "expensetransactions.remarks as remarks";
 		$select_args[] = "expensetransactions.transactionId as id";
 		$select_args[] = "expensetransactions.lookupValueId as lookupValueId";
 		$select_args[] = "expensetransactions.branchId as branch";
+		$select_args[] = "expensetransactions.filePath as filePath";
 	
 			
 		$actions = array();
@@ -487,6 +496,9 @@ private function getVehicleRepairs($values, $length, $start){
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			if($entity["billNo"] != ""){
+				$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
+			}
 			if($entity["lookupValueId"]>900){
 				$expenses_arr = array();
 				$expenses_arr["998"] = "CREDIT SUPPLIER PAYMENT";

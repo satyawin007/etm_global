@@ -16,7 +16,7 @@ class SalariesController extends \Controller {
 	public function payDriversSalary()
 	{
 		$values = Input::all();
-		$values['bredcum'] = "PAY DRIVERS SALARY";
+		$values['bredcum'] = "PAY DRIVERS/HELPERS SALARY";
 		$values['home_url'] = 'masters';
 		$values['add_url'] = '#';
 		$values['form_action'] = '#';
@@ -39,7 +39,7 @@ class SalariesController extends \Controller {
 		$branches = AppSettingsController::getEmpBranches();
 		$branches_arr = array();
 		foreach ($branches as $branch){
-			$branches_arr[$branch->id] = $branch->name;
+			$branches_arr[$branch["id"]] = $branch["name"];
 		}
 		
 		$month_arr = array();
@@ -70,13 +70,32 @@ class SalariesController extends \Controller {
 		if(isset($values["paymenttype"])){
 			$pmttype_val = $values["paymenttype"];
 		}
-		$form_field = array("name"=>"branch", "value"=>$branch_val, "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr);
+		if(isset($values["paymenttype"])){
+			$pmttype_val = $values["paymenttype"];
+		}
+		if(isset($values["paymenttype"])){
+			$pmttype_val = $values["paymenttype"];
+		}
+		
+		$clients =  AppSettingsController::getEmpClients();
+		$clients_arr = array();
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+		
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"month", "value"=>$month_val, "content"=>"salary month", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$month_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymentdate", "value"=>$pmtdate_val, "content"=>"payment date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+		$form_field = array("name"=>"paymentdate", "content"=>"payment date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+		$form_field = array("name"=>"branch", "content"=>"payment branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"salarydates", "content"=>"salary dates", "readonly"=>"",  "required"=>"required", "type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"paymenttype", "content"=>"", "readonly"=>"",  "required"=>"", "type"=>"hidden", "value"=>"", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		
 		
@@ -118,7 +137,7 @@ class SalariesController extends \Controller {
 		$branches = AppSettingsController::getEmpBranches();
 		$branches_arr = array();
 		foreach ($branches as $branch){
-			$branches_arr[$branch->id] = $branch->name;
+			$branches_arr[$branch["id"]] = $branch["name"];
 		}
 		
 		$month_arr = array();
@@ -155,7 +174,9 @@ class SalariesController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymentdate", "value"=>$pmtdate_val, "content"=>"payment date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+		$form_field = array("name"=>"salarydates", "content"=>"salary dates", "readonly"=>"",  "required"=>"required", "type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"hidden", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
 		$form_fields[] = $form_field;
 		
 		
@@ -192,8 +213,9 @@ class SalariesController extends \Controller {
 			foreach ($ids as $id){
 				$id = $id%$values["dynamic-table_length"];
 				$actualSalary = 0;
-				if(isset($values["daily_trips_salary"]) && isset($values["local_trips_salary"])){
-					$actualSalary = $values["daily_trips_salary"][$id] + $values["local_trips_salary"][$id];
+				if(isset($values["clientname"]) && isset($values["depot"])){
+					$actualSalary = $values["emp_salary"][$id];
+					$url = $url;
 				}
 				else{
 					$actualSalary = $values["emp_salary"][$id];
@@ -207,7 +229,7 @@ class SalariesController extends \Controller {
 				if(isset($values["issuedate"])){ $url = $url."&issuedate=".$values["issuedate"];}
 				if(isset($values["transactiondate"])){ $url = $url."&transactiondate=".$values["transactiondate"];}
 				
-				$dueDeductions = $values['deductions'][$id];
+				$dueDeductions = $values['due_deductions'][$id];
 				$dailyTripsAllowance = 0;
 				if(isset($values["daily_trips_allowance"])){
 					$dailyTripsAllowance = $values["daily_trips_allowance"][$id];
@@ -237,14 +259,14 @@ class SalariesController extends \Controller {
 					$salaryPaid = $salaryPaid - ($dueDeductions+$leave_deductions);
 				else
 				 	$dueDeductions= 0;
-				
+				$salaryPaid = $salaryPaid+$values["other_amt"][$id];
 				$values["pf"][$id] = $pf;
 				$values["esi"][$id] = $esi;
 				$values["proftax"][$id] = $proftax;
 				$values["salarypaid"][$id] = $salaryPaid;
 				$values["totalsalary"][$id] = $actualSalary;
 				
-				$field_names = array("id"=>"empId","totalsalary"=>"actualSalary","daily_trips_salary"=>"dailyTripsSalary","daily_trips_allowance"=>"dailyTripsAllowance","local_trips_salary"=>"localTripsSalary","leave_amount"=>"leaveAmount","deductions"=>"dueDeductions","leave_deductions"=>"leaveDeductions","salarypaid"=>"salaryPaid","pfopted"=>"pfOpted","pf"=>"pf","esi"=>"esi","proftax"=>"profTax","comments"=>"comments");
+				$field_names = array("id"=>"empId","totalsalary"=>"actualSalary","daily_trips_salary"=>"dailyTripsSalary","daily_trips_allowance"=>"dailyTripsAllowance","local_trips_salary"=>"localTripsSalary", "other_amt"=>"otherAmount", "leave_amount"=>"leaveAmount","due_deductions"=>"dueDeductions","leave_deductions"=>"leaveDeductions","salarypaid"=>"salaryPaid","pfopted"=>"pfOpted","pf"=>"pf","esi"=>"esi","proftax"=>"profTax","comments"=>"comments");
 				$fields = array();
 				foreach ($field_names as $key=>$val){
 					if(isset($values[$key])){
@@ -281,7 +303,7 @@ class SalariesController extends \Controller {
 					$values["duetype"][$id]= "Loan";
 					$values["sourceentity"][$id]= "empsalarytransactions";
 					$values["sourceentityid"][$id]= $recid;
-					$values["deductions"][$id] = -1*$values["deductions"][$id];
+					$values["due_deductions"][$id] = -1*$values["due_deductions"][$id];
 					$fields = array();
 					$field_names = array("id"=>"empId","duetype"=>"dueType","deductions"=>"amount","sourceentity"=>"sourceEntity","sourceentityid"=>"sourceEntityId");
 					foreach ($field_names as $key=>$val){
@@ -365,14 +387,14 @@ class SalariesController extends \Controller {
 				$salaryPaid = $salaryPaid - ($dueDeductions+$leave_deductions);
 			else
 			 	$dueDeductions= 0;
-			
+			$salaryPaid = $salaryPaid+$values["other_amt"];
 			$values["pf"] = $pf;
 			$values["esi"] = $esi;
 			$values["proftax"] = $proftax;
 			$values["salarypaid"] = $salaryPaid;
 			$values["totalsalary"] = $actualSalary;
 
-			$field_names = array("id"=>"empId","totalsalary"=>"actualSalary","daily_trips_salary"=>"dailyTripsSalary","daily_trips_allowance"=>"dailyTripsAllowance","local_trips_salary"=>"localTripsSalary","leave_amount"=>"leaveAmount","deductions"=>"dueDeductions","leave_deductions"=>"leaveDeductions","salarypaid"=>"salaryPaid","pfopted"=>"pfOpted","pf"=>"pf","esi"=>"esi","proftax"=>"profTax", "bankaccount"=>"bankAccount","cheque"=>"chequeNumber","comments"=>"comments");
+			$field_names = array("id"=>"empId","totalsalary"=>"actualSalary","other_amt"=>"otherAmount", "daily_trips_salary"=>"dailyTripsSalary","daily_trips_allowance"=>"dailyTripsAllowance","local_trips_salary"=>"localTripsSalary","leave_amount"=>"leaveAmount","deductions"=>"dueDeductions","leave_deductions"=>"leaveDeductions","salarypaid"=>"salaryPaid","pfopted"=>"pfOpted","pf"=>"pf","esi"=>"esi","proftax"=>"profTax", "bankaccount"=>"bankAccount","cheque"=>"chequeNumber","comments"=>"comments");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){

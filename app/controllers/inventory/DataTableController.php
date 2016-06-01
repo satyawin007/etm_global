@@ -393,6 +393,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "purchase_orders.comments as comments";
 		$select_args[] = "purchase_orders.status as status";
 		$select_args[] = "purchase_orders.id as id";
+		$select_args[] = "purchase_orders.filePath as filePath";
 		$actions = array();
 		$jobs = \Session::get("jobs");
 		if(in_array(331, $jobs)){
@@ -422,6 +423,9 @@ class DataTableController extends \Controller {
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			if($entity["billNumber"] != ""){
+				$entity["billNumber"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNumber"]."</a>";
+			}
 			$entity["orderDate"] = date("d-m-Y",strtotime($entity["orderDate"]));
 			$data_values = array_values($entity);
 			$actions = $values['actions'];

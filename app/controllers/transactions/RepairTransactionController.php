@@ -278,9 +278,9 @@ class RepairTransactionController extends \Controller {
 			}
 		
 			$warehouse_arr = array();
-			$warehouses = \OfficeBranch::all();
+			$warehouses = AppSettingsController::getEmpBranches();
 			foreach ($warehouses as $warehouse){
-				$warehouse_arr[$warehouse->id] = $warehouse->name;
+				$warehouse_arr[$warehouse["id"]] = $warehouse["name"];
 			}
 			$form_payment_fields= array();
 			$form_field = array("name"=>"creditsupplier", "id"=>"creditsupplier", "value"=>$entity->creditSupplierId, "content"=>"credit supplier", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$credit_sup_arr, "class"=>"form-control chosen-select");

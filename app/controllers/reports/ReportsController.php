@@ -166,6 +166,9 @@ class ReportsController extends \Controller {
 		if(isset($values["reporttype"]) && $values["reporttype"] == "salary"){
 			return $this->getSalaryReport($values);
 		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "estimatedsalary"){
+			return $this->getEstimateSalaryReport($values);
+		}
 		if(isset($values["reporttype"]) && $values["reporttype"] == "inchargetransactions"){
 			return $this->getInchargeTransactionsReport($values);
 		}
@@ -1080,7 +1083,7 @@ class ReportsController extends \Controller {
 			$totaladvances = 0;
 			$totalreturns  = 0;
 			if(true){
-				$sql = 'SELECT date, expensetransactions.amount, financecompanies.name, loans.amountFinanced, loans.vehicleId, loans.agmtDate, loans.installmentAmount, loans.totalInstallments, loans.paidInstallments, loans.paymentType, loans.bankAccountId, concat(bankdetails.bankName," - ",bankdetails.accountNo) as bankName,loans.loanNo, loans.id as loanId, expensetransactions.remarks as remarks FROM `expensetransactions` join loans on loans.id=expensetransactions.entityValue join financecompanies on financecompanies.id=loans.financeCompanyId join bankdetails on bankdetails.id=loans.bankAccountId where entity="LOAN PAYMENT" and date between "'.$frmDt.'" and "'.$frmDt.'" order by date;';
+				$sql = 'SELECT date, expensetransactions.amount, financecompanies.name, loans.amountFinanced, loans.vehicleId, loans.agmtDate, loans.installmentAmount, loans.totalInstallments, loans.paidInstallments, loans.paymentType, loans.bankAccountId, concat(bankdetails.bankName," - ",bankdetails.accountNo) as bankName,loans.loanNo, loans.id as loanId, expensetransactions.remarks as remarks FROM `expensetransactions` join loans on loans.id=expensetransactions.entityValue join financecompanies on financecompanies.id=loans.financeCompanyId join bankdetails on bankdetails.id=loans.bankAccountId where entity="DAILY FINANCE PAYMENT" and date between "'.$frmDt.'" and "'.$frmDt.'" order by date;';
 				$recs = DB::select( DB::raw($sql));
 				foreach ($recs as $rec){
 					$row = array();
@@ -2006,6 +2009,182 @@ class ReportsController extends \Controller {
 		return View::make('reports.inchargetransactionsreport', array("values"=>$values));
 	}
 	
+	private function getEstimateSalaryReport($values){
+		if (\Request::isMethod('post'))
+		{
+			$frmDt = date("Y-m-d", strtotime($values["fromdate"]));
+			$toDt = date("Y-m-d", strtotime($values["todate"]));
+			$resp = array();
+			$total_amount = 0;
+			if(isset($values["employeetype"]) && $values["employeetype"]=="OFFICE"){
+				if(true){
+					$entities = \Employee::where("roleId","!=",19)
+											->where("roleId","!=",20)
+											->where("officeBranchId","=",$values["officebranch"])
+											->where("status","=","ACTIVE")->get();
+					foreach ($entities as $entity){
+						$row = array();
+						$branch = \OfficeBranch::where("id","=",$values["officebranch"])->first();
+						$row["branch"] = $branch->name;
+						$row["employee"] = $entity->fullName." - ".$entity->empCode;
+						$salary_amt = 0;
+						$salary = \SalaryDetails::where("empId","=",$entity->id)->get();
+						if(count($salary)>0){
+							$salary = $salary[0];
+							$salary_amt = $salary->salary;
+						}
+						$row["salary"] = $salary_amt;
+						
+						$leaves = 0;
+						$leaves_amt = 0;
+						$fromdt = date("Y-m-d",strtotime($values["fromdate"]));
+						$todt = date("Y-m-d",strtotime($values["todate"]));
+						$recs = DB::select( DB::raw($sql = "select count(*) as cnt from attendence where attendence.empId='".$entity->id."' and (attendenceStatus = 'A') and date between '$fromdt' and '$todt'") );
+						foreach ($recs as $rec){
+							$leaves = $rec->cnt;
+							$leaves = $leaves/2;
+							
+							$date1=date_create($fromdt);
+							$date2=date_create($todt);
+							$diff=date_diff($date1,$date2);
+							$working_days =  $diff->format("%a");
+							$leaves_amt = ($salary_amt/$working_days)*$leaves;
+							$leaves_amt = intval($leaves_amt);
+						}
+						$row["leaves"] = $leaves;
+						$row["leave_amount"] = $leaves_amt;
+						
+						$due_amt = "0.00";
+						$recs = DB::select( DB::raw("SELECT SUM(`amount`) amt FROM `empdueamount` WHERE empId = ".$entity->id." and deleted='No'") );
+						foreach ($recs as $rec){
+							$due_amt = $rec->amt;
+							if($due_amt == ""){
+								$due_amt = "0.00";
+							}
+						}
+						$row["due_amount"] = $due_amt;
+						$row["estimated_salary"] = $salary_amt-($leaves_amt+$due_amt);
+						$total_amount = $total_amount+$row["estimated_salary"];
+						$resp[] = $row;
+					}
+				}
+			}
+			if(isset($values["employeetype"]) && $values["employeetype"]=="CLIENT BRANCH"){
+				if(true){
+					DB::statement(DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+					$entities = DB::select( DB::raw("select * from temp_contract_drivers_helpers group by id"));
+					foreach ($entities as $entity){
+						$row = array();
+						$depot = \depot::where("id","=",$values["depot"])->first();
+						$clientname = \Client::where("id","=",$values["clientname"])->first();
+						$row["branch"] = $depot->name." (".$clientname->name.")";
+						$row["employee"] = $entity->fullName." - ".$entity->empCode;
+						$salary_amt = 0;
+						$salary = \SalaryDetails::where("empId","=",$entity->id)->get();
+						if(count($salary)>0){
+							$salary = $salary[0];
+							$salary_amt = $salary->salary;
+						}
+						$row["salary"] = $salary_amt;
+			
+						$leaves = 0;
+						$leaves_amt = 0;
+						$fromdt = date("Y-m-d",strtotime($values["fromdate"]));
+						$todt = date("Y-m-d",strtotime($values["todate"]));
+						$recs = DB::select( DB::raw($sql = "select count(*) as cnt from attendence where attendence.empId='".$entity->id."' and (attendenceStatus = 'A') and date between '$fromdt' and '$todt'") );
+						foreach ($recs as $rec){
+							$leaves = $rec->cnt;
+							$leaves = $leaves/2;
+								
+							$date1=date_create($fromdt);
+							$date2=date_create($todt);
+							$diff=date_diff($date1,$date2);
+							$working_days =  $diff->format("%a");
+							$leaves_amt = ($salary_amt/$working_days)*$leaves;
+							$leaves_amt = intval($leaves_amt);
+						}
+						$row["leaves"] = $leaves;
+						$row["leave_amount"] = $leaves_amt;
+			
+						$due_amt = "0.00";
+						$recs = DB::select( DB::raw("SELECT SUM(`amount`) amt FROM `empdueamount` WHERE empId = ".$entity->id." and deleted='No'") );
+						foreach ($recs as $rec){
+							$due_amt = $rec->amt;
+							if($due_amt == ""){
+								$due_amt = "0.00";
+							}
+						}
+						$row["due_amount"] = $due_amt;
+						$row["estimated_salary"] = $salary_amt-($leaves_amt+$due_amt);
+						$total_amount = $total_amount+$row["estimated_salary"];
+						$resp[] = $row;
+					}
+				}
+			}
+			$row = array();
+			$row["1"] = ""; $row["2"] = "";  $row["3"] = ""; $row["4"] = ""; $row["5"] = ""; $row["amt"] = "TOTAL ESTIMATED AMOUNT";
+			$row["total_amt"] = $total_amount;
+			$resp[] = $row;
+			echo json_encode($resp);
+			return;
+		}
+		$values['bredcum'] = strtoupper($values["reporttype"]);
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'getreport';
+		$values['form_action'] = 'getreport';
+		$values['action_val'] = '';
+		$theads = array('Bank Name','Branch Name', "Account Name", "Account No", "Account Type");
+		$values["theads"] = $theads;
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "bankdetails";
+		$form_info["bredcum"] = "add bank details";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+		$form_fields = array();
+		$select_args = array();
+		$select_args[] = "fuelstationdetails.id as id";
+		$select_args[] = "fuelstationdetails.name as fname";
+		$select_args[] = "cities.name as cname";
+	
+		$branch_arr = array();
+		$branches = \OfficeBranch::where("status","=","ACTIVE")->get();
+		foreach ($branches as $branch){
+			$branch_arr[$branch->id] = $branch->name;
+		}
+		
+		$clients =  \Client::all();
+		$clients_arr = array();
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+		
+		$report_type_arr = array();
+		$form_field = array("name"=>"employeetype", "content"=>"employee type", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"enableClientDepot(this.value);"),  "options"=>array("OFFICE"=>"OFFICE", "CLIENT BRANCH"=>"CLIENT BRANCH"), "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"officebranch", "content"=>"office branch", "readonly"=>"","required"=>"", "type"=>"select", "options"=>$branch_arr, "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+	
+		$add_form_fields = array();
+		$form_info["form_fields"] = $form_fields;
+		$form_info["add_form_fields"] = $add_form_fields;
+		$values["form_info"] = $form_info;
+		$values["provider"] = "bankdetails";
+		return View::make('reports.estimatesalaryreport', array("values"=>$values));
+	}
+	
 	private function getSalaryReport($values){
 		if (\Request::isMethod('post'))
 		{
@@ -2026,7 +2205,7 @@ class ReportsController extends \Controller {
 			$totalpf  = 0;
 			$totalesi = 0;
 			$totalsalarypaid = 0;
-			
+				
 			if(isset($values["typeofreport"]) && $values["typeofreport"]=="branch_wise_salary_report"){
 				if($values["paidfrombranch"] == "0"){
 					$sql = "SELECT officebranch.name as branch, sum(actualSalary) as actualSalary, sum(dueDeductions) as dueDeductions, sum(leaveDeductions) as leaveDeductions, sum(pf) as pf, sum(esi) as esi, sum(salaryPaid) as salaryPaid from empsalarytransactions left join officebranch on officebranch.id=empsalarytransactions.branchId where paymentDate BETWEEN '".$frmDt."' and '".$toDt."' group by branchId";
@@ -2224,14 +2403,14 @@ class ReportsController extends \Controller {
 		foreach ($branches as $branch){
 			$branches_arr[$branch->id] = $branch->name;
 		}
-		
+	
 		$employees =  \Employee::ALL();
 		$employees_arr = array();
 		$employees_arr["0"] = "ALL EMPLOYEES";
 		foreach ($employees as $employee){
 			$employees_arr[$employee->id] = $employee->fullName." (".$employee->empCode.")";
 		}
-		
+	
 		$report_type_arr = array();
 		$report_type_arr["branch_wise_salary_report"] = "BRANCH WISE SALARY REPORT";
 		$report_type_arr["employee_wise_salary_report"] = "EMPLOYEE WISE SALARY REPORT";
@@ -2488,7 +2667,7 @@ class ReportsController extends \Controller {
 			$emps_arr[$emp->id] = $emp->fullName;
 		}
 	
-		$vehs =  \Vehicle::where("status","=","ACTIVE")->get();
+		$vehs =  \Vehicle::All();
 		$vehs_arr = array();
 		foreach ($vehs as $veh){
 			$vehs_arr[$veh->id] = $veh->veh_reg;
@@ -2768,20 +2947,20 @@ class ReportsController extends \Controller {
 				}
 			}
 			else if($values["supplierreporttype"] == "repairs"){
-				$qry=  \CreditSupplierTransactions::whereBetween("date",array($frmDt,$toDt));
+				$qry=  \CreditSupplierTransactions::whereBetween("date",array($frmDt,$toDt))->where("creditsuppliertransactions.deleted","=","No");
 						if($values["creditsupplier"] != "0"){
 							$qry->where("creditSupplierId","=",$values["creditsupplier"]);
 						}
-						$qry->join("creditsuppliertransdetails","creditsuppliertransactions.id","=","creditsuppliertransdetails.creditSupplierTransId")		
-							->join("creditsuppliers","creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
-							->join("lookuptypevalues","creditsuppliertransdetails.repairedItem","=","lookuptypevalues.id");
+						$qry->leftjoin("creditsuppliertransdetails","creditsuppliertransactions.id","=","creditsuppliertransdetails.creditSupplierTransId")		
+							->leftjoin("creditsuppliers","creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
+							->leftjoin("lookuptypevalues","creditsuppliertransdetails.repairedItem","=","lookuptypevalues.id");
 						
 				$select_args[] = "creditsuppliers.supplierName as creditsuppliername";
 				$select_args[] = "lookuptypevalues.name as itemdetails";
 				$select_args[] = "creditsuppliertransactions.transactionType as transactionType";
 				$select_args[] = "creditsuppliertransdetails.vehicleIds as vehicleIds";
-				$select_args[] = "creditsuppliertransactions.transactionDate as transactionDate";
-				$select_args[] = "creditsuppliertransactions.amount as amount";
+				$select_args[] = "creditsuppliertransactions.date as transactionDate";
+				$select_args[] = "creditsuppliertransdetails.amount as amount";
 				$select_args[] = "creditsuppliertransactions.labourCharges as labourCharges";
 				$select_args[] = "creditsuppliertransactions.electricianCharges as electricianCharges";
 				$select_args[] = "creditsuppliertransactions.batta as batta";
@@ -2796,7 +2975,7 @@ class ReportsController extends \Controller {
 				foreach($recs as  $rec) {
 					$row = array();
 					$row["creditsuppliername"] = $rec->creditsuppliername;
-					$row["transactionType"] = $rec->transactionType;
+					$row["transactionType"] = "REPAIRS";
 					$veh_arr_str = "";
 					$veh_arr_ids = explode(",", $rec->vehicleIds);
 					foreach ($veh_arr_ids as $veh){
@@ -2949,7 +3128,7 @@ class ReportsController extends \Controller {
 		$form_fields[] = $form_field;
 	
 		$add_form_fields = array();
-		$vehs =  \Vehicle::where("status","=","ACTIVE")->get();
+		$vehs =  \Vehicle::All();
 		$vehs_arr = array();
 		foreach ($vehs as $veh){
 			$vehs_arr[$veh->id] = $veh->veh_reg;

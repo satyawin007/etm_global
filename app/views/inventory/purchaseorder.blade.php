@@ -438,10 +438,16 @@ use Illuminate\Support\Facades\Input;
 
 			function enableIncharge(val){
 				if(val == "YES"){
+			  		$("#amountpaid").val("Yes");
+				  	$("#amountpaid").attr("disabled",true);
+				  	$("#paymenttype").attr("disabled",false);
 					$("#incharge").attr("disabled",false);
 					$('.chosen-select').trigger('chosen:updated');
 				}
 				else{
+					$("#amountpaid").val("No");
+				  	$("#amountpaid").attr("disabled",false);
+				  	$("#paymenttype").attr("disabled",true);
 					$("#incharge").attr("disabled",true);
 					$('.chosen-select').trigger('chosen:updated');
 				}
