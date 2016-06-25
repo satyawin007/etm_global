@@ -255,7 +255,7 @@ class BankDetailsController extends \Controller {
 		$banks =  \LookupTypeValues::where("parentId","=",$parentId)->where("status","=","ACTIVE")->get();
 		$bank_arr = array();
 		foreach ($banks as $bank){
-			$bank_arr [$bank['id']] = $bank->name;
+			$bank_arr [$bank->name] = $bank->name;
 		}
 		
 		$parentId = -1;

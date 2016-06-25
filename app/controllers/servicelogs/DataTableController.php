@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\DB;
+use settings\AppSettingsController;
 class DataTableController extends \Controller {
 
 	/**
@@ -117,14 +118,16 @@ class DataTableController extends \Controller {
 		}
 		
 		$select_args = array();
-		$select_args[] = "vehicle.veh_reg as vehicleId";
+		$select_args[] = "vehicle.veh_reg as vehicleId"; 
+		$select_args[] = "vehicle1.veh_reg as vehicleId1";
 		$select_args[] = "service_logs.serviceDate as serviceDate";
 		$select_args[] = "service_logs.startTime as startTime";
 		$select_args[] = "service_logs.startReading as startReading";
 		$select_args[] = "service_logs.endReading as endReading";
 		$select_args[] = "service_logs.distance as distance";
-		$select_args[] = "service_logs.driver1Id as driver1Id";
-		$select_args[] = "service_logs.helperId as helperId";
+		$select_args[] = "employee1.fullName as driver1Id";
+		$select_args[] = "employee2.fullName as helperId";
+		$select_args[] = "service_logs.status as tripno";
 		$select_args[] = "service_logs.status as status";
 		$select_args[] = "service_logs.id as id";
 		$select_args[] = "service_logs.contractVehicleId as contractVehicleId";
@@ -148,19 +151,54 @@ class DataTableController extends \Controller {
 				$vehs_arr[] = $veh->id;
 			}
 			$entities = \ServiceLog::where("service_logs.status", "!=", "DELETED")->whereIn("contractVehicleId",$vehs_arr)
+						->where("contracts.clientId","=",$values["clientid"])
+						->where("depotId","=",$values["depotid"])
+						->join("contracts","contracts.id", "=", "service_logs.contractId")
 						->join("vehicle","vehicle.id", "=", "service_logs.contractVehicleId")
-						->select($select_args)->orderby("serviceDate","desc")->limit($length)->offset($start)->get();
+						->leftjoin("employee as employee1","employee1.id", "=", "service_logs.driver1Id")
+						->leftjoin("employee as employee2","employee2.id", "=", "service_logs.helperId")
+						->select($select_args)->orderby("serviceDate","asc")->limit($length)->offset($start)->get();
 			$total = \ServiceLog::where("service_logs.status", "!=", "DELETED")->whereIn("contractVehicleId",$vehs_arr)->count();
 		}
 		else{
 			$entities = \ServiceLog::where("service_logs.status", "!=", "DELETED")
+						->where("contracts.clientId","=",$values["clientid"])
+						->where("depotId","=",$values["depotid"])
+						->join("contracts","contracts.id", "=", "service_logs.contractId")
 						->join("vehicle","vehicle.id", "=", "service_logs.contractVehicleId")
-						->select($select_args)->orderby("serviceDate","desc")->limit($length)->offset($start)->get();
-			$total = \ServiceLog::where("service_logs.status", "!=", "DELETED")->count();
+						->leftjoin("vehicle as vehicle1","vehicle1.id", "=", "service_logs.substituteVehicleId")
+						->leftjoin("employee as employee1","employee1.id", "=", "service_logs.driver1Id")
+						->leftjoin("employee as employee2","employee2.id", "=", "service_logs.helperId")
+						->select($select_args)->orderby("serviceDate","asc")->limit($length)->offset($start)->get();
+			$total = \ServiceLog::where("service_logs.status", "!=","DELETED")
+						->where("clientId","=",$values["clientid"])
+						->where("depotId","=",$values["depotid"])
+						->join("contracts","contracts.id", "=", "service_logs.contractId")->count();
 		}
-	
-		$entities = $entities->toArray();
+		$tripno = 1;
+		$start = 0;
+		$service_dt = "";
+		$vehicleId = "";
+		if(count($entities)>0){
+			$entity = $entities[0];
+			$entities = $entities->toArray();
+			$tripno = 1;
+			$start = 0;
+			$service_dt = $entity["serviceDate"];
+			$vehicleId = $entity["vehicleId"];
+		}
 		foreach($entities as $entity){
+			if($start>0 && $entity["serviceDate"]==$service_dt && $vehicleId == $entity["vehicleId"]){
+				$tripno++;
+				$entity["tripno"] = $tripno;
+			}
+			else{
+				$service_dt = $entity["serviceDate"];
+				$vehicleId = $entity["vehicleId"];
+				$tripno= 1;
+				$entity["tripno"] = $tripno;
+			}
+			$start++;
 			$entity["serviceDate"] = date("d-m-Y",strtotime($entity["serviceDate"]));
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
@@ -180,7 +218,7 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[9] = $action_data;
+			$data_values[11] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);
@@ -244,27 +282,39 @@ class DataTableController extends \Controller {
 			$total = \ServiceLogRequest::wherein("servicelogrequests.vehicleId",$contract_arr)
 					->where("servicelogrequests.deleted", "=", "No")->count();
 		}
-		else{	
+		else{
+			$depotids_str = \Auth::user()->contractIds;
+			if($depotids_str == ""){
+				$depots = \Depot::where("status","=","ACTIVE")->get();
+				foreach($depots as $depot){
+					$depotids_str = $depotids_str.$depot->id.",";
+				}
+				$depotids_str = substr($depotids_str, 0, strlen($depotids_str)-1);
+			}
 			if(isset($values["clientid"]) && $values["clientid"] != 0){
 				$contract_arr =  array();
-				$con_vehs = \DB::select(\DB::raw("select id from contracts where clientId=".$values["clientid"]));
+				$con_vehs = \DB::select(\DB::raw("select id from contracts where clientId=".$values["clientid"]." and depotId in(".$depotids_str.")"));
 				foreach ($con_vehs as  $con_veh){
 					$contract_arr[] = $con_veh->id;
 				}
 				$entities = \ServiceLogRequest::wherein("servicelogrequests.contractId",$contract_arr)
 						->where("servicelogrequests.deleted", "=", "No")
 						->whereIn("servicelogrequests.status",$logstatus_arr)
-						->join("contracts","contracts.id", "=", "servicelogrequests.contractId")
-						->join("clients","clients.id", "=", "contracts.clientId")
-						->join("depots","depots.id", "=", "contracts.depotId")
-						->join("vehicle","vehicle.id", "=", "servicelogrequests.vehicleId")
-						->join("employee","employee.id", "=", "servicelogrequests.createdBy")
+						->leftjoin("contracts","contracts.id", "=", "servicelogrequests.contractId")
+						->leftjoin("clients","clients.id", "=", "contracts.clientId")
+						->leftjoin("depots","depots.id", "=", "contracts.depotId")
+						->leftjoin("vehicle","vehicle.id", "=", "servicelogrequests.vehicleId")
+						->leftjoin("employee","employee.id", "=", "servicelogrequests.createdBy")
 						->leftjoin("employee as employee1","employee1.id", "=", "servicelogrequests.openedBy")
 						->select($select_args)->limit($length)->offset($start)->get();
-				$total = \ServiceLogRequest::wherein("servicelogrequests.vehicleId",$contract_arr)
-						->where("servicelogrequests.deleted", "=", "No")->count();
+				$total = \ServiceLogRequest::wherein("servicelogrequests.contractId",$contract_arr)
+						->where("servicelogrequests.deleted", "=", "No")
+						->whereIn("servicelogrequests.status",$logstatus_arr)->count();
 			}
 			else{
+				$entities = \ServiceLogRequest::where("servicelogrequests.deleted", "=", "no recotds")->get();
+			}
+			/* else{
 				$entities = \ServiceLogRequest::where("servicelogrequests.deleted", "=", "No")
 						->whereIn("servicelogrequests.status",$logstatus_arr)
 						->join("contracts","contracts.id", "=", "servicelogrequests.contractId")
@@ -275,7 +325,7 @@ class DataTableController extends \Controller {
 						->leftjoin("employee as employee1","employee1.id", "=", "servicelogrequests.openedBy")
 						->select($select_args)->limit($length)->offset($start)->get();
 				$total = \ServiceLogRequest::where("servicelogrequests.deleted", "=", "No")->count();
-			}
+			} */
 			
 		}
 	
@@ -323,6 +373,7 @@ class DataTableController extends \Controller {
 				}
 			}
 			$data_values[10] = $action_data;
+			$data_values[11] = $action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$entity['id'].'"> <span class="lbl">&nbsp;</span></label>';
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

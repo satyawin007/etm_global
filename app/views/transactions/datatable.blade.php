@@ -334,10 +334,23 @@ use settings\AppSettingsController;
 				}
 			}
 
-			function getendreading(val){
+			var showmessage = false;
+
+			function getendreading(){
 				$("#previousreading").val("");
+				filleddate = $("#filleddate").val();
+				if(filleddate == "" && showmessage){
+					showmessage = true;
+					alert("select filled date");
+					return;
+				}
+				vehicleno = $("#vehicleno").val();
+				if(vehicleno == ""){
+					alert("select vehicle no");
+					return;
+				}
 				$.ajax({
-			      url: "getendreading?id="+val,
+			      url: "getendreading?id="+vehicleno+"&date="+filleddate,
 			      success: function(data) {
 			    	  json_data = JSON.parse(data);
 			    	  $("#previousreading").val(json_data.endReading);
@@ -347,7 +360,7 @@ use settings\AppSettingsController;
 			}
 
 			function getpreviouslogs(val){
-				var vehicleid = $("#vehicleno").val();previous_logs_data
+				var vehicleid = $("#vehicleno").val();
 				$.ajax({
 			      url: "getpreviouslogs?date="+val+"&vehicleid="+vehicleid,
 			      success: function(data) {
@@ -355,7 +368,28 @@ use settings\AppSettingsController;
 			    	  $("#previous_logs_data").html(data);
 			      },
 			      type: 'GET'
+			    });
+
+				$("#previousreading").val("");
+				filleddate = $("#filleddate").val();
+				if(filleddate == ""){
+					alert("select filled date");
+					return;
+				}
+				vehicleno = $("#vehicleno").val();
+				if(vehicleno == ""){
+					alert("select vehicle no");
+					return;
+				}
+				$.ajax({
+			      url: "getendreading?id="+vehicleno+"&date="+filleddate,
+			      success: function(data) {
+			    	  json_data = JSON.parse(data);
+			    	  $("#previousreading").val(json_data.endReading);
+			      },
+			      type: 'GET'
 			   });
+			   
 			}
 			
 			function test(){;
@@ -524,24 +558,56 @@ use settings\AppSettingsController;
 							});
 						  $("#incharge").attr("disabled",true);
 						  $("#enableincharge").val("NO");
+						  $("#paymenttype").attr("disabled",true);
 						  $('.chosen-select').trigger('chosen:updated');
 						  $("#enableincharge").on("change",function(){
 							  	val = $("#enableincharge").val();
 							  	if(val == "YES"){
 							  		$("#paymentpaid").val("Yes");
-								  	$("#paymentpaid").attr("disabled",true);
-								  	$("#paymenttype").attr("disabled",true);
+								  	$("#paymentpaid").attr("disabled",false);
+								  	$("#paymenttype").attr("disabled",false);
 									$("#incharge").attr("disabled",false);
 									$('.chosen-select').trigger('chosen:updated');
 								}
 								else{
 									$("#paymentpaid").val("No");
 									$("#paymentpaid").attr("disabled",false);
-									$("#paymenttype").attr("disabled",false);
+									$("#paymenttype").attr("disabled",true);
 									$("#incharge").attr("disabled",true);
 									$('.chosen-select').trigger('chosen:updated');
 								}
 						  });
+
+						  $('input[type=radio][name=fulltank]').change(function() {
+							  	vehicleid = $("#vehicleno").val();
+							  	date = $("#date").val();
+							  	if(date==""){
+						        	alert("enter date");
+						        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+						        	return;
+					        	}
+						        if (this.value == 'YES') {
+						        	vehicleid = $("#vehicleno").val();
+						        	if(vehicleid==""){
+							        	alert("select vehicle");
+							        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+							        	return;
+						        	}
+						        	litres = $("#litres").val();
+						        	if(litres==""){
+							        	alert("enter litres");
+							        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+							        	return;
+						        	}
+						        	startreading = $("#startreading").val();
+						        	if(startreading==""){
+							        	alert("enter startreading");
+							        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+							        	return;
+						        	}
+						        	calculateMilage();
+						        }
+						    });
 				    	  $("#formbody").show();
 				    	  
 				      },
@@ -638,9 +704,10 @@ use settings\AppSettingsController;
 					$('#expensebody').hide();
 					$('#incomebody').hide();
 					$("#formbody").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
-					$("#formbody").show();					
+					$("#formbody").show();	
+					branch = $("#branch").val();			
 					$.ajax({
-				      url: "getfueltransactionfields",
+				      url: "getfueltransactionfields?branch="+branch,
 				      success: function(data) {
 				    	  $("#formbody").html(data);
 				    	  $('.date-picker').datepicker({
@@ -673,7 +740,7 @@ use settings\AppSettingsController;
 							  	val = $("#enableincharge").val();
 							  	if(val == "YES"){
 							  		$("#paymentpaid").val("Yes");
-								  	$("#paymentpaid").attr("disabled",true);
+								  	$("#paymentpaid").attr("disabled",false);
 								  	$("#paymenttype").attr("disabled",false);
 									$("#incharge").attr("disabled",false);
 									$('.chosen-select').trigger('chosen:updated');
@@ -686,6 +753,32 @@ use settings\AppSettingsController;
 									$('.chosen-select').trigger('chosen:updated');
 								}
 						  });
+
+						  $('input[type=radio][name=fulltank]').change(function() {
+							  	vehicleid = $("#vehicleno").val();
+							  	date = $("#date").val();
+						        if (this.value == 'YES') {
+						        	vehicleid = $("#vehicleno").val();
+						        	if(vehicleid==""){
+							        	alert("select vehicle");
+							        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+							        	return;
+						        	}
+						        	litres = $("#litres").val();
+						        	if(litres==""){
+							        	alert("enter litres");
+							        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+							        	return;
+						        	}
+						        	startreading = $("#startreading").val();
+						        	if(startreading==""){
+							        	alert("enter startreading");
+							        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+							        	return;
+						        	}
+						        	calculateMilage();
+						        }
+						    });
 				    	  $("#formbody").show();
 				    	  
 				      },
@@ -693,6 +786,49 @@ use settings\AppSettingsController;
 				   });
 				}	
 			}
+
+			function calculateMilage(){
+				startreading = $("#startreading").val();
+	        	if(startreading != ""){
+	        		previousreading = $("#previousreading").val();
+	        		previousreading = parseInt(previousreading);
+	        		startreading = parseInt(startreading);
+	        		if(previousreading>=startreading){
+		        		alert("Current reading must be greater than previous reading");
+		        		$("#startreading").val("");
+		        		return;
+	        		}
+	        	}
+				vehicleid = $("#vehicleno").val();
+			  	date = $("#filleddate").val();
+	        	vehicleid = $("#vehicleno").val();
+	        	if(vehicleid==""){
+		        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+		        	return;
+	        	}
+	        	litres = $("#litres").val();
+	        	if(litres==""){
+		        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+		        	return;
+	        	}
+	        	startreading = $("#startreading").val();
+	        	if(startreading==""){
+		        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+		        	return;
+	        	}
+	        	status = $('input[type=radio][name=fulltank]:checked').val() ;
+	        	if(status == "YES"){
+		            $.ajax({
+					      url: "getvehiclelastreading?vehicleId="+vehicleid+"&date="+date,
+					      success: function(prev_reading) {
+						      mileage = (startreading-prev_reading)/litres;
+						      mileage = parseFloat(mileage).toFixed(2);
+						      $("#mileage").val(mileage);
+					      }
+		            });
+	        	}
+			}
+			
 			function showForm(val){
 				$('#addfields').hide(); 
 				var myin = document.createElement("input"); 
@@ -858,6 +994,16 @@ use settings\AppSettingsController;
 			      url: "getcitiesbystateid?id="+val,
 			      success: function(data) {
 			    	  $("#cityname").html(data);
+			      },
+			      type: 'GET'
+			   });
+			}
+
+			function getInchargeBalance(val){
+				$.ajax({
+			      url: "getinchargebalance?id="+val,
+			      success: function(data) {
+			    	  $("#inchargebalance").val(data);
 			      },
 			      type: 'GET'
 			   });

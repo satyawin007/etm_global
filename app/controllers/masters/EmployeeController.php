@@ -173,11 +173,19 @@ class EmployeeController extends \Controller {
 				$values["provider"] = $values["provider"]."blocked";
 				if(isset($values['branch']) && $values['branch'] != ""){
 					$values["provider"] = $values["provider"]."&branch=".$values['branch'];
-					$entities = \Employee::where('officeBranchId',"=",$values['branch'])->where('status',"=","BLOCKED")->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->select($select_args)->paginate($entries);
-					$total = \Employee::where('officeBranchId',"=",$values['branch'])->where('status',"=","BLOCKED")->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->select($select_args)->get();
+					$entities = \Employee::where('officeBranchId',"=",$values['branch'])
+									->where('status',"=","BLOCKED")
+									->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+									->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+									->select($select_args)->paginate($entries);
+					$total = \Employee::where('officeBranchId',"=",$values['branch'])
+									->where('status',"=","BLOCKED")
+									->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+									->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+									->select($select_args)->get();
 					$total = count($total);
 				}
-				else {
+				else{
 					$entities = \Employee::where('employee.status',"=","BLOCKED")->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->select($select_args)->paginate($entries);
 					$total = \Employee::where('employee.status',"=","BLOCKED")->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->select($select_args)->get();
 					$total = count($total);
@@ -249,7 +257,11 @@ class EmployeeController extends \Controller {
 			$form_field = array("name"=>"empid1", "content"=>"emp id", "readonly"=>"readonly", "required"=>"required","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"id1", "content"=>"", "readonly"=>"readonly",  "required"=>"", "type"=>"hidden", "value"=>"", "class"=>"form-control");
-			$form_fields[] = $form_field;				
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"tdate", "content"=>"date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"action", "content"=>"action", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>array("TEMP BLOCK"=>"ASSIGN TERMINATION DATE", "TERMINATE"=>"BLOCK"), "class"=>"form-control");
+			$form_fields[] = $form_field;
 			$form_field = array("name"=>"remarks", "readonly"=>"", "content"=>"remarks", "required"=>"required", "type"=>"textarea", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_info["form_fields"] = $form_fields;
@@ -345,25 +357,29 @@ class EmployeeController extends \Controller {
 			$emp = $emp[0];
 			if($emp->status == "BLOCKED"){
 				$data = array("id"=>$values["id1"]);
-				$fields = array( "status"=>"ACTIVE");
+				$fields = array( "status"=>"ACTIVE","terminationDate"=>"");
 				$isBlocked = true;
 			}
 			else{
 				$data = array("id"=>$values["id1"]);
-				$fields = array( "status"=>"BLOCKED");
+				$fields = array( "status"=>"ACTIVE","terminationDate"=>date("Y-m-d",strtotime($values["tdate"])));
 			}
+			if(isset($values["action"]) && $values["action"]=="TERMINATE"){
+				$fields["status"] = "BLOCKED";
+			}
+			\Employee::where("id", "=", $values["id1"])->update($fields);
 		}
 		if($db_functions_ctrl->update($table, $fields, $data)){
 			if($isBlocked){
 				$table = "EmployeeActivity";
-				$fields = array("empid"=>$values["id1"],"reason"=>$values["remarks"],"date"=>date("Y-m-d"),"action"=>"UNBLOCKED");
+				$fields = array("empid"=>$values["id1"],"reason"=>$values["remarks"],"date"=>date("Y-m-d",strtotime($values["tdate"])),"action"=>"UNBLOCKED");
 				$db_functions_ctrl->insert($table, $fields);
 				\Session::put("message","Employee Unblocked Successfully");
 				return Redirect::to("employees");
 			}
 			else{
 				$table = "EmployeeActivity";
-				$fields = array("empid"=>$values["id1"],"reason"=>$values["remarks"],"date"=>date("Y-m-d"),"action"=>"BLOCKED");
+				$fields = array("empid"=>$values["id1"],"reason"=>$values["remarks"],"date"=>date("Y-m-d",strtotime($values["tdate"])),"action"=>"BLOCKED");
 				$db_functions_ctrl->insert($table, $fields);
 				\Session::put("message","Employee Blocked Successfully");
 				return Redirect::to("employees");
@@ -400,7 +416,7 @@ class EmployeeController extends \Controller {
 		//$values["DSf"];
 		$field_names = array("fullname"=>"fullName","gender"=>"gender", "city"=>"cityId","employeeid"=>"empCode",
 				"email"=>"emailId","password"=>"password", "roleprevilage"=>"rolePrevilegeId",
-				"workgroup"=>"workGroup","age"=>"age", "fathername"=>"fatherName",
+				"workgroup"=>"workGroup","age"=>"age", "fathername"=>"fatherName","employeetype"=>"typeId",
 				"religion"=>"religion","residance"=>"residance", "nonlocaldetails"=>"detailsForNonLocal",
 				"phonenumber"=>"mobileNo","homenumber"=>"homePhoneNo", "idproof"=>"idCardName",
 				"idproofnumber"=>"idCardNumber","joiningdate"=>"joiningDate", "rtaoffice"=>"rtaBranch",
@@ -445,7 +461,7 @@ class EmployeeController extends \Controller {
 		$db_functions_ctrl = new DBFunctionsController();
 		$table = "Employee";
 		if($db_functions_ctrl->insert($table, $fields)){
-			$empid = \Employee::where("emailId","=",$values["email"])->first();
+			$empid = \Employee::where("empCode","=",$values["employeeid"])->where("fullName","=",$values["fullname"])->first();
 			$table = "SalaryDetails";
 			$fields = array("empId"=>$empid->id);
 			$db_functions_ctrl->insert($table, $fields);
@@ -503,7 +519,7 @@ class EmployeeController extends \Controller {
 	{
 		$empCode = \Employee::orderBy('id', 'desc')->first();
 		$empCode = $empCode->empCode;
-		$empCode = "GT".(substr($empCode, 3)+1);
+		$empCode = "GT".(substr($empCode, 2)+1);
 		echo $empCode;
 	}
 	

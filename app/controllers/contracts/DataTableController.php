@@ -268,26 +268,26 @@ class DataTableController extends \Controller {
 				$contract_arr[] = $con_veh->contractId;
 			}
 			$entities = \Contract::where("contracts.status", "!=", "DELETED")->whereIn("contracts.id", $contract_arr)
-			->join("clients","clients.id", "=", "contracts.clientId")
-			->join("depots","depots.id", "=", "contracts.depotId")
-			->join("lookuptypevalues","lookuptypevalues.id", "=", "contracts.vehicleTypeId")
-			->select($select_args)->limit($length)->offset($start)->get();
+							->leftjoin("clients","clients.id", "=", "contracts.clientId")
+							->leftjoin("depots","depots.id", "=", "contracts.depotId")
+							->leftjoin("lookuptypevalues","lookuptypevalues.id", "=", "contracts.vehicleTypeId")
+							->select($select_args)->limit($length)->offset($start)->get();
 			$total = \Contract::where("contracts.status", "!=", "DELETED")->count();
 		}
 		else{
 			if(isset($values["clientid"]) && $values["clientid"] != 0){
 				$entities = \Contract::where("contracts.status", "!=", "DELETED")->where("contracts.clientId", "=", $values["clientid"])
-						->join("clients","clients.id", "=", "contracts.clientId")
-						->join("depots","depots.id", "=", "contracts.depotId")
-						->join("lookuptypevalues","lookuptypevalues.id", "=", "contracts.vehicleTypeId")
+						->leftjoin("clients","clients.id", "=", "contracts.clientId")
+						->leftjoin("depots","depots.id", "=", "contracts.depotId")
+						->leftjoin("lookuptypevalues","lookuptypevalues.id", "=", "contracts.vehicleTypeId")
 						->select($select_args)->limit($length)->offset($start)->get();
 				$total = \Contract::where("contracts.status", "!=", "DELETED")->where("contracts.clientId", "=", $values["clientid"])->count();
 			}
 			else{
 				$entities = \Contract::where("contracts.status", "!=", "DELETED")
-						->join("clients","clients.id", "=", "contracts.clientId")
-						->join("depots","depots.id", "=", "contracts.depotId")
-						->join("lookuptypevalues","lookuptypevalues.id", "=", "contracts.vehicleTypeId")
+						->leftjoin("clients","clients.id", "=", "contracts.clientId")
+						->leftjoin("depots","depots.id", "=", "contracts.depotId")
+						->leftjoin("lookuptypevalues","lookuptypevalues.id", "=", "contracts.vehicleTypeId")
 						->select($select_args)->limit($length)->offset($start)->get();
 				$total = \Contract::where("contracts.status", "!=", "DELETED")->count();
 			}
@@ -349,7 +349,14 @@ class DataTableController extends \Controller {
 		$select_args[] = "clientholidays.comments as comments";
 		$select_args[] = "clientholidays.status as status";
 		$select_args[] = "clientholidays.deleted as deleted";
+		$select_args[] = "employee.fullName as openedBy";
+		$select_args[] = "clientholidays.opened_at as opened_at";
 		$select_args[] = "clientholidays.id as id";
+		
+		$logstatus_arr = array("Send for Approval", "Pending", "Requested","Open","Closed");
+		if(isset($values['logstatus']) && $values['logstatus']!="All"){
+			$logstatus_arr = array($values['logstatus']);
+		}
 			
 		$actions = array();
 		if(in_array(416, $this->jobs)){
@@ -357,29 +364,54 @@ class DataTableController extends \Controller {
 			$actions[] = $action;
 		}
 		$values["actions"] = $actions;
+		
+		if(!isset($values["clientid"])){
+			$values["clientid"]=0;
+		}
 	
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
+		$depot_arr = explode(",", \Auth::user()->contractIds);
+		if(\Auth::user()->contractIds==""){
+			$depot_arr = array();
+			$depots = \Depot::where("status","=","ACTIVE")->get();
+			foreach ($depots as $depot){
+				$depot_arr[] = $depot->id;
+			}
+		}
 		if($search != ""){
 			$entities = \ClientHolidays::where("depots.name","like","%$search%")
-					->join("contracts","contracts.id", "=", "clientholidays.contractId")
-					->join("clients","clients.id", "=", "contracts.clientId")
-					->join("depots","depots.id", "=", "contracts.depotId")
+					->whereIn("depotId", $depot_arr)
+					->leftjoin("contracts","contracts.id", "=", "clientholidays.contractId")
+					->leftjoin("clients","clients.id", "=", "contracts.clientId")
+					->leftjoin("depots","depots.id", "=", "contracts.depotId")
+					->leftjoin("employee","employee.id", "=", "clientholidays.openedBy")
 					->select($select_args)->limit($length)->offset($start)->get();
-			$total = \ClientHolidays::where("deleted","=","No")->count();
+			$total = \ClientHolidays::join("contracts","contracts.id", "=", "clientholidays.contractId")
+							->leftjoin("depots","depots.id", "=", "contracts.depotId")
+							->where("depots.name","like","%$search%")
+							->where("clientholidays.deleted","=","No")->whereIn("depotId", $depot_arr)->count();
 		}
 		else{
 			$entities = \ClientHolidays::join("contracts","contracts.id", "=", "clientholidays.contractId")
-					->join("clients","clients.id", "=", "contracts.clientId")
-					->join("depots","depots.id", "=", "contracts.depotId")
-					->select($select_args)->limit($length)->offset($start)->get();
-			$total = \ClientHolidays::where("deleted","=","No")->count();
+							->leftjoin("clients","clients.id", "=", "contracts.clientId")
+							->leftjoin("depots","depots.id", "=", "contracts.depotId")
+							->where("clients.id","=", $values["clientid"])
+							->whereIn("depotId", $depot_arr)
+							->whereIn("clientholidays.status",$logstatus_arr)
+							->leftjoin("employee","employee.id", "=", "clientholidays.openedBy")
+							->select($select_args)->limit($length)->offset($start)->get();
+			$total = \ClientHolidays::join("contracts","contracts.id", "=", "clientholidays.contractId")
+							->leftjoin("clients","clients.id", "=", "contracts.clientId")
+							->where("clients.id","=", $values["clientid"])->where("clientholidays.deleted","=","No")->whereIn("depotId", $depot_arr)->count();
 		}
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
 			$entity["fromDate"] = date("d-m-Y",strtotime($entity["fromDate"]));
 			$entity["toDate"] = date("d-m-Y",strtotime($entity["toDate"]));
+			$entity["opened_at"] = date("d-m-Y h:i:s ",strtotime($entity["opened_at"]));
+			
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
@@ -398,7 +430,8 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[7] = $action_data;
+			$data_values[9] = $action_data;
+			$data_values[10] = $action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$entity['id'].'"> <span class="lbl">&nbsp;</span></label>';
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

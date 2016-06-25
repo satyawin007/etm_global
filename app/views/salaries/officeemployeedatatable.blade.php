@@ -155,19 +155,24 @@ use Illuminate\Support\Facades\Input;
 					</thead>
 						<tbody>
 						<?php
-							$entities = Employee::where("roleId","!=",19)
-													->where("roleId","!=",20)
-													->where("officeBranchId","=",$values["branch"])
-													->where("status","=","ACTIVE")->get();
+							$entities = Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["branch"]."',employee.officeBranchIds)")
+												  ->get();
 							$i = 0;
+							
+							$roles_arr = array();
+							$roles = Role::All();
+							foreach ($roles as $role){
+								$roles_arr[$role->id] = $role->roleName;
+							}
+							
 							$fromdt = date("Y-m-d",strtotime($values["fromdate"]));
 							$todt = date("Y-m-d",strtotime($values["todate"]));
 							foreach($entities as $entity){
-								$role_name = "";
-								$role = Role::where("id","=",$entity->roleId)->get();
-								if(count($role)>0){
-									$role = $role[0];
-									$entity->roleId = $role->roleName;
+								if($entity->roleId == 19){
+									$entity->roleId = "DRIVER";
+								}
+								else if($entity->roleId == 20){
+									$entity->roleId = "HELPER";
 								}
 								$dt_salary = 0;
 								$dt_allowance = 0;
@@ -201,11 +206,6 @@ use Illuminate\Support\Facades\Input;
 										$salary_amt = $salary->salary;
 									}
 								?> 
-								<td style="font-weight: bold; vertical-align: middle">{{$entity->roleId}}</td>
-								<td style="font-weight: bold; vertical-align: middle">
-									<input type="text" style="max-width:70px;"  name="emp_salary[]" id="{{$i}}_emp_salary" readonly="readonly" value="{{$salary_amt}}"/>
-								</td>
-								<td style="font-weight: bold; vertical-align: middle; min-width:120px;"><span id="{{$i}}_editbtn"><a class="btn btn-minier btn-success" onclick="return editRecord({{$i}},{{$entity->id}},'{{$entity->roleId}}');">Edit</a></span> &nbsp;&nbsp; <span id="{{$i}}_detailsbtn"><a href="#modal-table" role="button" data-toggle="modal" onclick="return viewDetails({{$entity->id}},'{{$entity->roleId}}')"  class="btn btn-minier btn-info">Details</a></span></td>
 								<?php 
 									$due_amt = "0.00";
 									$recs1 = DB::select( DB::raw("SELECT SUM(`amount`) amt FROM `empdueamount` WHERE empId = ".$entity->id." and deleted='No'") );
@@ -216,8 +216,6 @@ use Illuminate\Support\Facades\Input;
 										}
 									}
 								?>
-								<td style="font-weight: bold; vertical-align: middle">Due Amt : {{$due_amt}}</td>
-								
 								<?php 
 									$leaves = 0;
 									$leaves_amt = 0;
@@ -225,26 +223,87 @@ use Illuminate\Support\Facades\Input;
 									foreach ($recs1 as $rec1){
 										$leaves = $rec1->cnt;
 										$leaves = $leaves/2;
+										$after_leaves = $leaves;
+										$date1 = strtotime(date("Y-m-d",strtotime($entity->joiningDate)));
+										$date2 = strtotime(date("Y-m-d",strtotime($entity->terminationDate)));
+										$date3 = strtotime($fromdt);
+										$date4 = strtotime($todt);
+										if($date1>$date3 || ($entity->terminationDate!="" && $entity->terminationDate!="0000-00-00" && $date1 != "1970-01-01" &&  $date2<$date4)){
+											$after_leaves = $leaves;
+										}
+										else{
+											$after_leaves = $leaves-$values["casualleaves"];
+										}
+										if($after_leaves<0){
+											$after_leaves = 0;
+										}
 										
 										$date1=date_create($fromdt);
 										$date2=date_create($todt);
 										$diff=date_diff($date1,$date2);
 										$working_days =  $diff->format("%a");
-										$leaves_amt = ($salary_amt/$working_days)*$leaves;
+										$working_days = $working_days+1;
+										$leaves_amt = ($salary_amt/$working_days)*$after_leaves;
 										$leaves_amt = intval($leaves_amt);
 									}
 								?>
+								
+								<?php
+									$total_days = 0;
+									$date1=date_create($fromdt);
+									$date2=date_create($todt);
+									$diff=date_diff($date1,$date2);
+									$total_days =  $diff->format("%a");
+									$total_days = $total_days+1;
+									
+									$casual_leaves = $values["casualleaves"];
+									$late_joing_days = 0;
+									$early_erminated_days = 0;
+									$actual_working_days = $total_days;
+									$employee_working_days = $total_days-$leaves;
+									
+									$previous_salary = 0;
+									$increment = 0;
+									$salary_details = SalaryDetails::where("empid","=",$entity->id)->Get();
+									if(count($salary_details)>0){
+										$salary_details = $salary_details[0];
+										$previous_salary = $salary_details->previousSalary;
+										$increment = $salary_details->increament;
+									}
+									$joining_date = date("d-m-Y",strtotime($entity->joiningDate));
+									$details_data = "<table class=\'table table-striped table-bordered table-hover\'><tr><th>ENTITY</th><th>VALUE</th></tr>";
+									$details_data = $details_data."<tr><td>Total Days</td><td>".$total_days."</td></tr>";
+									$details_data = $details_data."<tr><td>Casual Leaves</td><td>".$casual_leaves."</td></tr>";
+									$details_data = $details_data."<tr><td>Late Joing Days</td><td>".$late_joing_days."</td></tr>";
+									$details_data = $details_data."<tr><td>Early Terminated Days</td><td>".$early_erminated_days."</td></tr>";
+									$details_data = $details_data."<tr><td>Actual Working Days</td><td>".$actual_working_days."</td></tr>";
+									$details_data = $details_data."<tr><td>Employee Working Days</td><td>".$employee_working_days."</td></tr>";
+									$details_data = $details_data."<tr><td>Previous Salary</td><td>".$previous_salary."</td></tr>";
+									$details_data = $details_data."<tr><td>Increment</td><td>".$increment."</td></tr>";
+									$details_data = $details_data."<tr><td>Joining Date</td><td>".$joining_date."</td></tr>";
+								?>
+								<?php 
+									if(isset($roles_arr[$entity->roleId])){
+										$entity->roleId = $roles_arr[$entity->roleId];
+									}
+								?>
+								<td style="font-weight: bold; vertical-align: middle">{{$entity->roleId}}</td>
+								<td style="font-weight: bold; vertical-align: middle">
+									<input type="text" style="max-width:70px;"  name="emp_salary[]" id="{{$i}}_emp_salary" readonly="readonly" value="{{$salary_amt}}"/>
+								</td>
+								<td style="font-weight: bold; vertical-align: middle; min-width:120px;"><span id="{{$i}}_editbtn"><a class="btn btn-minier btn-success" onclick="return editRecord({{$i}},{{$entity->id}},'{{$entity->roleId}}');">Edit</a></span> &nbsp;&nbsp; <span id="{{$i}}_detailsbtn"><a role="button" data-toggle="modal" onclick="return viewDetails('{{$details_data}}')"  class="btn btn-minier btn-info">Details</a></span></td>
+								<td style="font-weight: bold; vertical-align: middle">Due Amt : {{$due_amt}}</td>
 								<td >
 									<input type="text" style="max-width:70px;" name="leaves[]" id="{{$i}}_leaves" readonly="readonly" value="{{$leaves}}"/>	
 								</td>
 								<td>
-									<input type="text" style="max-width:70px;"  name="casual_leaves[]" id="{{$i}}_casual_leaves" readonly="readonly" value="0"/>	
+									<input type="text" style="max-width:70px;"  name="casual_leaves[]" id="{{$i}}_casual_leaves" readonly="readonly" value="{{$values['casualleaves']}}"/>	
 								</td>
 								<td>
 									<input type="text" style="max-width:70px;"  name="due_deductions[]" id="{{$i}}_due_deductions"readonly="readonly" onchange="calcSalary(this.id)" value="{{$rec->dueDeductions}}"/>	
 								</td>
 								<td>
-									<input type="text" style="max-width:70px;" name="leave_deductions[]" id="{{$i}}_leave_deductions" readonly="readonly" vonchange="calcSalary(this.id)" value="{{$rec->leaveDeductions}}"/>	
+									<input type="text" style="max-width:70px;" name="leave_deductions[]" id="{{$i}}_leave_deductions" readonly="readonly" onchange="calcSalary(this.id)" value="{{$rec->leaveDeductions}}"/>	
 								</td>
 								<td>
 									<select name="pfopted[]" id="pfopted_{{$i}}" class="form-control" >
@@ -255,9 +314,9 @@ use Illuminate\Support\Facades\Input;
 								<td>
 									<input type="text" style="min-width:70px;" name="other_amt[]" id="{{$i}}_other_amt" readonly="readonly" onchange="calcSalary(this.id)" value="{{$rec->otherAmount}}"/>	
 								</td>
-								<td style="font-weight: bold; vertical-align: middle" id="{{$i}}_netsalary">{{$rec->actualSalary}}</td>
-								<td style="font-weight: bold; vertical-align: middle">{{$rec->salaryPaid}}</td>
-								<td style="font-weight: bold; vertical-align: middle; min-width:150px;">{{$entity->salaryCardNo}}</td>
+								<td style="font-weight: bold; vertical-align: middle" id="{{$i}}_netsalary">{{$rec->salaryPaid}}</td>
+								<td style="font-weight: bold; vertical-align: middle">{{$rec->actualSalary}}</td>
+								<td style="font-weight: bold; vertical-align: middle; min-width:150px;">{{$entity->cardNumber}}</td>
 								<td>
 									<input type="text" style="min-width:270px;" name="comments[]" readonly="readonly" id="{{$i}}_comments" value="{{$rec->comments}}"/>	
 								</td>
@@ -275,19 +334,6 @@ use Illuminate\Support\Facades\Input;
 								<td style="font-weight: bold; vertical-align: middle">
 									<span style="color: red; font-weight: bold; font-size:14px;">{{$entity->fullName}} - {{$entity->empCode}} </span>
 								</td>
-								<?php 
-									$salary_amt = 0;
-									$salary = SalaryDetails::where("empId","=",$entity->id)->get();
-									if(count($salary)>0){
-										$salary = $salary[0];
-										$salary_amt = $salary->salary;
-									}
-								?> 
-								<td style="font-weight: bold; vertical-align: middle">{{$entity->roleId}}</td>
-								<td style="font-weight: bold; vertical-align: middle">
-									<input type="text" style="max-width:70px;"  name="emp_salary[]" id="{{$i}}_emp_salary" readonly="readonly" value="{{$salary_amt}}"/>
-								</td>
-								<td style="font-weight: bold; vertical-align: middle; min-width:70px;"><a href="#modal-table" role="button" data-toggle="modal" onclick="return viewDetails({{$i}},{{$entity->id}},'{{$entity->roleId}}')" class="btn btn-minier btn-info">Details</a></td>
 								
 								<?php 
 									$due_amt = "0.00";
@@ -299,29 +345,102 @@ use Illuminate\Support\Facades\Input;
 										}
 									}
 								?>
-								<td style="font-weight: bold; vertical-align: middle">Due Amt : {{$due_amt}}</td>
 								
 								<?php 
+									$salary_amt = 0;
+									$salary = SalaryDetails::where("empId","=",$entity->id)->get();
+									if(count($salary)>0){
+										$salary = $salary[0];
+										$salary_amt = $salary->salary;
+									}
+									
 									$leaves = 0;
 									$leaves_amt = 0;
-									$recs = DB::select( DB::raw($sql = "select count(*) as cnt from attendence where attendence.empId='".$entity->id."' and (attendenceStatus = 'A') and date between '$fromdt' and '$todt'") );
+									$recs = DB::select( DB::raw($sql = "select count(*) as cnt from attendence where attendence.empId='".$entity->id."' and attendenceStatus = 'A' and date between '$fromdt' and '$todt'") );
 									foreach ($recs as $rec){
 										$leaves = $rec->cnt;
 										$leaves = $leaves/2;
-										
+										$after_leaves = $leaves;
+										$date1 = strtotime(date("Y-m-d",strtotime($entity->joiningDate)));
+										$date2 = strtotime(date("Y-m-d",strtotime($entity->terminationDate)));
+										$date3 = strtotime($fromdt);
+										$date4 = strtotime($todt);
+										if(($entity->terminationDate!="" && $entity->terminationDate!="0000-00-00" && $date1 != "1970-01-01" && $date1>$date3) || ($entity->terminationDate!="" && $entity->terminationDate!="0000-00-00" && $date1 != "1970-01-01" &&  $date2<$date4)){
+											$after_leaves = $leaves;
+										}
+										else{
+											$after_leaves = $leaves-$values["casualleaves"];
+										}
+										if($after_leaves<0){
+											$after_leaves = 0;
+										}
+
 										$date1=date_create($fromdt);
 										$date2=date_create($todt);
 										$diff=date_diff($date1,$date2);
 										$working_days =  $diff->format("%a");
-										$leaves_amt = ($salary_amt/$working_days)*$leaves;
+										$working_days = $working_days+1;
+										$leaves_amt = ($salary_amt/$working_days)*$after_leaves;
 										$leaves_amt = intval($leaves_amt);
 									}
 								?>
+								
+								<?php 
+									$net_salary = $salary_amt-($leaves_amt+$due_amt);
+								?>
+								
+								<?php
+									$total_days = 0;
+									$date1=date_create($fromdt);
+									$date2=date_create($todt);
+									$diff=date_diff($date1,$date2);
+									$total_days =  $diff->format("%a");
+									$total_days = $total_days+1;
+									
+									$casual_leaves = $values["casualleaves"];
+									$late_joing_days = 0;
+									$early_erminated_days = 0;
+									$actual_working_days = $total_days;
+									$employee_working_days = $total_days-$leaves;
+									
+									$previous_salary = 0;
+									$increment = 0;
+									$salary_details = SalaryDetails::where("empid","=",$entity->id)->Get();
+									if(count($salary_details)>0){
+										$salary_details = $salary_details[0];
+										$previous_salary = $salary_details->previousSalary;
+										$increment = $salary_details->increament;
+									}
+									$joining_date = date("d-m-Y",strtotime($entity->joiningDate));
+									$details_data = "<table class=\'table table-striped table-bordered table-hover\'><tr><th>ENTITY</th><th>VALUE</th></tr>";
+									$details_data = $details_data."<tr><td>Total Days</td><td>".$total_days."</td></tr>";
+									$details_data = $details_data."<tr><td>Casual Leaves</td><td>".$casual_leaves."</td></tr>";
+									$details_data = $details_data."<tr><td>Late Joing Days</td><td>".$late_joing_days."</td></tr>";
+									$details_data = $details_data."<tr><td>Early Terminated Days</td><td>".$early_erminated_days."</td></tr>";
+									$details_data = $details_data."<tr><td>Actual Working Days</td><td>".$actual_working_days."</td></tr>";
+									$details_data = $details_data."<tr><td>Employee Working Days</td><td>".$employee_working_days."</td></tr>";
+									$details_data = $details_data."<tr><td>Previous Salary</td><td>".$previous_salary."</td></tr>";
+									$details_data = $details_data."<tr><td>Increment</td><td>".$increment."</td></tr>";
+									$details_data = $details_data."<tr><td>Joining Date</td><td>".$joining_date."</td></tr>";
+								?>
+								<?php 
+									if(isset($roles_arr[$entity->roleId])){
+										$entity->roleId = $roles_arr[$entity->roleId];
+									}
+								?>
+								<td style="font-weight: bold; vertical-align: middle">{{$entity->roleId}}</td>
+								<td style="font-weight: bold; vertical-align: middle">
+									<input type="text" style="max-width:70px;"  name="emp_salary[]" id="{{$i}}_emp_salary" readonly="readonly" value="{{$salary_amt}}"/>
+								</td>
+								<td style="font-weight: bold; vertical-align: middle; min-width:70px;"><a role="button" data-toggle="modal" onclick="return viewDetails('{{$details_data}}')" class="btn btn-minier btn-info">Details</a></td>
+								
+								<td style="font-weight: bold; vertical-align: middle">Due Amt : {{$due_amt}}</td>
+								
 								<td >
 									<input type="text" style="max-width:70px;" name="leaves[]" id="{{$i}}_leaves" readonly="readonly" value="{{$leaves}}"/>	
 								</td>
 								<td>
-									<input type="text" style="max-width:70px;"  name="casual_leaves[]" id="{{$i}}_casual_leaves"  value="0"/>	
+									<input type="text" style="max-width:70px;"  name="casual_leaves[]" id="{{$i}}_casual_leaves"  value="{{$values['casualleaves']}}"/>	
 								</td>
 								<td>
 									<input type="text" style="max-width:70px;"  name="due_deductions[]" id="{{$i}}_due_deductions" onchange="calcSalary(this.id)" value="{{$due_amt}}"/>	
@@ -338,12 +457,9 @@ use Illuminate\Support\Facades\Input;
 								<td>
 									<input type="text" style="min-width:70px;" name="other_amt[]" id="{{$i}}_other_amt" onchange="calcSalary(this.id)" value="0.00"/>	
 								</td>
-								<?php 
-									$net_salary = $salary_amt-($leaves_amt+$due_amt);
-								?>
 								<td style="font-weight: bold; vertical-align: middle" id="{{$i}}_netsalary">{{$net_salary}}</td>
 								<td style="font-weight: bold; vertical-align: middle">{{$salary_amt}}</td>
-								<td style="font-weight: bold; vertical-align: middle; min-width:150px;">{{$entity->salaryCardNo}}</td>
+								<td style="font-weight: bold; vertical-align: middle; min-width:150px;">{{$entity->cardNumber}}</td>
 								<td>
 									<input type="text" style="min-width:270px;" name="comments[]" id="{{$i}}_comments" value=""/>	
 								</td>
@@ -539,8 +655,9 @@ use Illuminate\Support\Facades\Input;
 				$("#"+id+"_netsalary").html(salary);			
 			}
 
-			function viewDetails(rowid, eid,type){
-				month = $("#month").val();
+			function viewDetails(data){
+				bootbox.alert(data);
+				/*month = $("#month").val();
 				$.ajax({
 			      url: "getleavedetails?eid="+eid+"&dt="+month,
 			      success: function(data) {
@@ -548,7 +665,7 @@ use Illuminate\Support\Facades\Input;
 			    	  $("#tbody").html(obj.tbody);
 			      },
 			      type: 'GET'
-			   });
+			   });*/
 			}
 
 			function editRecord(rowid, eid,type){

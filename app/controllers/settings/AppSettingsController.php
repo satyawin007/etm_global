@@ -280,11 +280,12 @@ class AppSettingsController extends \Controller {
 		$entities = null;
 		$emp_contracts = \Auth::user()->contractIds;
 		if($emp_contracts=="" || $emp_contracts==0){
-			$entities = \Client::All();
+			$entities = \Client::where("status","=","ACTIVE")->get();
 		}
 		else{
 			$emp_contracts = explode(",", $emp_contracts);
 			 $entities = \Client::whereIn("depots.id",$emp_contracts)
+			 		->where("clients.status","=","ACTIVE")
 					->join("contracts", "clients.id", "=","contracts.clientId")
 					->join("depots", "depots.id", "=","contracts.depotId")
 			 		->select(array("clients.id as id","clients.name as name"))->get();
@@ -292,16 +293,15 @@ class AppSettingsController extends \Controller {
 		 return $entities->toArray();
 	}
 	
-	
 	public static function getEmpBranches(){
 		$entities = null;
 		$emp_branches = \Auth::user()->officeBranchIds;
 		if($emp_branches=="" || $emp_branches==0){
-			$entities = \OfficeBranch::All();
+			$entities = \OfficeBranch::where("status","=","ACTIVE")->get();
 		}
 		else{
 			$emp_branches = explode(",", $emp_branches);
-			$entities = \OfficeBranch::whereIn("id",$emp_branches)->get();
+			$entities = \OfficeBranch::where("status","=","ACTIVE")->whereIn("id",$emp_branches)->get();
 		}
 		return $entities->toArray();
 	}

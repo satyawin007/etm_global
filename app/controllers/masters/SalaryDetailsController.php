@@ -94,7 +94,7 @@ class SalaryDetailsController extends \Controller {
 		$select_args[] = "employee.typeId as typeId";
 		$select_args[] = "employee.salaryCardNo as salaryCardNo";
 		$select_args[] = "cities.name as cityName";
-		$select_args[] = "officebranch.name as OfficeBranch";
+		$select_args[] = "employee.officeBranchIds as officeBranchIds";
 		$select_args[] = "client.name as client";
 		$select_args[] = "role.roleName as title";
 		$select_args[] = "empsalarydetails.salary as salary";
@@ -108,8 +108,15 @@ class SalaryDetailsController extends \Controller {
 		$select_args[] = "empsalarydetails.transactionDate as transactionDate";
 		$select_args[] = "empsalarydetails.fromDate as fromDate";
 		$select_args[] = "empsalarydetails.id as id";
+		$select_args[] = "employee.officeBranchId as officeBranchId";
 		
-		$entity = \SalaryDetails::where("empsalarydetails.empId","=",$values['id'])->join("employee","employee.id","=","empsalarydetails.empId")->join("role","employee.roleId","=","role.id")->leftjoin("officebranch", "employee.officeBranchId","=","officebranch.id")->leftjoin("client", "employee.clientId","=","client.id")->leftjoin("user_roles_master", "empsalarydetails.title","=","user_roles_master.id")->join("cities", "cities.id","=","employee.cityId")->select($select_args)->get();;
+		$entity = \SalaryDetails::where("empsalarydetails.empId","=",$values['id'])
+						->leftjoin("employee","employee.id","=","empsalarydetails.empId")
+						->leftjoin("role","employee.roleId","=","role.id")
+						->leftjoin("officebranch", "employee.officeBranchId","=","officebranch.id")
+						->leftjoin("client", "employee.clientId","=","client.id")
+						->leftjoin("user_roles_master", "empsalarydetails.title","=","user_roles_master.id")
+						->join("cities", "cities.id","=","employee.cityId")->select($select_args)->get();;
 			
 		if(count($entity)){
 			$entity = $entity[0];
@@ -143,15 +150,25 @@ class SalaryDetailsController extends \Controller {
 			else{
 				$emptype = "Non-Office";
 			}
-			if(date("d-m-Y",strtotime($entity->fromDate)) == "01-01-1970" || date("d-m-Y",strtotime($entity->fromDate)) == "" || date("d-m-Y",strtotime($entity->fromDate)) == "00-00-0000"){
+			if(date("d-m-Y",strtotime($entity->fromDate)) == "01-01-1970" || date("d-m-Y",strtotime($entity->fromDate)) == "30-11--0001" || date("d-m-Y",strtotime($entity->fromDate)) == "" || date("d-m-Y",strtotime($entity->fromDate)) == "00-00-0000"){
 				$entity->fromDate = "";
 			}
 			else{
 				$entity->fromDate = date("d-m-Y",strtotime($entity->fromDate));
 			}
+			
+			if($entity->officeBranchIds == 0){
+				$entity->officeBranchIds = $entity->officeBranchId;
+			}
+			$branches_str = "";
+			$branches = \DB::select(\DB::raw("select name from officebranch where id in(".$entity->officeBranchIds.");"));
+			foreach ($branches as $branch){
+				$branches_str = $branches_str.$branch->name.", ";
+			}
+			
 			$form_field = array("name"=>"employeetype", "id"=>"employeetype", "value"=>$emptype, "content"=>"employeetype", "readonly"=>"readonly",  "required"=>"","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"client", "value"=>$entity->OfficeBranch, "content"=>"Branch Name", "readonly"=>"readonly",  "required"=>"","type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"client", "value"=>$branches_str, "content"=>"Branch Name", "readonly"=>"readonly",  "required"=>"","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"employeename", "value"=>$entity->empName, "content"=>"employee name", "readonly"=>"readonly",  "required"=>"","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -161,7 +178,7 @@ class SalaryDetailsController extends \Controller {
 			$form_fields[] = $form_field; */
 			$form_field = array("name"=>"salary", "value"=>$entity->salary, "content"=>"salary", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control number");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"batta", "value"=>$entity->batta, "content"=>"daily Batta", "readonly"=>"",  "required"=>"required",   "type"=>"text", "class"=>"form-control number");
+			$form_field = array("name"=>"batta", "value"=>$entity->batta, "content"=>"daily Batta", "readonly"=>"",  "required"=>"",   "type"=>"text", "class"=>"form-control number");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"effectivefrom", "value"=>$entity->fromDate, "content"=>"effectivefrom", "readonly"=>"",  "required"=>"required",   "type"=>"text", "class"=>"form-control date-picker");
 			$form_fields[] = $form_field;

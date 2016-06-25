@@ -106,10 +106,11 @@ class FuelStationController extends \Controller {
 	public function editFuelStation()
 	{
 		$values = Input::all();
+		//$values["dsaf"];
 		if (\Request::isMethod('post'))
 		{
 			$field_names = array("fuelstationname1"=>"name","balanceamount1"=>"balanceAmount", "bankaccount1"=>"bankAccount",
-									"paymenttype1"=>"paymentType","paymentexpectedday1"=>"paymentExpectedDay","cityname1"=>"cityId",
+									"paymenttype1"=>"paymentType","paymentexpectedday1"=>"paymentExpectedDay","status1"=>"status","cityname1"=>"cityId",
 									"statename1"=>"stateId","securitydepositamount1"=>"securityDepositAmount","securitypaymenttype1"=>"securityPaymentType",
 									"securitypaymentdate1"=>"securityPaymentDate","bankname1"=>"bankName","accountnumber1"=>"accountNumber",
 									"chequenumber1"=>"chequeNumber","issuedate1"=>"issueDate","transactiondate1"=>"transactionDate"
@@ -117,7 +118,7 @@ class FuelStationController extends \Controller {
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){http://localhost/etm_global/public/fuelstations#edit
-					if ($key == "transactiondate" || $key=="securitypaymentdate" || $key=="issuedate"){
+					if ($key == "transactiondate" || $key=="securitypaymentdate1" || $key=="issuedate"){
 						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 					}
 					else{
@@ -287,7 +288,7 @@ class FuelStationController extends \Controller {
 		$values['form_action'] = 'fuelstations';
 		$values['action_val'] = '';
 		
-		$theads = array('Fuel Station Name','Payment TYpe', "Payment Expected Day", "Bank Account", "Account No", "City", "State", "status", "Actions");
+		$theads = array('Fuel Station Name', "balance amt", "deposit amt", 'security Pmt Type', 'pmt date', "City", "State", "status", "Actions");
 		$values["theads"] = $theads;
 			
 		
@@ -381,7 +382,7 @@ class FuelStationController extends \Controller {
 		$form_fields = array();
 		$form_field = array("name"=>"id1", "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"fuelstationname1", "value"=>"", "content"=>"fuel station name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"fuelstationname1", "value"=>"", "content"=>"station name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"balanceamount1", "value"=>"", "content"=>"balance Amount", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");
 		$form_fields[] = $form_field;					
@@ -391,17 +392,17 @@ class FuelStationController extends \Controller {
 // 		$form_fields[] = $form_field;
 // 		$form_field = array("name"=>"paymentexpectedday1", "value"=>"", "content"=>"payment expected day", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 // 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"statename1", "value"=>"", "content"=>"state name", "readonly"=>"",  "required"=>"required", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"),  "type"=>"select", "class"=>"form-control", "options"=>$state_arr);
+		$form_field = array("name"=>"statename1", "id"=>"statename1", "value"=>"", "content"=>"state name", "readonly"=>"",  "required"=>"required", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"),  "type"=>"select", "class"=>"form-control chosen-select", "options"=>$state_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"cityname1", "value"=>"", "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$cities_arr, "class"=>"form-control");
+		$form_field = array("name"=>"cityname1", "id"=>"cityname1", "value"=>"", "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$cities_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"securitydepositamount1", "content"=>"security deposit amt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control number");
+		$form_field = array("name"=>"securitydepositamount1", "content"=>"sec. depo. amt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control number");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"securitypaymenttype1", "id"=>"securitypaymenttype",  "content"=>"security payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+		$form_field = array("name"=>"securitypaymenttype1", "id"=>"securitypaymenttype1",  "content"=>"security pmt type", "readonly"=>"", "required"=>"", "type"=>"select", "class"=>"form-control  chosen-select",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"securitypaymentdate1", "content"=>"security payment date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
+		$form_field = array("name"=>"securitypaymentdate1", "content"=>"security pmt date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"status1", "value"=>"", "content"=>"status", "readonly"=>"",  "required"=>"","type"=>"select", "options"=>array("ACTIVE"=>"ACTIVE","INACTIVE"=>"INACTIVE"), "class"=>"form-control");
+		$form_field = array("name"=>"status1", "value"=>"", "content"=>"status", "readonly"=>"",  "required"=>"","type"=>"select", "options"=>array("ACTIVE"=>"ACTIVE","INACTIVE"=>"INACTIVE"), "class"=>"form-control  chosen-select");
 		$form_fields[] = $form_field;
 		
 		$form_info["form_fields"] = $form_fields;

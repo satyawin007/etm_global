@@ -99,7 +99,7 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for {{$values['entries']}}				 
+						Results for GENERATE REPORT				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -128,7 +128,7 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for {{$values['entries']}}				 
+						Results for VEHICLE SUMMARY			 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -157,7 +157,7 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for {{$values['entries']}}				 
+						Results for WORKINGDAYS VEHICLE SUMMARY 			 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -536,8 +536,13 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null,  null, null, null,null,null,null,null,null
+							{ "bSortable": false }, null, null,
+							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
+							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
+							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
+							{ "bSortable": false }, { "bSortable": false }
 						],
+										
 						"aaSorting": [],
 						//"sScrollY": "500px",
 						//"bPaginate": false,
@@ -578,7 +583,8 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null
+							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
+							null, { "bSortable": false }, { "bSortable": false }							
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -620,7 +626,11 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null, null, null, null,  null, null, null, null, null, null
+							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
+							null, { "bSortable": false }, { "bSortable": false },
+							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
+							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
+							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false }
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",

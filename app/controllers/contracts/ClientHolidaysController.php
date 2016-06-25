@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
+use settings\AppSettingsController;
 class ClientHolidaysController extends \Controller {
 
 	/**
@@ -172,8 +173,9 @@ class ClientHolidaysController extends \Controller {
 		$values['add_url'] = 'addclientholidays';
 		$values['form_action'] = 'clientholidays';
 		$values['action_val'] = '';
-		$theads = array('client','Branch/Depot', 'from date', "to date", "comments", "status", "Deleted", "Actions");
+		$theads = array('client','Branch/Depot', 'from date', "to date", "comments", "status", "Deleted", "open/Closed By", "open/Closed at", "Actions", "change status");
 		$values["theads"] = $theads;
+		$values["showsearchrow"]="servlogrequests";
 			
 		$actions = array();
 		$values["actions"] = $actions;
@@ -193,7 +195,7 @@ class ClientHolidaysController extends \Controller {
 		
 		$form_fields = array();		
 		
-		$clients =  \Client::all();
+		$clients =  AppSettingsController::getEmpClients();
 		$clients_arr = array();
 		foreach ($clients as $client){
 			$clients_arr[$client['id']] = $client['name'];
@@ -237,7 +239,7 @@ class ClientHolidaysController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"comments1", "content"=>"comments", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"status1", "content"=>"status", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control", "options"=>array("Open"=>"Open","Pending"=>"Pending","Requested"=>"Requested","Closed"=>"Closed"));
+		$form_field = array("name"=>"status1", "content"=>"status", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control", "options"=>array("Requested"=>"Requested"));
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"deleted1", "content"=>"deleted", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control", "options"=>array("Yes"=>"Yes","No"=>"No"));
 		$form_fields[] = $form_field;
@@ -251,6 +253,38 @@ class ClientHolidaysController extends \Controller {
 		
 		$values['provider'] = "clientholidays";	
 		return View::make('contracts.lookupdatatable', array("values"=>$values));
+	}
+	
+	function updateClientHolidaysRequestStatus(){
+		$values = Input::all();
+		if (\Request::isMethod('post'))
+		{
+			//$values["test"];
+			$status = false;
+			$fields = array();
+			$fields["status"] = $values["updatelogstatus"];
+			if($values["updatelogstatus"] == "Open" || $values["updatelogstatus"] == "Close" || $values["updatelogstatus"] == "Closed"){
+				$fields["openedBy"] = \Auth::user()->id;
+				$fields["opened_at"] = date("Y-m-d h:i:s");
+			}
+			//print_r($fields); die();
+			foreach ($values["action"] as $action){
+				$status = false;
+				$db_functions_ctrl = new DBFunctionsController();
+				$table = "\ClientHolidays"; 
+				$data = array("id"=>$action);
+				$db_functions_ctrl->update($table, $fields, $data);
+				$status = true;
+			}
+			if($status){
+				echo json_encode(array("status"=>"success", "message"=>"Operation completed Successfully"));
+				return;
+			}
+			else{
+				echo json_encode(array("status"=>"fail", "message"=>"Operation Could not be completed, Try Again!"));
+				return;
+			}
+		}
 	}
 	
 }

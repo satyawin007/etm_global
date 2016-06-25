@@ -99,7 +99,7 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+						Results for CREDIT SUPPLIER RANGE				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -127,7 +127,7 @@
 						<div id="tableTools-container2" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+						Results for CREDIT SUPPLIER DATE RANGE
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -156,7 +156,7 @@
 						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+						Results for 				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -187,7 +187,7 @@
 						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+						Results for REPAIR TRANSACTIONS				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -219,7 +219,7 @@
 						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+						Results for PURCHASES				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -248,7 +248,7 @@
 						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+						Results for TRACK BY VEHICLE				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -416,6 +416,64 @@
 								refresh1 = 1;
 								myTable1.draw();
 							}		
+							if(reporttype == "balanceSheet"){
+								url = form.attr("action");
+								fromdt = $("#fromdate").val();
+								todt = $("#todate").val();
+								reporttype = $("#reporttype").val();
+								creditsupplier = $("#creditsupplier").val();
+								url = url+"?supplierreporttype=repairs&fromdate="+fromdt+"&todate="+todt+"&reporttype="+reporttype+"&creditsupplier="+creditsupplier;
+								$.ajax({
+							        type:"POST",
+							        url:url,
+							        success: function(response){
+							          // alert(response);  
+							           var json = JSON.parse(response);
+							           var arr = [];
+							           for(var i = 0; i < json.length; i++) {
+							        	    var parsed = json[i];
+							        	    var row = [];
+							        	    for(var x in parsed){
+							        	    	row.push(parsed[x]);
+								            }
+								            arr.push(row);
+							        	}
+							            myTable4.clear().draw();
+										myTable4.rows.add(arr); // Add new data
+										myTable4.columns.adjust().draw(); // Redraw 
+										$("#table4").show();
+							        }
+								});
+
+								url = form.attr("action");
+								fromdt = $("#fromdate").val();
+								todt = $("#todate").val();
+								reporttype = $("#reporttype").val();
+								creditsupplier = $("#creditsupplier").val();
+								url = url+"?supplierreporttype=purchase&fromdate="+fromdt+"&todate="+todt+"&reporttype="+reporttype+"&creditsupplier="+creditsupplier;
+								$.ajax({
+							        type:"POST",
+							        url:url,
+							        success: function(response){
+							          // alert(response);  
+							           var json = JSON.parse(response);
+							           var arr = [];
+							           for(var i = 0; i < json.length; i++) {
+							        	    var parsed = json[i];
+							        	    var row = [];
+							        	    for(var x in parsed){
+							        	    	row.push(parsed[x]);
+								            }
+								            arr.push(row);
+							        	}
+							            myTable5.clear().draw();
+										myTable5.rows.add(arr); // Add new data
+										myTable5.columns.adjust().draw(); // Redraw 
+										$("#table5").show();
+							        }
+								});
+							}
+								
 			        	}
 			        	else if(reporttype == "payment"){
 							myTable2.clear().draw();

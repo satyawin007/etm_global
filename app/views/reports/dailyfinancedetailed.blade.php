@@ -107,10 +107,14 @@
 						<table id="dynamic-table1" class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
-									<td>FUEL STATION</td>
-									<td>TILL DATE FUEL</td>
-									<td>TILL DATE PAYMENTS</td>
-									<td>BALANCE</td>
+									<td>FINANCE COMPANY</td>
+									<td>PAID FROM BRANCH</td>
+									<td>PAYMENT DATE</td>
+									<td>PAID AMOUNT</td>
+									<td>INCHARGE</td>
+									<td>PAYMENT TYPE</td>
+									<td>CREATED BY</td>
+									
 								</tr>
 							</thead>
 							<tbody id="tbody1">
@@ -512,7 +516,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null
+						  null, null, null,  null, null, null,  null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -613,7 +617,7 @@
 				    } );
 					////
 					setTimeout(function() {
-						$("#table1").hide();
+						//$("#table1").hide();
 						$("#table2").hide();
 						$("#table3").hide();
 					}, 500);

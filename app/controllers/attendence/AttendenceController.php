@@ -18,6 +18,13 @@ class AttendenceController extends \Controller {
 		{
 			$values = Input::all();
 			//$values["test"];
+			$date1=date_create($values["date"]);
+			$date2=date_create(date("d-m-Y"));
+			$diff=date_diff($date1,$date2);
+			$diff =  $diff->format("%R%a");
+			if($diff>0){
+				return json_encode(['status' => 'fail', 'message' => 'Attendence for PREVIOUS DATES is not allowed']);
+			}
 			$time = date('H:i:s',strtotime("12 PM"));
 			if( $values["session"]=="MORNING" && date('H:i:s') > $time){
 				return json_encode(['status' => 'fail', 'message' => 'Attendence for MORNING SESSION is closed']);
@@ -65,6 +72,44 @@ class AttendenceController extends \Controller {
 	{
 		$values = Input::all();
 		//$values["test"];
+		if(isset($values["action"]) && $values["action"]=="update"){
+			$db_functions_ctrl = new DBFunctionsController();
+			$table = "\AttendenceLog";
+			$jsonitems = json_decode($values["jsondata"]);
+			$success = false;
+			$fields = array();
+			$fields["session"] = $values["session"];
+			$fields["day"] = $values["day"];
+			$fields["date"] = date("Y-m-d", strtotime($values["date"]));
+			$fields["time"] = date("H:i:s");
+			$fields["holidayReason"] = $values["holidayreason"];
+			if($values["employeetype"] == "CLIENT BRANCH"){
+				$fields["clientId"] = $values["clientname"];
+				$fields["depotId"] = $values["depot"];
+			}
+			else{
+				$fields["officeBranchId"] = $values["officebranch"];
+			}
+			$qry = \AttendenceLog::where("date","=",$fields["date"]);
+						if($values["employeetype"] == "CLIENT BRANCH"){
+							$qry->where("depotId","=",$values["depot"])->where("clientId","=",$values["clientname"]);
+						}
+						else{
+							$qry->where("officeBranchId","=",$values["officebranch"]);
+						}
+			$at_log = 	$qry->where("session","=",$values["session"])->get();
+			if(count($at_log)>0){
+				return json_encode(['status' => 'success', 'message' => 'Operation completed/updated Successfully']);
+			}
+			$db_functions_ctrl->insert($table, $fields);
+			$success = true;
+			if($success){
+				return json_encode(['status' => 'success', 'message' => 'Operation completed Successfully']);
+			}
+			else{
+				return json_encode(['status' => 'fail', 'message' => 'Operation Could not be completed, Try Again!']);
+			}
+		}
 		
 		$time = date('H:i:s',strtotime("12 PM"));
 		if( $values["session"]=="MORNING" && date('H:i:s') > $time){
@@ -93,6 +138,10 @@ class AttendenceController extends \Controller {
 		else{
 			$fields["officeBranchId"] = $values["officebranch"];
 		}
+		$at_log = $db_functions_ctrl->get($table, array("session" => $values["session"],"date" => date("Y-m-d", strtotime($values["date"]))));
+		if(count($at_log)>0){
+			return json_encode(['status' => 'success', 'message' => 'Operation completed Successfully']);
+		}
 		$db_functions_ctrl->insert($table, $fields);
 		$success = true;
 		if($success){
@@ -103,10 +152,18 @@ class AttendenceController extends \Controller {
 		}
 	}
 	
+	
 	public function getAttendenceLog()
 	{
 		$values = Input::all();
 		
+		$date1=date_create($values["date"]);
+		$date2=date_create(date("d-m-Y"));
+		$diff=date_diff($date1,$date2);
+		$diff =  $diff->format("%R%a");
+		if($diff>0){
+			return json_encode(['status' => 'fail', 'message' => 'Attendence for PREVIOUS DATES is not allowed']);
+		}
 		$time = date('H:i:s',strtotime("12 PM"));
 		if( $values["session"]=="MORNING" && date('H:i:s') > $time){
 			return json_encode(['status' => 'fail', 'message' => 'Attendence for MORNING SESSION is closed']);
@@ -155,12 +212,6 @@ class AttendenceController extends \Controller {
 			foreach ($jsonitems as $jsonitem){
 				$success = false;
 				$fields = array();
-// 				$fields["session"] = $values["session"];
-// 				$fields["day"] = $values["day"];
-// 				$fields["date"] = date("Y-m-d", strtotime($values["date"]));
-// 				if($jsonitem->empid != ""){
-// 					$fields["empId"] = $jsonitem->empid;
-// 				}
 				if($jsonitem->Substitute != ""){
 					$fields["substituteId"] = $jsonitem->Substitute;
 				}
@@ -175,7 +226,16 @@ class AttendenceController extends \Controller {
 				}
 				$cnt = \Attendence::where("id","=",$jsonitem->recid)->update($fields);
 				if($cnt==0){
-					$db_functions_ctrl->insert($table, $fields);
+					$fields["session"] = $values["session"];
+					$fields["day"] = $values["day"];
+					$fields["date"] = date("Y-m-d", strtotime($values["date"]));
+					if($jsonitem->comments == ""){
+						$fields["comments"] = $jsonitem->statuschangecomments;
+					}
+					if($jsonitem->empid != ""){
+						$fields["empId"] = $jsonitem->empid;
+						$db_functions_ctrl->insert($table, $fields);
+					}
 				}
 				$success = true;
 			}
@@ -226,24 +286,55 @@ class AttendenceController extends \Controller {
 		foreach ($clients as $client){
 			$clients_arr[$client['id']] = $client['name'];
 		}
-		
+		$employee_type = "";
+		$office_branch = 0;
+		$clientid = 0;
+		$depotid = 0;
+		$session = "";
+		$day = "";
+		$date = "";
+		$holiday_reason = "";
+		if(isset($values["employeetype"])){
+			$employee_type = $values["employeetype"];
+		}
+		if(isset($values["officebranch"])){
+			$office_branch = $values["officebranch"];
+		}
+		if(isset($values["client"])){
+			$clientid = $values["client"];
+		}
+		if(isset($values["depot"])){
+			$depotid = $values["depot"];
+		}
+		if(isset($values["date"])){
+			$date = $values["date"];
+		}
+		if(isset($values["session"])){
+			$session = $values["session"];
+		}
+		if(isset($values["day"])){
+			$day = $values["day"];
+		}
+		if(isset($values["holidayreason"])){
+			$holiday_reason = $values["holidayreason"];
+		}
 		
 		$form_fields = array();		
-		$form_field = array("name"=>"employeetype", "content"=>"employee type", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"enableClientDepot(this.value);"),  "options"=>array("OFFICE"=>"OFFICE", "CLIENT BRANCH"=>"CLIENT BRANCH"), "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"employeetype", "value"=>$employee_type, "content"=>"employee type", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"enableClientDepot(this.value);"),  "options"=>array("OFFICE"=>"OFFICE", "CLIENT BRANCH"=>"CLIENT BRANCH"), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_field = array("name"=>"clientname", "value"=>$clientid, "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"officebranch", "content"=>"office branch", "readonly"=>"","required"=>"", "type"=>"select", "options"=>$branch_arr, "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"officebranch", "value"=>$office_branch, "content"=>"office branch", "readonly"=>"","required"=>"", "type"=>"select", "options"=>$branch_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+		$form_field = array("name"=>"depot", "value"=>$depotid, "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"session", "content"=>"session", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("MORNING"=>"MORNING","AFTERNOON"=>"AFTERNOON"), "class"=>"form-control");
+		$form_field = array("name"=>"session", "value"=>$session, "content"=>"session", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("MORNING"=>"MORNING","AFTERNOON"=>"AFTERNOON"), "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"date", "content"=>"date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+		$form_field = array("name"=>"date", "value"=>$date, "content"=>"date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"day", "content"=>"day", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("WORKING DAY"=>"WORKING DAY","HOLIDAY"=>"HOLIDAY"), "class"=>"form-control");
+		$form_field = array("name"=>"day", "value"=>$day, "content"=>"day", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("WORKING DAY"=>"WORKING DAY","HOLIDAY"=>"HOLIDAY"), "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"holidayreason", "content"=>"holiday reason", "readonly"=>"readonly",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
+		$form_field = array("name"=>"holidayreason", "value"=>$holiday_reason, "content"=>"holiday reason", "readonly"=>"readonly",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"noofpresents", "content"=>"no of presents", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -293,6 +384,17 @@ class AttendenceController extends \Controller {
 	public function getDayTotalAttendence(){
 		$values = Input::All();
 		$select_args = array("employee.id", "employee.fullName", "employee.empCode");
+		
+		if($values["employeetype"] == "CLIENT BRANCH"){
+			\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+			$entities = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
+		}
+		else{
+			$entities = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")
+							->select($select_args)->get();
+		}
+		
+		/*
 		if($values["employeetype"] == "CLIENT BRANCH"){
 			$entities = \ContractVehicle::where("contract_vehicles.status", "=","ACTIVE")
 						->where("contracts.clientId","=",$values["clientname"])
@@ -303,18 +405,20 @@ class AttendenceController extends \Controller {
 		}
 		else{
 			$entities = \Employee::where("officeBranchId", "=",$values["officebranch"])
+						->whereNotIn("roleId",array(19,20))
 						->select($select_args)->get();
 		}
+		*/
 		$emp_arr = array();
 		foreach($entities as $entity){
 			$emp_arr[] =  $entity->id;
 		}
 		$abs_emps_cnt  = \Attendence::where("date","=",date("Y-m-d", strtotime($values["date"])))
-					->whereIn("empId",$emp_arr)
-					->where("session","=",$values["session"])
-					->where("day","=",$values["day"])
-					->where("attendenceStatus","!=","P")
-					->count();
+							->whereIn("empId",$emp_arr)
+							->where("session","=",$values["session"])
+							->where("day","=",$values["day"])
+							->where("attendenceStatus","!=","P")
+							->count();
 		$tot_presents = count($emp_arr) - $abs_emps_cnt;
 		
 		echo json_encode(array("noofpresents"=>$tot_presents, "noofabsents"=>$abs_emps_cnt));

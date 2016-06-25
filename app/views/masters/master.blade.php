@@ -513,7 +513,7 @@
 					<?php } ?>
 					
 					<li class="open hover">
-						<?php if(in_array(5, $jobs)){?>
+						<?php if(in_array(9, $jobs)){?>
 						<a href="#" class="dropdown-toggle">
 							<i class="menu-icon fa fa-exchange"></i>
 							<span class="menu-text">
@@ -523,21 +523,28 @@
 						</a>
 						<b class="arrow"></b>
 						<ul class="submenu">
-							<?php if(in_array(113, $jobs)){?>
+							<?php if(in_array(501, $jobs)){?>
 							<li class="hover">
 								<a href="workflow?type=fueltransactions">
 									<i class="menu-icon fa fa-caret-right"></i>
 									FUEL TRANSACTIONS
 								</a>
 							</li>
-							<?php } if(in_array(114, $jobs)){?>
+							<?php } if(in_array(502, $jobs)){?>
 							<li class="hover">
 								<a href="workflow?type=repairtransactions">
 									<i class="menu-icon fa fa-caret-right"></i>
 									REPAIR TRANSACTIONS
 								</a>
 							</li>
-							<?php } if(in_array(114, $jobs)){?>
+							<?php } if(in_array(503, $jobs)){?>
+							<li class="hover">
+								<a href="workflow?type=purchaseorders">
+									<i class="menu-icon fa fa-caret-right"></i>
+									PURCHASE ORDERS
+								</a>
+							</li>
+							<?php } if(in_array(504, $jobs)){?>
 							<li class="hover">
 								<a href="workflow?type=inchargetransactions">
 									<i class="menu-icon fa fa-caret-right"></i>

@@ -24,7 +24,7 @@ class ContractController extends \Controller {
 			$field_names = array(
 							"statename"=>"stateId","districtname"=>"districtId","cityname"=>"cityId","clientname"=>"clientId","depot"=>"depotId",
 							"route"=>"routeId","vehicletype"=>"vehicleTypeId","distance"=>"distance","contracttype"=>"contractType",
-							"fuelcharges"=>"fuelCharges","repaircharges"=>"repairCharges","fromdate"=>"startDate","todate"=>"endDate",
+							"avgkms"=>"avgKms", "fuelcharges"=>"fuelCharges","repaircharges"=>"repairCharges","fromdate"=>"startDate","todate"=>"endDate",
 							"noofvehicles"=>"noofVehicles","floorrate"=>"floorRate","noofdrivers"=>"noofDrivers","noofhelpers"=>"noofHelpers"
 						   );
 			$fields = array();
@@ -108,10 +108,10 @@ class ContractController extends \Controller {
 		{
 			//$values['DSFasdf'];
 			$field_names = array(
-							"statename"=>"stateId","districtname"=>"districtId","cityname"=>"cityId",
-							"route"=>"routeId","vehicletype"=>"vehicleTypeId","distance"=>"distance","contracttype"=>"contractType",
-							"fuelcharges"=>"fuelCharges","repaircharges"=>"repairCharges","fromdate"=>"startDate","todate"=>"endDate",
-							"noofvehicles"=>"noofVehicles","floorrate"=>"floorRate","noofdrivers"=>"noofDrivers","noofhelpers"=>"noofHelpers"
+							"statename"=>"stateId", "districtname"=>"districtId", "cityname"=>"cityId",
+							"route"=>"routeId", "vehicletype"=>"vehicleTypeId", "distance"=>"distance","contracttype"=>"contractType",
+							"avgkms"=>"avgKms", "fuelcharges"=>"fuelCharges","repaircharges"=>"repairCharges","fromdate"=>"startDate","todate"=>"endDate",
+							"noofvehicles"=>"noofVehicles", "floorrate"=>"floorRate", "noofdrivers"=>"noofDrivers", "noofhelpers"=>"noofHelpers"
 						   );
 			$fields = array();
 			foreach ($field_names as $key=>$val){
@@ -310,6 +310,8 @@ class ContractController extends \Controller {
 			$form_field = array("name"=>"route", "value"=>$entity->routeId, "content"=>"route", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$services_arr);
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"vehicletype", "value"=>$entity->vehicleTypeId, "content"=>"vehicle type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehtypes_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"avgkms", "value"=>$entity->avgKms, "content"=>"average kms", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"distance", "value"=>$entity->distance, "content"=>"distance", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -553,6 +555,8 @@ class ContractController extends \Controller {
 		$form_field = array("name"=>"route", "content"=>"route", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$services_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"vehicletype", "content"=>"vehicle type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehtypes_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"avgkms", "content"=>"average kms", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"distance", "content"=>"distance", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;

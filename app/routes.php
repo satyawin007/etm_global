@@ -317,9 +317,13 @@ Route::any('/deleterepairtransaction', "transactions\RepairTransactionController
 
 Route::get('/getpaymentfields', "transactions\TransactionController@getPaymentFields");
 
+Route::get('/getinchargebalance', "transactions\TransactionController@getInchargeBalance");
+
 Route::get('/getmasterspaymentfields', "transactions\TransactionController@getMastersPaymentFields");
 
 Route::get('/getfueltransactionfields', "transactions\TransactionController@getFuelTransactionFields");
+
+Route::any('/getvehiclelastreading', "transactions\TransactionController@getVehicleLastReading");
 
 Route::get('/gettransactionfields', "transactions\TransactionController@getTransactionFields");
 
@@ -576,11 +580,15 @@ Route::any('/addservicelog', "servicelogs\ServiceLogController@addServiceLog");
 
 Route::any('/editservicelog', "servicelogs\ServiceLogController@editServiceLog");
 
+Route::get('/checkpendingdates', "servicelogs\ServiceLogController@checkPendingDates");
+
 Route::get('/servicelogrequests', "servicelogs\ServiceLogRequestController@manageServiceLogRequests");
 
 Route::any('/addservicelogrequest', "servicelogs\ServiceLogRequestController@addServiceLogRequest");
 
 Route::any('/editservicelogrequest', "servicelogs\ServiceLogRequestController@editServiceLogRequest");
+
+Route::any('/updateservicelogrequeststatus', "servicelogs\ServiceLogRequestController@updateServiceLogRequestStatus");
 
 Route::any('/getvehiclecontractinfo', "servicelogs\ServiceLogController@getVehicleContractInfo");
 
@@ -589,6 +597,8 @@ Route::get('/getdriverhelper', "servicelogs\ServiceLogController@getDriverHelper
 Route::get('/getstartreading', "servicelogs\ServiceLogController@getStartReading");
 
 Route::get('/getpendingservicelogs', "servicelogs\ServiceLogController@getPendingServiceLogs");
+
+Route::any('/viewpendingservicelogs', "servicelogs\ServiceLogController@viewPendingServiceLogs");
 
 Route::any('/getservicelogsdatatabledata', "servicelogs\DataTableController@getDataTableData");
 
@@ -605,6 +615,8 @@ Route::get('/clientholidays', "contracts\ClientHolidaysController@manageClientHo
 Route::any('/addclientholidays', "contracts\ClientHolidaysController@addclientholidays");
 
 Route::any('/editclientholidays', "contracts\ClientHolidaysController@editclientholidays");
+
+Route::any('/updateclientholidaysrequeststatus', "contracts\ClientHolidaysController@updateClientHolidaysRequestStatus");
 
 Route::any('/billpayments',"billpayments\BillPaymentsController@manageBillPayments");
 

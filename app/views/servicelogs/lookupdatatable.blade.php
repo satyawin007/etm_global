@@ -1,3 +1,6 @@
+<?php
+use settings\AppSettingsController;
+?>
 @extends('masters.master')
 	@section('inline_css')
 		<style>
@@ -49,6 +52,40 @@
 				<?php } ?>
 			</div>
 		</div>
+		
+		<?php if((isset($values["showsearchrow"]) && $values["showsearchrow"]="servlogrequests")){?>
+		<div class="row">
+			<div class="col-xs-offset-3 col-xs-9">
+				<div class="col-xs-4">
+					<select name="clientid" id="clientid" class="formcontrol chosen-select">
+					<!-- <option value="0">ALL</option> -->
+					<?php 
+						$clients =  AppSettingsController::getEmpClients();
+						$clients_arr = array();
+						foreach ($clients as $client){
+							$clients_arr[$client['id']] = $client['name'];
+						}
+						foreach ($clients_arr as $key=>$val){
+							echo "<option value='".$key."'>".$val."</option>";
+						}
+					?>
+					</select>
+				</div>
+				<div class="col-xs-4">
+					<select name="logstatus" id="logstatus" class="formcontrol chosen-select">
+						<option value="All">All</option>
+						<option value="Send for Approval">Send for Approval</option>
+						<option value="Requested">Requested</option>
+						<option value="Open">Open</option>
+						<option value="Closed">Closed</option>
+					</select>
+				</div>
+				<div class="col-xs-3">
+					<button class="btn btn-xs btn-primary" id="getbtn">&nbsp;&nbsp;GET&nbsp;&nbsp;</button>
+				</div>
+			</div>
+		</div>
+		<?php }?>
 				
 		<div class="row">
 		<div class="col-xs-offset-0 col-xs-12">
@@ -91,24 +128,12 @@
 				</div>
 				<div class="pull-right tableTools-container"></div>
 			</div>
+			<form action="test" method="post" name="workflowform" id="workflowform" onsubmit="return false;">
 			<?php if((isset($values["showsearchrow"]) && $values["showsearchrow"]="servlogrequests")){?>
 			<div class="row">
-				<div class="col-xs-offset-3 col-xs-9">
+				<div class="col-xs-offset-4 col-xs-7">
 					<div class="col-xs-4">
-						<select name="clientid" id="clientid" class="formcontrol chosen-select">
-							<option value="0">ALL</option>
-						<?php 
-							$clients =  \Client::all();
-							$clients_arr = array();
-							foreach ($clients as $client){
-								echo "<option value='".$client['id']."'>".$client['name']."</option>";
-							}
-						?>
-						</select>
-					</div>
-					<div class="col-xs-4">
-						<select name="logstatus" id="logstatus" class="formcontrol chosen-select">
-							<option value="All">All</option>
+						<select name="updatelogstatus" id="updatelogstatus" class="formcontrol chosen-select">
 							<option value="Send for Approval">Send for Approval</option>
 							<option value="Requested">Requested</option>
 							<option value="Open">Open</option>
@@ -116,11 +141,12 @@
 						</select>
 					</div>
 					<div class="col-xs-3">
-						<button class="btn btn-xs btn-primary" id="getbtn">&nbsp;&nbsp;GET&nbsp;&nbsp;</button>
+						<button class="btn btn-xs btn-primary" id="updatebtn" onclick="postData()">&nbsp;&nbsp;UPDATE&nbsp;&nbsp;</button>
 					</div>
 				</div>
 			</div>
 			<?php }?>
+			
 			<div class="table-header" style="margin-top: 10px;">
 				Results for "{{$values['bredcum']}}"				 
 				<div style="float:right;padding-right: 15px;padding-top: 6px;"><a style="color: white;" href="{{$values['home_url']}}"><i class="ace-icon fa fa-home bigger-200"></i></a> </div>				
@@ -143,6 +169,7 @@
 			</div>
 		</div>
 		</div>
+		</form>
 
 		<?php 
 			if(isset($values['modals'])) {
@@ -217,6 +244,23 @@
 				$("#id1").val(id);		
 			}
 
+			function postData(){
+				var updatelogstatus = $("#updatelogstatus").val();
+				if(updatelogstatus == ""){
+					alert("select update status");
+					return;
+				}
+			 	$.post( 
+                   "updateservicelogrequeststatus",
+                   $("#workflowform").serialize(),
+                   function(data) {
+                       json_obj = JSON.parse(data);
+                       bootbox.alert(json_obj.message);
+                       window.setTimeout(function(){location.reload();}, 2000 );
+                   }
+                );
+				return false;
+			}
 
 			function modalEditClient(id, name, code, status){
 				$("#clientname1").val(name);				

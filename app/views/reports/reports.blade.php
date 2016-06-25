@@ -222,11 +222,13 @@ use Illuminate\Support\Facades\Input;
 								</li>
 								
 								<li>
-									&nbsp;
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=attendence"> ATTENDENCE </a>
 								</li>
 								
 								<li>
-									&nbsp;
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=attendencedetailed"> ATTENDENCE DETAILED </a>
 								</li>
 							</ul>
 						</div>

@@ -398,6 +398,20 @@ use Illuminate\Support\Facades\Input;
 														<input type="text" name="drivingliceneexpiredate" id="drivingliceneexpiredate" class="form-control date-picker" value="{{$employee->drvLicenceExpDate}}">
 													</div>
 												</div>
+												<div class="form-group">
+													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Termination Date</label>
+													<div class="col-xs-8">
+														<?php
+																if($employee->terminationDate =="0000-00-00" || $employee->terminationDate==""){
+																	$employee->terminationDate ="";
+																}
+																else{
+																	$employee->terminationDate=date('d-m-Y',strtotime($employee->terminationDate));
+																}
+													?>
+														<input type="text" readonly="readonly" class="form-control" value="{{$employee->terminationDate}}">
+													</div>
+												</div>
 											</div>								
 										</div>
 										<div class="space"></div>

@@ -61,6 +61,13 @@
 				&nbsp; &nbsp; &nbsp;  SERVICE LOGS &nbsp; &nbsp; &nbsp; 
 			</button>
 			</a>
+			<?php } if(in_array(454, $jobs)){?>
+			<a href="viewpendingservicelogs">
+			<button>
+				<i class="ace-icon fa fa-pencil-square-o bigger-300"></i><BR/>
+				&nbsp; &nbsp; &nbsp;  VIEW PENDING SERVICE LOGS &nbsp; &nbsp; &nbsp; 
+			</button>
+			</a>
 			<?php } if(in_array(455, $jobs)){?>
 			<a href="incometransactions?type=contracts">
 			<button>

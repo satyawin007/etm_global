@@ -343,13 +343,13 @@
 				$("#id1").val(id);		
 			}
 
-			function modalEditFuelStation(name,paymentType,PaymentExpectedDay,bankAccount,accountNo,cityId,stateId,status,balanceAmount,id){
+			function modalEditFuelStation(name, balanceAmount, depoamt, paymentType,  pmtdate, cityId, stateId, status,  id){
 				$("#fuelstationname1").val(name);				
 				$("#balanceamount1").val(balanceAmount);
-				$("#bankaccount1 option").each(function() { this.selected = (this.text == bankAccount); });
-				$("#paymenttype1 option").each(function() { this.selected = (this.text == paymentType); });
-				$("#paymentexpectedday1").val(PaymentExpectedDay);
-				$("#statename1 option").each(function() { this.selected = (this.text == stateId); });
+				$("#securitydepositamount1").val(depoamt);
+				$("#securitypaymentdate1").val(pmtdate);
+				$("#securitypaymenttype1 option").each(function() { this.selected = (this.value == paymentType); });
+				$("#statename1 option").each(function() {this.selected = (this.text == stateId); });
 				$("#cityname1 option").each(function() { this.selected = (this.text == cityId); });
 				$("#status1 option").each(function() { this.selected = (this.text == status); });
 				$("#id1").val(id);		

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
 use settings\AppSettingsController;
+use masters\OfficeBranchController;
 class ReportsController extends \Controller {
 
 	
@@ -168,6 +169,12 @@ class ReportsController extends \Controller {
 		}
 		if(isset($values["reporttype"]) && $values["reporttype"] == "estimatedsalary"){
 			return $this->getEstimateSalaryReport($values);
+		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "attendence"){
+			return $this->getAttendenceReport($values);
+		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "attendencedetailed"){
+			return $this->getAttendenceDetailedReport($values);
 		}
 		if(isset($values["reporttype"]) && $values["reporttype"] == "inchargetransactions"){
 			return $this->getInchargeTransactionsReport($values);
@@ -418,18 +425,52 @@ class ReportsController extends \Controller {
 				}
 			}
 			else if($values["btntype"] == "txn_details"){
+				$employee_name = "";
+				if($empId>0){
+					$employee_name = \Employee::where("id","=",$empId)->first();
+					$employee_name = $employee_name->fullName;
+				}
+				
 				DB::statement(DB::raw("CALL daily_transactions_report('".$frmDt."', '".$toDt."');"));
 				if($brachId == 0 && $reportFor=="0"){
-					$recs = DB::select( DB::raw("select * from temp_daily_transaction order by branchId"));
+					if($empId>0){
+						$recs = DB::select( DB::raw("select * from temp_daily_transaction where createdBy='".$employee_name."' order by branchId"));
+					}
+					else{
+						$recs = DB::select( DB::raw("select * from temp_daily_transaction order by branchId"));
+					}
 				}
 				else if($brachId > 0 && $reportFor=="0"){
-					$recs = DB::select( DB::raw("select * from temp_daily_transaction where branchId=".$brachId." order by branchId"));
+					if($empId>0){
+						$recs = DB::select( DB::raw("select * from temp_daily_transaction where branchId=".$brachId." and createdBy='".$employee_name."' order by branchId"));
+					}
+					else{
+						$recs = DB::select( DB::raw("select * from temp_daily_transaction where branchId=".$brachId." order by branchId"));
+					}
 				}
 				else if($brachId > 0 && $reportFor != "0"){
-					$recs = DB::select( DB::raw("select * from temp_daily_transaction where branchId=".$brachId." and name='".$reportFor."' order by branchId"));
+					if($empId>0){
+						$recs = DB::select( DB::raw("select * from temp_daily_transaction where branchId=".$brachId." and name='".$reportFor."' and createdBy='".$employee_name."' order by branchId"));
+					}
+					else{
+						$recs = DB::select( DB::raw("select * from temp_daily_transaction where branchId=".$brachId." and name='".$reportFor."' order by branchId"));
+					}
+				}
+				else if($brachId > 0 && $reportFor != "0"){
+					if($empId>0){
+						$recs = DB::select( DB::raw("select * from temp_daily_transaction where branchId=".$brachId." and name='".$reportFor."' and createdBy='".$employee_name."' order by branchId"));
+					}
+					else{
+						$recs = DB::select( DB::raw("select * from temp_daily_transaction where branchId=".$brachId." and name='".$reportFor."' and createdBy='".$employee_name."' order by branchId"));
+					}
 				}
 				else if($brachId == 0 && $reportFor != "0"){
-					$recs = DB::select( DB::raw("select * from temp_daily_transaction where  name='".$reportFor."' order by branchId"));
+					if($empId>0){
+						$recs = DB::select( DB::raw("select * from temp_daily_transaction where  name='".$reportFor."' order by branchId"));
+					}
+					else {
+						$recs = DB::select( DB::raw("select * from temp_daily_transaction where  name='".$reportFor."' order by branchId"));
+					}
 				}
 				if(count($recs)>0) {
 					$totalAmt = 0;
@@ -945,10 +986,10 @@ class ReportsController extends \Controller {
 			$mons = array(1 => "JANUARY", 2 => "FEBRUARY", 3 => "MARCH", 4 => "APRIL", 5 => "MAY", 6 => "JUNE", 7 => "JULY", 8 => "AUGUST", 9 => "SEPTEMBER", 10 => "OCTOBER", 11 => "NOVEMBER", 12 => "DECEMBER");
 			if(true){
 				if($values["loan"] == "0"){
-					$sql = 'SELECT date, financecompanies.name, loans.vehicleId, loans.agmtDate, loans.installmentAmount, loans.totalInstallments, loans.paidInstallments, loans.paymentType, loans.bankAccountId, concat(bankdetails.bankName," - ",bankdetails.accountNo) as bankName,loans.loanNo, loans.id as loanId, expensetransactions.remarks as remarks FROM `expensetransactions` join loans on loans.id=expensetransactions.entityValue join financecompanies on financecompanies.id=loans.financeCompanyId join bankdetails on bankdetails.id=loans.bankAccountId where entity="LOAN PAYMENT" and date between "'.$frmDt.'" and "'.$toDt.'" order by date;';
+					$sql = 'SELECT date, financecompanies.name, loans.vehicleId, loans.agmtDate, loans.installmentAmount, loans.totalInstallments, loans.paidInstallments, expensetransactions.paymentType, expensetransactions.amount, loans.bankAccountId, concat(bankdetails.bankName," - ",bankdetails.accountNo) as bankName,loans.loanNo, loans.id as loanId, expensetransactions.remarks as remarks FROM `expensetransactions` left join loans on loans.id=expensetransactions.entityValue left join financecompanies on financecompanies.id=loans.financeCompanyId left join bankdetails on bankdetails.id=loans.bankAccountId where entity="LOAN PAYMENT" and date between "'.$frmDt.'" and "'.$toDt.'" order by date;';
 				}
 				else if($values["loan"] > 0){
-					$sql = 'SELECT date, financecompanies.name, loans.vehicleId, loans.agmtDate, loans.installmentAmount, loans.totalInstallments, loans.paidInstallments, loans.paymentType, loans.bankAccountId, concat(bankdetails.bankName," - ",bankdetails.accountNo) as bankName,loans.loanNo, loans.id as loanId, expensetransactions.remarks as remarks FROM `expensetransactions` join loans on loans.id=expensetransactions.entityValue join financecompanies on financecompanies.id=loans.financeCompanyId join bankdetails on bankdetails.id=loans.bankAccountId where loans.id='.$values["loan"].' and entity="LOAN PAYMENT" and date between "'.$frmDt.'" and "'.$toDt.'" order by date;';
+					$sql = 'SELECT date, financecompanies.name, loans.vehicleId, loans.agmtDate, loans.installmentAmount, loans.totalInstallments, loans.paidInstallments, expensetransactions.paymentType, expensetransactions.amount, loans.bankAccountId, concat(bankdetails.bankName," - ",bankdetails.accountNo) as bankName,loans.loanNo, loans.id as loanId, expensetransactions.remarks as remarks FROM `expensetransactions` left join loans on loans.id=expensetransactions.entityValue left join financecompanies on financecompanies.id=loans.financeCompanyId left join bankdetails on bankdetails.id=loans.bankAccountId where loans.id='.$values["loan"].' and entity="LOAN PAYMENT" and date between "'.$frmDt.'" and "'.$toDt.'" order by date;';
 				}
 				$recs = DB::select( DB::raw($sql));
 				foreach ($recs as $rec){
@@ -974,6 +1015,7 @@ class ReportsController extends \Controller {
 					$endyear = date("Y", strtotime($endDate));
 					$row["emiperiod"] = $month_name.", ".$year." - ".$endmonth_name.", ".$endyear;
 					$row["emiamt"] = sprintf('%0.2f', $rec->installmentAmount);
+					$row["amount"] = sprintf('%0.2f', $rec->amount);
 					
 					$sql = 'select count(*) as cnt from expensetransactions where entity="LoAN PAYMENT" and entityValue='.$rec->loanId.' and date BETWEEN "'.$rec->agmtDate.'" and "'.$rec->date.'";';
 					$rec1 = DB::select( DB::raw($sql));
@@ -1083,7 +1125,14 @@ class ReportsController extends \Controller {
 			$totaladvances = 0;
 			$totalreturns  = 0;
 			if(true){
-				$sql = 'SELECT date, expensetransactions.amount, financecompanies.name, loans.amountFinanced, loans.vehicleId, loans.agmtDate, loans.installmentAmount, loans.totalInstallments, loans.paidInstallments, loans.paymentType, loans.bankAccountId, concat(bankdetails.bankName," - ",bankdetails.accountNo) as bankName,loans.loanNo, loans.id as loanId, expensetransactions.remarks as remarks FROM `expensetransactions` join loans on loans.id=expensetransactions.entityValue join financecompanies on financecompanies.id=loans.financeCompanyId join bankdetails on bankdetails.id=loans.bankAccountId where entity="DAILY FINANCE PAYMENT" and date between "'.$frmDt.'" and "'.$frmDt.'" order by date;';
+				$sql = 'SELECT date, expensetransactions.amount, financecompanies.name, loans.amountFinanced,  
+						loans.agmtDate, loans.installmentAmount, loans.totalInstallments, loans.paidInstallments, 
+						loans.paymentType, loans.bankAccountId, concat(bankdetails.bankName," - ",bankdetails.accountNo) as bankName,
+						loans.id as loanId, expensetransactions.remarks as remarks FROM `expensetransactions` 
+						left join dailyfinances as loans on loans.id=expensetransactions.entityValue 
+						left join financecompanies on financecompanies.id=loans.financeCompanyId 
+						left join bankdetails on bankdetails.id=loans.bankAccountId 
+						where entity="DAILY FINANCE PAYMENT" and date between "'.$frmDt.'" and "'.$frmDt.'" order by date;';
 				$recs = DB::select( DB::raw($sql));
 				foreach ($recs as $rec){
 					$row = array();
@@ -1093,7 +1142,7 @@ class ReportsController extends \Controller {
 					$endDate = strtotime(date("Y-m-d", strtotime($Date)) . " +".$rec->totalInstallments." day");
 					$endDate = date ( 'Y-m-d' , $endDate );
 
-					$sql = 'select sum(amount) as amt from expensetransactions where entity="LoAN PAYMENT" and status="ACTIVE" and entityValue='.$rec->loanId.' and date BETWEEN "'.$rec->agmtDate.'" and "'.$frmDt.'";';
+					$sql = 'select sum(amount) as amt from expensetransactions where  entity="DAILY FINANCE PAYMENT" and status="ACTIVE" and entityValue='.$rec->loanId.' and date BETWEEN "'.$rec->agmtDate.'" and "'.$frmDt.'";';
 					$rec1 = DB::select( DB::raw($sql));
 					$rec1 = $rec1[0];
 					$totalamnt = $rec1->amt;
@@ -2018,10 +2067,8 @@ class ReportsController extends \Controller {
 			$total_amount = 0;
 			if(isset($values["employeetype"]) && $values["employeetype"]=="OFFICE"){
 				if(true){
-					$entities = \Employee::where("roleId","!=",19)
-											->where("roleId","!=",20)
-											->where("officeBranchId","=",$values["officebranch"])
-											->where("status","=","ACTIVE")->get();
+					$entities = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")
+												  ->get();
 					foreach ($entities as $entity){
 						$row = array();
 						$branch = \OfficeBranch::where("id","=",$values["officebranch"])->first();
@@ -2043,15 +2090,22 @@ class ReportsController extends \Controller {
 						foreach ($recs as $rec){
 							$leaves = $rec->cnt;
 							$leaves = $leaves/2;
+							$after_leaves = $leaves;
+							$after_leaves = $leaves-$values["casualleaves"];
+							if($after_leaves<0){
+								$after_leaves = 0;
+							}
 							
 							$date1=date_create($fromdt);
 							$date2=date_create($todt);
 							$diff=date_diff($date1,$date2);
 							$working_days =  $diff->format("%a");
-							$leaves_amt = ($salary_amt/$working_days)*$leaves;
+							$working_days = $working_days+1;
+							$leaves_amt = ($salary_amt/$working_days)*$after_leaves;
 							$leaves_amt = intval($leaves_amt);
 						}
 						$row["leaves"] = $leaves;
+						$row["appliedleaves"] = $after_leaves;
 						$row["leave_amount"] = $leaves_amt;
 						
 						$due_amt = "0.00";
@@ -2075,7 +2129,7 @@ class ReportsController extends \Controller {
 					$entities = DB::select( DB::raw("select * from temp_contract_drivers_helpers group by id"));
 					foreach ($entities as $entity){
 						$row = array();
-						$depot = \depot::where("id","=",$values["depot"])->first();
+						$depot = \Depot::where("id","=",$values["depot"])->first();
 						$clientname = \Client::where("id","=",$values["clientname"])->first();
 						$row["branch"] = $depot->name." (".$clientname->name.")";
 						$row["employee"] = $entity->fullName." - ".$entity->empCode;
@@ -2095,15 +2149,22 @@ class ReportsController extends \Controller {
 						foreach ($recs as $rec){
 							$leaves = $rec->cnt;
 							$leaves = $leaves/2;
-								
+							$after_leaves = $leaves;
+							$after_leaves = $leaves-$values["casualleaves"];
+							if($after_leaves<0){
+								$after_leaves = 0;
+							}
+							
 							$date1=date_create($fromdt);
 							$date2=date_create($todt);
 							$diff=date_diff($date1,$date2);
 							$working_days =  $diff->format("%a");
-							$leaves_amt = ($salary_amt/$working_days)*$leaves;
+							$working_days = $working_days+1;
+							$leaves_amt = ($salary_amt/$working_days)*$after_leaves;
 							$leaves_amt = intval($leaves_amt);
 						}
 						$row["leaves"] = $leaves;
+						$row["appliedleaves"] = $after_leaves;
 						$row["leave_amount"] = $leaves_amt;
 			
 						$due_amt = "0.00";
@@ -2122,7 +2183,7 @@ class ReportsController extends \Controller {
 				}
 			}
 			$row = array();
-			$row["1"] = ""; $row["2"] = "";  $row["3"] = ""; $row["4"] = ""; $row["5"] = ""; $row["amt"] = "TOTAL ESTIMATED AMOUNT";
+			$row["1"] = ""; $row["2"] = "";  $row["3"] = ""; $row["4"] = ""; $row["5"] = ""; $row["6"] = ""; $row["amt"] = "TOTAL ESTIMATED AMOUNT";
 			$row["total_amt"] = $total_amount;
 			$resp[] = $row;
 			echo json_encode($resp);
@@ -2157,12 +2218,192 @@ class ReportsController extends \Controller {
 			$branch_arr[$branch->id] = $branch->name;
 		}
 		
-		$clients =  \Client::all();
+		$clients =  \Client::where("status","=","ACTIVE")->get();
 		$clients_arr = array();
 		foreach ($clients as $client){
 			$clients_arr[$client['id']] = $client['name'];
 		}
 		
+		$report_type_arr = array();
+		$form_field = array("name"=>"employeetype", "content"=>"employee type", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"enableClientDepot(this.value);"),  "options"=>array("OFFICE"=>"OFFICE", "CLIENT BRANCH"=>"CLIENT BRANCH"), "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"officebranch", "content"=>"office branch", "readonly"=>"","required"=>"", "type"=>"select", "options"=>$branch_arr, "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"casualleaves", "value"=>2, "content"=>"casual leaves", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+	
+		$add_form_fields = array();
+		$form_info["form_fields"] = $form_fields;
+		$form_info["add_form_fields"] = $add_form_fields;
+		$values["form_info"] = $form_info;
+		$values["provider"] = "bankdetails";
+		return View::make('reports.estimatesalaryreport', array("values"=>$values));
+	}
+	
+	private function getAttendenceReport($values){
+		if (\Request::isMethod('post'))
+		{
+			
+			$fromDt = date("Y-m-d", strtotime($values["fromdate"]));
+			$toDt = date("Y-m-d", strtotime($values["todate"]));
+			$resp = array();
+			$total_amount = 0;
+			if(isset($values["employeetype"]) && $values["employeetype"]=="OFFICE"){
+				$select_args = array();
+				$select_args[] = "officebranch.name as branch";
+				$select_args[] = "attendence_log.date as date";
+				$select_args[] = "attendence_log.time as time";
+				$select_args[] = "attendence_log.session as session";
+				$select_args[] = "attendence_log.day as day";
+				$select_args[] = "attendence_log.day as day";
+				$select_args[] = "attendence_log.day as day";
+				$select_args[] = "employee.fullName as name";
+				
+				$employees_arr = array();
+				$employees = \Employee::whereRaw("employee.status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->get();
+				foreach($employees as $employee){
+					$employees_arr[$employee->id] = $employee->fullName." (".$employee->empCode.")";
+				}
+				if(true){
+					$tot_emps = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->count();
+					
+					$entities = \AttendenceLog::where("attendence_log.officeBranchId","=",$values["officebranch"])
+									->join("officebranch","officebranch.id","=","attendence_log.officeBranchId")
+									->join("employee","employee.id","=","attendence_log.createdBy")
+									->whereBetween("date",array($fromDt,$toDt))
+									->where("attendence_log.status","=","ACTIVE")
+									->select($select_args)->orderBy("date")->get();
+					foreach ($entities as $entity){
+						$row = array();
+						$row["branch"] = $entity->branch;
+						$row["date"] = date("d-m-Y", strtotime($entity->date));
+						$row["time"] = $entity->time;
+						$row["session"] = $entity->session;
+						$row["day"] = $entity->day;
+						
+						$absenties_str = "";
+						$cnt = 0;
+						$absenties = \Attendence::where("date","=",$entity->date)
+										->where("session","=",$entity->session)
+										->where("attendenceStatus","=","A")
+										->get();
+						foreach($absenties as $absentee){
+							 if(isset($employees_arr[$absentee->empId])){
+							 	$cnt++;
+							 	$absenties_str = $employees_arr[$absentee->empId].", ".$absenties_str;
+							 }
+						}
+						$row["cnt1"] = count($employees_arr)-$cnt;
+						$row["cnt2"] = "Total Absentees : ".$cnt."<br/> ".$absenties_str;
+						$row["createdby"] = $entity->name;
+						$resp[] = $row;
+					}
+				}
+			}
+			if(isset($values["employeetype"]) && $values["employeetype"]=="CLIENT BRANCH"){
+				if(true){
+					$select_args = array();
+					$select_args[] = "clients.name as clientname";
+					$select_args[] = "depots.name as depotname";
+					$select_args[] = "attendence_log.date as date";
+					$select_args[] = "attendence_log.time as time";
+					$select_args[] = "attendence_log.session as session";
+					$select_args[] = "attendence_log.day as day";
+					$select_args[] = "attendence_log.day as day";
+					$select_args[] = "attendence_log.day as day";
+					$select_args[] = "employee.fullName as name";
+					
+					
+					$employees_arr = array();
+					\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+					$employees = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
+					$tot_emps = count($employees);
+					foreach($employees as $employee){
+						$employees_arr[$employee->id] = $employee->fullName." (".$employee->empCode.")";
+					}
+					if(true){
+						$entities = \AttendenceLog::where("attendence_log.clientId","=",$values["clientname"])
+										->where("attendence_log.depotId","=",$values["depot"])
+										->leftjoin("clients","clients.id","=","attendence_log.clientId")
+										->leftjoin("depots","depots.id","=","attendence_log.depotId")
+										->leftjoin("employee","employee.id","=","attendence_log.createdBy")
+										->whereBetween("date",array($fromDt,$toDt))
+										->where("attendence_log.status","=","ACTIVE")
+										->select($select_args)->orderBy("date")->get();
+						foreach ($entities as $entity){
+							$row = array();
+							$row["branch"] = $entity->depotname." (".$entity->clientname.")";
+							$row["date"] = date("d-m-Y", strtotime($entity->date));
+							$row["time"] = $entity->time;
+							$row["session"] = $entity->session;
+							$row["day"] = $entity->day;
+							
+							$absenties_str = "";
+							$cnt = 0;
+							$absenties = \Attendence::where("date","=",$entity->date)
+											->where("session","=",$entity->session)
+											->where("attendenceStatus","=","A")
+											->get();
+							foreach($absenties as $absentee){
+								 if(isset($employees_arr[$absentee->empId])){
+								 	$cnt++;
+								 	$absenties_str = $employees_arr[$absentee->empId].", ".$absenties_str;
+								 }
+							}
+							$row["cnt1"] = count($employees_arr)-$cnt;
+							$row["cnt2"] = "Total Absentees : ".$cnt."<br/> ".$absenties_str;
+							$row["createdby"] = $entity->name;
+							$resp[] = $row;
+						}
+					}
+				}
+			}
+			echo json_encode($resp);
+			return;
+		}
+		$values['bredcum'] = strtoupper($values["reporttype"]);
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'getreport';
+		$values['form_action'] = 'getreport';
+		$values['action_val'] = '';
+		$theads = array('Bank Name','Branch Name', "Account Name", "Account No", "Account Type");
+		$values["theads"] = $theads;
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "bankdetails";
+		$form_info["bredcum"] = "add bank details";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+		$form_fields = array();
+		$select_args = array();
+		$select_args[] = "fuelstationdetails.id as id";
+		$select_args[] = "fuelstationdetails.name as fname";
+		$select_args[] = "cities.name as cname";
+	
+		$branch_arr = array();
+		$branches = \OfficeBranch::where("status","=","ACTIVE")->get();
+		foreach ($branches as $branch){
+			$branch_arr[$branch->id] = $branch->name;
+		}
+	
+		$clients =  \Client::where("status","=","ACTIVE")->get();
+		$clients_arr = array();
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+	
 		$report_type_arr = array();
 		$form_field = array("name"=>"employeetype", "content"=>"employee type", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"enableClientDepot(this.value);"),  "options"=>array("OFFICE"=>"OFFICE", "CLIENT BRANCH"=>"CLIENT BRANCH"), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
@@ -2182,7 +2423,221 @@ class ReportsController extends \Controller {
 		$form_info["add_form_fields"] = $add_form_fields;
 		$values["form_info"] = $form_info;
 		$values["provider"] = "bankdetails";
-		return View::make('reports.estimatesalaryreport', array("values"=>$values));
+		return View::make('reports.attendencereport', array("values"=>$values));
+	}
+	
+	private function getAttendenceDetailedReport($values){
+		if (\Request::isMethod('post'))
+		{
+			$fromDt = date("Y-m-d", strtotime($values["fromdate"]));
+			$toDt = date("Y-m-d", strtotime($values["todate"]));
+			$resp = array();
+			
+			//$values["DSF"];
+			$data = array();
+			$select_args = array("employee.id", "employee.fullName", "employee.empCode", "employee.joiningDate", "employee.terminationDate");
+			
+			$entities = null;
+			if($values["employeetype"] == "CLIENT BRANCH"){
+				\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+				$entities = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
+			}
+			else{
+				$entities = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")
+						->select($select_args)->get();
+			}
+			
+			//$entities = $entities->toArray();
+			foreach($entities as $entity){
+				$data_values = array();
+				$data_values[] = $entity->fullName."(".$entity->empCode.")";
+				$date = date_create($fromDt);
+				$today = date_create($toDt);
+				$diff = date_diff($date,$today);
+				$diff =  $diff->format("%a");
+					
+				$emptype ="office";
+				if($values["employeetype"] == "CLIENT BRANCH"){
+					$emptype = "driver";
+				}
+				$total_absent_days = 0; 
+					
+				for($i=0; $i<=$diff; $i++){
+					$date1 = strtotime(date("Y-m-d",strtotime($entity->joiningDate)));
+					$date2 = strtotime(date("Y-m-d",strtotime(date_format($date, 'Y-m-d'))));
+					$date3 = strtotime(date('Y-m-01'));
+			
+					if($date1>$date2){
+						$date = date_add($date, date_interval_create_from_date_string('1 days'));
+						$data_values[] = "";
+						continue;
+					}
+					$date1 = strtotime(date("Y-m-d",strtotime($entity->terminationDate)));
+					$date2 = strtotime(date("Y-m-d",strtotime(date_format($date, 'Y-m-d'))));
+			
+					if($entity->terminationDate!="" && $entity->terminationDate!="0000-00-00" && $date1 != "1970-01-01" && $date1<$date2){
+						$date = date_add($date, date_interval_create_from_date_string('1 days'));
+						$data_values[] = "";
+						continue;
+					}
+					$isHoliday = false;
+					$qry = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'));
+					if($values["employeetype"] == "CLIENT BRANCH"){
+						$qry->where("depotId","=",$values["depot"])->where("clientId","=",$values["clientname"]);
+					}
+					else{
+						$qry->where("officeBranchId","=",$values["officebranch"]);
+					}
+					$at_log = 	$qry->where("day","=","HOLIDAY")->where("session","=","MORNING")->get();
+					if(count($at_log)>0){
+						$isHoliday = true;
+					}
+					$session_val = "&nbsp;&nbsp;";
+					$emp = \Attendence::where("empId","=",$entity->id)->where("session","=","MORNING")->where("date","=",date("Y-m-d", strtotime(date_format($date, 'd-m-Y'))))->get();
+					if(count($emp)>0){
+						$emp = $emp[0];
+						if($emp->day=="HOLIDAY" || $isHoliday){
+							$session_val =  "&nbsp;&nbsp;<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>";
+						}
+						else{
+							$session_val =  "&nbsp;&nbsp;<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>";
+						}
+						if($emp["attendenceStatus"]=="A"){
+							$total_absent_days = $total_absent_days+.5;
+						}
+					}
+					else{
+						$qry = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'));
+						if($values["employeetype"] == "CLIENT BRANCH"){
+							$qry->where("depotId","=",$values["depot"])->where("clientId","=",$values["clientname"]);
+						}
+						else{
+							$qry->where("officeBranchId","=",$values["officebranch"]);
+						}
+						$at_log = 	$qry->get();
+						if(count($at_log)>0){
+							if($isHoliday){
+								$session_val =  "&nbsp;&nbsp;<span style='font-weight:bold; color:red'>H</span>";
+							}
+							else{
+								$session_val =  "&nbsp;&nbsp;<span style='font-weight:bold; color:green'>P</span>";
+							}
+						}
+						else{
+							$session_val = "&nbsp;&nbsp;";
+						}
+					}
+					$isHoliday = false;
+					$qry = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'));
+					if($values["employeetype"] == "CLIENT BRANCH"){
+						$qry->where("depotId","=",$values["depot"])->where("clientId","=",$values["clientname"]);
+					}
+					else{
+						$qry->where("officeBranchId","=",$values["officebranch"]);
+					}
+					$at_log = 	$qry->where("day","=","HOLIDAY")->where("session","=","AFTERNOON")->get();
+					if(count($at_log)>0){
+						$isHoliday = true;
+					}
+					$emp = \Attendence::where("empId","=",$entity->id)->where("session","=","AFTERNOON")->where("date","=",date("Y-m-d", strtotime(date_format($date, 'd-m-Y'))))->get();
+					if(count($emp)>0){
+						$emp = $emp[0];
+						if($emp->day=="HOLIDAY" || $isHoliday){
+							$session_val =  $session_val." | "."<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>";
+						}
+						else{
+							$session_val =  $session_val." | "."<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>";
+						}
+						if($emp["attendenceStatus"]=="A"){
+							$total_absent_days = $total_absent_days+.5;
+						}
+					}
+					else{
+						$qry = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'));
+						if($values["employeetype"] == "CLIENT BRANCH"){
+							$qry->where("depotId","=",$values["depot"])->where("clientId","=",$values["clientname"]);
+						}
+						else{
+							$qry->where("officeBranchId","=",$values["officebranch"]);
+						}
+						$at_log = 	$qry->get();
+						if(count($at_log)>0){
+							if($isHoliday){
+								$session_val =  $session_val." | "."<span style='font-weight:bold; color:red'>H</span>";
+							}
+							else{
+								$session_val =  $session_val." | "."<span style='font-weight:bold; color:green'>P</span>";
+							}
+						}
+						else{
+							$session_val =  $session_val."";
+						}
+					}
+					$data_values[] = $session_val;
+					$date = date_add($date, date_interval_create_from_date_string('1 days'));
+				}
+				$data_values[] = $total_absent_days;
+				$data[] = $data_values;
+			}
+			
+			echo json_encode($data);
+			return;
+		}
+		$values['bredcum'] = strtoupper($values["reporttype"]);
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'getreport';
+		$values['form_action'] = 'getreport';
+		$values['action_val'] = '';
+		$theads = array('Bank Name','Branch Name', "Account Name", "Account No", "Account Type");
+		$values["theads"] = $theads;
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "bankdetails";
+		$form_info["bredcum"] = "add bank details";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+		$form_fields = array();
+		$select_args = array();
+		$select_args[] = "fuelstationdetails.id as id";
+		$select_args[] = "fuelstationdetails.name as fname";
+		$select_args[] = "cities.name as cname";
+	
+		$branch_arr = array();
+		$branches = \OfficeBranch::where("status","=","ACTIVE")->get();
+		foreach ($branches as $branch){
+			$branch_arr[$branch->id] = $branch->name;
+		}
+	
+		$clients =  \Client::where("status","=","ACTIVE")->get();
+		$clients_arr = array();
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+	
+		$report_type_arr = array();
+		$form_field = array("name"=>"employeetype", "content"=>"employee type", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"enableClientDepot(this.value);"),  "options"=>array("OFFICE"=>"OFFICE", "CLIENT BRANCH"=>"CLIENT BRANCH"), "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"officebranch", "content"=>"office branch", "readonly"=>"","required"=>"", "type"=>"select", "options"=>$branch_arr, "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+	
+		$add_form_fields = array();
+		$form_info["form_fields"] = $form_fields;
+		$form_info["add_form_fields"] = $add_form_fields;
+		$values["form_info"] = $form_info;
+		$values["provider"] = "bankdetails";
+		return View::make('reports.attendencedetailedreport', array("values"=>$values));
 	}
 	
 	private function getSalaryReport($values){
@@ -2208,7 +2663,7 @@ class ReportsController extends \Controller {
 				
 			if(isset($values["typeofreport"]) && $values["typeofreport"]=="branch_wise_salary_report"){
 				if($values["paidfrombranch"] == "0"){
-					$sql = "SELECT officebranch.name as branch, sum(actualSalary) as actualSalary, sum(dueDeductions) as dueDeductions, sum(leaveDeductions) as leaveDeductions, sum(pf) as pf, sum(esi) as esi, sum(salaryPaid) as salaryPaid from empsalarytransactions left join officebranch on officebranch.id=empsalarytransactions.branchId where paymentDate BETWEEN '".$frmDt."' and '".$toDt."' group by branchId";
+					$sql = "SELECT officebranch.name as branch, sum(actualSalary) as actualSalary, sum(dueDeductions) as dueDeductions, sum(leaveDeductions) as leaveDeductions, sum(pf) as pf, sum(esi) as esi, sum(otherAmount) as other_amount, sum(salaryPaid) as salaryPaid from empsalarytransactions left join officebranch on officebranch.id=empsalarytransactions.branchId where paymentDate BETWEEN '".$frmDt."' and '".$toDt."' group by branchId";
 					$salarytransactions =  \DB::select(DB::raw($sql));
 					foreach ($salarytransactions as $salarytransaction){
 						$row = array();
@@ -2216,6 +2671,7 @@ class ReportsController extends \Controller {
 						$row["actualSalary"] = $salarytransaction->actualSalary;
 						$row["dueDeductions"] = $salarytransaction->dueDeductions;
 						$row["leaveDeductions"] = $salarytransaction->leaveDeductions;
+						$row["other_amount"] = $salarytransaction->other_amount;
 						$row["pf"] = $salarytransaction->pf;
 						$row["esi"] = $salarytransaction->esi;
 						$row["salaryPaid"] = $salarytransaction->salaryPaid;
@@ -2229,7 +2685,7 @@ class ReportsController extends \Controller {
 					}
 				}
 				else if($values["paidfrombranch"]>0){
-					$sql = "SELECT officebranch.name as branch, sum(actualSalary) as actualSalary, sum(dueDeductions) as dueDeductions, sum(leaveDeductions) as leaveDeductions, sum(pf) as pf, sum(esi) as esi, sum(salaryPaid) as salaryPaid from empsalarytransactions left join officebranch on officebranch.id=empsalarytransactions.branchId where branchId= ".$values["paidfrombranch"]." and paymentDate BETWEEN '".$frmDt."' and '".$toDt."' group by branchId";
+					$sql = "SELECT officebranch.name as branch, sum(actualSalary) as actualSalary, sum(dueDeductions) as dueDeductions, sum(leaveDeductions) as leaveDeductions, sum(pf) as pf, sum(esi) as esi, sum(otherAmount) as other_amount, sum(salaryPaid) as salaryPaid from empsalarytransactions left join officebranch on officebranch.id=empsalarytransactions.branchId where branchId= ".$values["paidfrombranch"]." and paymentDate BETWEEN '".$frmDt."' and '".$toDt."' group by branchId";
 					$salarytransactions =  \DB::select(DB::raw($sql));
 					foreach ($salarytransactions as $salarytransaction){
 						$row = array();
@@ -2237,6 +2693,7 @@ class ReportsController extends \Controller {
 						$row["actualSalary"] = $salarytransaction->actualSalary;
 						$row["dueDeductions"] = $salarytransaction->dueDeductions;
 						$row["leaveDeductions"] = $salarytransaction->leaveDeductions;
+						$row["other_amount"] = $salarytransaction->other_amount;
 						$row["pf"] = $salarytransaction->pf;
 						$row["esi"] = $salarytransaction->esi;
 						$row["salaryPaid"] = $salarytransaction->salaryPaid;
@@ -2252,10 +2709,10 @@ class ReportsController extends \Controller {
 			}
 			if(isset($values["typeofreport"]) && $values["typeofreport"]=="bank_payment_report"){
 				if($values["paidfrombranch"] == "0"){
-					$sql = "SELECT officebranch.name as branch, employee.empCode as empId, employee.fullName as name, salaryMonth, paymentDate, (actualSalary) as actualSalary, (dueDeductions) as dueDeductions, (leaveDeductions) as leaveDeductions, (pf) as pf, (esi) as esi, (salaryPaid) as salaryPaid, empsalarytransactions.paymentType, empsalarytransactions.bankAccount, empsalarytransactions.accountNumber, empsalarytransactions.chequeNumber, empsalarytransactions.bankName, empsalarytransactions.accountNumber, empsalarytransactions.issueDate, empsalarytransactions.transactionDate from empsalarytransactions join employee on employee.id=empsalarytransactions.empId left join officebranch on officebranch.id=empsalarytransactions.branchId where paymentType != 'cash' and paymentDate BETWEEN '".$frmDt."' and '".$toDt."' order by branchId";
+					$sql = "SELECT officebranch.name as branch, employee.empCode as empId, employee.fullName as name, salaryMonth, paymentDate, (actualSalary) as actualSalary, (dueDeductions) as dueDeductions, (leaveDeductions) as leaveDeductions, (pf) as pf, (esi) as esi, sum(otherAmount) as other_amount, (salaryPaid) as salaryPaid, empsalarytransactions.paymentType, empsalarytransactions.bankAccount, empsalarytransactions.accountNumber, empsalarytransactions.chequeNumber, empsalarytransactions.bankName, empsalarytransactions.accountNumber, empsalarytransactions.issueDate, empsalarytransactions.transactionDate from empsalarytransactions join employee on employee.id=empsalarytransactions.empId left join officebranch on officebranch.id=empsalarytransactions.branchId where paymentType != 'cash' and paymentDate BETWEEN '".$frmDt."' and '".$toDt."' order by branchId";
 				}
 				else if($values["paidfrombranch"]>0){
-					$sql = "SELECT officebranch.name as branch, employee.empCode as empId, employee.fullName as name, salaryMonth, paymentDate, (actualSalary) as actualSalary, (dueDeductions) as dueDeductions, (leaveDeductions) as leaveDeductions, (pf) as pf, (esi) as esi, (salaryPaid) as salaryPaid, empsalarytransactions.paymentType, empsalarytransactions.bankAccount, empsalarytransactions.accountNumber, empsalarytransactions.chequeNumber, empsalarytransactions.bankName, empsalarytransactions.accountNumber, empsalarytransactions.issueDate, empsalarytransactions.transactionDate from empsalarytransactions join employee on employee.id=empsalarytransactions.empId left join officebranch on officebranch.id=empsalarytransactions.branchId where branchId=".$values["paidfrombranch"]." and paymentType != 'cash' and paymentDate BETWEEN '".$frmDt."' and '".$toDt."' order by branchId";
+					$sql = "SELECT officebranch.name as branch, employee.empCode as empId, employee.fullName as name, salaryMonth, paymentDate, (actualSalary) as actualSalary, (dueDeductions) as dueDeductions, (leaveDeductions) as leaveDeductions, (pf) as pf, (esi) as esi, sum(otherAmount) as other_amount, (salaryPaid) as salaryPaid, empsalarytransactions.paymentType, empsalarytransactions.bankAccount, empsalarytransactions.accountNumber, empsalarytransactions.chequeNumber, empsalarytransactions.bankName, empsalarytransactions.accountNumber, empsalarytransactions.issueDate, empsalarytransactions.transactionDate from empsalarytransactions join employee on employee.id=empsalarytransactions.empId left join officebranch on officebranch.id=empsalarytransactions.branchId where branchId=".$values["paidfrombranch"]." and paymentType != 'cash' and paymentDate BETWEEN '".$frmDt."' and '".$toDt."' order by branchId";
 				}
 				$salarytransactions =  \DB::select(DB::raw($sql));
 				foreach ($salarytransactions as $salarytransaction){
@@ -2294,6 +2751,7 @@ class ReportsController extends \Controller {
 					$row["actualSalary"] = $salarytransaction->actualSalary;
 					$row["dueDeductions"] = $salarytransaction->dueDeductions;
 					$row["leaveDeductions"] = $salarytransaction->leaveDeductions;
+					$row["other_amount"] = $salarytransaction->other_amount;
 					$row["pf"] = $salarytransaction->pf;
 					$row["esi"] = $salarytransaction->esi;
 					$row["salaryPaid"] = $salarytransaction->salaryPaid;
@@ -2302,7 +2760,7 @@ class ReportsController extends \Controller {
 			}
 			if(isset($values["typeofreport"]) && $values["typeofreport"]=="employee_wise_salary_report"){
 				if($values["employee"] == "0"){
-					$sql = "SELECT officebranch.name as branch, employee.empCode as empId, employee.fullName as name, salaryMonth, paymentDate, (actualSalary) as actualSalary, (dueDeductions) as dueDeductions, (leaveDeductions) as leaveDeductions, (pf) as pf, (esi) as esi, (salaryPaid) as salaryPaid from empsalarytransactions join employee on employee.id=empsalarytransactions.empId left join officebranch on officebranch.id=empsalarytransactions.branchId where paymentDate BETWEEN '".$frmDt."' and '".$toDt."' order by branchId";
+					$sql = "SELECT officebranch.name as branch, employee.empCode as empId, employee.fullName as name, salaryMonth, paymentDate, (actualSalary) as actualSalary, (dueDeductions) as dueDeductions, (leaveDeductions) as leaveDeductions, (pf) as pf, (esi) as esi, (otherAmount) as other_amount, (salaryPaid) as salaryPaid from empsalarytransactions join employee on employee.id=empsalarytransactions.empId left join officebranch on officebranch.id=empsalarytransactions.branchId where paymentDate BETWEEN '".$frmDt."' and '".$toDt."' order by branchId";
 					$salarytransactions =  \DB::select(DB::raw($sql));
 					foreach ($salarytransactions as $salarytransaction){
 						$row = array();
@@ -2314,6 +2772,7 @@ class ReportsController extends \Controller {
 						$row["actualSalary"] = $salarytransaction->actualSalary;
 						$row["dueDeductions"] = $salarytransaction->dueDeductions;
 						$row["leaveDeductions"] = $salarytransaction->leaveDeductions;
+						$row["other_amount"] = $salarytransaction->other_amount;
 						$row["pf"] = $salarytransaction->pf;
 						$row["esi"] = $salarytransaction->esi;
 						$row["salaryPaid"] = $salarytransaction->salaryPaid;
@@ -2321,24 +2780,164 @@ class ReportsController extends \Controller {
 					}
 				}
 				else if($values["employee"]>0){
-					$sql = "SELECT officebranch.name as branch, sum(actualSalary) as actualSalary, sum(dueDeductions) as dueDeductions, sum(leaveDeductions) as leaveDeductions, sum(pf) as pf, sum(esi) as esi, sum(salaryPaid) as salaryPaid from empsalarytransactions left join officebranch on officebranch.id=empsalarytransactions.branchId where empId= ".$values["employee"]." and paymentDate BETWEEN '".$frmDt."' and '".$toDt."'";
+					$sql = "SELECT officebranch.name as branch, employee.empCode as empId, employee.fullName as name, salaryMonth, paymentDate, (actualSalary) as actualSalary, (dueDeductions) as dueDeductions, (leaveDeductions) as leaveDeductions, (pf) as pf, (esi) as esi, (otherAmount) as other_amount, (salaryPaid) as salaryPaid from empsalarytransactions join employee on employee.id=empsalarytransactions.empId left join officebranch on officebranch.id=empsalarytransactions.branchId where employee.id=".$values["employee"]." and paymentDate BETWEEN '".$frmDt."' and '".$toDt."' order by branchId";
 					$salarytransactions =  \DB::select(DB::raw($sql));
 					foreach ($salarytransactions as $salarytransaction){
 						$row = array();
 						$row["branch"] = $salarytransaction->branch;
+						$row["empId"] = $salarytransaction->empId;
+						$row["name"] = $salarytransaction->name;
+						$row["salaryMonth"] = date("M",strtotime($salarytransaction->salaryMonth)).", ".date("Y",strtotime($salarytransaction->salaryMonth));
+						$row["paymentDate"] = date("d-m-Y",strtotime($salarytransaction->paymentDate));
 						$row["actualSalary"] = $salarytransaction->actualSalary;
 						$row["dueDeductions"] = $salarytransaction->dueDeductions;
 						$row["leaveDeductions"] = $salarytransaction->leaveDeductions;
+						$row["other_amount"] = $salarytransaction->other_amount;
 						$row["pf"] = $salarytransaction->pf;
 						$row["esi"] = $salarytransaction->esi;
 						$row["salaryPaid"] = $salarytransaction->salaryPaid;
 						$resp[] = $row;
-						$totalactsalary = $totalactsalary+$salarytransaction->actualSalary;
-						$totalduedeductions = $totalduedeductions+$salarytransaction->dueDeductions;
-						$totalleavedeductions = $totalleavedeductions+$salarytransaction->leaveDeductions;
-						$totalpf = $totalpf+$salarytransaction->pf;
-						$totalesi = $totalesi+$salarytransaction->esi;
-						$totalsalarypaid = $totalsalarypaid+$salarytransaction->salaryPaid;
+					}
+				}
+			}
+			if(isset($values["typeofreport"]) && $values["typeofreport"]=="detailed_salary_report"){
+				if(true){
+					  if(isset($values["employeetype"]) && $values["employeetype"]=="OFFICE"){
+						$entities = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->get();
+					  }
+					  else if(isset($values["employeetype"]) && $values["employeetype"]=="CLIENT BRANCH"){
+					  	DB::statement(DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+						$entities = DB::select( DB::raw("select * from temp_contract_drivers_helpers group by id"));
+					  }
+					  $i = 0;
+					  $roles_arr = array();
+					  $roles = \Role::All();
+					  foreach ($roles as $role){
+					  	$roles_arr[$role->id] = $role->roleName;
+					  }
+					  $fromdt = date("Y-m-d",strtotime($values["fromdate"]));
+					  $todt = date("Y-m-d",strtotime($values["todate"]));
+					  foreach($entities as $entity){
+					  	$row = array();
+					  	$br_name = "";
+					  	if(isset($values["employeetype"]) && $values["employeetype"]=="OFFICE"){
+						  	$off_br = \OfficeBranch::where("id","=",$values["officebranch"])->get();
+						  	if(count($off_br)>0){
+						  		$off_br = $off_br[0];
+						  		$br_name = $off_br->name;
+						  	}
+					  	}
+					  	else if(isset($values["employeetype"]) && $values["employeetype"]=="CLIENT BRANCH"){
+					  		$br_name = "FAD";
+					  	}
+					  	$row["branch"] = $br_name;
+					  	$row["employee"] = $entity->fullName." - ".$entity->empCode;
+					  	if($entity->roleId == 19){
+					  		$entity->roleId = "DRIVER";
+					  	}
+					  	else if($entity->roleId == 20){
+					  		$entity->roleId = "HELPER";
+					  	}
+					  	$dt_salary = 0;
+					  	$dt_allowance = 0;
+					  	$lt_salary = 0;
+					  	$deductions = 0;
+					  	$salaryMonth = $values["month"];
+					  	$noOfDays = date("t", strtotime($salaryMonth)) -1;
+					  	$startDate = $salaryMonth;
+					  	$endDate =  date('Y-m-d', strtotime($salaryMonth.'+ '.$noOfDays.' days'));
+					  	$recs = \SalaryTransactions::where("salaryMonth","=",$values["month"])->where("empId","=",$entity->id)->where("deleted","=","No")->get();
+					  	if(count($recs)>0){
+					  		$rec = $recs[0];
+							$salary_amt = 0;
+  							$salary = \SalaryDetails::where("empId","=",$entity->id)->get();
+  							if(count($salary)>0){
+  								$salary = $salary[0];
+  								$salary_amt = $salary->salary;
+							}
+  							$due_amt = "0.00";
+  							$recs1 = DB::select( DB::raw("SELECT SUM(`amount`) amt FROM `empdueamount` WHERE empId = ".$entity->id." and deleted='No'") );
+  							foreach ($recs1 as $rec1){
+  								$due_amt = $rec1->amt;
+  								if($due_amt == ""){
+  									$due_amt = "0.00";
+  								}
+							}
+							$leaves = 0;
+							$leaves_amt = 0;
+							$recs1 = DB::select( DB::raw($sql = "select count(*) as cnt from attendence where attendence.empId='".$entity->id."' and (attendenceStatus = 'A') and date between '$fromdt' and '$todt'") );
+							foreach ($recs1 as $rec1){
+								$leaves = $rec1->cnt;
+								$leaves = $leaves/2;
+								$after_leaves = $leaves;
+								$date1 = strtotime(date("Y-m-d",strtotime($entity->joiningDate)));
+								$date2 = strtotime(date("Y-m-d",strtotime($entity->terminationDate)));
+								$date3 = strtotime($fromdt);
+								$date4 = strtotime($todt);
+								if($date1>$date3 || ($entity->terminationDate!="" && $entity->terminationDate!="0000-00-00" && $date1 != "1970-01-01" &&  $date2<$date4)){
+									$after_leaves = $leaves;
+								}
+								else{
+									$after_leaves = $leaves-$rec->casualLeaves;
+								}
+								if($after_leaves<0){
+									$after_leaves = 0;
+								}
+								$date1=date_create($fromdt);
+								$date2=date_create($todt);
+								$diff=date_diff($date1,$date2);
+								$working_days =  $diff->format("%a");
+								$working_days = $working_days+1;
+								$leaves_amt = ($salary_amt/$working_days)*$after_leaves;
+								$leaves_amt = intval($leaves_amt);
+							}
+							
+							$total_days = 0;
+							$date1=date_create($fromdt);
+							$date2=date_create($todt);
+							$diff=date_diff($date1,$date2);
+							$total_days =  $diff->format("%a");
+							$total_days = $total_days+1;
+							
+							$casual_leaves = $rec->casualLeaves;
+							$late_joing_days = 0;
+							$early_erminated_days = 0;
+							$actual_working_days = $total_days;
+							$employee_working_days = $total_days-$leaves;
+							
+							$previous_salary = 0;
+							$increment = 0;
+							$salary_details = \SalaryDetails::where("empid","=",$entity->id)->Get();
+							if(count($salary_details)>0){
+								$salary_details = $salary_details[0];
+								$previous_salary = $salary_details->previousSalary;
+								$increment = $salary_details->increament;
+							}
+							if(isset($roles_arr[$entity->roleId])){
+								$entity->roleId = $roles_arr[$entity->roleId];
+							}
+							$row["designation"] = $entity->roleId;
+							$row["salary_month"] = strtoupper(date("M",strtotime($rec->salaryMonth)));
+							$row["paidDate"] = date("d-m-Y",strtotime($rec->paymentDate));
+							$row["joining_date"] = date("d-m-Y",strtotime($entity->joiningDate));
+							$row["actualSalary"] = $rec->actualSalary;
+							$row["total_days"] = $total_days;
+							$row["cas_leaves"] = $rec->casualLeaves;
+							$row["leaves"] = $leaves;
+							$row["early_erminated_days"] = $early_erminated_days;
+							$row["employee_working_days"] = $employee_working_days;
+							$row["dueDeductions"] = $rec->dueDeductions;
+							$row["leaveDeductions"] = $rec->leaveDeductions;
+							$row["otherAmount"] = $rec->otherAmount;
+							$row["previous_salary"] = $previous_salary;
+							$row["increment"] = $increment;
+							$row["increment_date"] = "00-00-0000";
+							$row["grosssalary"] = $rec->actualSalary;
+							$row["netsalary"] = $rec->salaryPaid;
+							$row["cardNumber"] = $rec->cardNumber;
+							$row["comments"] = $rec->comments;
+							$resp[] = $row;
+					  	}
 					}
 				}
 			}
@@ -2410,14 +3009,52 @@ class ReportsController extends \Controller {
 		foreach ($employees as $employee){
 			$employees_arr[$employee->id] = $employee->fullName." (".$employee->empCode.")";
 		}
+		
+		$branch_arr = array();
+		$branches = \OfficeBranch::where("status","=","ACTIVE")->get();
+		foreach ($branches as $branch){
+			$branch_arr[$branch->id] = $branch->name;
+		}
+		
+		$clients =  \Client::where("status","=","ACTIVE")->get();
+		$clients_arr = array();
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+		
+		$month_arr = array();
+		$month_arr[date('Y', strtotime('-1 year'))."-12-01"] = 'Dec '.date('Y', strtotime('-1 year'));
+		$month_arr[date('Y')."-01-01"] = 'Jan '.date('Y');
+		$month_arr[date('Y')."-02-01"] = 'Feb '.date('Y');
+		$month_arr[date('Y')."-03-01"] = 'March '.date('Y');
+		$month_arr[date('Y')."-04-01"] = 'April '.date('Y');
+		$month_arr[date('Y')."-05-01"] = 'May '.date('Y');
+		$month_arr[date('Y')."-06-01"] = 'June '.date('Y');
+		$month_arr[date('Y')."-07-01"] = 'July'.date('Y');
+		$month_arr[date('Y')."-08-01"] = 'Aug '.date('Y');
+		$month_arr[date('Y')."-09-01"] = 'Sep '.date('Y');
+		$month_arr[date('Y')."-10-01"] = 'Oct '.date('Y');
+		$month_arr[date('Y')."-11-01"] = 'Nov '.date('Y');
+		$month_arr[date('Y')."-12-01"] = 'Dec '.date('Y');
 	
 		$report_type_arr = array();
+		$report_type_arr["detailed_salary_report"] = "DETAILED SALARY REPORT";
 		$report_type_arr["branch_wise_salary_report"] = "BRANCH WISE SALARY REPORT";
 		$report_type_arr["employee_wise_salary_report"] = "EMPLOYEE WISE SALARY REPORT";
 		$report_type_arr["pf_report"] = "PF REPORT";
 		$report_type_arr["esi_report"] = "ESI REPORT";
 		$report_type_arr["bank_payment_report"] = "BANK PAYMENT REPORT";
 		$form_field = array("name"=>"typeofreport", "content"=>"type of report ", "readonly"=>"",  "required"=>"required","type"=>"select", "action"=>array("type"=>"onChange","script"=>"showSelectionType(this.value)"),  "options"=>$report_type_arr, "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"employeetype", "content"=>"employee type", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"enableClientDepot(this.value);"),  "options"=>array("OFFICE"=>"OFFICE", "CLIENT BRANCH"=>"CLIENT BRANCH"), "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"month", "value"=>"", "content"=>"salary month", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$month_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"officebranch", "content"=>"office branch", "readonly"=>"","required"=>"required", "type"=>"select", "options"=>$branch_arr, "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -2427,6 +3064,7 @@ class ReportsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
 		$form_fields[] = $form_field;
+		
 	
 		$add_form_fields = array();
 		$emps =  \Employee::where("roleId","=",19)->get();
@@ -2772,7 +3410,8 @@ class ReportsController extends \Controller {
 				$entity_text = "daily finance ";
 		$form_field = array("name"=>$entity_name, "content"=>$entity_text, "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$entity_arr);
 		$form_fields[] = $form_field;
-	
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
 	
 		$form_info["form_fields"] = $form_fields;
 		$values["form_info"] = $form_info;
@@ -3001,11 +3640,11 @@ class ReportsController extends \Controller {
 						}
 						$qry->join("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
 							->join("purchased_items","purchased_items.purchasedOrderId","=","purchase_orders.id")
-							->join("inventorylookupvalues","inventorylookupvalues.id","=","purchased_items.itemId")
+							->join("items","items.id","=","purchased_items.itemId")
 							->join("manufactures","manufactures.id","=","purchased_items.manufacturerId");
 						
 				$select_args[] = "creditsuppliers.supplierName as creditsuppliername";
-				$select_args[] = "inventorylookupvalues.name as itemname";
+				$select_args[] = "items.name as itemname";
 				$select_args[] = "manufactures.name as itemcompany";
 				$select_args[] = "purchased_items.purchasedQty as purchasedQty";
 				$select_args[] = "purchased_items.unitPrice as unitPrice";
@@ -3731,9 +4370,9 @@ class ReportsController extends \Controller {
 					$row["yearof_pur"] = date("d-m-Y",strtotime($entities[$i]->yearof_pur));
 					$row["startDate"] = date("d-m-Y",strtotime($entities[$i]->startDate));
 					$row["endDate"] = date("d-m-Y",strtotime($entities[$i+1]->endDate));
-					$row["distance"] = $entities[$i]->startReading-$entities[$i+1]->startReading;
+					$row["distance"] = $entities[$i+1]->startReading-$entities[$i]->startReading;
 					$row["litres"] = $entities[$i]->litres;
-					$row["mileage"] = round(($entities[$i]->startReading-$entities[$i+1]->startReading)/$entities[$i]->litres, 2);
+					$row["mileage"] = round(($entities[$i+1]->startReading-$entities[$i]->startReading)/$entities[$i]->litres, 2);
 					$row["remarks"] = $entities[$i]->remarks." ";//.$entities[$i]->startReading;
 				}
 				else{
@@ -3743,9 +4382,9 @@ class ReportsController extends \Controller {
 					$row["yearof_pur"] = date("d-m-Y",strtotime($entities[$i]->yearof_pur));
 					$row["startDate"] = date("d-m-Y",strtotime($entities[$i]->startDate));
 					$row["endDate"] = date("d-m-Y",strtotime($entities[$i]->endDate));
-					$row["distance"] = $entities[$i]->startReading-$entities[$i]->startReading;
+					$row["distance"] = $entities[$i+1]->startReading-$entities[$i]->startReading;
 					$row["litres"] = $entities[$i]->litres;
-					$row["mileage"] = round(($entities[$i]->startReading-$entities[$i]->startReading)/$entities[$i]->litres, 2);
+					$row["mileage"] = round(($entities[$i+1]->startReading-$entities[$i]->startReading)/$entities[$i]->litres, 2);
 					$row["remarks"] = $entities[$i]->remarks;//." ".$entities[$i]->startReading;
 				}
 				$resp[] = $row;
@@ -3980,7 +4619,6 @@ class ReportsController extends \Controller {
 			$frmdt = date("Y-m-d",strtotime($values["fromdate"]));
 			$todt = date("Y-m-d",strtotime($values["todate"]));
 			if ($values["reportfor"] == "getreport") {
-			
 				$select_args = array();
 				$select_args[] = "contracts.startDate as startDate";
 				$select_args[] = "contracts.endDate as endDate";
@@ -3997,18 +4635,14 @@ class ReportsController extends \Controller {
 				$select_args[] = "service_logs.driver2Id as driver2Id";
 				$select_args[] = "service_logs.helperId as helperId";
 				$select_args[] = "service_logs.remarks as remarks";
-		
 				
 				$resp = array();
-		
 				$qry=  \ServiceLog::join("contracts","service_logs.contractId","=","contracts.id")
-				->where("contracts.clientId","=",$values["clientname"])
-				->where("contracts.depotId","=",$values["depot"]);
+						->where("contracts.clientId","=",$values["clientname"])
+						->where("contracts.depotId","=",$values["depot"])
+						->whereBetween("service_logs.serviceDate",array($frmdt,$todt));
 		
-					
 				$recs = $qry->select($select_args)->orderBy("service_logs.serviceDate","desc")->get();
-					
-					
 				$veh_arr = array();
 				$vehicles = \Vehicle::all();
 				foreach ($vehicles as $vehicle){
@@ -4018,9 +4652,7 @@ class ReportsController extends \Controller {
 				$drivers =  \Employee::where("roleId","=",19)->get();
 				$drivers_arr = array();
 				foreach ($drivers as $driver){
-		
 					$drivers_arr[$driver['id']] = $driver['fullName']." (".$driver->empCode.")";
-		
 				}
 					
 				$helpers =  \Employee::where("roleId","=",20)->get();
@@ -4069,35 +4701,44 @@ class ReportsController extends \Controller {
 					$row["repairkms"] = $rec->repairkms;
 					$row["driver1Id"] = $drivers_arr[$rec->driver1Id];
 					$row["driver2Id"] = $rec->driver2Id;
-					$row["helperId"] = $helpers_arr[$rec->helperId];
+					$row["helperId"] = "";
+					if(isset($helpers_arr[$rec->helperId])){
+						$row["helperId"] = $helpers_arr[$rec->helperId];
+					}
 					$row["remarks"] = $rec->remarks;
 		
 					$resp[] = $row;
 				}
 			}
 			else if($values["reportfor"] == "vehiclesummary"){
-				
+				$resp = array();
 				$select_args = array();
-				$select_args[] = "contracts.startDate as startDate";
+				/*$select_args[] = "contracts.startDate as startDate";
 				$select_args[] = "contracts.endDate as endDate";
 				$select_args[] = "clients.name as client";
 				$select_args[] = "depots.name as depots";
 				$select_args[] = "service_logs.contractVehicleId as contractVehicleId";
-				$select_args[] = "service_logs.distance as distance";
-				$select_args[] = "service_logs.repairkms as repairkms";
+				$select_args[] = "sum(service_logs.distance) as distance";
+				$select_args[] = "sum(service_logs.repairkms) as repairkms";
 				
 				$resp = array();
-				
 				$qry=  \ServiceLog::join("contracts","service_logs.contractId","=","contracts.id")
 									->join("clients","contracts.clientId","=","clients.id")
 									->join("depots","contracts.depotId","=","depots.id")
 									->where("contracts.clientId","=",$values["clientname"])
 									->where("contracts.depotId","=",$values["depot"]);
-				
-					
-				$recs = $qry->select($select_args)->orderBy("service_logs.serviceDate","desc")->get();
-					
-					
+				$recs = $qry->select($select_args)
+						->groupBy("service_logs.contractVehicleId")->orderBy("service_logs.serviceDate","desc")->get();
+				*/
+				$sql = "select `contracts`.`startDate` as `startDate`, `contracts`.`endDate` as `endDate`," 
+							."`clients`.`name` as `client`, `depots`.`name` as `depots`, `service_logs`.`contractVehicleId` as `contractVehicleId`,"
+							."sum(service_logs.distance) as `distance`, sum(service_logs.repairkms) as `repairkms` from `service_logs`"
+							."inner join `contracts` on `service_logs`.`contractId` = `contracts`.`id`"
+							."inner join `clients` on `contracts`.`clientId` = `clients`.`id`"
+							."inner join `depots` on `contracts`.`depotId` = `depots`.`id`"
+							."where  `contracts`.`clientId` = ".$values["clientname"]." and `contracts`.`depotId` = ".$values["depot"] 
+							." and serviceDate between '".$frmdt."' and '".$todt."' group by `service_logs`.`contractVehicleId` order by `service_logs`.`serviceDate` desc";
+				$recs = \DB::select(\DB::raw($sql));
 				$veh_arr = array();
 				$vehicles = \Vehicle::all();
 				foreach ($vehicles as $vehicle){
@@ -4118,10 +4759,10 @@ class ReportsController extends \Controller {
 				}
 			}
 			else if($values["reportfor"] == "workingdaysvehiclesummary"){
-			
 				$select_args = array();
 				$select_args[] = "contracts.startDate as startDate";
 				$select_args[] = "contracts.endDate as endDate";
+				$select_args[] = "contracts.avgKms as avgKms";
 				$select_args[] = "clients.name as client";
 				$select_args[] = "depots.name as depots";
 				$select_args[] = "service_logs.contractVehicleId as contractVehicleId";
@@ -4129,33 +4770,152 @@ class ReportsController extends \Controller {
 				$select_args[] = "service_logs.repairkms as repairkms";
 			
 				$resp = array();
-			
-				$qry=  \ServiceLog::join("contracts","service_logs.contractId","=","contracts.id")
-				->join("clients","contracts.clientId","=","clients.id")
-				->join("depots","contracts.depotId","=","depots.id")
-				->where("contracts.clientId","=",$values["clientname"])
-				->where("contracts.depotId","=",$values["depot"]);
-			
-					
-				$recs = $qry->select($select_args)->orderBy("service_logs.serviceDate","desc")->get();
-					
-					
+				// service_logs.substituteVehicleId=0 and
+				$sql = "select `contracts`.`startDate` as `startDate`, `contracts`.`endDate` as `endDate`, `contracts`.`avgKms` as `avgKms`," 
+							."`clients`.`name` as `client`, `depots`.`name` as `depots`, `service_logs`.`contractVehicleId` as `contractVehicleId`,"
+							."sum(service_logs.distance) as `distance`, sum(service_logs.repairkms) as `repairkms` from `service_logs`"
+							."inner join `contracts` on `service_logs`.`contractId` = `contracts`.`id`"
+							."inner join `clients` on `contracts`.`clientId` = `clients`.`id`"
+							."inner join `depots` on `contracts`.`depotId` = `depots`.`id`"
+							."where `contracts`.`clientId` = ".$values["clientname"]." and `contracts`.`depotId` = ".$values["depot"] 
+							." and serviceDate between '".$frmdt."' and '".$todt."' group by `service_logs`.`contractVehicleId` order by `service_logs`.`serviceDate` desc";
+				$recs = \DB::select(\DB::raw($sql));
 				$veh_arr = array();
 				$vehicles = \Vehicle::all();
 				foreach ($vehicles as $vehicle){
 					$veh_arr[$vehicle->id] = $vehicle->veh_reg;
 				}
-					
-					
+				
+				$date1=date_create($frmdt);
+				$date2=date_create($todt);
+				$diff=date_diff($date1,$date2);
+				$working_days =  $diff->format("%a");
+				
+				$tot_holidays=0;
+				$contractid = \Contract::where("clientId","=",$values["clientname"])
+								->where("depotId","=",$values["depot"])
+								->where("status","=","ACTIVE")->first();
+				$contractid = $contractid->id;
+				$holidays = \ClientHolidays::where("contractId","=",$contractid)
+									->where("status","=","Open")->get();
+				$holidays_arr = array();
+				foreach($holidays as  $holiday) {
+					$date1 = strtotime($frmdt);
+					$date2 = strtotime($todt);
+					$date3 = strtotime(date("Y-m-d",strtotime($holiday->fromDate)));
+					$date4 = strtotime(date("Y-m-d",strtotime($holiday->toDate)));
+					if($date1<=$date3 && $date2>=$date4){
+						$dt1 = date_create(date("Y-m-d",strtotime($holiday->fromDate)));
+						$dt2 = date_create(date("Y-m-d",strtotime($holiday->toDate)));
+						$diff = date_diff($dt1,$dt2);
+						$tot_holidays =  $tot_holidays+$diff->format("%a");
+						$tot_holidays = $tot_holidays+1;
+						
+						$date = $dt1;
+						for($i=0; $i<$diff->format("%a"); $i++){
+							$date = date_add($date, date_interval_create_from_date_string('1 days'));
+							$holidays_arr[] =  date_format($date, 'Y-m-d');
+						}
+					}
+					else if($date1>=$date3 && $date2<=$date4){
+						$dt1 = date_create(date("Y-m-d",strtotime($frmdt)));
+						$dt2 = date_create(date("Y-m-d",strtotime($todt)));
+						$diff = date_diff($dt1,$dt2);
+						$tot_holidays =  $tot_holidays+$diff->format("%a");
+						$tot_holidays = $tot_holidays+1;
+						
+						$date = $dt1;
+						for($i=0; $i<$diff->format("%a"); $i++){
+							$date = date_add($date, date_interval_create_from_date_string('1 days'));
+							$holidays_arr[] =  date_format($date, 'Y-m-d');
+						}
+					}
+					else if($date1<=$date3 && $date2<=$date4 && $date3<=$date2){
+						$dt1 = date_create(date("Y-m-d",strtotime($holiday->fromDate)));
+						$dt2 = date_create(date("Y-m-d",strtotime($todt)));
+						$diff = date_diff($dt1,$dt2);
+						$tot_holidays =  $tot_holidays+$diff->format("%a");
+						$tot_holidays = $tot_holidays+1;
+						
+						$date = $dt1;
+						for($i=0; $i<$diff->format("%a"); $i++){
+							$date = date_add($date, date_interval_create_from_date_string('1 days'));
+							$holidays_arr[] =  date_format($date, 'Y-m-d');
+						}
+					}
+					else if($date1>=$date3 && $date2>=$date4 && $date1<=$date4){
+						$dt1 = date_create(date("Y-m-d",strtotime($frmdt)));
+						$dt2 = date_create(date("Y-m-d",strtotime($holiday->toDate)));
+						$diff = date_diff($dt1,$dt2);
+						$tot_holidays =  $tot_holidays+$diff->format("%a");
+						$tot_holidays = $tot_holidays+1;
+						
+						$date = $dt1;
+						for($i=0; $i<$diff->format("%a"); $i++){
+							$date = date_add($date, date_interval_create_from_date_string('1 days'));
+							$holidays_arr[] =  date_format($date, 'Y-m-d');
+						}
+					}
+				}
+				
 				foreach($recs as  $rec) {
 					$row = array();
 					$row["startDate"] = date("d-m-Y",strtotime($rec->startDate))." to ".date("d-m-Y",strtotime($rec->endDate));
 					$row["client"] = $rec->client;
 					$row["depots"] = $rec->depots;
 					$row["contractVehicleId"] = $veh_arr[$rec->contractVehicleId];
-					$row["distance"] = $rec->distance;
-					$row["repairkms"] = $rec->repairkms;
-			
+					$row["avg kms"] =$rec->avgKms;
+					$row["working days"] = $working_days-$tot_holidays;
+					$row["total holiday days"] = $tot_holidays;
+					$start_reading = 0;
+					$servlogs = \ServiceLog::where("contractId","=",$contractid)
+											->where("contractVehicleId","=",$rec->contractVehicleId)
+											->where("serviceDate","<",$frmdt)
+											->where("substituteVehicleId","=",0)
+											->where("status","=","ACTIVE")->orderBy("serviceDate","asc")->get();
+					if(count($servlogs)){
+						$servlog = $servlogs[count($servlogs)-1];
+						$start_reading = $servlog->endReading;
+					}
+					
+					$end_reading = 0;
+					$servlogs = \ServiceLog::where("contractId","=",$contractid)
+											->where("contractVehicleId","=",$rec->contractVehicleId)
+											->where("serviceDate","<",$todt)
+											->where("substituteVehicleId","=",0)
+											->where("status","=","ACTIVE")->orderBy("serviceDate","asc")->get();
+					if(count($servlogs)){
+						$servlog = $servlogs[count($servlogs)-1];
+						$end_reading = $servlog->endReading;
+					}
+					
+					$holidays_kms = 0;
+					$servlogs = \ServiceLog::where("contractId","=",$contractid)
+									->where("contractVehicleId","=",$rec->contractVehicleId)
+									->whereIn("serviceDate",$holidays_arr)
+									->where("substituteVehicleId","=",0)
+									->where("status","=","ACTIVE")->orderBy("serviceDate","asc")->get();
+					foreach ($servlogs as $servlog){
+						$holidays_kms = $holidays_kms+$servlog->distance;
+					}
+					
+					$trip1_kms = $rec->distance;
+					$trip2_kms = 0;
+					$sql = "select count(serviceDate) as cnt, distance from `service_logs` where `contractId` = ".$contractid." and `contractVehicleId` = ".$rec->contractVehicleId." and `substituteVehicleId` = 0 and `status` = 'ACTIVE' and serviceDate BETWEEN '".$frmdt."' and '".$todt."' GROUP BY `serviceDate` HAVING cnt > 1";
+					$servlogs = \DB::select(\DB::raw($sql));
+					foreach ($servlogs as $servlog){
+						$trip2_kms = $trip2_kms+$servlog->distance;
+					}
+					
+					$row["start reading"] = $start_reading;
+					$row["end reading"] = $end_reading;
+					$row["trip1 kms"] = $trip1_kms-($trip2_kms+$holidays_kms);
+					$row["trip2 kms"] = $trip2_kms;
+					$row["holidays kms"] = $holidays_kms;
+					
+					$row["repair kms"] = $rec->repairkms;
+					$row["excess kms"] = ($trip1_kms+$trip2_kms)-($working_days*$rec->avgKms);
+					$row["final kms"] = ($trip1_kms+$trip2_kms);
 					$resp[] = $row;
 				}
 					
@@ -4169,11 +4929,11 @@ class ReportsController extends \Controller {
 		$values['add_url'] = 'loginlog';
 		$values['form_action'] = 'loginlog';
 		$values['action_val'] = '#';
-		$theads1 = array('contract year','service date','vehicle no',"substituteVehicle no", "trip number", "start time", "start reading", "end reading", "distance","Repair KMs", "driver1", "driver2", "helper", "remarks");
+		$theads1 = array('contract year','service date','vehicle no',"sub. Veh no", "trip number", "start time", "start reading", "end reading", "distance","Repair KMs", "driver1", "driver2", "helper", "remarks");
 		$values["theads1"] = $theads1;
 		$theads2 = array('contract year','client','client branch',"vehicle no", "distance", "Repair KMs");
 		$values["theads2"] = $theads2;
-		$theads3 = array('contract year','client','client branch',"vehicle no", "Average KMs(per day)", "Working Days",'Total Holidays',"Start Reading", "End reading", "Trip1 KMs", "Trip2 KMs",'Holidays KMs',"Repair KMs", "Excess KMs", "Final KMs");
+		$theads3 = array('contract year','client','client branch',"vehicle no", "Avg KMs(per day)", "Working Days",'Tot Holidays',"Start Reading", "End reading", "Tp1 KMs", "Tp2 KMs",'Holidays KMs',"Repair KMs", "Excess KMs", "Final KMs");
 		$values["theads3"] = $theads3;
 	
 		//$values["test"];
@@ -4219,7 +4979,6 @@ class ReportsController extends \Controller {
 		$modals[] = $form_info;
 		$values["modals"] = $modals;
 		//$values['provider'] = "loginlog";
-	
 		return View::make('reports.servicelogreport', array("values"=>$values));
 	}
 	

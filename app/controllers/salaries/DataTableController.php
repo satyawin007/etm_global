@@ -77,11 +77,15 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \IncomeTransaction::where("transactionId", "like", "%$search%")->where("branchId","=",$values["branch1"])->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = \IncomeTransaction::where("transactionId", "like", "%$search%")->count();
-			foreach ($entities as $entity){
-				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
-			}
+			$entities = \EmpDueAmount::where("employee.fullName", "like", "%".$search."%")
+						->leftjoin("employee", "employee.id","=","empdueamount.empId")
+						->leftjoin("officebranch","officebranch.id","=","empdueamount.branchId")
+						->select($select_args)->limit($length)->offset($start)->get();
+			
+			$total = \EmpDueAmount::where("fullName","like", "'%$search%'")
+						->leftjoin("employee", "employee.id","=","empdueamount.empId")
+						->leftjoin("officebranch","officebranch.id","=","empdueamount.branchId")
+						->count();
 		}
 		else{
 			$entities = \EmpDueAmount::join("employee","employee.id","=","empdueamount.empId")->join("officebranch","officebranch.id","=","empdueamount.branchId")->select($select_args)->limit($length)->offset($start)->get();

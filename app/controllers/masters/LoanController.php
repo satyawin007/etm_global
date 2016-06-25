@@ -15,6 +15,7 @@ class LoanController extends \Controller {
 		{
 		
 			$values = Input::All();
+			//$values["dasf"];
 			$field_names = array("loanno"=>"loanNo","loanforvehicle"=>"vehicleId","loanpurpose"=>"purpose",
 					"financecompany"=>"financeCompanyId","firstinstallmentdate"=>"agmtDate","loanamount"=>"amountFinanced","installmentamount"=>"installmentAmount",
 					"interestrate"=>"interestRate","frequency"=>"frequency","totalinstallments"=>"totalInstallments","noofinstallmentspaid"=>"paidInstallments","status"=>"status",
@@ -152,7 +153,8 @@ class LoanController extends \Controller {
 				"interestrate"=>"interestRate","frequency"=>"frequency","totalinstallments"=>"totalInstallments","noofinstallmentspaid"=>"paidInstallments","status"=>"status",
 				"paymenttype"=>"paymentType","bankaccount"=>"bankAccountId");
 			$fields = array();
-			
+			$fields["vehicleId"] = "";
+			$fields["purpose"] = "";
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
 					if($key == "loanforvehicle" || $key == "loanpurpose"){
@@ -270,9 +272,9 @@ class LoanController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"financecompany", "value"=>$entity->financeCompanyId, "id"=>"financecompany",  "content"=>"finance company", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$fincompanies_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"loanforvehicle[]", "value"=>explode(",",$entity->vehicleId), "id"=>"loanforvehicle",  "content"=>"loan for vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$veh_arr, "multiple"=>"multiple", "class"=>"form-control chosen-select");
+			$form_field = array("name"=>"loanforvehicle[]", "value"=>explode(",",$entity->vehicleId), "id"=>"loanforvehicle",  "content"=>"loan for vehicle", "readonly"=>"",  "required"=>"", "type"=>"select", "options"=>$veh_arr, "multiple"=>"multiple", "class"=>"form-control chosen-select");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"loanpurpose[]", "value"=>explode(",",$entity->purpose), "id"=>"loanpurpose",  "content"=>"loan purpose", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$purtype_arr,  "multiple"=>"multiple", "class"=>"form-control chosen-select");
+			$form_field = array("name"=>"loanpurpose[]", "value"=>explode(",",$entity->purpose), "id"=>"loanpurpose",  "content"=>"loan purpose", "readonly"=>"",  "required"=>"", "type"=>"select", "options"=>$purtype_arr,  "multiple"=>"multiple", "class"=>"form-control chosen-select");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"firstinstallmentdate", "value"=>date("d-m-Y",strtotime($entity->agmtDate)), "id"=>"firstinstallmentdate",  "content"=>"first installment date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
 			$form_fields[] = $form_field;
@@ -427,9 +429,9 @@ class LoanController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"cityname", "id"=>"cityname",  "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeCity(this.value);"),  "options"=>array(), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"loanforvehicle[]", "id"=>"loanforvehicle",  "content"=>"loan for vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$veh_arr, "multiple"=>"multiple", "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"loanforvehicle[]", "id"=>"loanforvehicle",  "content"=>"loan for vehicle", "readonly"=>"",  "required"=>"", "type"=>"select", "options"=>$veh_arr, "multiple"=>"multiple", "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"loanpurpose[]", "id"=>"loanpurpose",  "content"=>"loan purpose", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$purtype_arr,  "multiple"=>"multiple", "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"loanpurpose[]", "id"=>"loanpurpose",  "content"=>"loan purpose", "readonly"=>"",  "required"=>"","type"=>"select", "options"=>$purtype_arr,  "multiple"=>"multiple", "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"firstinstallmentdate", "id"=>"firstinstallmentdate",  "content"=>"first inst. date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
@@ -446,6 +448,8 @@ class LoanController extends \Controller {
 		$form_field = array("name"=>"noofinstallmentspaid", "id"=>"noofinstallmentspaid",  "content"=>"no of inst. paid", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control  number");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"status", "id"=>"status",  "content"=>"status", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("ACTIVE"=>"ACTIVE","CLOSED"=>"CLOSED"));
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"remarks", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"","type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
 		$form_fields[] = $form_field;

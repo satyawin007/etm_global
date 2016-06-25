@@ -64,7 +64,7 @@
 						<div class="form-group" >
 							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 							<div class="col-xs-7">
-								<input {{$form_field['readonly']}} <?php if(isset($form_field["value"])) echo "value='".$form_field["value"]."'"; ?> type="{{$form_field['type']}}" id="{{$form_field['name']}}" {{$form_field['required']}} name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
+								<input {{$form_field['readonly']}} <?php if(isset($form_field["value"])) echo "value='".$form_field["value"]."'"; ?>  type="{{$form_field['type']}}" id="{{$form_field['name']}}" {{$form_field['required']}} name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
 							</div>			
 						</div>
 						<?php } ?>
@@ -87,7 +87,7 @@
 						<div class="form-group">
 							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 							<div class="col-xs-7">
-								<textarea {{$form_field['readonly']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"></textarea>
+								<textarea {{$form_field['readonly']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}">{{$form_field['value']}}</textarea>
 							</div>			
 						</div>
 						<?php } ?>
@@ -98,7 +98,12 @@
 								<div class="radio">
 								<?php 
 									foreach($form_field["options"] as $key => $value){
-										echo "<label><input type='radio' name=\"".$form_field['name']."\"class='ace' value='$key'> <span class='lbl'>".$value."</span></label>&nbsp;&nbsp;";
+										if($form_field['value']==$key){
+											echo "<label><input type='radio' checked='checked' name=\"".$form_field['name']."\"class='ace' value='$key'> <span class='lbl'>".$value."</span></label>&nbsp;&nbsp;";
+										}
+										else{
+											echo "<label><input type='radio' name=\"".$form_field['name']."\"class='ace' value='$key'> <span class='lbl'>".$value."</span></label>&nbsp;&nbsp;";
+										}
 									}
 								?>
 								</div>
@@ -159,7 +164,6 @@
 									ADD
 								</div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-								
 								
 								
 								<div class="btn primary" id="modify" onclick="getEmployeesToUpdate()">

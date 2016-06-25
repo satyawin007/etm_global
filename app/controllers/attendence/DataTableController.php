@@ -60,7 +60,7 @@ class DataTableController extends \Controller {
 		//$values["DSF"];
 		$total = 0;
 		$data = array();
-		$select_args = array("employee.id", "employee.fullName", "employee.empCode");
+		$select_args = array("employee.id", "employee.fullName", "employee.empCode", "employee.joiningDate", "employee.terminationDate");
 	
 		$actions = array();
 		$values["actions"] = $actions;
@@ -81,30 +81,21 @@ class DataTableController extends \Controller {
 		}
 		else{
 			if($values["employeetype"] == "CLIENT BRANCH"){
-				$entities = \ContractVehicle::where("contract_vehicles.status", "=","ACTIVE")
-							->where("contracts.clientId","=",$values["client"])
-							->where("contracts.depotId","=",$values["depot"])
-							->join("contracts", "contract_vehicles.contractId", "=", "contracts.id")
-							->join("employee", "contract_vehicles.driver1Id", "=", "employee.id")
-							->select($select_args)->limit($length)->offset($start)->get();
-				$total = \ContractVehicle::where("contract_vehicles.status", "=","ACTIVE")
-							->where("contracts.clientId","=",$values["client"])
-							->where("contracts.depotId","=",$values["depot"])
-							->join("contracts", "contract_vehicles.contractId", "=", "contracts.id")
-							->join("employee", "contract_vehicles.driver1Id", "=", "employee.id")->count();
+				\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["client"]."');"));
+				$entities = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
+				$total = count($entities);
 			}
 			else{
-				$entities = \Employee::where("officeBranchId", "=",$values["officebranch"])
-							->whereNotIn("roleId",array(19,20))
+				$entities = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")
 							->select($select_args)->limit($length)->offset($start)->get();
-				$total = \Employee::where("officeBranchId", "=",$values["officebranch"])->count();
+				$total = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->count();
 			}
 		}
 	
-		$entities = $entities->toArray();
+		//$entities = $entities->toArray();
 		foreach($entities as $entity){
 			$data_values = array();
-			$data_values[] = $entity["fullName"]."(".$entity["empCode"].")";
+			$data_values[] = $entity->fullName."(".$entity->empCode.")";
 			$month = date("m",strtotime($values["date"]));
 			$year = date("Y",strtotime($values["date"]));
 			$date = date_create(date("d-m-Y",strtotime("01"."-".$month."-".$year)));
@@ -123,15 +114,37 @@ class DataTableController extends \Controller {
 			}
 			
 			for($i=0; $i<=$diff; $i++){
+				$date1 = strtotime(date("Y-m-d",strtotime($entity->joiningDate)));
+				$date2 = strtotime(date("Y-m-d",strtotime(date_format($date, 'Y-m-d'))));
+				$date3 = strtotime(date('Y-m-01'));
+				
+				if($date1>$date2){
+					$date = date_add($date, date_interval_create_from_date_string('1 days'));
+					$data_values[] = "";
+					continue;
+				}
+				$date1 = strtotime(date("Y-m-d",strtotime($entity->terminationDate)));
+				$date2 = strtotime(date("Y-m-d",strtotime(date_format($date, 'Y-m-d'))));
+
+				if($entity->terminationDate!="" && $entity->terminationDate!="0000-00-00" && $date1 != "1970-01-01" && $date1<$date2){
+					$date = date_add($date, date_interval_create_from_date_string('1 days'));
+					$data_values[] = "";
+					continue;
+				}
 				$isHoliday = false;
-				$at_log = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'))
-											->where("day","=","HOLIDAY")
-											->where("session","=",$values["session"])->get();
+				$qry = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'));
+						if($values["employeetype"] == "CLIENT BRANCH"){
+							$qry->where("depotId","=",$values["depot"])->where("clientId","=",$values["client"]);
+						}
+						else{
+							$qry->where("officeBranchId","=",$values["officebranch"]);
+						}
+				$at_log = 	$qry->where("day","=","HOLIDAY")->where("session","=",$values["session"])->get();
 				if(count($at_log)>0){
 					$isHoliday = true;
 				}
 				if(date_format($date, 'd-m-Y') == $values["date"]){
-					$emp = \Attendence::where("empId","=",$entity["id"])->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime($values["date"])))->get();
+					$emp = \Attendence::where("empId","=",$entity->id)->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime($values["date"])))->get();
 					if(count($emp)>0){
 						$emp = $emp[0];
 						if($emp->substituteId>0){
@@ -139,23 +152,23 @@ class DataTableController extends \Controller {
 							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
 						}
 						if(($emp->day=="HOLIDAY" && $emp->session==$values["session"]) || $isHoliday || $values["day"]=="HOLIDAY"){
-							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:black'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-13px; margin-bottom:-17px;' src='../assets/img/corner.png'/></span>";
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:black'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity->id."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-13px; margin-bottom:-17px;' src='../assets/img/corner.png'/></span>";
 						}
 						else{
-							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-13px; margin-bottom:-17px;' src='../assets/img/corner.png'/></span>";
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity->id."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-13px; margin-bottom:-17px;' src='../assets/img/corner.png'/></span>";
 						}
 					}
 					else{
 						if($isHoliday || $values["day"]=="HOLIDAY"){
-							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:black' id='".$entity["id"]."_".$i."' onclick='changeValue(this.id, \"".$entity["id"]."\", \"".$emptype."\")'>P</span>";
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:red' id='".$entity->id."_".$i."' onclick='changeValue(this.id, \"".$entity->id."\", \"".$emptype."\")'>H</span>";
 						}
 						else{
-							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:blue' id='".$entity["id"]."_".$i."' onclick='changeValue(this.id, \"".$entity["id"]."\", \"".$emptype."\")'>P</span>";
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:blue' id='".$entity->id."_".$i."' onclick='changeValue(this.id, \"".$entity->id."\", \"".$emptype."\")'>P</span>";
 						}
 					}
 				}
 				else{
-					$emp = \Attendence::where("empId","=",$entity["id"])->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime(date_format($date, 'd-m-Y'))))->get();
+					$emp = \Attendence::where("empId","=",$entity->id)->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime(date_format($date, 'd-m-Y'))))->get();
 					if(count($emp)>0){
 						$emp = $emp[0];
 						if($emp->substituteId>0){
@@ -163,18 +176,31 @@ class DataTableController extends \Controller {
 							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
 						}
 						if(($emp->day=="HOLIDAY" && $emp->session==$values["session"]) || $isHoliday){
-							$data_values[] =  "<span style='font-weight:bold; color:black'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-24px;' src='../assets/img/corner.png'/></span>";
+							$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity->id."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-24px;' src='../assets/img/corner.png'/></span>";
 						}
 						else{
-							$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-24px;' src='../assets/img/corner.png'/></span>";
+							$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity->id."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-24px;' src='../assets/img/corner.png'/></span>";
 						}
 					}
 					else{
-						if($isHoliday){
-							$data_values[] =  "<span style='font-weight:bold; color:black'>P</span>";
+						$qry = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'));
+						if($values["employeetype"] == "CLIENT BRANCH"){
+							$qry->where("depotId","=",$values["depot"])->where("clientId","=",$values["client"]);
 						}
 						else{
-							$data_values[] =  "<span style='font-weight:bold; color:green'>P</span>";
+							$qry->where("officeBranchId","=",$values["officebranch"]);
+						}
+						$at_log = 	$qry->where("session","=",$values["session"])->get();
+						if(count($at_log)>0){
+							if($isHoliday){
+								$data_values[] =  "<span style='font-weight:bold; color:red'>H</span>";
+							}
+							else{
+								$data_values[] =  "<span style='font-weight:bold; color:green'>P</span>";
+							}
+						}
+						else{
+							$data_values[] = "";
 						}
 					}
 				}
@@ -210,30 +236,21 @@ class DataTableController extends \Controller {
 		}
 		else{
 			if($values["employeetype"] == "CLIENT BRANCH"){
-				$entities = \ContractVehicle::where("contract_vehicles.status", "=","ACTIVE")
-							->where("contracts.clientId","=",$values["client"])
-							->where("contracts.depotId","=",$values["depot"])
-							->join("contracts", "contract_vehicles.contractId", "=", "contracts.id")
-							->join("employee", "contract_vehicles.driver1Id", "=", "employee.id")
-							->select($select_args)->limit($length)->offset($start)->get();
-				$total = \ContractVehicle::where("contract_vehicles.status", "=","ACTIVE")
-							->where("contracts.clientId","=",$values["client"])
-							->where("contracts.depotId","=",$values["depot"])
-							->join("contracts", "contract_vehicles.contractId", "=", "contracts.id")
-							->join("employee", "contract_vehicles.driver1Id", "=", "employee.id")->count();
+				\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["client"]."');"));
+				$entities = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
+				$total = count($entities);
 			}
 			else{
-				$entities = \Employee::where("officeBranchId", "=",$values["officebranch"])
-							->whereNotIn("roleId",array(19,20))
+				$entities = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")
 							->select($select_args)->limit($length)->offset($start)->get();
-				$total = \Employee::where("officeBranchId", "=",$values["officebranch"])->count();
+				$total = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->count();
 			}
 		}
 	
-		$entities = $entities->toArray();
+		//$entities = $entities->toArray();
 		foreach($entities as $entity){
 			$data_values = array();
-			$data_values[] = $entity["fullName"]."(".$entity["empCode"].")";
+			$data_values[] = $entity->fullName."(".$entity->empCode.")";
 			$month = date("m",strtotime($values["date"]));
 			$year = date("Y",strtotime($values["date"]));
 			$date = date_create(date("d-m-Y",strtotime("01"."-".$month."-".$year)));
@@ -253,14 +270,19 @@ class DataTableController extends \Controller {
 				
 			for($i=0; $i<=$diff; $i++){
 				$isHoliday = false;
-				$at_log = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'))
-											->where("day","=","HOLIDAY")
-											->where("session","=",$values["session"])->get();
+				$qry = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'));
+						if($values["employeetype"] == "CLIENT BRANCH"){
+							$qry->where("depotId","=",$values["depot"])->where("clientId","=",$values["client"]);
+						}
+						else{
+							$qry->where("officeBranchId","=",$values["officebranch"]);
+						}
+				$at_log = 	$qry->where("day","=","HOLIDAY")->where("session","=",$values["session"])->get();
 				if(count($at_log)>0){
 					$isHoliday = true;
 				}
 				if(date_format($date, 'd-m-Y') == $values["date"]){
-					$emp = \Attendence::where("empId","=",$entity["id"])->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime($values["date"])))->get();
+					$emp = \Attendence::where("empId","=",$entity->id)->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime($values["date"])))->get();
 					if(count($emp)>0){
 						$emp = $emp[0];
 						if($emp->substituteId>0){
@@ -268,23 +290,23 @@ class DataTableController extends \Controller {
 							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
 						}
 						if(($emp->day=="HOLIDAY" && $emp->session==$values["session"]) || $isHoliday || $values["day"]=="HOLIDAY"){
-							$data_values[] =  "<span style='font-weight:bold; color:black' id='_".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",\"".$emp["substituteId"]."\", \"".$emp["attendenceStatus"]."\", \"".$emp["comments"]."\", \"".$emp["attendenceStatusComments"]."\", ".$emp["id"].")'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+							$data_values[] =  "<span style='font-weight:bold; color:red' id='_".$entity->id."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",\"".$emp["empId"]."\",\"".$emp["substituteId"]."\", \"".$emp["attendenceStatus"]."\", \"".$emp["comments"]."\", \"".$emp["attendenceStatusComments"]."\", ".$emp["id"].")'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity->id."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
 						}
 						else{
-							$data_values[] =  "<span style='font-weight:bold; color:red' id='_".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",\"".$emp["substituteId"]."\", \"".$emp["attendenceStatus"]."\", \"".$emp["comments"]."\", \"".$emp["attendenceStatusComments"]."\", ".$emp["id"].")'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+							$data_values[] =  "<span style='font-weight:bold; color:red' id='_".$entity->id."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",\"".$emp["empId"]."\",\"".$emp["substituteId"]."\", \"".$emp["attendenceStatus"]."\", \"".$emp["comments"]."\", \"".$emp["attendenceStatusComments"]."\", ".$emp["id"].")'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity->id."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
 						}
 					}
 					else{
 						if($isHoliday || $values["day"]=="HOLIDAY"){																							//(id, type, substitute, comments, status, empid)
-							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:black' id='".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",".$entity["id"]."\", \"".$emptype."\")'>P</span>";
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:red' id='".$entity->id."_".$i."' onclick='updateAttendenceValues(this.id, \"".$entity->id."\", \"".$emptype."\", \"\", \"\", \"\", \"\", \"\")'>H</span>";
 						}
 						else{
-							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:blue' id='".$entity["id"]."_".$i."' onclick='updateAttendenceValues(this.id, \"".$emptype."\",".$entity["id"]."\", \"".$emptype."\")'>P</span>";
+							$data_values[] =  "<span style='font-weight:bold; font-size:16px; color:blue' id='".$entity->id."_".$i."' onclick='updateAttendenceValues(this.id, \"".$entity->id."\", \"".$emptype."\", \"\", \"\", \"\", \"\", \"\")'>P</span>";
 						}
 					}
 				}
 				else{
-					$emp = \Attendence::where("empId","=",$entity["id"])->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime(date_format($date, 'd-m-Y'))))->get();
+					$emp = \Attendence::where("empId","=",$entity->id)->where("session","=",$values["session"])->where("date","=",date("Y-m-d", strtotime(date_format($date, 'd-m-Y'))))->get();
 					if(count($emp)>0){
 						$emp = $emp[0];
 						if($emp->substituteId>0){
@@ -292,18 +314,32 @@ class DataTableController extends \Controller {
 							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
 						}
 						if(($emp->day=="HOLIDAY" && $emp->session==$values["session"]) || $isHoliday){
-							$data_values[] =  "<span style='font-weight:bold; color:black'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+							$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity->id."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
 						}
 						else{
-							$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity["id"]."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
+							$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity->id."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";
 						}
 					}
 					else{
-						if($isHoliday){
-							$data_values[] =  "<span style='font-weight:bold; color:black'>P</span>";
+						$qry = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'));
+									if($values["employeetype"] == "CLIENT BRANCH"){
+										$qry->where("depotId","=",$values["depot"])->where("clientId","=",$values["client"]);
+									}
+									else{
+										$qry->where("officeBranchId","=",$values["officebranch"]);
+									}
+						$at_log = 	$qry->where("session","=",$values["session"])->get();
+						
+						if(count($at_log)>0){
+							if($isHoliday){
+								$data_values[] =  "<span style='font-weight:bold; color:red'>H</span>";
+							}
+							else{
+								$data_values[] =  "<span style='font-weight:bold; color:green'>P</span>";
+							}
 						}
 						else{
-							$data_values[] =  "<span style='font-weight:bold; color:green'>P</span>";
+							$data_values[] = "";
 						}
 					}
 				}

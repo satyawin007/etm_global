@@ -137,7 +137,7 @@ class DataTableController extends \Controller {
 		$select_args = array();
 		$select_args[] = "employee.empCode as empCode";
 		$select_args[] = "employee.fullName as fullName";
-		$select_args[] = "officebranch.name as officeBranchName";
+		$select_args[] = "employee.officeBranchIds as officeBranchIds";
 		$select_args[] = "employee.mobileNo as mobileNo";
 		$select_args[] = "role.roleName as name";
 		$select_args[] = "employee.emailid as emailid";
@@ -145,6 +145,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "employee.fatherName as fatherName";
 		$select_args[] = "employee.status as status";
 		$select_args[] = "employee.id as id";
+		$select_args[] = "employee.officeBranchId as officeBranchId";
 			
 		$actions = array();
 		if(in_array(202, $this->jobs)){
@@ -176,12 +177,15 @@ class DataTableController extends \Controller {
 		if(in_array(205, $this->jobs)){
 			if(isset($values['action']) && $values['action']=="blocked") {
 				$action = array("url"=>"#block", "type"=>"modal", "css"=>"purple", "js"=>"modalBlockEmployee(", "jsdata"=>array("id","fullName","empCode"),  "text"=>"Unblock");
-				$action = array("url"=>"#rejoin", "type"=>"modal", "css"=>"pink", "js"=>"modalRejoinEmployee(", "jsdata"=>array("id","fullName","empCode","blockedReson"), "text"=>"rejoin");
+				$actions[] = $action;
+				$action = array("url"=>"#rejoin", "type"=>"modal", "css"=>"pink", "js"=>"modalRejoinEmployee(", "jsdata"=>array("id","fullName","empCode","blockedReason"), "text"=>"rejoin");
+				$actions[] = $action;
 			}
 			else{
 				$action = array("url"=>"#block", "type"=>"modal", "css"=>"purple", "js"=>"modalBlockEmployee(", "jsdata"=>array("id","fullName","empCode"),  "text"=>"block");
+				$actions[] = $action;
 			}
-			$actions[] = $action;
+			
 		}
 		$values["actions"] = $actions;
 	
@@ -197,15 +201,20 @@ class DataTableController extends \Controller {
 			$total = \Employee::where('fullName',"like","%$search%")->count();
 		}
 		else{
+			$branch = 0;
+			if(isset($values['branch'])){
+				$branch = $values['branch'];
+			}
 			if(isset($values['action']) && $values['action']=="driver_helpers"){
 				if(isset($values['branch']) && $values['branch'] != ""){
 					$branch = $values['branch'];
-					$entities = \Employee::whereRaw(" (roleId=20 or roleId=19) and employee.status='ACTIVE' and officebranchId='$branch' ")
+					$entities = \Employee::whereRaw(" (roleId=20 or roleId=19) and employee.status='ACTIVE' and FIND_IN_SET('$branch',employee.officeBranchIds)")
 										->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 										->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
 										->leftjoin('role','employee.roleId','=','role.id')
 										->select($select_args)->limit($length)->offset($start)->get();
-					$total = \Employee::whereRaw(" (roleId=20 or roleId=19) and officebranchId='$branch' ")->where("employee.status","=","ACTIVE")->count();
+					$total = \Employee::whereRaw(" (roleId=20 or roleId=19) and employee.status='ACTIVE' and FIND_IN_SET('$branch',employee.officeBranchIds)")
+										->where("employee.status","=","ACTIVE")->count();
 				}
 				else{
 					$entities = \Employee::leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
@@ -220,14 +229,15 @@ class DataTableController extends \Controller {
 				$select_args[] = "employee_activity.reason as blockedReson";
 				if(isset($values['branch']) && $values['branch'] != ""){
 					$branch = $values['branch'];
-					$entities = \Employee::where("officebranchId","=",$values['branch'])
+					$entities = \Employee::whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")
 										  ->where("employee.status","=","BLOCKED")
 										  ->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 										  ->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
 										  ->leftjoin('role','employee.roleId','=','role.id')
 										  ->leftjoin('employee_activity','employee_activity.empid','=','employee.id')
 										  ->select($select_args)->orderBy("employee_activity.date","desc")->limit($length)->offset($start)->get();
-					$total = \Employee::where("officebranchId","=",$values['branch'])->where("status","=","BLOCKED")->count();
+					$total = \Employee::whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")
+											->where("status","=","BLOCKED")->count();
 				}
 				else{
 					$entities = \Employee::where("employee.status","=","BLOCKED")
@@ -242,13 +252,13 @@ class DataTableController extends \Controller {
 			if(isset($values['action']) && $values['action']=="terminated"){
 				if(isset($values['branch']) && $values['branch'] != ""){
 					$branch = $values['branch'];
-					$entities = \Employee::where("officebranchId","=",$values['branch'])
+					$entities = \Employee::whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")
 								->where("employee.status","=","TERMINATED")
 								->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 								->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
 								->leftjoin('role','employee.roleId','=','role.id')
 								->select($select_args)->limit($length)->offset($start)->get();
-					$total = \Employee::where("officebranchId","=",$values['branch'])->where("status","=","TERMINATED")->count();
+					$total = \Employee::whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")->where("status","=","TERMINATED")->count();
 				}
 				else{
 					$entities = \Employee::where("employee.status","=","TERMINATED")
@@ -261,14 +271,14 @@ class DataTableController extends \Controller {
 			}
 			if(isset($values['action']) && $values['action']=="all"){
 				if(isset($values['branch']) && $values['branch'] != ""){
-					$entities = \Employee::where('officeBranchId',"=",$values['branch'])
+					$entities = \Employee::whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")
 								->where('roleId',"!=",20)->where("roleId", "!=",19)
 								->where("employee.status", "=","Active")
 								->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
 								->leftjoin('role','employee.roleId','=','role.id')
 								->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 								->select($select_args)->limit($length)->offset($start)->get();
-					$total = \Employee::where('officeBranchId',"=",$values['branch'])->where('roleId',"!=",20)->where("roleId", "!=",19)->where("employee.status", "=","Active")->count();
+					$total = \Employee::whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")->where('roleId',"!=",20)->where("roleId", "!=",19)->where("employee.status", "=","Active")->count();
 				}
 				else {
 					$entities = \Employee::where('roleId',"!=",20)->where("roleId", "!=",19)
@@ -285,9 +295,20 @@ class DataTableController extends \Controller {
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			if($entity["officeBranchIds"] == ""){
+				$entity["officeBranchIds"] = $entity["officeBranchId"];
+			}
+			$branches_str = "";
+			$branches = \DB::select(\DB::raw("select name from officebranch where id in(".$entity["officeBranchIds"].");"));
+			foreach ($branches as $branch){
+				$branches_str = $branches_str.$branch->name."<br/>";
+			}
+			$entity["officeBranchIds"] = $branches_str;
+			
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
+			
 			foreach($actions as $action){
 				if($action["type"] == "modal"){
 					$jsfields = $action["jsdata"];
@@ -1216,10 +1237,10 @@ class DataTableController extends \Controller {
 		
 		$select_args = array();
 		$select_args[] = "fuelstationdetails.name as name";
-		$select_args[] = "fuelstationdetails.paymentType as paymentType";
-		$select_args[] = "fuelstationdetails.PaymentExpectedDay as PaymentExpectedDay";
-		$select_args[] = "bankdetails.bankName as bankAccount";
-		$select_args[] = "bankdetails.accountNo as accountNo";
+		$select_args[] = "fuelstationdetails.balanceAmount as balanceAmount";
+		$select_args[] = "fuelstationdetails.securityDepositAmount as securityDepositAmount";
+		$select_args[] = "fuelstationdetails.securityPaymentType as securityPaymentType";
+		$select_args[] = "fuelstationdetails.securityPaymentDate as securityPaymentDate";
 		$select_args[] = "cities.name as cityId";
 		$select_args[] = "states.name as stateId";
 		$select_args[] = "fuelstationdetails.status as status";
@@ -1228,7 +1249,7 @@ class DataTableController extends \Controller {
 		
 		$actions = array();
 		if(in_array(236, $this->jobs)){
-			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditFuelStation(", "jsdata"=>array("name","paymentType","PaymentExpectedDay","bankAccount","accountNo","cityId","stateId","status","balanceAmount","id"), "text"=>"EDIT");
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditFuelStation(", "jsdata"=>array("name","balanceAmount","securityDepositAmount", "securityPaymentType", "securityPaymentDate","cityId", "stateId", "status", "id"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
 		$values["actions"] = $actions;
@@ -1274,6 +1295,10 @@ class DataTableController extends \Controller {
 		}
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			$entity["securityPaymentDate"] =  date("d-m-Y",strtotime($entity["securityPaymentDate"]));
+			if($entity["securityPaymentDate"]=="01-01-1970"){
+				$entity["securityPaymentDate"] = "";
+			}
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";

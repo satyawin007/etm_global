@@ -146,8 +146,8 @@
 						$("#"+entry).find('option:selected').removeAttr("selected");
 						text_arr[entry] = text;
 					});
-					$text_arr['date']=$("#date").val();
-					$text_arr['remarks']=$("#remarks").val();
+					text_arr['date']=$("#date").val();
+					text_arr['remarks']=$("#remarks").val();
 					$scope.vehicles_text.push(text_arr);
 					$('.chosen-select').trigger("chosen:updated");
 				};
@@ -190,7 +190,7 @@
 					for( var i = 0; i < comArr.length; i++ ) {
 						if( comArr[i].id == editid && comArr[i].vehicle==$scope.vehicle) {
 							index = i;
-							alert($scope.helper);
+							//alert($scope.helper);
 							$scope.vehicles[i]['driver1']=$scope.driver1;
 							$scope.vehicles[i]['driver2']=$scope.driver2;
 							$scope.vehicles[i]['helper']=$scope.helper;

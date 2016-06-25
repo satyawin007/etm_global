@@ -121,17 +121,20 @@
 			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 5px;">CHANGE STATUS OF {{$values["bredcum"]}} WORK FLOW</h3>
 			<div class="row">
 				<div class="col-xs-offset-1 col-xs-10">
-					<div class="col-xs-4">
+					<div class="col-xs-offset-4 col-xs-4">
 						<select name="workflowstatus" id="workflowstatus" class="formcontrol chosen-select">
-							<option value="Sent for Approval">Sent for Approval</option>
-							<option value="Approved">Approved</option>
-							<option value="Rejected">Rejected</option>
-							<option value="Hold">Hold</option>
+							<option value="Sent for Approval">Send for Approval</option>
+							<?php $jobs = Session::get("jobs");?>
+							<?php if(in_array(505, $jobs)){?>
+								<option value="Approved">Approved</option>
+								<option value="Rejected">Rejected</option>
+								<option value="Hold">Hold</option>
+							<?php } ?>
 						</select>
 					</div>
-					<div class="col-xs-6">
-						<input type="text" class="formcontrol col-xs-12" name="remarks" placeholder="enter comments (if any)">
-					</div>
+<!-- 					<div class="col-xs-6"> -->
+<!-- 						<input type="text" class="formcontrol col-xs-12" name="remarks" placeholder="enter comments (if any)"> -->
+<!-- 					</div> -->
 					<div class="col-xs-2">
 						<button class="btn btn-xs btn-primary" id="updatebtn" onclick="postData()">&nbsp;&nbsp;UPDATE&nbsp;&nbsp;</button>
 					</div>

@@ -108,6 +108,7 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "Show STOCK & INVENTORY Tab";
                                             		$menu_arr[] = "Show REPORTS Tab";
                                             		$menu_arr[] = "Show SETTINGS Tab";
+                                            		$menu_arr[] = "Show WORK FLOW Tab";
                                             		$i=1;
                                             		foreach ($menu_arr as $menu_item){
                                             			$chk = "";
@@ -489,6 +490,47 @@ use Illuminate\Support\Facades\Input;
                                         </div>
                                     </div>
                                 </div>
+                                
+                                <div ng-repeat="categry in categoty" class="ng-scope">
+                                    <div class="col-sm-12" style="padding-left: 0px; padding-right: 0px; ">
+                                        <div style="margin-top: 10px; background-color:#666666; color: #ffffff; margin-bottom: 0px; margin-left: -1px; margin-right: -1px;">
+                                            <div class="checkbox" style=" margin-bottom: 0px;padding-left: 40px;">
+                                                <label class="ng-binding">
+                                                    <input type="checkbox" id="tab8" class="ng-pristine ng-untouched ng-valid">
+                                                    Work Flow Operations
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 ng-scope" ng-repeat="privlge in privlage">
+                                            <div ng-if="categry.id===privlge.id" class="col-sm-12 ng-scope">
+                                                 <?php 
+                                            		$menu_arr = array();
+                                            		$menu_arr[] = "workflow of FUEL TRANSACTION";
+                                            		$menu_arr[] = "workflow of REPAIR TRANSACTION";
+                                            		$menu_arr[] = "workflow of PURCHASE TRANSACTION";
+                                            		$menu_arr[] = "workflow of INCHARGE TRANSACTION";
+                                            		$menu_arr[] = "workflow of AUTHORIZATION";
+                                            		
+                                            		$i=501;
+                                            		foreach ($menu_arr as $menu_item){
+                                            			$chk = "";
+                                            			if(in_array($i, $jobs_arr)){
+                                            				$chk = " checked ";
+                                            			}
+                                            	?>
+                                                <div class="col-sm-6 ng-scope" ng-repeat="subPrivlge in privlage[$index].sub_priv">
+                                                    <div class="checkbox" style="margin-bottom: 0px; margin-top: 2px;">
+                                                        <label class="ng-binding">
+                                                        	<input type="checkbox" name="ids[]" value="{{$i}}"  id="{{$i}}" onclick="changeVal(this.value)"  {{$chk}} class="ng-pristine ng-untouched ng-valid">
+                                                            {{$menu_item}}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <?php $i++; }?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 </div>
 
                                 <div >
@@ -640,6 +682,20 @@ use Illuminate\Support\Facades\Input;
 				   }
 				   else{
 					   for(i=401;i<450; i++){
+						 $("#"+i).prop("checked",false);
+					   }
+				   }
+				});
+
+			   $("#tab8").on("click",function(){
+				   val = $("#tab8").prop("checked");
+				   if(val){
+					 for(i=501;i<550; i++){
+						 $("#"+i).prop("checked",true);
+					 }
+				   }
+				   else{
+					   for(i=501;i<550; i++){
 						 $("#"+i).prop("checked",false);
 					   }
 				   }

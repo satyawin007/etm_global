@@ -39,6 +39,7 @@
 
 	@section('page_content')
 		<div class="row ">
+			<div id="showerrormessage" style="text-align: center; font-size: 16px; font-weight: bold"></div>
 			<div class="col-xs-offset-0 col-xs-12" style="max-width:98%;margin-left: 1%;">
 				<?php $form_info = $values["form_info"];?>
 				<?php $jobs = Session::get("jobs");?>
@@ -242,6 +243,10 @@
 		<!-- inline scripts related to angular JS-->
 		<script>
 			submit_data = "false";
+			$("#starttime option").each(function() {  this.selected =(this.text == "07:00 AM")});
+			$("#starttime option").find('option:selected').attr("selected", "selected"); 
+			$('.chosen-select').trigger("chosen:updated");	
+			
 			var app = angular.module('myApp', []);
 			app.controller('myCtrl', function($scope, $http) {
 				$scope.vehicles = [];
@@ -257,6 +262,7 @@
 						}
 					});	
 					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" ||  typeof $scope.servicedate === "undefined" || typeof $scope.endreading === "undefined" || $scope.driver1 === "" || $scope.vehicle === "" || $scope.servicedate === "" || $scope.endreading == "") {
+						alert("There are some required fields / Something went wrong");
 						return;
 					}
 					$scope.distance = $("#distance").val();	
@@ -282,6 +288,8 @@
 
 					$scope.vehicles_text.unshift(text_arr);
 					$scope.vehicles.unshift(veh_arr);
+					$("#starttime option").each(function() {  this.selected =(this.text == "07:00 AM")});
+					$("#starttime option").find('option:selected').attr("selected", "selected"); 
 					$('.chosen-select').trigger("chosen:updated");
 				};
 
@@ -353,6 +361,8 @@
 						return;
 					}
 					alert("updated successfully");
+					$("#starttime option").each(function() {  this.selected =(this.text == "07:00 AM")});
+					$("#starttime option").find('option:selected').attr("selected", "selected"); 
 					$('.chosen-select').trigger("chosen:updated");
 				};
 				
@@ -388,7 +398,8 @@
                             	bootbox.alert(response.message, function(result) {});
                             	resetForm("{{$form_info['name']}}");
                             	$scope.vehicles= [];	
-            					$scope.vehicles_text = [];		
+            					$scope.vehicles_text = [];	
+            					window.setTimeout(function(){location.reload();}, 2000 );	
                             }
                             if(response.status=="fail"){
                             	bootbox.alert(response.message, function(result) {});
@@ -425,6 +436,8 @@
                           }
 	                    });
 		            }
+		            $("#starttime option").each(function() {  this.selected =(this.text == "07:00 AM")});
+					$("#starttime option").find('option:selected').attr("selected", "selected"); 
 		            $('.chosen-select').trigger("chosen:updated");	
 			    }
 			});
@@ -446,6 +459,10 @@
 				$("#status1 option").each(function() { this.selected = (this.text == status); });
 				$("#id1").val(id);		
 				$('.chosen-select').trigger("chosen:updated");	
+			}
+
+			function showPendingLogs(data){
+				bootbox.alert(data);
 			}
 
 			function showPendingServiceLogs (){
@@ -506,6 +523,8 @@
 			      url: "getdepotsbyclientId?id="+val,
 			      success: function(data) {
 			    	  $("#depot").html(data);
+			    	  $("#starttime option").each(function() {  this.selected =(this.text == "07:00 AM")});
+					  $("#starttime option").find('option:selected').attr("selected", "selected"); 
 			    	  $('.chosen-select').trigger("chosen:updated");
 			      },
 			      type: 'GET'
@@ -522,6 +541,8 @@
 			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
 			      success: function(data) {
 			    	  $("#vehicle").html(data);
+			    	  $("#starttime option").each(function() {  this.selected =(this.text == "07:00 AM")});
+					  $("#starttime option").find('option:selected').attr("selected", "selected"); 
 			    	  $('.chosen-select').trigger("chosen:updated");
 			      },
 			      type: 'GET'
@@ -552,24 +573,45 @@
 					  $("#endreading").trigger('input');
 					  $("#distance").val("");
 					  $("#distance").trigger('input');
+					  $("#starttime option").each(function() {  this.selected =(this.text == "07:00 AM")});
+					  $("#starttime option").find('option:selected').attr("selected", "selected"); 
 					  $('.chosen-select').trigger("chosen:updated");
 			      },
 			      type: 'GET'
 			   });
 			}
 
-			function getDriverHelper (val){
+			function getDriverHelper(val){
 				clientId =  $("#clientname").val();
 				depotId = $("#depot").val();
 				$.ajax({
-			      url: "getdriverhelper?clientid="+clientId+"&depotid="+depotId+"&vehicleid="+val,
+			      url: "checkpendingdates?clientid="+clientId+"&depotid="+depotId+"&vehicleid="+val,
 			      success: function(data) {
-				      data = JSON.parse(data);
-			    	  $("#driver1").html(data[0]);
-			    	  $("#driver2").html(data[1]);
-			    	  $("#helper").html(data[2]);
-			    	  $("#servicedate").html(data[3]);
-			    	  $('.chosen-select').trigger("chosen:updated");
+			    	  data = JSON.parse(data);
+			    	  if(data.status=="success"){			    	  
+				    	  $.ajax({
+						      url: "getdriverhelper?clientid="+clientId+"&depotid="+depotId+"&vehicleid="+val,
+						      success: function(data) {
+							      data = JSON.parse(data);
+						    	  $("#driver1").html(data[0]);
+						    	  $("#driver2").html(data[1]);
+						    	  $("#helper").html(data[2]);
+						    	  $("#servicedate").html(data[3]);
+						    	  $("#starttime option").each(function() {  this.selected =(this.text == "07:00 AM")});
+								  $("#starttime option").find('option:selected').attr("selected", "selected"); 
+						    	  $('.chosen-select').trigger("chosen:updated");
+						      },
+						      type: 'GET'
+						  });
+				    	  $("#showerrormessage").html("");
+			    	  }
+			    	  else{
+			    		  $("#servicedate").html("<option value=''>select service date</option>");
+			    		  $("#starttime option").each(function() {  this.selected =(this.text == "07:00 AM")});
+						  $("#starttime option").find('option:selected').attr("selected", "selected"); 
+			    		  $('.chosen-select').trigger("chosen:updated");
+			    		  $("#showerrormessage").html(data.message);
+			    	  }
 			      },
 			      type: 'GET'
 			   });
@@ -648,7 +690,9 @@
 		    	$("#div_helper").hide();	
 
 				$('#endreading').on('change', function() { 
-					if($('#endreading').val()<$('#startreading').val()){
+					endreading = parseInt($('#endreading').val());
+					startreading = parseInt($('#startreading').val());
+					if(endreading<=startreading){
 						alert("End Reading must be greater than Start Reading");
 						$('#endreading').val("");
 						return;
@@ -717,6 +761,8 @@
 					      success: function(data) {
 						      data = JSON.parse(data);
 					    	  $("#pendingdates").html(data[0]);
+					    	  $("#starttime option").each(function() {  this.selected =(this.text == "07:00 AM")});
+							  $("#starttime option").find('option:selected').attr("selected", "selected"); 
 					    	  $('.chosen-select').trigger("chosen:updated");
 					      },
 					      type: 'GET'

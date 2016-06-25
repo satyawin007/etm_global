@@ -52,6 +52,12 @@ class PurchaseOrderController extends \Controller {
 			$recid = "";
 			try{
 				$recid = $db_functions_ctrl->insertRetId($table, $fields);
+				if(isset($values["incharge"]) && $values["incharge"]>0){
+					$incharge_acct = \InchargeAccounts::where("empid","=",$values["incharge"])->first();
+					$balance_amount = $incharge_acct->balance;
+					$balance_amount = $balance_amount-$values["totalamount"];
+					\InchargeAccounts::where("empid","=",$values["incharge"])->update(array("balance"=>$balance_amount));
+				}
 			}
 			catch(\Exception $ex){
 				\Session::put("message","Add Purchase order : Operation Could not be completed, Try Again!");
@@ -402,7 +408,9 @@ class PurchaseOrderController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymenttype", "content"=>"payment type", "readonly"=>"", "required"=>"required","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"), "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incharges_arr);
+		$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange", "script"=>"getInchargeBalance(this.value)"),  "options"=>$incharges_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"inchargebalance", "value"=>"", "content"=>"Incharge balance", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"comments", "content"=>"comments", "readonly"=>"", "required"=>"","type"=>"textarea", "class"=>"form-control ");
 		$form_fields[] = $form_field;
@@ -718,7 +726,9 @@ class PurchaseOrderController extends \Controller {
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"enableincharge", "id"=>"enableincharge", "content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
 				$form_fields[] = $form_field;
-				$form_field = array("name"=>"incharge", "id"=>"incharge", "value"=>$entity->inchargeId, "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incharges_arr);
+				$form_field = array("name"=>"incharge", "id"=>"incharge", "value"=>$entity->inchargeId, "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange", "script"=>"getInchargeBalance(this.value)"), "options"=>$incharges_arr);
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"inchargebalance", "value"=>"", "content"=>"Incharge balance", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"amountpaid", "id"=>"amountpaid", "value"=>$entity->amountPaid, "content"=>"amount paid", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onChange","script"=>"enablePaymentType(this.value)"), "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
 				$form_fields[] = $form_field;
@@ -890,7 +900,7 @@ class PurchaseOrderController extends \Controller {
 		
 		$values['create_link'] = array("href"=>"createpurchaseorder","text"=>"CREATE PURCHASE ORDER");
 	
-		$theads = array('Credit supplier','Warehouse', "received By", "order date", "bill number", "amount paid", "payment type", "total amount", "comments", "status", "Actions");
+		$theads = array('Credit supplier','Warehouse', "received By", "order date", "bill number", "amount paid", "payment type", "total amount", "comments", "status",  'created by', 'wf status', 'wf updated By', 'wf_remarks', "Actions");
 		$values["theads"] = $theads;
 	
 		//Code to add modal forms

@@ -397,6 +397,10 @@ class DataTableController extends \Controller {
 		$select_args[] = "purchase_orders.totalAmount as totalAmount";
 		$select_args[] = "purchase_orders.comments as comments";
 		$select_args[] = "purchase_orders.status as status";
+		$select_args[] = "employee2.fullName as createdBy";
+		$select_args[] = "purchase_orders.workFlowStatus as workFlowStatus";
+		$select_args[] = "employee3.fullName as updatedBy";
+		$select_args[] = "purchase_orders.workFlowRemarks as workFlowRemarks";
 		$select_args[] = "purchase_orders.id as id";
 		$select_args[] = "purchase_orders.filePath as filePath";
 		$actions = array();
@@ -412,7 +416,13 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \PurchasedOrders::where("creditsuppliers.supplierName", "like", "%$search%")->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")->join("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")->join("employee","employee.id","=","purchase_orders.receivedBy")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \PurchasedOrders::where("creditsuppliers.supplierName", "like", "%$search%")
+						->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
+						->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+						->leftjoin("employee","employee.id","=","purchase_orders.receivedBy")
+						->leftjoin("employee as employee2", "employee2.id","=","purchase_orders.createdBy")
+						->leftjoin("employee as employee3", "employee3.id","=","purchase_orders.updatedBy")
+						->select($select_args)->limit($length)->offset($start)->get();
 			$total = count($entities);
 		}
 		else{
@@ -421,6 +431,8 @@ class DataTableController extends \Controller {
 						->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
 						->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
 						->leftjoin("employee","employee.id","=","purchase_orders.receivedBy")
+						->leftjoin("employee as employee2", "employee2.id","=","purchase_orders.createdBy")
+						->leftjoin("employee as employee3", "employee3.id","=","purchase_orders.updatedBy")
 						->select($select_args)->limit($length)->offset($start)->get();
 			$total = \PurchasedOrders::where("purchase_orders.status","ACTIVE")
 						->where("purchase_orders.type","PURCHASE ORDER")->count();
@@ -453,7 +465,10 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[10] = $action_data;
+			if(isset($entity["workFlowStatus"]) && $entity["workFlowStatus"]=="Approved"){
+				$action_data = "";
+			}
+			$data_values[14] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

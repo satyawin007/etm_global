@@ -1,3 +1,6 @@
+<?php
+use settings\AppSettingsController;
+?>
 @extends('masters.master')
 	@section('inline_css')
 		<style>
@@ -20,9 +23,28 @@
 			td {
 			    white-space: nowrap;
 			}
+			panel-group .panel {
+			    margin-bottom: 20px;
+			    border-radius: 4px;
+			}
+			label{
+				text-align: right;
+				margin-top: 3px;
+			}
+			.ace-file-input {
+			    text-align: left !important;
+			}
+			.chosen-container{
+			  width: 100% !important;
+			}
 		</style>
-		
+	@stop
+	
+	@section('page_css')
+		<link rel="stylesheet" href="../assets/css/jquery-ui.custom.css" />
 		<link rel="stylesheet" href="../assets/css/bootstrap-datepicker3.css"/>
+		<link rel="stylesheet" href="../assets/css/chosen1.css" />
+		<link rel="stylesheet" href="../assets/css/daterangepicker.css" />
 	@stop
 	
 	@section('bredcum')	
@@ -33,7 +55,109 @@
 		</small>
 	@stop
 
-	@section('page_content')	
+	@section('page_content')
+		<?php if(isset($values["create_link"])){ 
+			$create_link  = $values["create_link"];
+			if(isset($values["type"])&& $values["type"]=="contracts"){
+				$create_link['href'] = $create_link['href']."?type=contracts";
+			}
+		?>
+		<div class="row" style="margin-right: 0px;"><div class="pull-right tableTools-container"><a class="btn btn-sm btn-primary"  href="{{$create_link['href']}}" >{{$create_link["text"]}}</a></div></div>
+		<?php } ?>
+		<div class="clearfix col-xs-12 input-group">
+			<form action="{{$values['form_action']}}" name="paginate" id="paginate">
+			<div class="col-xs-5">
+				<div class="form-group">
+					<label class="col-xs-3 control-label no-padding-right" for="form-field-1">DATE RANGE<span style="color:red;">*</span></label>
+					<div class="col-xs-9">
+						<div class="input-daterange input-group">
+							<input type="text" id="fromdate"  style="padding-top: 15px;padding-bottom: 18px;" required="required" name="fromdate" <?php if(isset($values["fromdate"])) echo " value=".$values["fromdate"]." "; ?> class="input-sm form-control"/>
+							<span class="input-group-addon">
+								<i class="fa fa-exchange"></i>
+							</span>
+							<input type="text" class="input-sm form-control"  style="padding-top: 15px;padding-bottom: 18px;" id="todate" required="required" <?php if(isset($values["fromdate"])) echo " value=".$values["todate"]." "; ?>  name="todate"/>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xs-4">
+				<?php if(false){ ?>
+					<div class="form-group">
+						<div class="col-xs-6">
+							<?php 
+								$form_field = array("name"=>"clientname1", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot1(this.value);"), "class"=>"form-control chosen-select");
+							?>
+							<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+								<option value="">-- {{$form_field['name']}} --</option>
+								<?php 
+									$clients =  AppSettingsController::getEmpClients();
+									foreach ($clients as $client){
+										echo '<option value="'.$client['id'].'">'.$client['name'].'</option>'; 
+									}
+								?>
+							</select>
+						</div>
+						<div class="col-xs-6">
+							<?php 
+								$form_field = array("name"=>"depot1", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+							?>
+							<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+								<option value="">-- {{$form_field['name']}} --</option>
+							</select>
+						</div>
+					</div>	
+				<?php } else {?>
+					<div class="form-group">
+					<?php 
+						$branches =  AppSettingsController::getEmpBranches();
+						$branches_arr = array();
+						foreach ($branches as $branch){
+							$branches_arr[$branch["id"]] = $branch["name"];
+						}
+						if(!isset($values['branch1'])){
+							$values["branch1"] = 0;
+						}
+					?>
+					<?php $form_field = array("name"=>"branch1", "value"=>$values["branch1"], "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>
+					<label class="col-xs-2 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+					<div class="col-xs-10">
+						<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+							<option value="">-- {{$form_field['name']}} --</option>
+							<?php 
+								foreach($form_field["options"] as $key => $value){
+									if(isset($form_field['value']) && $form_field['value']==$key) { 
+										echo "<option selected='selected' value='$key'>$value</option>";
+									}
+									else{
+										echo "<option value='$key'>$value</option>";
+									}
+								}
+							?>
+						</select>
+					</div>			
+				</div>
+				<?php } ?>
+			</div>
+			<div class="col-xs-1" style="margin-top: 0px; margin-left:-20px; margin-bottom: -10px">
+				<div class="form-group">
+					<label class="col-xs-0 control-label no-padding-right" for="form-field-1"> </label>
+					<div class="col-xs-5">
+						<input class="btn btn-sm btn-primary" type="button" value="GET" onclick="test()"/>
+					</div>			
+				</div>
+			</div>
+			<input type="hidden" name="page" id="page" /> 
+			<?php 
+			if(isset($values['links'])){
+				$links = $values['links'];
+				foreach($links as $link){
+					echo "<a class='btn btn-white btn-success' href=".$link['url'].">".$link['name']."</a> &nbsp; &nbsp; &nbsp";
+				}
+			}
+			?>
+			<?php echo "<input type='hidden' name='action' value='".$values['action_val']."'/>"; ?>					
+			</form>
+		</div>	
 		<div class="col-xs-12">
 			<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
 			<div class="clearfix">
@@ -72,14 +196,7 @@
 				</div>
 				<div class="pull-right tableTools-container"></div>
 			</div>
-			<?php if(isset($values["create_link"])){ 
-				$create_link  = $values["create_link"];
-				if(isset($values["type"])&& $values["type"]=="contracts"){
-					$create_link['href'] = $create_link['href']."?type=contracts";
-				}
-			?>
-			<div class="row" style="margin-right: 0px;"><div class="pull-right tableTools-container"><a class="btn btn-sm btn-primary"  href="{{$create_link['href']}}" >{{$create_link["text"]}}</a></div></div>
-			<?php } ?>
+			
 			<div class="table-header" style="margin-top: 10px;">
 				Results for "{{$values['bredcum']}}"	
 				<?php $jobs = Session::get("jobs");?>			 
@@ -144,7 +261,11 @@
 		<script src="../assets/js/dataTables/extensions/buttons/buttons.colVis.js"></script>
 		<script src="../assets/js/dataTables/extensions/select/dataTables.select.js"></script>
 		<script src="../assets/js/date-time/bootstrap-datepicker.js"></script>
+		<script src="../assets/js/date-time/moment.js"></script>
+		<script src="../assets/js/date-time/daterangepicker.js"></script>		
 		<script src="../assets/js/bootbox.js"></script>
+		<script src="../assets/js/chosen.jquery.js"></script>
+		<script src="../assets/js/autosize.js"></script>
 	@stop
 	
 	@section('inline_js')
@@ -188,6 +309,16 @@
 					}
 				});
 			};
+			
+			function getInchargeBalance(val){
+				$.ajax({
+				  url: "getinchargebalance?id="+val,
+				  success: function(data) {
+					  $("#inchargebalance").val(data);
+				  },
+				  type: 'GET'
+			   });
+			}
 
 			function modalEditRepairTransaction(id){
 				//$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
@@ -216,6 +347,30 @@
 		        });
 	    	    $("#modal_body").html(ifr);
 			};
+
+			function test(){
+				url="gettransactiondatatabledata?name=<?php echo $values["provider"] ?>";
+				branch = $("#branch1").val();
+				if(branch == ""){
+					alert("select branch");
+					return;
+				}
+				url = url+"&branch="+branch;
+				fdt = $("#fromdate").val();
+				if(fdt == ""){
+					alert("select FROM date");
+					return;
+				}
+				url = url+"&fromdate="+fdt;
+				tdt = $("#todate").val();
+				if(tdt == ""){
+					alert("select TO date");
+					return;
+				}
+				url = url+"&todate="+tdt;
+				myTable.ajax.url(url).load();
+				//$("#paginate").submit();				
+			}
 
 			function getManufacturers(id){
 				$.ajax({
@@ -278,10 +433,44 @@
 				this.value = this.value.replace(/[^0-9.]/g, ''); 
 				this.value = this.value.replace(/(\..*)\./g, '$1');
 			});
+
+			//or change it into a date range picker
+			$('.input-daterange').datepicker({autoclose:true,todayHighlight: true});
+
+			if(!ace.vars['touch']) {
+				$('.chosen-select').chosen({allow_single_deselect:true}); 
+				//resize the chosen on window resize
+		
+				$(window)
+				.off('resize.chosen')
+				.on('resize.chosen', function() {
+					$('.chosen-select').each(function() {
+						 var $this = $(this);
+						 $this.next().css({'width': $this.parent().width()});
+					})
+				}).trigger('resize.chosen');
+				//resize chosen on sidebar collapse/expand
+				$(document).on('settings.ace.chosen', function(e, event_name, event_val) {
+					if(event_name != 'sidebar_collapsed') return;
+					$('.chosen-select').each(function() {
+						 var $this = $(this);
+						 $this.next().css({'width': $this.parent().width()});
+					})
+				});
+		
+		
+				$('#chosen-multiple-style .btn').on('click', function(e){
+					var target = $(this).find('input[type=radio]');
+					var which = parseInt(target.val());
+					if(which == 2) $('#form-field-select-4').addClass('tag-input-style');
+					 else $('#form-field-select-4').removeClass('tag-input-style');
+				});
+			}
 			
+			var myTable = null;
 			jQuery(function($) {
 				//initiate dataTables plugin
-				var myTable = 
+				myTable = 
 				$('#dynamic-table')
 				//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
 
@@ -301,7 +490,7 @@
 					"bProcessing": true,
 			        "bServerSide": true,
 					"ajax":{
-		                url :"gettransactiondatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
+		                url :"gettransactiondatatabledata?name=", // json datasource
 		                type: "post",  // method  , by default get
 		                error: function(){  // error handling
 		                    $(".employee-grid-error").html("");

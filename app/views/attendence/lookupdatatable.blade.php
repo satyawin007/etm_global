@@ -221,6 +221,7 @@
 										</div>			
 									</div>
 									<input type="hidden" name="recid" id="recid" value="" />
+									<input type="hidden" name="empid" id="empid" value="" />
 									<input type="hidden" name="cellid" id="cellid" value="" />
 												
 									<div class="modal-footer">
@@ -274,6 +275,18 @@
 			$("#depot").attr("disabled",true);
 			$("#officebranch").attr("disabled",true);
 
+			<?php
+				if(isset($values["officebranch"]) && $values["officebranch"]!=0 ){
+					echo '$("#officebranch").attr("disabled",false); ';
+				}
+				if(isset($values["client"]) && $values["client"]!=0 ){
+					echo '$("#clientname").attr("disabled",false); ';
+				}
+				if(isset($values["depot"]) && $values["officebranch"]!=0 ){
+					echo '$("#depot").attr("disabled",false); ';
+				}
+			?>
+		
 			$("#getbtn").on("click",function(){
 				logstatus = $("#logstatus").val();
 				url = "";
@@ -327,6 +340,14 @@
 				if(attendence_data.length == 0){
 					return;
 				}
+
+				$.ajax({
+                    url: "addattendencelog",
+                    type: "post",
+                    data: $("#attendence").serialize(),
+                    success: function(response) {}
+                });
+                
 				$('#jsondata').val(JSON.stringify(attendence_data));
 				$.ajax({
                     url: "addattendence",
@@ -346,10 +367,13 @@
 			}
 
 			function postDataUpdate(){
-				if(attendence_data_update.length== 0){
-					alert("No data to SEND");
-					return;
-				}
+				$.ajax({
+                    url: "addattendencelog?action=update",
+                    type: "post",
+                    data: $("#attendence").serialize(),
+                    success: function(response) {}
+                });
+                
 				$('#jsondata').val(JSON.stringify(attendence_data_update));
 				$.ajax({
                     url: "updateattendence",
@@ -382,6 +406,7 @@
 			function formValuesUpdate(){
 				data = {};
 				data["recid"] = $("#recid").val();
+				data["empid"] = $("#empid").val();
 				data["Substitute"] = $("#substitute1").val();
 				data["comments"] = $("#comments1").val();
 				data["statuschangecomments"] = $("#statuschangecomments1").val();
@@ -432,9 +457,16 @@
 				//alert(id+" "+empid+" "+type);
 				$("#empid").val(empid);
 				$text = $("#"+id).html();
-				$("#"+id).html("P");
-				$("#"+id).css("color","green");
-				if($text == "P"){
+				day = $('input[name=day]:radio:checked').val();
+				if(day == "HOLIDAY"){
+					$("#"+id).html("H");
+					$("#"+id).css("color","red");
+				}
+				else{
+					$("#"+id).html("P");
+					$("#"+id).css("color","green");
+				}
+				if($text == "P" || $text == "H"){
 					if(type == "driver"|| type == "helper"){
 						$("#modaledit").click();
 					}
@@ -463,7 +495,7 @@
 				}
 			}
 
-			function updateAttendenceValues(id, type, substitute, status, comments, comments1, recid){
+			function updateAttendenceValues(id, empid, type, substitute, status, comments, comments1, recid){
 				text = $("#"+id).html();
 				$("#cellid").val(id);
 				$("#recid").val(recid);
@@ -475,6 +507,7 @@
 					$("#comments1").val(comments);
 					$("#statuschangecomments1").val(comments1);
 					$("#recid").val(recid);
+					$("#empid").val(empid);
 					$('.chosen-select').trigger("chosen:updated");
 					$("#modalupdate").click();
 				}
@@ -484,6 +517,7 @@
 					$("#comments1").attr("disabled",true);
 					$("#statuschangecomments1").val(comments1);
 					$("#recid").val(recid);
+					$("#empid").val(empid);
 					$('.chosen-select').trigger("chosen:updated");
 					$("#modalupdate").click();
 				}
@@ -556,16 +590,18 @@
 				$("#add").show();
 				myTable.ajax.url(url).load();
 
-				$.ajax({
-                    url: "getdaytotalattendence",
-                    data: $("#attendence").serialize(),
-                    type: "post",
-                    success: function(response) {
-                    	response = jQuery.parseJSON(response);	
-                    	$("#noofpresents").val(response.noofpresents);
-                    	$("#noofabsents").val(response.noofabsents);
-                    }
-                });
+				setTimeout(function(){ 
+					$.ajax({
+	                    url: "getdaytotalattendence",
+	                    data: $("#attendence").serialize(),
+	                    type: "post",
+	                    success: function(response) {
+	                    	response = jQuery.parseJSON(response);	
+	                    	$("#noofpresents").val(response.noofpresents);
+	                    	$("#noofabsents").val(response.noofabsents);
+	                    }
+	                });
+				}, 2000);
 			}
 
 			function changeDepot(val){
@@ -648,21 +684,23 @@
 				$("#add").show();
 				myTable.ajax.url(url).load();
 
-				$.ajax({
-                    url: "getdaytotalattendence",
-                    data: $("#attendence").serialize(),
-                    type: "post",
-                    success: function(response) {
-                    	response = jQuery.parseJSON(response);	
-                    	$("#noofpresents").val(response.noofpresents);
-                    	$("#noofabsents").val(response.noofabsents);
-                    }
-                });
+				setTimeout(function(){ 
+					$.ajax({
+	                    url: "getdaytotalattendence",
+	                    data: $("#attendence").serialize(),
+	                    type: "post",
+	                    success: function(response) {
+	                    	response = jQuery.parseJSON(response);	
+	                    	$("#noofpresents").val(response.noofpresents);
+	                    	$("#noofabsents").val(response.noofabsents);
+	                    }
+	                });
+				}, 2000);
 			}
 
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 

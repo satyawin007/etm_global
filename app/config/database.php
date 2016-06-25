@@ -55,7 +55,7 @@ return array(
 		'mysql' => array(
 			'driver'    => 'mysql',
 			'host'      => 'localhost',
-			'database'  => 'etm_global4',
+			'database'  => 'etm_global',
 			'username'  => 'root',
 			'password'  => '',
 			'charset'   => 'utf8',

@@ -112,10 +112,12 @@
 									<td>VEHICLE</td>
 									<td>EMI PERIOD</td>
 									<td>EMI</td>
+									<td>PAID AMT</td>
 									<td>PAID EMIS</td>
 									<td>PAYMENT TYPE</td>
 									<td>BANK NAME</td>
 									<td>LOAN NO</td>
+									<td>REMARKS</td>
 								</tr>
 							</thead>
 							<tbody id="tbody1">
@@ -405,7 +407,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null, null, null,  null
+						  null, null, null, null, null, null, null, null, null, null,  null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",

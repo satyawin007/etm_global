@@ -156,6 +156,7 @@ class OfficeBranchController extends \Controller {
 	public function editOfficeBranch()
 	{
 		$values = Input::all();
+		$values["Sdf"];
 		if (\Request::isMethod('post'))
 		{
 		$field_names = array("cityname"=>"cityId","officebranchcode"=>"code", "officebranchname"=>"name","statename"=>"stateId","iswarehouse"=>"isWareHouse");

@@ -100,7 +100,7 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['reporttype'])){ echo '"'.strtoupper($values['reporttype'])." REPORT".'"';} ?>				 
+						Results for BRANCH SUMMARY SALARY REPORT				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -112,6 +112,7 @@
 									<td>ACTUAL SALARY</td>
 									<td>DUE DEDUCTIONS</td>
 									<td>LEAVE DEDUCTION</td>
+									<td>OTHER AMOUNT</td>
 									<td>PF</td>
 									<td>ESI</td>
 									<td>PAID SALARY</td>
@@ -130,7 +131,7 @@
 						<div id="tableTools-container2" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+						Results for BRANCH WISE SALARY REPORT
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -146,6 +147,7 @@
 									<td>ACTUAL SALARY</td>
 									<td>DUE DEDUCTIONS</td>
 									<td>LEAVE DEDUCTION</td>
+									<td>OTHER AMOUNT</td>
 									<td>PF</td>
 									<td>ESI</td>
 									<td>PAID SALARY</td>
@@ -194,7 +196,7 @@
 						<div id="tableTools-container2" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+						Results for DETAILED SALARY REPORT				 				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -204,15 +206,26 @@
 								<tr>
 									<td>BRANCH NAME</td>
 									<td>EMP NAME</td>
-									<td>SALARY MONTH</td>
-									<td>SALARY PAID ON</td>
-									<td>PAYMENT INFO</td>
-									<td>ACTUAL SALARY</td>
-									<td>DUE DEDUCTIONS</td>
-									<td>LEAVE DEDUCTION</td>
-									<td>PF</td>
-									<td>ESI</td>
-									<td>PAID SALARY</td>
+									<td>DESIGNATION</td>
+									<td>SAL MONTH</td>
+									<td>SAL PAID ON</td>
+									<td>JOIN DATE</td>
+									<td>ACTUAL SAL</td>
+									<td>TOT WORKING DAYS</td>
+									<td>CAS. LEAVES</td>
+									<td>LEAVES</td>
+									<td>EARLY TERM. DAYS</td>
+									<td>EMP WORKING DAYS</td>
+									<td>DUE AMOUNT</td>
+									<td>LEAVE AMT</td>
+									<td>OTHER AMT</td>
+									<td>PREV SAL</td>
+									<td>INCR AMT</td>
+									<td>INCR DATE</td>
+									<td>GROSS SAL</td>
+									<td>NET SAL</td>
+									<td>CARD NO</td>
+									<td>COMMENTS</td>
 								</tr>
 							</thead>
 							<tbody id="tbody2">
@@ -280,6 +293,13 @@
 			$("#fuelstationid").hide();
 			$("#vehicleid").hide();
 			$("#driverid").hide();
+			$("#employeetype").attr("disabled",true);
+			$("#officebranch").attr("disabled",true);
+			$("#clientname").attr("disabled",true);
+			$("#depot").attr("disabled",true);
+			$("#paidfrombranch").attr("disabled",true);
+			$("#employee").attr("disabled",true);
+			$("#month").attr("disabled",true);
 			reporttype = "";
 
 			function generateReport(){
@@ -288,21 +308,30 @@
 			}
 
 			function showSelectionType(val){
+				$("#employeetype").attr("disabled",true);
+				$("#officebranch").attr("disabled",true);
+				$("#clientname").attr("disabled",true);
+				$("#depot").attr("disabled",true);
+				$("#paidfrombranch").attr("disabled",true);
+				$("#employee").attr("disabled",true);
+				$("#month").attr("disabled",true);
+				if(val == "detailed_salary_report"){
+					$("#employeetype").attr("disabled",false);
+					$("#month").attr("disabled",false);
+				}
 				if(val == "branch_wise_salary_report" || val == "bank_payment_report"){
 					$("#employee").attr("disabled",true);
 					$("#paidfrombranch").attr("disabled",false);
-					$('.chosen-select').trigger('chosen:updated');
 				}
 				if(val == "employee_wise_salary_report"){
 					$("#paidfrombranch").attr("disabled",true);
 					$("#employee").attr("disabled",false);
-					$('.chosen-select').trigger('chosen:updated');
 				}
 				if(val == "pf_report" || val == "esi_report"){
 					$("#paidfrombranch").attr("disabled",true);
 					$("#employee").attr("disabled",true);
-					$('.chosen-select').trigger('chosen:updated');
 				}
+				$('.chosen-select').trigger('chosen:updated');
 			}
 
 			function paginate(page){
@@ -317,6 +346,34 @@
 					alert("select paid from branch");
 					return;
 				}
+
+				if(reporttype == "detailed_salary_report"){
+					employeetype = $('#employeetype').val();
+					if(employeetype == ""){
+						alert("please select employee type");
+						return;
+					}
+
+					month = $('#month').val();
+					if(month == ""){
+						alert("please select month");
+						return;
+					}
+					
+					officebranch = $('#officebranch').val();
+					if(employeetype == "OFFICE" && officebranch==""){
+						alert("please select office branch");
+						return;
+					}
+	
+					clientname = $('#clientname').val();
+					clientbranch = $('#depot').val();
+					if(employeetype == "CLIENT BRANCH" && (clientname=="" || clientbranch=="")){
+						alert("please select client name and  branch");
+						return;
+					}
+				}
+				
 				employee = $("#employee").val();
 				if(reporttype == "employee_wise_salary_report" &&  employee == ""){
 					alert("select employee");
@@ -380,7 +437,7 @@
 							$("#table3").show();
 							$("#table4").hide();		
 			        	}
-			        	else if(reporttype == "bank_payment_report"){
+			        	else if(reporttype == "detailed_salary_report"){
 							myTable4.clear().draw();
 							myTable4.rows.add(arr); // Add new data
 							myTable4.columns.adjust().draw(); // Redraw theDataTable
@@ -399,7 +456,35 @@
 				$("#id1").val(id);
 				return;				
 			}
-			
+
+			function changeDepot(val){
+				$.ajax({
+			      url: "getdepotsbyclientId?id="+val,
+			      success: function(data) {
+			    	  $("#depot").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			    });
+
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+			}
+
+			function enableClientDepot(val){
+				$("#paidfrombranch").attr("disabled",true);
+				if(val == "OFFICE"){
+					$("#clientname").attr("disabled",true);
+					$("#depot").attr("disabled",true);
+					$("#officebranch").attr("disabled",false);
+				}
+				else if(val == "CLIENT BRANCH"){
+					$("#clientname").attr("disabled",false);
+					$("#depot").attr("disabled",false);
+					$("#officebranch").attr("disabled",true);
+				}
+				$('.chosen-select').trigger("chosen:updated");
+			}
 
 			function modalEditTransaction(id){
 				//$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
@@ -549,7 +634,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null, null
+						  null, null, null,  null, null, null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -592,7 +677,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null, null, null, null, null, null
+						  null, null, null, null, null, null, null, null, null, null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -636,7 +721,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null
+						  null, null, null, null, null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -679,7 +764,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null, null, null, null, null, null
+						  null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",

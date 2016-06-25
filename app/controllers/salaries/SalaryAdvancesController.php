@@ -151,7 +151,7 @@ class SalaryAdvancesController extends \Controller {
 		$branches = AppSettingsController::getEmpBranches();
 		$branches_arr = array();
 		foreach ($branches as $branch){
-			$branches_arr[$branch->id] = $branch->name;
+			$branches_arr[$branch["id"]] = $branch["name"];
 		}
 		
 		$select_args = array();
@@ -166,7 +166,7 @@ class SalaryAdvancesController extends \Controller {
 		$form_fields = array();		
 		$form_field = array("name"=>"employeetype", "content"=>"employee type", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>array("office employee"=>"OFFICE EMPLOYEE","driver and helper"=>"DRIVER and HELPER"), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"branch", "content"=>"office branch", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$branches_arr, "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"branch", "content"=>"office branch", "readonly"=>"", "required"=>"", "type"=>"select", "options"=>$branches_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"employeename", "content"=>"employee name", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;

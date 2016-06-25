@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
 use masters\BlockDataEntryController;
+use settings\AppSettingsController;
 class DataTableController extends \Controller {
 
 	/**
@@ -46,6 +47,12 @@ class DataTableController extends \Controller {
 			$total = $ret_arr["total"];
 			$data = $ret_arr["data"];
 		}
+		else if(isset($values["name"]) && $values["name"]=="purchaseorders") {
+			$ret_arr = $this->getPurchaseOrders($values, $length, $start);
+			$total = $ret_arr["total"];
+			$data = $ret_arr["data"];
+		}
+		
 		
 		$json_data = array(
 				"draw"            => intval( $_REQUEST['draw'] ),
@@ -215,7 +222,7 @@ class DataTableController extends \Controller {
 		return array("total"=>$total, "data"=>$data);
 	}
 	
-private function getVehicleRepairs($values, $length, $start){
+	private function getVehicleRepairs($values, $length, $start){
 		$total = 0;
 		$data = array();
 		$select_args = array();
@@ -233,6 +240,7 @@ private function getVehicleRepairs($values, $length, $start){
 		$select_args[] = "creditsuppliertransactions.amount as amount";
 		$select_args[] = "creditsuppliertransactions.comments as comments";
 		$select_args[] = "creditsuppliertransdetails.vehicleIds as vehicleIds";
+		$select_args[] = "employee2.fullName as createdBy";
 		$select_args[] = "creditsuppliertransactions.workFlowStatus as workFlowStatus";
 		$select_args[] = "creditsuppliertransactions.workFlowRemarks as workFlowRemarks";
 		$select_args[] = "creditsuppliertransactions.status as status";
@@ -253,6 +261,31 @@ private function getVehicleRepairs($values, $length, $start){
 			$actions[] = $action;
 		}
 		$values["actions"] = $actions;
+		
+		$assingedBranches = AppSettingsController::getEmpBranches();
+		$emp_branches_str = "";
+		foreach ($assingedBranches as $assingedBranch){
+			$emp_branches_str = $emp_branches_str.$assingedBranch["id"].",";
+		}
+		$emp_branches_str = substr($emp_branches_str, 0, strlen($emp_branches_str)-1);
+		$emp_contracts = \Auth::user()->contractIds;
+		$emp_contracts_str = "";
+		if($emp_contracts=="" || $emp_contracts==0){
+			$clients = \Contract::All();
+			foreach ($clients as $client){
+				$emp_contracts_str = $emp_contracts_str.$client->id.",";
+			}
+		}
+		else{
+			$emp_contracts = explode(",", $emp_contracts);
+			$depots = \Depot::whereIn("depots.id",$emp_contracts)
+			->join("contracts", "depots.id", "=","contracts.depotId")
+			->select(array("contracts.id as id"))->get();
+			foreach ($depots as $depot){
+				$emp_contracts_str = $emp_contracts_str.$depot->id.",";
+			}
+		}
+		$emp_contracts_str = substr($emp_contracts_str, 0, strlen($emp_contracts_str-1));
 	
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
@@ -267,8 +300,19 @@ private function getVehicleRepairs($values, $length, $start){
 			foreach ($branches as $branch){
 				$branchids_arr[] = $branch->id;
 			}
-			$entities = \CreditSupplierTransactions::whereIn("creditsuppliertransactions.branchId",$branchids_arr)->orWhereIn("creditsuppliertransactions.creditSupplierId",$supids_arr)->where("creditsuppliertransactions.deleted","=","No")->leftjoin("vehicle", "vehicle.id","=","creditsuppliertransactions.vehicleId")->leftjoin("officebranch", "officebranch.id","=","creditsuppliertransactions.branchId")->leftjoin("creditsuppliers", "creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = \CreditSupplierTransactions::whereIn("creditsuppliertransactions.branchId",$branchids_arr)->orWhereIn("creditsuppliertransactions.creditSupplierId",$supids_arr)->where("creditsuppliertransactions.deleted","=","No")->count();
+			$entities = \CreditSupplierTransactions::whereIn("creditsuppliertransactions.branchId",$branchids_arr)
+							->orWhereIn("creditsuppliertransactions.creditSupplierId",$supids_arr)
+							->where("creditsuppliertransactions.deleted","=","No")
+							->whereRaw('(creditsuppliertransactions.branchId in('.$emp_branches_str.') or creditsuppliertransactions.contractId in('.$emp_contracts_str.'))')
+							->leftjoin("vehicle", "vehicle.id","=","creditsuppliertransactions.vehicleId")
+							->leftjoin("employee as employee2", "employee2.id","=","creditsuppliertransactions.createdBy")
+							->leftjoin("officebranch", "officebranch.id","=","creditsuppliertransactions.branchId")
+							->leftjoin("creditsuppliers", "creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
+							->select($select_args)->limit($length)->offset($start)->get();
+			$total = \CreditSupplierTransactions::whereIn("creditsuppliertransactions.branchId",$branchids_arr)
+							->orWhereIn("creditsuppliertransactions.creditSupplierId",$supids_arr)
+							->whereRaw('(creditsuppliertransactions.branchId in('.$emp_branches_str.') or creditsuppliertransactions.contractId in('.$emp_contracts_str.'))')
+							->where("creditsuppliertransactions.deleted","=","No")->count();
 		}
 		else {
 			$qry = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No");
@@ -276,11 +320,13 @@ private function getVehicleRepairs($values, $length, $start){
 								$qry->where("creditsuppliertransactions.workFlowStatus","=",$values["logstatus"]);
 							}
 							$qry->where("creditsuppliertransdetails.status","=","ACTIVE")
+							->whereRaw('(creditsuppliertransactions.branchId in('.$emp_branches_str.') or creditsuppliertransactions.contractId in('.$emp_contracts_str.'))')
 							->leftjoin("creditsuppliertransdetails", "creditsuppliertransdetails.creditSupplierTransId","=","creditsuppliertransactions.id")
 							->leftjoin("creditsuppliers", "creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
 							->leftjoin("officebranch", "officebranch.id","=","creditsuppliertransactions.branchId")
 							->leftjoin("contracts", "contracts.id","=","creditsuppliertransactions.contractId")
 							->leftjoin("clients", "clients.id","=","contracts.clientId")
+							->leftjoin("employee as employee2", "employee2.id","=","creditsuppliertransactions.createdBy")
 							->leftjoin("depots", "depots.id","=","contracts.depotId");							
 			$entities =    $qry->select($select_args)->limit($length)->groupBy("id")->offset($start)->get();
 			
@@ -290,7 +336,9 @@ private function getVehicleRepairs($values, $length, $start){
 							}
 							$qry->where("creditsuppliertransdetails.status","=","ACTIVE");
 							$qry->leftjoin("creditsuppliertransdetails", "creditsuppliertransdetails.creditSupplierTransId","=","creditsuppliertransactions.id");
+							$qry->whereRaw('(creditsuppliertransactions.branchId in('.$emp_branches_str.') or creditsuppliertransactions.contractId in('.$emp_contracts_str.'))');
 			$total = $qry->groupBy("creditsuppliertransactions.id")->count();
+			
 			foreach ($entities as $entity){
 				$entity["clientname"] = $entity["depotname"]." (".$entity["clientname"].")";
 			}
@@ -302,6 +350,7 @@ private function getVehicleRepairs($values, $length, $start){
 			$vehs_arr[$vehicle->id] = $vehicle->veh_reg;
 		}
 		//print_r($entities);die();
+		$i=0;
 		foreach($entities as $entity){
 			if($entity["billNo"] != ""){
 				$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
@@ -327,6 +376,13 @@ private function getVehicleRepairs($values, $length, $start){
 			$entity["vehicleIds"] = $entity["vehicleIds"]."Labour Charges : ".$entity["labourCharges"]."<br/>";
 			$entity["vehicleIds"] = $entity["vehicleIds"]."Electricial Charges : ".$entity["electricianCharges"]."<br/>";
 			$entity["vehicleIds"] = $entity["vehicleIds"]."Batta : ".$entity["batta"]."<br/>";
+			
+			if($entity["workFlowStatus"] == "Sent for Approval"){
+				$entity["workFlowRemarks"] = '<label> <input name="remarks[]" type="text" class=""></label>';
+			}
+			else{
+				$entity["workFlowRemarks"] = $entity["workFlowRemarks"].'<input name="remarks[]" type="hidden" class="">';
+			}
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
@@ -334,7 +390,6 @@ private function getVehicleRepairs($values, $length, $start){
 			$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
 			$valid = $bde->verifyTransactionDateandBranchLocally($values1);
 			foreach($actions as $action){
-			
 				if($action["type"] == "modal"){
 					$jsfields = $action["jsdata"];
 					$jsdata = "";
@@ -354,9 +409,191 @@ private function getVehicleRepairs($values, $length, $start){
 					}
 				}
 			}
-			$action_data = '<label> <input name="action[]" type="checkbox" class="ace" value="'.$entity["id"].'"> <span class="lbl">&nbsp;</span></label>';
-			$data_values[11] = $action_data;
+			$action_data = "";
+			if($entity["workFlowStatus"] != "Approved"){
+				$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+			}
+			else{
+				$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="hidden" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+			}
+			$data_values[12] = $action_data;
 			$data[] = $data_values;
+			$i++;
+		}
+		return array("total"=>$total, "data"=>$data);
+	}
+	
+	private function getPurchaseOrders($values, $length, $start){
+		$total = 0;
+		$data = array();
+		$select_args = array();
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$select_args[] = "clients.name as clientname";
+		}
+		else{
+			$select_args[] = "officebranch.name as branchId";
+		}
+		$select_args[] = "creditsuppliers.supplierName as creditSupplierId";
+		$select_args[] = "purchase_orders.orderDate as date";
+		$select_args[] = "purchase_orders.billNumber as billNo";
+		$select_args[] = "purchase_orders.amountPaid as paymentPaid";
+		$select_args[] = "purchase_orders.paymentType as paymentType";
+		$select_args[] = "purchase_orders.totalAmount as amount";
+		$select_args[] = "purchase_orders.comments as comments";
+		$select_args[] = "purchase_orders.comments as items";
+		$select_args[] = "employee2.fullName as createdBy";
+		$select_args[] = "purchase_orders.workFlowStatus as workFlowStatus";
+		$select_args[] = "purchase_orders.workFlowRemarks as workFlowRemarks";
+		$select_args[] = "purchase_orders.status as status";
+		$select_args[] = "purchase_orders.id as id";
+		$select_args[] = "purchase_orders.officeBranchId as branch";
+		$select_args[] = "purchase_orders.filePath as filePath";
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$select_args[] = "depots.name as depotname";
+		}
+		$actions = array();
+		if(in_array(308, $this->jobs)){
+			$action = array("url"=>"editrepairtransaction?", "type"=>"", "css"=>"primary", "js"=>"modalEditRepairTransaction(", "jsdata"=>array("id"), "text"=>"EDIT");
+			$actions[] = $action;
+			$action = array("url"=>"#","css"=>"danger", "id"=>"deleteRepairTransaction", "type"=>"", "text"=>"DELETE");
+			$actions[] = $action;
+		}
+		$values["actions"] = $actions;
+	
+		$assingedBranches = AppSettingsController::getEmpBranches();
+		$emp_branches_str = "";
+		foreach ($assingedBranches as $assingedBranch){
+			$emp_branches_str = $emp_branches_str.$assingedBranch["id"].",";
+		}
+		$emp_branches_str = substr($emp_branches_str, 0, strlen($emp_branches_str)-1);
+		$emp_contracts = \Auth::user()->contractIds;
+		$emp_contracts_str = "";
+		if($emp_contracts=="" || $emp_contracts==0){
+			$clients = \Contract::All();
+			foreach ($clients as $client){
+				$emp_contracts_str = $emp_contracts_str.$client->id.",";
+			}
+		}
+		else{
+			$emp_contracts = explode(",", $emp_contracts);
+			$depots = \Depot::whereIn("depots.id",$emp_contracts)
+			->join("contracts", "depots.id", "=","contracts.depotId")
+			->select(array("contracts.id as id"))->get();
+			foreach ($depots as $depot){
+				$emp_contracts_str = $emp_contracts_str.$depot->id.",";
+			}
+		}
+		$emp_contracts_str = substr($emp_contracts_str, 0, strlen($emp_contracts_str-1));
+	
+		$search = $_REQUEST["search"];
+		$search = $search['value'];
+		if($search != ""){
+			$supids_arr = array();
+			$suppliers = \CreditSupplier::where("supplierName","like","%$search%")->get();
+			foreach ($suppliers as $supplier){
+				$supids_arr[] = $supplier->id;
+			}
+			$branchids_arr = array();
+			$branches = \OfficeBranch::where("name","like","%$search%")->get();
+			foreach ($branches as $branch){
+				$branchids_arr[] = $branch->id;
+			}
+			$entities = \PurchasedOrders::whereIn("purchase_orders.officeBranchId",$branchids_arr)
+							->orWhereIn("purchase_orders.creditSupplierId",$supids_arr)
+							->where("purchase_orders.status","=","ACTIVE")
+							->whereRaw('purchase_orders.officeBranchId in('.$emp_branches_str.')')
+							->leftjoin("officebranch", "officebranch.id","=","purchase_orders.officeBranchId")
+							->leftjoin("creditsuppliers", "creditsuppliers.id","=","purchase_orders.officeBranchId")
+							->leftjoin("employee as employee2", "employee2.id","=","purchase_orders.createdBy")
+							->select($select_args)->limit($length)->offset($start)->get();
+			$total = \PurchasedOrders::whereIn("purchase_orders.officeBranchId",$branchids_arr)
+							->orWhereIn("purchase_orders.creditSupplierId",$supids_arr)
+							->whereRaw('purchase_orders.officeBranchId in('.$emp_branches_str.')')
+							->where("purchase_orders.status","=","ACTIVE")->count();
+		}
+		else {
+			$qry = \PurchasedOrders::where("purchase_orders.status","=","ACTIVE");
+			if($values["logstatus"] != "All"){
+				$qry->where("purchase_orders.workFlowStatus","=",$values["logstatus"]);
+			}
+			$qry->whereRaw('purchase_orders.officeBranchId in('.$emp_branches_str.')')
+						->leftjoin("officebranch", "officebranch.id","=","purchase_orders.officeBranchId")
+						->leftjoin("employee as employee2", "employee2.id","=","purchase_orders.createdBy")
+						->leftjoin("creditsuppliers", "creditsuppliers.id","=","purchase_orders.officeBranchId");
+			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
+				
+			$qry =  \PurchasedOrders::where("purchase_orders.status","=","ACTIVE");
+						if($values["logstatus"] != "All"){
+							$qry->where("purchase_orders.workFlowStatus","=",$values["logstatus"]);
+						}
+						$qry->whereRaw('purchase_orders.officeBranchId in('.$emp_branches_str.')');
+			$total = $qry->count();
+		}
+		$entities = $entities->toArray();
+		$vehs_arr = array();
+		$vehicles = \Vehicle::All();
+		foreach ($vehicles  as $vehicle){
+			$vehs_arr[$vehicle->id] = $vehicle->veh_reg;
+		}
+		//print_r($entities);die();
+		$i=0;
+		foreach($entities as $entity){
+			if($entity["billNo"] != ""){
+				$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
+			}
+			$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
+			$trans_items = \PurchasedItems::where("purchasedOrderId","=",$entity["id"])
+							->where("purchased_items.status","=","ACTIVE")
+							->leftjoin("items","items.id","=","purchased_items.itemId")
+							->select(array("items.name as name"))->get();
+				
+			$entity["items"] = "ITEMS : ";
+			foreach($trans_items as $trans_item){
+				$entity["items"] = $entity["items"].$trans_item->name.", ";
+			}
+			if($entity["workFlowStatus"] == "Sent for Approval"){
+				$entity["workFlowRemarks"] = '<label> <input name="remarks[]" type="text" class=""></label>';
+			}
+			else{
+				$entity["workFlowRemarks"] = $entity["workFlowRemarks"].'<input name="remarks[]" type="hidden" class="">';
+			}
+			$data_values = array_values($entity);
+			$actions = $values['actions'];
+			$action_data = "";
+			$bde = new BlockDataEntryController();
+			$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
+			$valid = $bde->verifyTransactionDateandBranchLocally($values1);
+			foreach($actions as $action){
+				if($action["type"] == "modal"){
+					$jsfields = $action["jsdata"];
+					$jsdata = "";
+					$i=0;
+					for($i=0; $i<(count($jsfields)-1); $i++){
+						$jsdata = $jsdata." '".$entity[$jsfields[$i]]."', ";
+					}
+					$jsdata = $jsdata." '".$entity[$jsfields[$i]];
+						
+					if($valid=="YES"){
+						$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+					}
+				}
+				else {
+					if($valid=="YES"){
+						$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+					}
+				}
+			}
+			
+			$action_data = "";
+			if($entity["workFlowStatus"] != "Approved"){
+				$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+			}
+			else{
+				$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="hidden" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+			}
+			$data_values[12] = $action_data;
+			$data[] = $data_values;
+			$i++;
 		}
 		return array("total"=>$total, "data"=>$data);
 	}
@@ -374,6 +611,7 @@ private function getVehicleRepairs($values, $length, $start){
 		$select_args[] = "fueltransactions.billNo as billNo";
 		$select_args[] = "fueltransactions.paymentType as paymentType";
 		$select_args[] = "fueltransactions.remarks as remarks";
+		$select_args[] = "employee2.fullName as createdBy";
 		$select_args[] = "fueltransactions.workFlowStatus as workFlowStatus";
 		$select_args[] = "fueltransactions.workFlowRemarks as workFlowRemarks";
 		$select_args[] = "fueltransactions.id as id";
@@ -389,6 +627,32 @@ private function getVehicleRepairs($values, $length, $start){
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		$entities = \Vehicle::where("id","=",0)->get();
+		
+		$assingedBranches = AppSettingsController::getEmpBranches();
+		$emp_branches_str = "";
+		foreach ($assingedBranches as $assingedBranch){
+			$emp_branches_str = $emp_branches_str.$assingedBranch["id"].",";
+		}
+		$emp_branches_str = substr($emp_branches_str, 0, strlen($emp_branches_str)-1);
+		$emp_contracts = \Auth::user()->contractIds;
+		$emp_contracts_str = "";
+		if($emp_contracts=="" || $emp_contracts==0){
+			$clients = \Contract::All();
+			foreach ($clients as $client){
+				$emp_contracts_str = $emp_contracts_str.$client->id.",";
+			}
+		}
+		else{
+			$emp_contracts = explode(",", $emp_contracts);
+			$depots = \Depot::whereIn("depots.id",$emp_contracts)
+						->join("contracts", "depots.id", "=","contracts.depotId")
+						->select(array("contracts.id as id"))->get();
+			foreach ($depots as $depot){
+				$emp_contracts_str = $emp_contracts_str.$depot->id.",";
+			}
+		}
+		$emp_contracts_str = substr($emp_contracts_str, 0, strlen($emp_contracts_str)-1);
+		
 		if($search != ""){
 			$entities = \Vehicle::where("veh_reg", "like", "%$search%")
 							->where("vehicle.status","=","ACTIVE")->get();
@@ -398,27 +662,32 @@ private function getVehicleRepairs($values, $length, $start){
 			}
 			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
 							->whereIn("vehicleId",$veh_arr)
+							->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
 							->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
 							->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
 							->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
 							->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
+							->leftjoin("employee as employee2", "employee2.id","=","fueltransactions.createdBy")
 							->leftjoin("clients", "clients.id","=","contracts.clientId")
 							->leftjoin("depots", "depots.id","=","contracts.depotId");
 			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
 			
 			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-							->whereIn("vehicleId",$veh_arr)->count();
+							->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
+							->count();
 		}
 		else {
 			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE");
 						if($values["logstatus"] != "All"){
 							$qry->where("fueltransactions.workFlowStatus","=",$values["logstatus"]);
 						}
-						$qry->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
+						$qry->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
+						->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
 						->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
 						->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
 						->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
 						->leftjoin("clients", "clients.id","=","contracts.clientId")
+						->leftjoin("employee as employee2", "employee2.id","=","fueltransactions.createdBy")
 						->leftjoin("depots", "depots.id","=","contracts.depotId");
 			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
 			
@@ -426,9 +695,12 @@ private function getVehicleRepairs($values, $length, $start){
 						if($values["logstatus"] != "All"){
 							$qry->where("fueltransactions.workFlowStatus","=",$values["logstatus"]);
 						}
-			$total = $qry->where("fueltransactions.workFlowStatus","=","Requested")->count();
+						$qry->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))');
+						
+			$total = $qry->count();
 		}
 		$entities = $entities->toArray();
+		$i = 0;
 		foreach($entities as $entity){
 			$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 			if($entity["contractId"]>0){
@@ -437,11 +709,24 @@ private function getVehicleRepairs($values, $length, $start){
 			if($entity["billNo"] != ""){
 				$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
 			}
+			if($entity["workFlowStatus"] == "Sent for Approval"){
+				$entity["workFlowRemarks"] = '<label> <input name="remarks[]" type="text" class=""></label>';
+			}
+			else{
+				$entity["workFlowRemarks"] = $entity["workFlowRemarks"].'<input name="remarks[]" type="hidden" class="">';
+			}
 			$data_values = array_values($entity);
 			$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
-			$action_data = '<label> <input name="action[]" type="checkbox" class="ace" value="'.$entity["id"].'"> <span class="lbl">&nbsp;</span></label>';
-			$data_values[10] = $action_data;
+			$action_data = "";
+			if($entity["workFlowStatus"] != "Approved"){
+				$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+			}
+			else{
+				$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="hidden" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+			}
+			$data_values[11] = $action_data;
 			$data[] = $data_values;
+			$i++;
 		}
 		return array("total"=>$total, "data"=>$data);
 	}
@@ -458,6 +743,7 @@ private function getVehicleRepairs($values, $length, $start){
 		$select_args[] = "expensetransactions.paymentType as paymentType";
 		$select_args[] = "expensetransactions.billNo as billNo";
 		$select_args[] = "expensetransactions.remarks as remarks";
+		$select_args[] = "employee2.fullName as createdBy";
 		$select_args[] = "expensetransactions.transactionId as id";
 		$select_args[] = "expensetransactions.lookupValueId as lookupValueId";
 		$select_args[] = "expensetransactions.branchId as branch";
@@ -476,8 +762,15 @@ private function getVehicleRepairs($values, $length, $start){
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->where("branchId","=",$values["branch1"])->leftjoin("officebranch", "officebranch.id","=","expensetransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","expensetransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->count();
+			$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
+							->where("transactionId", "like", "%$search%")
+							->where("branchId","=",$values["branch1"])
+							->leftjoin("officebranch", "officebranch.id","=","expensetransactions.branchId")
+							->leftjoin("employee as employee2", "employee2.id","=","expensetransactions.createdBy")
+							->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","expensetransactions.lookupValueId")
+							->select($select_args)->limit($length)->offset($start)->get();
+			$total = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
+							->where("transactionId", "like", "%$search%")->count();
 			foreach ($entities as $entity){
 				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 			}
@@ -487,7 +780,13 @@ private function getVehicleRepairs($values, $length, $start){
 			$dtrange = explode(" - ", $dtrange);
 			$startdt = date("Y-m-d",strtotime($dtrange[0]));
 			$enddt = date("Y-m-d",strtotime($dtrange[1]));
-			$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")->where("branchId","=",$values["branch1"])->whereBetween("date",array($startdt,$enddt))->leftjoin("officebranch", "officebranch.id","=","expensetransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","expensetransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
+							->where("branchId","=",$values["branch1"])
+							->whereBetween("date",array($startdt,$enddt))
+							->leftjoin("officebranch", "officebranch.id","=","expensetransactions.branchId")
+							->leftjoin("employee as employee2", "employee2.id","=","expensetransactions.createdBy")
+							->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","expensetransactions.lookupValueId")
+							->select($select_args)->limit($length)->offset($start)->get();
 			$total = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")->where("branchId","=",$values["branch1"])->whereBetween("date",array($startdt,$enddt))->count();
 			foreach ($entities as $entity){
 				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
@@ -510,6 +809,12 @@ private function getVehicleRepairs($values, $length, $start){
 				$expenses_arr["992"] = "ONLINE OPERATORS";
 				$expenses_arr["991"] = "DAILY FINANCE PAYMENT";
 				$entity["name"] = $expenses_arr[$entity["lookupValueId"]];
+			}
+			if($entity["workFlowStatus"] == "Sent for Approval"){
+				$entity["workFlowRemarks"] = '<label> <input name="remarks[]" type="text" class=""></label>';
+			}
+			else{
+				$entity["workFlowRemarks"] = $entity["workFlowRemarks"].'<input name="remarks[]" type="hidden" class="">';
 			}
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
@@ -552,15 +857,41 @@ private function getVehicleRepairs($values, $length, $start){
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		
+		$assingedBranches = AppSettingsController::getEmpBranches();
+		$emp_branches_str = "";
+		foreach ($assingedBranches as $assingedBranch){
+			$emp_branches_str = $emp_branches_str.$assingedBranch["id"].",";
+		}
+		$emp_branches_str = substr($emp_branches_str, 0, strlen($emp_branches_str)-1);
+		$emp_contracts = \Auth::user()->contractIds;
+		$emp_contracts_str = "";
+		if($emp_contracts=="" || $emp_contracts==0){
+			$clients = \Contract::All();
+			foreach ($clients as $client){
+				$emp_contracts_str = $emp_contracts_str.$client->id.",";
+			}
+		}
+		else{
+			$emp_contracts = explode(",", $emp_contracts);
+			$depots = \Depot::whereIn("depots.id",$emp_contracts)
+								->join("contracts", "depots.id", "=","contracts.depotId")
+								->select(array("contracts.id as id"))->get();
+			foreach ($depots as $depot){
+				$emp_contracts_str = $emp_contracts_str.$depot->id.",";
+			}
+		}
+		$emp_contracts_str = substr($emp_contracts_str, 0, strlen($emp_contracts_str-1));
+		
 		if(isset($values["inchargereporttype"]) && $values["inchargereporttype"] == "Income"){
-			
 			$select_args = array();
 			$select_args[] = "officebranch.name as branchId";
 			$select_args[] = "employee.fullName as inchargeId";
 			$select_args[] = "incometransactions.amount as amount";
 			$select_args[] = "incometransactions.date as date";
 			$select_args[] = "lookuptypevalues.name as name";
+			$select_args[] = "incometransactions.billNo as billNo";
 			$select_args[] = "incometransactions.remarks as remarks";
+			$select_args[] = "employee2.fullName as createdBy";
 			$select_args[] = "incometransactions.workFlowStatus as workFlowStatus";
 			$select_args[] = "incometransactions.workFlowRemarks as workFlowRemarks";
 			$select_args[] = "incometransactions.transactionId as id";
@@ -569,9 +900,15 @@ private function getVehicleRepairs($values, $length, $start){
 			$select_args[] = "clients.name as clientname";
 			$select_args[] = "depots.name as depotname";
 			$select_args[] = "employee.empCode as empCode";
-			
+			$select_args[] = "incometransactions.filePath as filePath";
 			if($search != ""){
-				$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->where("branchId","=",$values["branch1"])->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
+				$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
+							->where("transactionId", "like", "%$search%")
+							->where("branchId","=",$values["branch1"])
+							->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")
+							->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")
+							->leftjoin("employee as employee2", "employee2.id","=","incometransactions.createdBy")
+							->select($select_args)->limit($length)->offset($start)->get();
 				$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->count();
 				foreach ($entities as $entity){
 					$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
@@ -580,21 +917,35 @@ private function getVehicleRepairs($values, $length, $start){
 			else{
 				$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
 								->where("incometransactions.inchargeId",">",0)
+								->whereRaw('(incometransactions.branchId in('.$emp_branches_str.') or incometransactions.contractId in('.$emp_contracts_str.'))')
 								->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")
 								->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")
 								->leftjoin("contracts", "contracts.id","=","incometransactions.contractId")
 								->leftjoin("employee", "employee.id","=","incometransactions.inchargeId")
+								->leftjoin("employee as employee2", "employee2.id","=","incometransactions.createdBy")
 								->leftjoin("clients", "clients.id","=","contracts.clientId")
 								->leftjoin("depots", "depots.id","=","contracts.depotId")
 								->select($select_args)->limit($length)->offset($start)->get();
-				$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->count();
+				$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
+							->where("incometransactions.inchargeId",">",0)
+							->whereRaw('(incometransactions.branchId in('.$emp_branches_str.') or incometransactions.contractId in('.$emp_contracts_str.'))')
+							->count();
 				foreach ($entities as $entity){
 					$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 				}
 			}
-		
+			$i=0;
 			$entities = $entities->toArray();
 			foreach($entities as $entity){
+				if($entity["billNo"] != ""){
+					$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
+				}
+				if($entity["workFlowStatus"] == "Sent for Approval"){
+					$entity["workFlowRemarks"] = '<label> <input name="remarks[]" type="text" class=""></label>';
+				}
+				else{
+					$entity["workFlowRemarks"] = $entity["workFlowRemarks"].'<input name="remarks[]" type="hidden" class="">';
+				}
 				$entity["inchargeId"] = $entity["inchargeId"]." (".$entity["empCode"].")";
 				if($entity["lookupValueId"]>900){
 					$expenses_arr = array();
@@ -608,15 +959,23 @@ private function getVehicleRepairs($values, $length, $start){
 					$expenses_arr["999"] = "PREPAID RECHARGE";
 					$entity["name"] = $expenses_arr[$entity["lookupValueId"]];
 				}
+				
 				$data_values = array_values($entity);
 				$actions = $values['actions'];
 				$action_data = "";
 				$bde = new BlockDataEntryController();
 				$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
 				$valid = $bde->verifyTransactionDateandBranchLocally($values1);
-				$action_data = '<label> <input name="action[]" type="checkbox" class="ace" value="'.$entity["id"].'"> <span class="lbl">&nbsp;</span></label>';
-				$data_values[8] = $action_data;
+				$action_data = "";
+				if($entity["workFlowStatus"] != "Approved"){
+					$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+				}
+				else{
+					$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="hidden" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+				}
+				$data_values[10] = $action_data;
 				$data[] = $data_values;
+				$i++;
 			}
 			return array("total"=>$total, "data"=>$data);
 		}
@@ -627,7 +986,9 @@ private function getVehicleRepairs($values, $length, $start){
 			$select_args[] = "expensetransactions.amount as amount";
 			$select_args[] = "expensetransactions.date as date";
 			$select_args[] = "lookuptypevalues.name as name";
+			$select_args[] = "expensetransactions.billNo as billNo";
 			$select_args[] = "expensetransactions.remarks as remarks";
+			$select_args[] = "employee2.fullName as createdBy";
 			$select_args[] = "expensetransactions.workFlowStatus as workFlowStatus";
 			$select_args[] = "expensetransactions.workFlowRemarks as workFlowRemarks";
 			$select_args[] = "expensetransactions.transactionId as id";
@@ -636,9 +997,16 @@ private function getVehicleRepairs($values, $length, $start){
 			$select_args[] = "clients.name as clientname";
 			$select_args[] = "depots.name as depotname";
 			$select_args[] = "employee.empCode as empCode";
+			$select_args[] = "expensetransactions.filePath as filePath";
 			
 			if($search != ""){
-				$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->where("branchId","=",$values["branch1"])->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
+				$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
+								->where("transactionId", "like", "%$search%")
+								->where("branchId","=",$values["branch1"])
+								->leftjoin("officebranch", "officebranch.id","=","expensetransactions.branchId")
+								->leftjoin("employee as employee2", "employee2.id","=","expensetransactions.createdBy")
+								->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","expensetransactions.lookupValueId")
+								->select($select_args)->limit($length)->offset($start)->get();
 				$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->count();
 				foreach ($entities as $entity){
 					$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
@@ -647,21 +1015,35 @@ private function getVehicleRepairs($values, $length, $start){
 			else{
 				$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
 								->where("expensetransactions.inchargeId",">",0)
+								->whereRaw('(expensetransactions.branchId in('.$emp_branches_str.') or expensetransactions.contractId in('.$emp_contracts_str.'))')
 								->leftjoin("officebranch", "officebranch.id","=","expensetransactions.branchId")
 								->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","expensetransactions.lookupValueId")
 								->leftjoin("contracts", "contracts.id","=","expensetransactions.contractId")
 								->leftjoin("employee", "employee.id","=","expensetransactions.inchargeId")
+								->leftjoin("employee as employee2", "employee2.id","=","expensetransactions.createdBy")
 								->leftjoin("clients", "clients.id","=","contracts.clientId")
 								->leftjoin("depots", "depots.id","=","contracts.depotId")
 								->select($select_args)->limit($length)->offset($start)->get();
-				$total = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")->count();
+				$total = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
+								->where("expensetransactions.inchargeId",">",0)
+								->whereRaw('(expensetransactions.branchId in('.$emp_branches_str.') or expensetransactions.contractId in('.$emp_contracts_str.'))')
+								->count();
 				foreach ($entities as $entity){
 					$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 				}
 			}
-		
+			$i = 0;
 			$entities = $entities->toArray();
 			foreach($entities as $entity){
+				if($entity["billNo"] != ""){
+					$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
+				}
+				if($entity["workFlowStatus"] == "Sent for Approval"){
+					$entity["workFlowRemarks"] = '<label> <input name="remarks[]" type="text" class=""></label>';
+				}
+				else{
+					$entity["workFlowRemarks"] = $entity["workFlowRemarks"].'<input name="remarks[]" type="hidden" class="">';
+				}
 				$entity["inchargeId"] = $entity["inchargeId"]." (".$entity["empCode"].")";
 				if($entity["lookupValueId"]>900){
 					$expenses_arr = array();
@@ -681,9 +1063,16 @@ private function getVehicleRepairs($values, $length, $start){
 				$bde = new BlockDataEntryController();
 				$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
 				$valid = $bde->verifyTransactionDateandBranchLocally($values1);
-				$action_data = '<label> <input name="action[]" type="checkbox" class="ace" value="'.$entity["id"].'"> <span class="lbl">&nbsp;</span></label>';
-				$data_values[8] = $action_data;
+				$action_data = "";
+				if($entity["workFlowStatus"] != "Approved"){
+					$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+				}
+				else{
+					$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="hidden" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+				}
+				$data_values[10] = $action_data;
 				$data[] = $data_values;
+				$i++;
 			}
 			return array("total"=>$total, "data"=>$data);
 		}

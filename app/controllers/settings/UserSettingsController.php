@@ -63,7 +63,7 @@ class UserSettingsController extends \Controller {
 			$field_names = array("fullname"=>"fullName","gender"=>"gender","city"=>"cityId",
 					"password"=>"password", "workgroup"=>"workGroup","dateofbirth"=>"dob","age"=>"age",
 					"fathername"=>"fatherName","religion"=>"religion","residance"=>"residance",
-					"nonlocaldetails"=>"detailsForNonLocal",
+					"nonlocaldetails"=>"detailsForNonLocal","employeetype"=>"typeId",
 					"phonenumber"=>"mobileNo","homenumber"=>"homePhoneNo", "idproof"=>"idCardName",
 					"idproofnumber"=>"idCardNumber","presentaddress"=>"presentAddress","joiningdate"=>"joiningDate",
 					"aadhdaarnumber"=>"aadharNumber","rationcardnumber"=>"rationCardNumber", "drivinglicence"=>"drivingLicence",

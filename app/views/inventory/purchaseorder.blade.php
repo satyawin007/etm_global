@@ -439,7 +439,7 @@ use Illuminate\Support\Facades\Input;
 			function enableIncharge(val){
 				if(val == "YES"){
 			  		$("#amountpaid").val("Yes");
-				  	$("#amountpaid").attr("disabled",true);
+				  	$("#amountpaid").attr("disabled",false);
 				  	$("#paymenttype").attr("disabled",false);
 					$("#incharge").attr("disabled",false);
 					$('.chosen-select').trigger('chosen:updated');
@@ -451,6 +451,16 @@ use Illuminate\Support\Facades\Input;
 					$("#incharge").attr("disabled",true);
 					$('.chosen-select').trigger('chosen:updated');
 				}
+			}
+
+			function getInchargeBalance(val){
+				$.ajax({
+				  url: "getinchargebalance?id="+val,
+				  success: function(data) {
+					  $("#inchargebalance").val(data);
+				  },
+				  type: 'GET'
+			   });
 			}
 
 			function validateInput(val){

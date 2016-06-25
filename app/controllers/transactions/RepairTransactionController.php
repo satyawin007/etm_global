@@ -62,6 +62,12 @@ class RepairTransactionController extends \Controller {
 			$recid = "";
 			try{
 				$recid = $db_functions_ctrl->insertRetId($table, $fields);
+				if(isset($values["incharge"]) && $values["incharge"]>0){
+					$incharge_acct = \InchargeAccounts::where("empid","=",$values["incharge"])->first();
+					$balance_amount = $incharge_acct->balance;
+					$balance_amount = $balance_amount-$values["totalamount"];
+					\InchargeAccounts::where("empid","=",$values["incharge"])->update(array("balance"=>$balance_amount));
+				}
 			}
 			catch(\Exception $ex){
 				\Session::put("message","Add Repaired Transaction : Operation Could not be completed, Try Again!");
@@ -255,6 +261,14 @@ class RepairTransactionController extends \Controller {
 			if(!isset($values["type"])){
 				$values["type"] = "-1";
 			}
+			
+			$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+			->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+			$incharges_arr = array();
+			foreach ($incharges as $incharge){
+				$incharges_arr[$incharge->id] = $incharge->name;
+			}
+			
 			$select_args =  array();
 			$select_args[] = "cities.name as name";
 			$select_args[] = "creditsuppliers.supplierName as supplierName";
@@ -334,6 +348,12 @@ class RepairTransactionController extends \Controller {
 			$form_field = array("name"=>"batta", "id"=>"batta", "value"=>$entity->batta, "content"=>"batta", "readonly"=>"", "required"=>"","type"=>"text", "class"=>"form-control ");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"battapaidto", "id"=>"", "value"=>$entity->battaEmployee, "content"=>"batta paid to", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"enableincharge", "id"=>"enableincharge", "content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"incharge", "id"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange", "script"=>"getInchargeBalance(this.value)"),  "options"=>$incharges_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"inchargebalance", "id"=>"inchargebalance", "value"=>"", "content"=>"Incharge balance", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"paymentPaid", "id"=>"", "value"=>$entity->paymentPaid, "content"=>"amount paid", "readonly"=>"", "required"=>"required","type"=>"select", "action"=>array("type"=>"onChange","script"=>"enablePaymentType(this.value)"), "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -863,7 +883,9 @@ class RepairTransactionController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymenttype", "content"=>"payment type", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"), "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incharges_arr);
+		$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange", "script"=>"getInchargeBalance(this.value)"),  "options"=>$incharges_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"inchargebalance", "value"=>"", "content"=>"Incharge balance", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"comments", "content"=>"comments", "readonly"=>"", "required"=>"","type"=>"textarea", "class"=>"form-control ");
 		$form_fields[] = $form_field;
@@ -1054,10 +1076,10 @@ class RepairTransactionController extends \Controller {
 		
 		$values['create_link'] = array("href"=>"createrepairtransaction","text"=>"CREATE REPAIR TRANSACTION");
 		if(isset($values["type"]) && $values["type"]=="contracts"){
-			$theads = array('Contract', 'Credit supplier', "date", "bill number", "payment paid", "payment Type", "total amount", "comments", "summary", "status", "Actions");
+			$theads = array('Contract', 'Credit supplier', "date", "bill number", "payment paid", "payment Type", "total amount", "comments", "summary", "status", 'created by', 'wf status', 'wf updated By', 'wf_remarks', "Actions");
 		}
 		else {
-			$theads = array('Branch', 'Credit supplier', "date", "bill number", "payment paid", "payment Type", "total amount", "comments", "summary", "status", "Actions");
+			$theads = array('Branch', 'Credit supplier', "date", "bill number", "payment paid", "payment Type", "total amount", "comments", "summary", "status", 'created by', 'wf status', 'wf updated By', 'wf_remarks', "Actions");
 		}
 		$values["theads"] = $theads;
 	

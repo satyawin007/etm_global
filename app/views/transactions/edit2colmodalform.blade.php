@@ -46,7 +46,7 @@
 	
 	@section('bredcum')	
 		<small>
-			INCOME& EXPENSES
+			INCOME & EXPENSES
 			<i class="ace-icon fa fa-angle-double-right"></i>
 			{{ strtoupper($form_info['bredcum'])}}			
 		</small>
@@ -283,15 +283,15 @@
 				  	val = $("#enableincharge").val();
 				  	if(val == "YES"){
 				  		$("#paymentpaid").val("Yes");
-					  	$("#paymentpaid").attr("disabled",true);
-					  	$("#paymenttype").attr("disabled",true);
+					  	$("#paymentpaid").attr("disabled",false);
+					  	$("#paymenttype").attr("disabled",false);
 						$("#incharge").attr("disabled",false);
 						$('.chosen-select').trigger('chosen:updated');
 					}
 					else{
 						$("#paymentpaid").val("No");
 						$("#paymentpaid").attr("disabled",false);
-						$("#paymenttype").attr("disabled",false);
+						$("#paymenttype").attr("disabled",true);
 						$("#incharge").attr("disabled",true);
 						$('.chosen-select').trigger('chosen:updated');
 					}
@@ -312,6 +312,16 @@
 				ltrs = $("#litres").val();
 				price = $("#priceperlitre").val();
 				$("#totalamount").val(ltrs*price);
+			}
+
+			function getInchargeBalance(val){
+				$.ajax({
+				  url: "getinchargebalance?id="+val,
+				  success: function(data) {
+					  $("#inchargebalance").val(data);
+				  },
+				  type: 'GET'
+			   });
 			}
 
 			function changeCity(val){

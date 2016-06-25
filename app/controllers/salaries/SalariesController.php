@@ -76,7 +76,10 @@ class SalariesController extends \Controller {
 		if(isset($values["paymenttype"])){
 			$pmttype_val = $values["paymenttype"];
 		}
-		
+		$casual_leaves = 2;
+		if(isset($values["casualleaves"])){
+			$casual_leaves = $values["casualleaves"];
+		}
 		$clients =  AppSettingsController::getEmpClients();
 		$clients_arr = array();
 		foreach ($clients as $client){
@@ -95,9 +98,10 @@ class SalariesController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"salarydates", "content"=>"salary dates", "readonly"=>"",  "required"=>"required", "type"=>"daterange", "class"=>"form-control");
 		$form_fields[] = $form_field;
+		$form_field = array("name"=>"casualleaves", "value"=>$casual_leaves, "content"=>"casual leaves", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"updateCasualLeaves(this.value)"), "required"=>"", "type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymenttype", "content"=>"", "readonly"=>"",  "required"=>"", "type"=>"hidden", "value"=>"", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		
 		
 		$form_info["form_fields"] = $form_fields;
 		$values["form_info"] = $form_info;
@@ -168,6 +172,10 @@ class SalariesController extends \Controller {
 		if(isset($values["paymenttype"])){
 			$pmttype_val = $values["paymenttype"];
 		}
+		$casual_leaves = 2;
+		if(isset($values["casualleaves"])){
+			$casual_leaves = $values["casualleaves"];
+		}
 		$form_field = array("name"=>"branch", "value"=>$branch_val, "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"month", "value"=>$month_val, "content"=>"salary month", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$month_arr);
@@ -175,6 +183,8 @@ class SalariesController extends \Controller {
 		$form_field = array("name"=>"paymentdate", "value"=>$pmtdate_val, "content"=>"payment date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"salarydates", "content"=>"salary dates", "readonly"=>"",  "required"=>"required", "type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"casualleaves", "value"=>$casual_leaves, "content"=>"casual leaves", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"updateCasualLeaves(this.value)"), "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"hidden", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
 		$form_fields[] = $form_field;
@@ -254,9 +264,9 @@ class SalariesController extends \Controller {
 					  	$proftax = 0;
 				}
 				$salaryPaid = $actualSalary - ($pf + $esi + $proftax)+$dailyTripsAllowance;
-				
+				$salaryPaid = $salaryPaid - ($leave_deductions);
 				if($dueDeductions != "0.00")
-					$salaryPaid = $salaryPaid - ($dueDeductions+$leave_deductions);
+					$salaryPaid = $salaryPaid - ($dueDeductions);
 				else
 				 	$dueDeductions= 0;
 				$salaryPaid = $salaryPaid+$values["other_amt"][$id];
@@ -266,7 +276,7 @@ class SalariesController extends \Controller {
 				$values["salarypaid"][$id] = $salaryPaid;
 				$values["totalsalary"][$id] = $actualSalary;
 				
-				$field_names = array("id"=>"empId","totalsalary"=>"actualSalary","daily_trips_salary"=>"dailyTripsSalary","daily_trips_allowance"=>"dailyTripsAllowance","local_trips_salary"=>"localTripsSalary", "other_amt"=>"otherAmount", "leave_amount"=>"leaveAmount","due_deductions"=>"dueDeductions","leave_deductions"=>"leaveDeductions","salarypaid"=>"salaryPaid","pfopted"=>"pfOpted","pf"=>"pf","esi"=>"esi","proftax"=>"profTax","comments"=>"comments");
+				$field_names = array("id"=>"empId","casual_leaves"=>"casualLeaves", "totalsalary"=>"actualSalary","daily_trips_salary"=>"dailyTripsSalary","daily_trips_allowance"=>"dailyTripsAllowance","local_trips_salary"=>"localTripsSalary", "other_amt"=>"otherAmount", "leave_amount"=>"leaveAmount","due_deductions"=>"dueDeductions","leave_deductions"=>"leaveDeductions","salarypaid"=>"salaryPaid","pfopted"=>"pfOpted","pf"=>"pf","esi"=>"esi","proftax"=>"profTax","comments"=>"comments");
 				$fields = array();
 				foreach ($field_names as $key=>$val){
 					if(isset($values[$key])){
@@ -439,6 +449,11 @@ class SalariesController extends \Controller {
 				$data = "0.00";
 			}
 		}
+		$total_days = 31;
+		$table_data = "";
+		$table_data = "<td>".$total_days."</td>";
+		$table_data = "<td>".$data."</td>";
+		$table_data = "<td>".$leave_amt."</td>";
 		$jsondata["due"] = $data;
 		
 		\DB::statement(DB::raw('CALL calc_daily_trip_salary_info('.$empid.",'".$startDate."','".$endDate."');"));
