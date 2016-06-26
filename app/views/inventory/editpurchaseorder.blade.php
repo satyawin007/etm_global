@@ -506,7 +506,7 @@ use Illuminate\Support\Facades\Input;
 								tabledata[i][2] = tr[2];
 								tabledata[i][3] = tr[3];
 								tabledata[i][4] = tr[4];
-								tabledata[i][5] = tr[6];
+								tabledata[i][5] = tr[5];
 								tabledata[i][7] = '<button class="btn btn-sm btn-primary" onclick="editItem('+editRowId+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+editRowId+')">Remove</button>';;
 								tabledata[i][8] = $("#item").val();
 								tabledata[i][9] = $("#iteminfo").val();
@@ -634,10 +634,11 @@ use Illuminate\Support\Facades\Input;
 				editRowId = rowid;
 				for(i=0; i<row; i++){
 					if(editRowId == i){
+						getManufacturers(tabledata[i][8]);
 						$("#itemnumbers").val(tabledata[i][2]);
 						$("#quantity").val(tabledata[i][3]);				
 						$("#unitprice").val(tabledata[i][4]);
-						$("#status option").each(function() { this.selected = (this.value == tabledata[i][5]); });
+						$("#status option").each(function() { this.selected = (this.text == tabledata[i][5]); });
 						$("#item option").each(function() { this.selected = (this.text == tabledata[i][0]); });
 						$("#iteminfo option").each(function() { this.selected = (this.text == tabledata[i][1]); });
 						$('.chosen-select').trigger('chosen:updated');

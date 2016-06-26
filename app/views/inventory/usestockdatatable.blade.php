@@ -1368,15 +1368,15 @@
 				veh_arr = new Array();
 				ids.forEach(function(entry) {
 					text = $("#"+entry+" option:selected").text();
+					val = $("#"+entry+" option:selected").val();
 					if(entry=="itemnumbers"){
 						text = "";
 						$('#itemnumbers option:selected').each(function(){ 
 							text = text+$(this).text()+","; 
 						});
+						val = text;
 					}
-					val = $("#"+entry+" option:selected").val();
 					veh_arr[entry] = val;
-					$("#"+entry).find('option:selected').removeAttr("selected");
 					if(val==""){
 						text="";
 					}
@@ -1386,6 +1386,7 @@
 							text = text.substring(0, endindex);
 						}
 					}
+					$("#"+entry).find('option:selected').removeAttr("selected");
 					text_arr[entry] = text;
 				});
 				vars.forEach(function(entry) {
@@ -1452,7 +1453,16 @@
 					$("#"+entry).val(comArr1[index][entry]);
 				});	
 				ids.forEach(function(entry) {
-					$("#"+entry+" option").each(function() {   this.selected =(this.value == comArr1[index][entry])});
+					alert(entry+" - "+comArr1[index][entry]);
+					if(entry=="itemnumbers"){
+						itemnums = comArr1[index][entry].split(",");
+						for(i=0; i<itemnums.length; i++) {
+							$("#"+entry+" option").each(function() { this.selected =(this.text == itemnums[i])});
+						}
+					}
+					else{
+						$("#"+entry+" option").each(function() {   this.selected =(this.value == comArr1[index][entry])});
+					}
 					$("#"+entry).find('option:selected').attr("selected", "selected"); 
 				});	
 				$('.chosen-select').trigger("chosen:updated");	
@@ -1468,10 +1478,16 @@
 						ids.forEach(function(entry) {
 							text = $("#"+entry+" option:selected").text();
 							if(entry != "item"){
+								if(entry=="itemnumbers"){
+									text = "";
+									$('#itemnumbers option:selected').each(function(){ 
+										text = text+$(this).text()+","; 
+									});
+								}
 								if(text != ""){
 									entities_text[index][entry] = text;
 								}
-								entities[index][entry] = $("#"+entry).val();
+								entities[index][entry] = $("#"+entry+" option:selected").val();
 							}
 							$("#"+entry).find('option:selected').removeAttr("selected");
 						});

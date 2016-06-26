@@ -218,7 +218,7 @@ class LookupValueController extends \Controller {
 		$form_fields[] = $form_field;
 // 		$form_field = array("name"=>"showvalues", "content"=>"show Fields", "readonly"=>"",  "required"=>"","type"=>"checkbox", "options"=>array("incharge"=>"YES", "vehicle"=>"YES", "branch"=>"YES", "employee"=>"YES"), "class"=>"form-control");
 // 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"showfields[]", "content"=>"show fields", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "multiple"=>"multiple", "options"=>array("INCHARGE"=>"INCHARGE","VEHICLE"=>"VEHICLE","BANK"=>"BANK","EMPLOYEE"=>"EMPLOYEE","BRANCH"=>"BRANCH"));
+		$form_field = array("name"=>"showfields[]", "content"=>"show fields", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "multiple"=>"multiple", "options"=>array("INCHARGE"=>"INCHARGE","VEHICLE"=>"VEHICLE","BANK"=>"BANK","EMPLOYEE"=>"EMPLOYEE","BRANCH"=>"BRANCH","NEXT ALERT DATE"=>"NEXT ALERT DATE"));
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"remarks", "content"=>"additional information", "readonly"=>"",  "required"=>"required","type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -245,9 +245,9 @@ class LookupValueController extends \Controller {
 // 		$form_fields[] = $form_field;		
 // 		$form_field = array("name"=>"showvalues", "content"=>"show Fields", "readonly"=>"",  "required"=>"","type"=>"checkbox", "options"=>array("incharge"=>"YES", "vehicle"=>"YES", "branch"=>"YES", "employee"=>"YES"), "class"=>"form-control");
 // 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"showfields1[]", "id"=>"showfields1", "content"=>"show fields", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "multiple"=>"multiple", "options"=>array("INCHARGE"=>"INCHARGE","VEHICLE"=>"VEHICLE","BANK"=>"BANK","EMPLOYEE"=>"EMPLOYEE","BRANCH"=>"BRANCH"));
+		$form_field = array("name"=>"showfields1[]", "id"=>"showfields1", "content"=>"show fields", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "multiple"=>"multiple", "options"=>array("INCHARGE"=>"INCHARGE","VEHICLE"=>"VEHICLE","BANK"=>"BANK","EMPLOYEE"=>"EMPLOYEE","BRANCH"=>"BRANCH","NEXT ALERT DATE"=>"NEXT ALERT DATE"));
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"remarks1", "content"=>"additional information", "readonly"=>"",  "required"=>"required","type"=>"textarea", "class"=>"form-control");
+		$form_field = array("name"=>"remarks1", "content"=>"additional information", "readonly"=>"",  "required"=>"","type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"enabled1",  "value"=>"NO", "content"=>"is Enabled", "readonly"=>"",  "required"=>"","type"=>"radio", "options"=>array("NO"=>"NO","YES"=>"YES"), "class"=>"form-control");
 		$form_fields[] = $form_field;

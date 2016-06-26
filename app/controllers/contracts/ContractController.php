@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
+use settings\AppSettingsController;
 class ContractController extends \Controller {
 
 	/**
@@ -262,7 +263,7 @@ class ContractController extends \Controller {
 				$districts_arr[$district['id']] = $district['name'];
 			}
 			
-			$clients =  \Client::all();
+			$clients =  AppSettingsController::getEmpClients();
 			$clients_arr = array();
 			foreach ($clients as $client){
 				$clients_arr[$client['id']] = $client['name'];
@@ -513,7 +514,7 @@ class ContractController extends \Controller {
 			$districts_arr[$district['id']] = $district['name'];
 		}
 		
-		$clients =  \Client::all();
+		$clients =  AppSettingsController::getEmpClients();
 		$clients_arr = array();
 		foreach ($clients as $client){
 			$clients_arr[$client['id']] = $client['name'];

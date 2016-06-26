@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
+use settings\AppSettingsController;
 class BillPaymentsController extends \Controller {
 
 	/**
@@ -178,7 +179,7 @@ class BillPaymentsController extends \Controller {
 		$form_info["bredcum"] = "add bill payment";
 	
 		$form_fields = array();
-		$clients = \Client::all();
+		$clients = AppSettingsController::getEmpClients();
 		$client_arr = array();
 		foreach ($clients as $client){
 			$client_arr[$client['id']] = $client['name'];

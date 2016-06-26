@@ -165,6 +165,7 @@
 						$expenses_arr["994"] = "INCHARGE ACCOUNT CREDIT";
 						//$expenses_arr["993"] = "PREPAID RECHARGE";
 						$expenses_arr["992"] = "ONLINE OPERATORS";*/
+						$expenses_arr["989"] = "VEHICLE RENEWAL";
 					?>
 					<?php $form_field = array("name"=>"expense", "content"=>"expense TYpe", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$expenses_arr); ?>
 					<label class="col-xs-5 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>

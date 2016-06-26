@@ -858,9 +858,6 @@ use settings\AppSettingsController;
 					myin.value="fuel"; 
 					//document.getElementById('transactionform').appendChild(myin);
 				} 
-				
-
-				 
 				var myin = document.createElement("input"); 
 				myin.type='hidden'; 
 				myin.name='date1'; 
@@ -873,9 +870,14 @@ use settings\AppSettingsController;
 				
 				//$('#incomebody').show();
 				//$('#expensebody').hide();
-			
+				url = "gettransactionfields?typeId="+val+"&transtype="+transtype;
+				<?php 
+					if($values['bredcum'] == "CONTRACT EXPENSE TRANSACTIONS"){
+						echo "url = url+'&type=contracts';";
+					}
+				?>
 				$.ajax({
-			      url: "gettransactionfields?typeId="+val+"&transtype="+transtype,
+			      url: url,
 			      success: function(data) {
 			    	  $("#formbody").html(data);
 			    	  $('.date-picker').datepicker({

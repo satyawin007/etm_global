@@ -324,7 +324,7 @@ class ServiceLogController extends \Controller {
 		
 		//$dates_arr = array_reverse($dates_arr);
 		$opendts = \ServiceLogRequest::where("contractId","=",$contractId)
-				->where("vehicleId","=",$values["vehicleid"])
+				//->where("vehicleId","=",$values["vehicleid"])
 				->where("status","=","Open")->get();
 		foreach ($opendts as $opendt){
 			$opendt_arr = explode(",", $opendt->pendingDates);

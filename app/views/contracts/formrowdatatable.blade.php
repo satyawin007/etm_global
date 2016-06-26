@@ -1,3 +1,6 @@
+<?php
+use settings\AppSettingsController;
+?>
 @extends('masters.master')
 	@section('inline_css')
 		<style>
@@ -98,7 +101,7 @@
 						<select name="clientid" id="clientid" class="formcontrol chosen-select">
 							<option value="0">ALL</option>
 						<?php 
-							$clients =  \Client::all();
+							$clients =  AppSettingsController::getEmpClients();
 							$clients_arr = array();
 							foreach ($clients as $client){
 								echo "<option value='".$client['id']."'>".$client['name']."</option>";

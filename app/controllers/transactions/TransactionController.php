@@ -120,7 +120,7 @@ class TransactionController extends \Controller {
 			}
 			if(isset($values["transtype"]) && $values["transtype"] == "expense" ){
 				$field_names = array("branch"=>"branchId","amount"=>"amount","paymenttype"=>"paymentType", "transtype"=>"name", "type"=>"lookupValueId",
-						"branch1"=>"branchId1","incharge"=>"inchargeId","employee"=>"employeeId","vehicle"=>"vehicleIds", "bankId"=>"bankId",
+						"branch1"=>"branchId1","incharge"=>"inchargeId","employee"=>"employeeId","vehicle"=>"vehicleIds", "bankId"=>"bankId", "next_alert_date"=>"nextAlertDate",
 						"remarks"=>"remarks","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate","billno"=>"billNo",
 						"transactiondate"=>"transactionDate","suspense"=>"suspense","date1"=>"date","accountnumber"=>"accountNumber","bankname"=>"bankName"
 				);
@@ -136,7 +136,7 @@ class TransactionController extends \Controller {
 				$expenses_arr["991"] = "DAILY FINANCE PAYMENT";
 				foreach ($field_names as $key=>$val){
 					if(isset($values[$key])){
-						if($key == "transactiondate" || $key=="date1" || $key=="issuedate"){
+						if($key == "transactiondate" || $key=="date1" || $key=="issuedate" || $key=="next_alert_date"){
 							$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 						}
 						else if($key == "vehicle"){
@@ -454,13 +454,13 @@ class TransactionController extends \Controller {
 			if(isset($values["type1"]) && $values["type1"] == "expense" ){
 				$field_names = array("branch"=>"branchId","amount"=>"amount","paymenttype"=>"paymentType", "transtype"=>"name", "type"=>"lookupValueId",
 						"branch1"=>"branchId1","incharge"=>"inchargeId","employee"=>"employeeId","vehicle"=>"vehicleIds","billno"=>"billNo",
-						"remarks"=>"remarks","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate",
+						"remarks"=>"remarks","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate","next_alert_date"=>"nextAlertDate",
 						"transactiondate"=>"transactionDate","suspense"=>"suspense", "date1"=>"date","accountnumber"=>"accountNumber","bankname"=>"bankName"
 				);
 				$fields = array();
 				foreach ($field_names as $key=>$val){
 					if(isset($values[$key])){
-						if($key == "transactiondate" || $key=="date1" || $key=="issuedate"){
+						if($key == "transactiondate" || $key=="date1" || $key=="issuedate" || $key=="next_alert_date"){
 							$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 						}
 						else if($key == "vehicle"){
@@ -807,6 +807,14 @@ class TransactionController extends \Controller {
 						$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
 					}
 					$form_field = array("name"=>"bankId", "id"=>"bankId", "value"=>$entity->bankId, "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
+					$form_fields[] = $form_field;
+				}
+				if($entity->nextAlertDate != "0000-00-00" && $entity->nextAlertDate != "01-01-1970"){
+					$form_field = array("name"=>"next_alert_date", "id"=>"next_alert_date", "value"=>date("d-m-Y",strtotime($entity->nextAlertDate)), "content"=>"next alert date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+					$form_fields[] = $form_field;
+				}
+				else{
+					$form_field = array("name"=>"next_alert_date", "id"=>"next_alert_date", "value"=>"", "content"=>"next alert date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
 					$form_fields[] = $form_field;
 				}
 				$form_field = array("name"=>"transactiondate", "id"=>"transactiondate",  "value"=>$entity->date, "content"=>"transaction date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
@@ -1681,7 +1689,38 @@ class TransactionController extends \Controller {
 				$entity_text = "phone numbers";
 				$form_field = array("name"=>$entity_name, "content"=>$entity_text, "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$entity_arr);
 				$form_fields[] = $form_field;
-				$values["typeId"] = "990";
+				$values["typeId"] = "108";
+			}
+			if($values["typeId"] == "989"){
+				$parentId = \LookupTypeValues::where("name", "=", "VEHICLE RENEWALS")->get();
+				$incomes = array();
+				if(count($parentId)>0){
+					$parentId = $parentId[0];
+					$parentId = $parentId->id;
+					$incomes =  \LookupTypeValues::where("parentId","=",$parentId)->get();
+				}
+				foreach ($incomes as $income){
+					$entity_arr[$income->id] = $income->name;
+				}
+				$entity_name = "vehiclerenewals";
+				$entity_text = "Vehicle Renewals";
+				$form_field = array("name"=>$entity_name, "content"=>$entity_text, "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$entity_arr);
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"next_alert_date", "content"=>"next alert date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+				$form_fields[] = $form_field;
+				
+				if(isset($values["type"]) && $values["type"]=="contracts"){
+				}
+				else{
+					$vehicles_arr = array();
+					$vehs = AppSettingsController::getNonContractVehicles();
+					foreach ($vehs as $veh){
+						$vehicles_arr[$veh['id']] = $veh['veh_reg'];
+					}
+					$form_field = array("name"=>"vehicle", "content"=>"vehicle reg no", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
+					$form_fields[] = $form_field;
+				}
+				$values["typeId"] = "989";
 			}
 			if($values["typeId"] == "145"){
 				$parentId = \LookupTypeValues::where("name", "=", "PF COMPANIES")->get();
@@ -1699,7 +1738,7 @@ class TransactionController extends \Controller {
 				$entity_text = "pf company";
 				$form_field = array("name"=>$entity_name, "content"=>$entity_text, "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$entity_arr);
 				$form_fields[] = $form_field;
-				$values["typeId"] = "980";
+				$values["typeId"] = "145";
 			}
 			if($values["typeId"] == "146"){
 				$parentId = \LookupTypeValues::where("name", "=", "ESI COMPANIES")->get();
@@ -1717,7 +1756,7 @@ class TransactionController extends \Controller {
 				$entity_text = "esi company";
 				$form_field = array("name"=>$entity_name, "content"=>$entity_text, "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$entity_arr);
 				$form_fields[] = $form_field;
-				$values["typeId"] = "990";
+				$values["typeId"] = "146";
 			}
 			$form_field = array("name"=>"amount", "content"=>"amount", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");
 			$form_fields[] = $form_field;
@@ -1760,13 +1799,17 @@ class TransactionController extends \Controller {
 					$form_fields[] = $form_field;
 				}
 				if(in_array("VEHICLE",$fields)){
-					$vehicles_arr = array();
-					$vehs = AppSettingsController::getNonContractVehicles();
-					foreach ($vehs as $veh){
-						$vehicles_arr[$veh['id']] = $veh['veh_reg'];
+					if(isset($values["type"]) && $values["type"]=="contracts"){
 					}
-					$form_field = array("name"=>"vehicle[]", "content"=>"vehicle reg no", "readonly"=>"",  "required"=>"", "multiple"=>"multiple", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
-					$form_fields[] = $form_field;
+					else{
+						$vehicles_arr = array();
+						$vehs = AppSettingsController::getNonContractVehicles();
+						foreach ($vehs as $veh){
+							$vehicles_arr[$veh['id']] = $veh['veh_reg'];
+						}
+						$form_field = array("name"=>"vehicle[]", "content"=>"vehicle reg no", "readonly"=>"",  "required"=>"", "multiple"=>"multiple", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
+						$form_fields[] = $form_field;
+					}
 				}
 				if(in_array("BRANCH",$fields)){
 					$branches =  \OfficeBranch::All();
@@ -1805,6 +1848,10 @@ class TransactionController extends \Controller {
 						$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
 					}
 					$form_field = array("name"=>"bankId", "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
+					$form_fields[] = $form_field;
+				}
+				if(in_array("NEXT ALERT DATE",$fields)){
+					$form_field = array("name"=>"next_alert_date", "content"=>"NEXT ALERT DATE", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
 					$form_fields[] = $form_field;
 				}
 			}

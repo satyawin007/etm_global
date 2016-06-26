@@ -861,7 +861,7 @@ class PurchaseOrderController extends \Controller {
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"unitprice", "content"=>"price of unit", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control ");
 				$form_fields[] = $form_field;
-				$form_field = array("name"=>"status", "content"=>"status", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>array("New"=>"New","Old"=>"Old"), "class"=>"form-control");
+				$form_field = array("name"=>"status", "content"=>"status", "readonly"=>"", "required"=>"required", "type"=>"select", "options"=>array("New"=>"New","Old"=>"Old"), "class"=>"form-control chosen-select");
 				$form_fields[] = $form_field;
 				$form_info["form_fields"] = $form_fields;
 				$modals[] = $form_info;
