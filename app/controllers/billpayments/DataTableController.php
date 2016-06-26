@@ -59,10 +59,12 @@ class DataTableController extends \Controller {
 		$select_args[] = "bill_payments.id as id";
 		$select_args[] = "bill_payments.clientId as clientId";
 		$select_args[] = "bill_payments.parentBillId as parentBillId";
+		$select_args[] = "bill_payments.filePath as filePath";
+		$select_args[] = "bill_payments.billNo as billNo1";
 			
 		$actions = array();
 		if(in_array(310, $this->jobs)){
-			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditBillPayments(", "jsdata"=>array("billNo","billDate","paidDate", "totalAmount", "amountPaid","name","billParticulars", "remarks" ,"status", "id","clientId","parentBillId","transctionType"), "text"=>"EDIT");
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditBillPayments(", "jsdata"=>array("billNo1","billDate","paidDate", "totalAmount", "amountPaid","name","billParticulars", "remarks" ,"status", "id","clientId","parentBillId","transctionType"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
 		$values["actions"] = $actions;
@@ -84,19 +86,27 @@ class DataTableController extends \Controller {
 		
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			$destinationPath = '../app/storage/uploads/'.$entity["filePath"];
+			if ($entity["filePath"] != ""){
+				$entity["billNo"] = "<a href='".$destinationPath."' target='_blank'>".$entity["billNo"]."</a>";
+			}
 			if($entity["billDate"] != ""){
 				$entity["billDate"] = date("d-m-Y",strtotime($entity["billDate"]));
 				if($entity["billDate"] == "01-01-1970"){
 					$entity["billDate"] = "";
 				}
 			}
+			$paid_amt_tot = \BillPayments::where("billNo","=",$entity["billNo"])
+										->where('paidDate',"<=",$entity["paidDate"])
+										->where('clientId',"=",$entity["clientId"])
+										->sum('amountPaid');
 			if($entity["paidDate"] != ""){
 				$entity["paidDate"] = date("d-m-Y",strtotime($entity["paidDate"]));
 				if($entity["paidDate"] == "01-01-1970"){
 					$entity["paidDate"] = "";
 				}
 			}
-			$entity["dueAmount"] = $entity["totalAmount"]-$entity["amountPaid"];
+			$entity["dueAmount"] = $entity["totalAmount"]-$paid_amt_tot;
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";

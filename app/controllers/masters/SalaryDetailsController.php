@@ -52,12 +52,14 @@ class SalaryDetailsController extends \Controller {
 			$field_names = array("bankaccount"=>"bankAccount","paymenttype"=>"paymentType",
 								 "effectivefrom"=>"fromDate","batta"=>"batta","accounttype"=>"accountType",
 								 "salary"=>"salary","status"=>"status","bankname"=>"bankName","accountnumber"=>"accountNumber",
-								 "chequenumber"=>"chequeNumber","issuedate"=>"issueDate","transactiondate"=>"transactionDate"
+								 "chequenumber"=>"chequeNumber","issuedate"=>"issueDate","transactiondate"=>"transactionDate",
+								 "increamentamount"=>"increament","increamentDate"=>"increamentDate","arrearpaid"=>"arrearpaid",
+								 "arrearamount"=>"arrearamount"
 								);
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
-					if($key == "effectivefrom" || $key == "transactiondate" || $key=="issuedate"){
+					if($key == "effectivefrom" || $key == "transactiondate" || $key=="issuedate" || $key=="increamentDate"){
 						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 					}
 					else {
@@ -65,6 +67,11 @@ class SalaryDetailsController extends \Controller {
 					}
 				}
 			}
+			if($values["arrearpaid"] == "NO"){
+				$fields["arrearamount"] = 0;
+			}
+			$fields["previousSalary"] = $values["salary"];
+			$fields["salary"] = $values["salary"]+$values["increamentamount"];
 			$db_functions_ctrl = new DBFunctionsController();
 			$table = "SalaryDetails";
 			$data = array("id"=>$values['id1']);
@@ -109,6 +116,10 @@ class SalaryDetailsController extends \Controller {
 		$select_args[] = "empsalarydetails.fromDate as fromDate";
 		$select_args[] = "empsalarydetails.id as id";
 		$select_args[] = "employee.officeBranchId as officeBranchId";
+		$select_args[] = "empsalarydetails.increament as increamentamount";
+		$select_args[] = "empsalarydetails.increamentDate as increamentDate";
+		$select_args[] = "empsalarydetails.arrearpaid as arrearpaid";
+		$select_args[] = "empsalarydetails.arrearamount as arrearamount";
 		
 		$entity = \SalaryDetails::where("empsalarydetails.empId","=",$values['id'])
 						->leftjoin("employee","employee.id","=","empsalarydetails.empId")
@@ -155,6 +166,13 @@ class SalaryDetailsController extends \Controller {
 			}
 			else{
 				$entity->fromDate = date("d-m-Y",strtotime($entity->fromDate));
+			}
+			
+			if(date("d-m-Y",strtotime($entity->increamentDate)) == "01-01-1970" || date("d-m-Y",strtotime($entity->increamentDate)) == "30-11--0001" || date("d-m-Y",strtotime($entity->increamentDate)) == "" || date("d-m-Y",strtotime($entity->increamentDate)) == "00-00-0000"){
+				$entity->increamentDate = "";
+			}
+			else{
+				$entity->increamentDate = date("d-m-Y",strtotime($entity->increamentDate));
 			}
 			
 			if($entity->officeBranchIds == 0){
@@ -221,7 +239,20 @@ class SalaryDetailsController extends \Controller {
 				$form_field = array("name"=>"accountnumber", "id"=>"accountnumber","value"=>$entity->accountNumber, "content"=>"account number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 				$form_fields[] = $form_field;
 			}
+			
+			$form_field = array("name"=>"editincrement","id"=>"editincrement", "content"=>"edit increment", "readonly"=>"",  "required"=>"","action"=>array("type"=>"onchange","script"=>"showincrement(this.value)"), "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("YES"=>"YES", "NO"=>"NO"));
+			$form_fields[] = $form_field;
+			/* $form_field = array("name"=>"editincrement", "content"=>"edit increment", "readonly"=>"",  "required"=>"","type"=>"radio", "class"=>"form-control","options"=>array("YES"=>"YES", "NO"=>"NO"),"script"=>array("YES"=>"onclick='showincrement()'", "NO"=>"onclick='hideincrement()'"));
+			$form_fields[] = $form_field; */
 			$form_field = array("name"=>"salarycardno", "value"=>$entity->salaryCardNo, "content"=>"salary card no", "readonly"=>"readonly",  "required"=>"","type"=>"text", "class"=>"form-control input-mask-card");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"increamentamount", "value"=>$entity->increamentamount, "content"=>"increament amount", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control ");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"increamentDate", "value"=>$entity->increamentDate, "content"=>"increament Date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"arrearpaid", "content"=>"arrear paid", "readonly"=>"","value"=>$entity->arrearpaid,  "required"=>"","type"=>"radio", "class"=>"form-control","options"=>array("YES"=>"YES", "NO"=>"NO"));
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"arrearamount", "value"=>$entity->arrearamount, "content"=>"arrear amount", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			/* $form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"bank Account", "readonly"=>"",  "required"=>"","type"=>"select", "options"=>$banks_arr, "class"=>"form-control");
 			$form_fields[] = $form_field;		
@@ -361,6 +392,38 @@ class SalaryDetailsController extends \Controller {
 		$values["form_info"] = $form_info;
 		$values['provider'] = "salarydetails";
 		return View::make('masters.layouts.datatable', array("values"=>$values));
+	}
+	
+	public function addIncreament(){
+		if (\Request::isMethod('post'))
+		{
+			$values = Input::all();
+			$field_names = array("increamentdate"=>"increamentDate","increamentamount"=>"increament",
+					"arrearpaid"=>"arrearpaid","ariaramount"=>"arrearamount");
+			$fields = array();
+			foreach ($field_names as $key=>$val){
+				if(isset($values[$key])){
+					if($key == "increamentdate"){
+						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+					}
+					else {
+						$fields[$val] = $values[$key];
+					}
+				}
+			}
+			$entity = \SalaryDetails::where("empid","=",$values['empid'])->first();
+			$fields["previousSalary"] = $entity->salary;
+			$fields["salary"] = $entity->salary+$values["increamentamount"];
+			$db_functions_ctrl = new DBFunctionsController();
+			$table = "SalaryDetails";
+			$data = array("id"=>$values['empid']);
+			if($db_functions_ctrl->update($table, $fields, $data)){
+				echo "Operation completed Successfully";
+			}
+			else{
+				echo "Operation Could not be completed, Try Again!";
+			}
+		}
 	}
 	
 }

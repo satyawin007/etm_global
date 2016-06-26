@@ -255,6 +255,8 @@ Route::any('/addsalarydetails', "masters\SalaryDetailsController@addSalaryDetail
 
 Route::any('/editsalarydetails', "masters\SalaryDetailsController@editSalaryDetails");
 
+Route::any('/addincreament', "masters\SalaryDetailsController@addIncreament");
+
 Route::get('/fuelstations', "masters\FuelStationController@manageFuelStations");
 
 Route::any('/addfuelstation', "masters\FuelStationController@addFuelStation");
@@ -649,4 +651,9 @@ Route::any('/addattendencelog', "attendence\AttendenceController@addAttendenceLo
 Route::any('/getattendencelog', "attendence\AttendenceController@getAttendenceLog");
 
 Route::any('/getdaytotalattendence', "attendence\AttendenceController@getDayTotalAttendence");
+
+Route::get('/dashboard', function()
+{
+	return View::make('settings.dashboard');
+});
 

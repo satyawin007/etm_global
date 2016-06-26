@@ -104,8 +104,19 @@
 									$entities = Employee::where("status","=","ACTIVE")->get();
 									$count = 0;
 									foreach ($entities as $entity){
+										
 										$joindate_day = date('d', strtotime($entity->joiningDate));
 										$joindate_month = date('m', strtotime($entity->joiningDate));
+										$joiningdate_gen = date("Y")."-".$joindate_month."-".$joindate_day;
+										
+										$empsalarydet = \SalaryDetails::where("id","=",$entity->id)->first();
+										if(count($empsalarydet)>0){
+											$incrementdate = $empsalarydet->increamentDate;
+	 										if($joiningdate_gen < $incrementdate){
+	 											continue;
+	 										}
+										}
+										$edit = '&nbsp;&nbsp;<a class="btn btn-minier btn-primary" href="#edit" onclick="setemp('.$entity->id.')" data-toggle="modal">PAY INCREMENT</a>';
 										$one_year_less_join_date = $last_year."-".$joindate_month."-".$joindate_day;
 										$date1=date_create($one_year_less_join_date);
 										$date2=date_create($today);
@@ -119,13 +130,13 @@
 													 "<td>".date("d-m-Y",strtotime($entity->joiningDate))."</td>".
 													 "<td>".$joindate_day."-".$joindate_month."-".date("Y")."</td>";
 											if(($diff->format("%a")-365)<5){
-												echo "<td>"."<span class='label label-success'>".($diff->format("%a")-365)."</span>"."</td></tr>";
+												echo "<td>"."<span class='label label-success'>".($diff->format("%a")-365)."</span>".$edit."</td></tr>";
 											}
 											else if(($diff->format("%a")-365)<=10){
-												echo "<td>"."<span class='label label-warning'>".($diff->format("%a")-365)."</span>"."</td></tr>";
+												echo "<td>"."<span class='label label-warning'>".($diff->format("%a")-365)."</span>".$edit."</td></tr>";
 											}
 											else if(($diff->format("%a")-365)>10){
-												echo "<td>"."<span class='label label-inverse'>".($diff->format("%a")-365)."</span>"."</td></tr>";
+												echo "<td>"."<span class='label label-inverse'>".($diff->format("%a")-365)."</span>".$edit."</td></tr>";
 											}
 										}
 									}
@@ -137,16 +148,8 @@
 			</div>
 		</div>
 
-		<?php 
-			if(isset($values['modals'])) {
-				$modals = $values['modals'];
-				foreach ($modals as $modal){
-		?>
-				@include('masters.layouts.modalform', $modal)
-		<?php }} ?>
-		
 		<div id="edit" class="modal" tabindex="-1">
-			<div class="modal-dialog" style="width: 80%">
+			<div class="modal-dialog" style="width: 50%">
 				<div class="modal-content">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -154,6 +157,51 @@
 					</div>
 	
 					<div class="modal-body" id="modal_body">
+						<form name="modalform" id="modalform" class="form-horizontal" action="addincreament" onsubmit="return false">	
+								<div class="form-group">
+									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> INCREAMENT DATE </label>
+									<div class="col-xs-6">
+										<input type="text" id="increamentdate" name="increamentdate" class="form-control date-picker">
+									</div>			
+								</div>
+								<div class="form-group">
+									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> INCREAMENT AMOUNT </label>
+									<div class="col-xs-6">
+										<input type="text" id="increamentamount" name="increamentamount" class="form-control">
+									</div>			
+								</div>
+								<div class="form-group">
+									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> ARREAR PAID </label>
+									<div class="radio inline">
+										<label>
+											<input name="arrearpaid" id="arrearpaid" value="YES" type="radio" class="ace" onclick="showariaramount()">
+											<span class="lbl">&nbsp;YES &nbsp;&nbsp;</span>
+										</label>
+									</div>	
+									<div class="radio inline">
+										<label>
+											<input name="arrearpaid" id="arrearpaid" value="NO" type="radio" class="ace" checked onclick="hideariaramount()">
+											<span class="lbl">&nbsp;NO &nbsp;&nbsp;</span>
+										</label>
+									</div>			
+								</div>
+								<div class="form-group" id="div_ariaramount">
+									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> ARREAR AMOUNT </label>
+									<div class="col-xs-6">
+										<input type="text" id="ariaramount" name="ariaramount" class="form-control">
+									</div>			
+								</div>
+								<input type="hidden" id="empid" name="empid" class="form-control">
+								<div class="form-group">
+									<label class="col-xs-4 control-label no-padding-right" for="form-field-1">  </label>
+									<div class="col-xs-6">
+										<button class="btn btn-sm btn-primary" id="submitbutton">
+											SUBMIT
+										</button>
+									</div>			
+								</div>
+								
+						</form>
 					</div>
 	
 					<div class="modal-footer">
@@ -191,11 +239,43 @@
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#processing").hide();
+			$("#div_ariaramount").hide();
 			reporttype = "";
+
+			$("#submitbutton").on("click",function(){
+				var form = $("#modalform");
+				$.ajax({
+			        type:"POST",
+			        url:form.attr("action"),
+			        data:form.serialize(),
+			        success: function(response){
+			        	if(response == "Operation completed Successfully"){
+					    	 bootbox.alert(response, function(result) {});
+					    	 setTimeout(location.reload(), 3000);
+					    }
+			        	else{
+			        		bootbox.alert(response, function(result) {});
+			        	}
+			        }
+			    });
+			});
 
 			function generateReport(){
 				reporttype = "ticket_corgos_summery";
 				paginate(1);
+			}
+
+			function showariaramount(){
+				$("#div_ariaramount").show();
+			}
+
+			function hideariaramount(){
+				$("#ariaramount").val("");
+				$("#div_ariaramount").hide();
+			}
+
+			function setemp(id){
+				$("#empid").val(id);
 			}
 
 			function showSelectionType(val){
