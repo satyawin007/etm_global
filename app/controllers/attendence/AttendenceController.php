@@ -281,7 +281,7 @@ class AttendenceController extends \Controller {
 			$branch_arr[$branch->id] = $branch->name;
 		}
 		
-		$clients =  \Client::all();
+		$clients =  AppSettingsController::getEmpClients();
 		$clients_arr = array();
 		foreach ($clients as $client){
 			$clients_arr[$client['id']] = $client['name'];
