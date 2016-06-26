@@ -31,6 +31,13 @@ class BillPaymentsController extends \Controller {
 					
 				}
 			}
+			if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
+				$destinationPath = storage_path().'/uploads/'; // upload path
+				$extension = Input::file('billfile')->getClientOriginalExtension(); // getting image extension
+				$fileName = uniqid().'.'.$extension; // renameing image
+				Input::file('billfile')->move($destinationPath, $fileName); // upl1oading file to given path
+				$fields["filePath"] = $fileName;
+			}
 			if(isset($values["existing_bills"]) && $values["existing_bills"] == "YES"){
 				$fields["transctionType"] = "Existing Bills";
 			}
@@ -105,6 +112,13 @@ class BillPaymentsController extends \Controller {
 					}
 					
 				}
+			}
+			if (isset($values["billfile1"]) && Input::hasFile('billfile1') && Input::file('billfile1')->isValid()) {
+				$destinationPath = storage_path().'/uploads/'; // upload path
+				$extension = Input::file('billfile1')->getClientOriginalExtension(); // getting image extension
+				$fileName = uniqid().'.'.$extension; // renameing image
+				Input::file('billfile1')->move($destinationPath, $fileName); // upl1oading file to given path
+				$fields["filePath"] = $fileName;
 			}
 			$data = array('id'=>$values['id1']);
 			$db_functions_ctrl = new DBFunctionsController();
@@ -186,6 +200,8 @@ class BillPaymentsController extends \Controller {
 		
 		$parentbills = \BillPayments::where("bill_payments.status","=","ACTIVE")
 						->join("clients","bill_payments.clientId","=","clients.id")
+						->groupBy('bill_payments.billNo')
+						->groupBy('clients.name')
 						->select(array("clients.name as name", "bill_payments.billNo as billNo", "bill_payments.id as id"))->get();
 		$parentbills_arr = array();
 		foreach ($parentbills as $parentbill){
@@ -201,6 +217,8 @@ class BillPaymentsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"totalamount", "content"=>"total amount", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
+		$form_field = array("name"=>"balanceamount", "content"=>"balance amount", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
 		$form_field = array("name"=>"clientname","id"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required","action"=>array("type"=>"onchange","script"=>"gettotalamount(this.value)"), "type"=>"select", "class"=>"form-control chosen-select", "options"=>$client_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"amountpaid", "content"=>"amount paid", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
@@ -210,6 +228,8 @@ class BillPaymentsController extends \Controller {
 		$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"",  "required"=>"","type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"show", "content"=>"show", "readonly"=>"",  "required"=>"","type"=>"checkbox", "class"=>"form-control","options"=>array("existing_bills"=>"existing bills", "bulk_payment"=>"bulk payment"));
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"billfile", "content"=>"upload bill", "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
 		$form_fields[] = $form_field;
 		
 		$form_info["form_fields"] = $form_fields;
@@ -242,6 +262,8 @@ class BillPaymentsController extends \Controller {
 		$form_field = array("name"=>"remarks1", "content"=>"remarks", "readonly"=>"",  "required"=>"","type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"status1", "value"=>"", "content"=>"status", "readonly"=>"", "value"=>"", "required"=>"", "type"=>"select", "options"=>array("ACTIVE"=>"ACTIVE","INACTIVE"=>"INACTIVE"), "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"billfile1", "content"=>"upload bill", "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"id1",  "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -320,13 +342,29 @@ class BillPaymentsController extends \Controller {
 	public function getBillNo()
 	{
 		$values = Input::all();
+		
+		$select_args = array();
+		$select_args[] = "bill_payments.billNo as billNo";
+		$select_args[] = "bill_payments.totalAmount as totalAmount";
+		$select_args[] = "bill_payments.billDate as billDate";
+		$select_args[] = "bill_payments.clientId as clientId";
+		$select_args[] = "bill_payments.billParticulars as billParticulars";
+		
+		
 		$json_resp = array();
-		$entity = \BillPayments::where("Id","=",$values['id'])->first();
+		$entity = \BillPayments::where("bill_payments.Id","=",$values['id'])
+								->join("clients","bill_payments.clientId","=","clients.id")
+								->first();
 		$json_resp["billNo"] = $entity->billNo;
 		$json_resp["totalAmount"] = $entity->totalAmount;
 		$json_resp["billDate"] = date("d-m-Y",strtotime($entity->billDate));
 		$json_resp["clientId"] = $entity->clientId;
 		$json_resp["billParticulars"] = $entity->billParticulars;
+		$paid_amt_tot = \BillPayments::where("billNo","=",$entity->billNo)
+										->where("clientId","=",$entity->clientId)
+										->select($select_args)
+										->sum('amountPaid');
+		$json_resp["balance_amt"] = $entity->totalAmount-$paid_amt_tot;
 		echo json_encode($json_resp);
 	}
 	

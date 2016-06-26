@@ -276,7 +276,7 @@
 
 				<ul class="nav nav-list">
 					<li class="hover">
-						<a href="#">
+						<a href="dashboard">
 							<i class="menu-icon fa fa-tachometer"></i>
 							<span class="menu-text"> DASHBOARD </span>
 						</a>

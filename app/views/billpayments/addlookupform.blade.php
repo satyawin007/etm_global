@@ -55,7 +55,7 @@
 			</div>
 			<div class="widget-body">
 				<div class="widget-main no-padding">
-				<form style="padding-top:20px;" class="{{$form_info['class']}}" action="{{$form_info['action']}}" method="{{$form_info['method']}}" name="{{$form_info['name']}}"  id="{{$form_info['name']}}">
+				<form style="padding-top:20px;" class="{{$form_info['class']}}" action="{{$form_info['action']}}" method="{{$form_info['method']}}" name="{{$form_info['name']}}"  id="{{$form_info['name']}}" enctype="multipart/form-data">
 					<div>
 					<?php $form_fields = $form_info['form_fields'];?>	
 					<?php foreach ($form_fields as $form_field) {?>
@@ -125,6 +125,16 @@
 							</div>			
 						</div>				
 						<?php } ?>
+						
+						<?php if($form_field['type'] === "file"){ ?>				
+						<div class="form-group">
+							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+							<div class="col-xs-8">
+								<input type="file" id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="form-control file"/>
+							</div>			
+						</div>
+						<?php } ?>
+						
 						<?php if($form_field['type'] === "checkbox"){ ?>
 							<div class="form-group">
 								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>

@@ -9,7 +9,7 @@
 			<div class="modal-body">
 				<div class="row">
 					<div class="col-xs-12">
-					<form name="{{$modal['action']}}" id="{{$modal['name']}}" class="form-horizontal" action="{{$modal['action']}}" method="post">	
+					<form name="{{$modal['action']}}" id="{{$modal['name']}}" class="form-horizontal" action="{{$modal['action']}}" method="post" enctype="multipart/form-data">	
 						<?php $form_fields = $modal['form_fields'];?>	
 						<?php foreach ($form_fields as $form_field) {?>
 							<div class="col-xs-6" id="div_{{$form_field['name']}}">
@@ -18,6 +18,14 @@
 								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 								<div class="col-xs-8">
 									<input {{$form_field['readonly']}} type="{{$form_field['type']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['required']) && $form_field['required']=="required") echo " required='required' "; ?> name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
+								</div>			
+							</div>
+							<?php } ?>
+							<?php if($form_field['type'] === "file"){ ?>				
+							<div class="form-group">
+								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+								<div class="col-xs-8">
+									<input type="file" id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="form-control file"/>
 								</div>			
 							</div>
 							<?php } ?>

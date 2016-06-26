@@ -58,7 +58,7 @@
 			<div class="clearfix">
 				<div class="pull-left">
 					
-					<form action="{{$values['form_action']}}" name="paginate" id="paginate">
+					<form action="{{$values['form_action']}}" name="paginate" id="paginate" enctype="multipart/form-data">
 					<?php 
 					if(isset($values['selects'])){
 						$selects = $values['selects'];
@@ -146,6 +146,8 @@
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
 			$("#div_parentbill").hide();
+			$("#div_balanceamount").hide();
+			$("#balanceamount").val("");
 
 
 			$('#existing_bills').on('change', function() { 
@@ -154,6 +156,8 @@
 				    $("#div_parentbill").show();	
 				    $("#billno").attr("readonly", true); 
 				    $("#totalamount").attr("readonly", true); 
+				    $("#div_balanceamount").show();
+				    $("#balanceamount").attr("readonly", true); 
 				    $("#billdate").attr("readonly", true); 
 				    $("#billparticulars").attr("readonly", true); 
 			   }
@@ -162,7 +166,9 @@
 				    $("#billno").attr("readonly", false); 
 				    $("#billno").val(""); 
 				    $("#totalamount").attr("readonly", false); 
+				    $("#balanceamount").attr("readonly", false);
 				    $("#totalamount").val("");
+				    $("#balanceamount").val("");
 				    $("#billdate").attr("readonly", false); 
 				    $("#billdate").val("");
 				    $("#billparticulars").attr("readonly", false); 
@@ -192,6 +198,7 @@
 			    	  json_data = JSON.parse(data);
 			    	  $("#billno").val(json_data.billNo);
 			    	  $("#totalamount").val(json_data.totalAmount);
+			    	  $("#balanceamount").val(json_data.balance_amt);
 			    	  $("#billdate").val(json_data.billDate);
 			    	  $("#clientname option").each(function() { this.selected = (this.value == json_data.clientId); });
 			    	  $("#billparticulars").html(json_data.billParticulars);
@@ -214,6 +221,19 @@
 				   });
 				}
 			}
+
+			$('.file').ace_file_input({
+				no_file:'No File ...',
+				btn_choose:'Choose',
+				btn_change:'Change',
+				droppable:false,
+				onchange:null,
+				thumbnail:false //| true | large
+				//whitelist:'gif|png|jpg|jpeg'
+				//blacklist:'exe|php'
+				//onchange:''
+				//
+			});
 			
 			function paginate(page){
 				var myin = document.createElement("input"); 
@@ -310,6 +330,7 @@
 			}
 
 			function modalEditBillPayments(billNo,billDate,paidDate, totalAmount, amountPaid,name,billParticulars, remarks ,status, id,clientId,parentBillId,transctionType){
+				alert(billNo);
 				$("#paiddate1").val(paidDate);				
 				$("#totalamount1").val(totalAmount);
 				$("#amountpaid1").val(amountPaid);
