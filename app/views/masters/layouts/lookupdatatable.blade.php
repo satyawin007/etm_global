@@ -49,7 +49,6 @@
 						($form_info['action']=="addservicedetails" && in_array(221, $jobs)) or
 						($form_info['action']=="addlookupvalue" && in_array(225, $jobs)) or
 						($form_info['action']=="addbankdetails" && in_array(227, $jobs)) or 
-						($form_info['action']=="addcard" && in_array(227, $jobs)) or
 						($form_info['action']=="addfinancecompany" && in_array(229, $jobs)) or 
 						($form_info['action']=="addcreditsupplier" && in_array(231, $jobs)) or
 						($form_info['action']=="addfuelstation" && in_array(235, $jobs)) or
@@ -383,17 +382,6 @@
 				$("#id1").val(id);		
 				$('.chosen-select').trigger("chosen:updated");	
 			}
-			function modalEditCard(id, cardNumber, cardType, cardHolderName, bank, creditLimit, expireDate, status){
-				$("#cardnumber1").val(cardNumber);				
-				$("#cardholdername1").val(cardHolderName);
-				$("#creditlimit1").val(creditLimit);
-				$("#expiredate1").val(expireDate);
-				$("#cardtype1 option").each(function() {this.selected = (this.text == cardType); });
-				$("#bank1 option").each(function() {this.selected = (this.text == bank); });
-				$("#status1 option").each(function() { this.selected = (this.text == status); });
-				$("#id1").val(id);		
-				$('.chosen-select').trigger("chosen:updated");	
-			}
 
 			function modalEditService(id, source, dest, serviceno, description, status, servstatus){
 				$("#sourcecity1 option").each(function() {this.selected = (this.text == source); });
@@ -543,19 +531,6 @@
 			      type: 'GET'
 			   });
 			}
-
-			function validateCard(val){
-				$.ajax({
-			      url: "validatecardnumber?cardnumber="+val,
-			      success: function(data) {
-				      if(data == "YES"){
-					      alert("CARD NUMBER ALREADY EXISTS");
-				    	  $("#cardnumber").val("");
-				      }
-			      },
-			      type: 'GET'
-			   });
-			}
 			<?php 
 				if(Session::has('message')){
 					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
@@ -609,8 +584,7 @@
 			});
 
 			$('.input-mask-phone').mask('(999) 999-9999');
-			$('#cardnumber').mask('9999-9999-9999-9999');
-			$('#cardnumber1').mask('9999-9999-9999-9999');
+			
 
 			jQuery(function($) {		
 				//initiate dataTables plugin

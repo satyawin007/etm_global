@@ -2828,19 +2828,7 @@ class ReportsController extends \Controller {
 						  	}
 					  	}
 					  	else if(isset($values["employeetype"]) && $values["employeetype"]=="CLIENT BRANCH"){
-					  		$clientname="";
-					  		$client = \Client::where("id","=",$values["clientname"])->get();
-					  		if(count($client)>0){
-					  			$client = $client[0];
-					  			$clientname = $client->name;
-					  		}
-					  		$depotname="";
-					  		$depot = \Depot::where("id","=",$values["depot"])->get();
-					  		if(count($depot)>0){
-					  			$depot = $depot[0];
-					  			$depotname = $depot->name;
-					  		}
-					  		$br_name = $depotname." (".$clientname.")";
+					  		$br_name = "FAD";
 					  	}
 					  	$row["branch"] = $br_name;
 					  	$row["employee"] = $entity->fullName." - ".$entity->empCode;
@@ -2919,17 +2907,11 @@ class ReportsController extends \Controller {
 							
 							$previous_salary = 0;
 							$increment = 0;
-							$increment_dt = "";
-							$salary_details = \SalaryDetails::where("empId","=",$entity->id)->Get();
+							$salary_details = \SalaryDetails::where("empid","=",$entity->id)->Get();
 							if(count($salary_details)>0){
 								$salary_details = $salary_details[0];
 								$previous_salary = $salary_details->previousSalary;
 								$increment = $salary_details->increament;
-								$increment_dt = date("d-m-Y",strtotime($salary_details->increamentDate));
-								if($increment_dt=="30-11--0001" || $increment_dt=="01-01-1970"){
-									$increment_dt = "";
-								}
-								//echo $entity->fullName." - ".$increment." - ".$previous_salary." - ".$increment_dt; die();
 							}
 							if(isset($roles_arr[$entity->roleId])){
 								$entity->roleId = $roles_arr[$entity->roleId];
@@ -2949,10 +2931,7 @@ class ReportsController extends \Controller {
 							$row["otherAmount"] = $rec->otherAmount;
 							$row["previous_salary"] = $previous_salary;
 							$row["increment"] = $increment;
-							if($increment_dt == "01-01-1970"){
-								$increment_dt = "";
-							}
-							$row["increment_date"] = $increment_dt;
+							$row["increment_date"] = "00-00-0000";
 							$row["grosssalary"] = $rec->actualSalary;
 							$row["netsalary"] = $rec->salaryPaid;
 							$row["cardNumber"] = $rec->cardNumber;

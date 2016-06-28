@@ -263,25 +263,23 @@
 								<thead>
 									<tr>
 										<th>VEHICLE</th>
-										<th>TYPE</th>
 										<th>DRIVER1</th>
 										<th>DRIVER2</th>
 										<th>HELPER</th>
 										<th>START DT</th>
 										<th>STATUS</th>
-<!-- 										<th>REMARKS</th> -->
+										<th>REMARKS</th>
 										<th>ACTIONS</th>
 									</tr>
 								</thead>
 								<tr ng-repeat="vehicle in vehicles_text">
 									<td>@{{vehicle.vehicle}}</td>
-									<td>@{{vehicle.vehicletype}}</td>
 									<td>@{{vehicle.driver1}}</td>
 									<td>@{{vehicle.driver2}}</td>
 									<td>@{{vehicle.helper}}</td>
 									<td>@{{vehicle.startdt}}</td>
 									<td>@{{vehicle.status}} @{{vehicle['date'] ? "("+vehicle['date']+")" : ''}}</td>
-<!-- 									<td>@{{vehicle.remarks}}</td> -->
+									<td>@{{vehicle.remarks}}</td>
 									<?php 
 										if(isset($form_info['btn_action_type']) && $form_info['btn_action_type']=="edit"){
 									?>

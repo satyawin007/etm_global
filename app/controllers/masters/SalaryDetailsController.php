@@ -200,7 +200,7 @@ class SalaryDetailsController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"effectivefrom", "value"=>$entity->fromDate, "content"=>"effectivefrom", "readonly"=>"",  "required"=>"required",   "type"=>"text", "class"=>"form-control date-picker");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields1(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
+			$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields1(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
 			$form_fields[] = $form_field;
 			if($entity->paymentType === "cheque_credit"){
 				//die();
@@ -417,7 +417,7 @@ class SalaryDetailsController extends \Controller {
 			$db_functions_ctrl = new DBFunctionsController();
 			$table = "SalaryDetails";
 			$data = array("id"=>$values['empid']);
-			if($table::where("empId","=", $values['empid'])->update($fields)){
+			if($db_functions_ctrl->update($table, $fields, $data)){
 				echo "Operation completed Successfully";
 			}
 			else{
@@ -425,4 +425,5 @@ class SalaryDetailsController extends \Controller {
 			}
 		}
 	}
+	
 }

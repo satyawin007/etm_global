@@ -268,8 +268,7 @@ use Illuminate\Support\Facades\Input;
 									if(count($salary_details)>0){
 										$salary_details = $salary_details[0];
 										$previous_salary = $salary_details->previousSalary;
-										$incrdate = date("d-m-Y",strtotime($salary_details->increamentDate));
-										$increment = $salary_details->increament." (".$incrdate.")";
+										$increment = $salary_details->increament;
 									}
 									$joining_date = date("d-m-Y",strtotime($entity->joiningDate));
 									$details_data = "<table class=\'table table-striped table-bordered table-hover\'><tr><th>ENTITY</th><th>VALUE</th></tr>";
@@ -410,8 +409,7 @@ use Illuminate\Support\Facades\Input;
 									if(count($salary_details)>0){
 										$salary_details = $salary_details[0];
 										$previous_salary = $salary_details->previousSalary;
-										$incrdate = date("d-m-Y",strtotime($salary_details->increamentDate));
-										$increment = $salary_details->increament." (".$incrdate.")";
+										$increment = $salary_details->increament;
 									}
 									$joining_date = date("d-m-Y",strtotime($entity->joiningDate));
 									$details_data = "<table class=\'table table-striped table-bordered table-hover\'><tr><th>ENTITY</th><th>VALUE</th></tr>";

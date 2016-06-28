@@ -56,15 +56,8 @@ class StockController extends \Controller {
 							$itemnumbers = $db_functions_ctrl->get($table, $fields1);
 							$itemnumbers = $itemnumbers[0];
 							$itemnumbers = $itemnumbers->itemNumbers;
-							$item_num_arr = explode(",",$json_obj->itemnumbers);
-							foreach($item_num_arr as  $item_num){
-								if($item_num==""){
-									continue;
-								}
-								$item_num = $item_num;
-								$itemnumbers = str_replace($item_num,"",$itemnumbers);
-							}
-							$itemnumbers = str_replace(",,",",",$itemnumbers);
+							$itemnumbers = str_replace($json_obj->itemnumbers,"",$itemnumbers);
+							
 							$data = array('id'=>$json_obj->item);
 							$table = "\PurchasedItems";
 							$fields1 = array("itemNumbers"=>$itemnumbers);
@@ -284,6 +277,7 @@ class StockController extends \Controller {
 					$db_functions_ctrl = new DBFunctionsController();
 					$table = "PurchasedItems";
 					$json_data = json_decode($values["jsondata"]);
+					//print_r($json_data);die();
 					foreach($json_data as $json_obj){
 						$fields = array();
 						$fields["purchasedOrderId"] = $recid;
@@ -294,7 +288,6 @@ class StockController extends \Controller {
 						$fields["itemNumbers"] = $json_obj->itemnumbers;
 						$fields["unitPrice"] = 0;
 						$fields["itemStatus"] = $json_obj->itemstatus;
-						$fields["vehicleId"] = $json_obj->vehicle;
 						$fields["remarks"] = $json_obj->remarks;
 						$db_functions_ctrl->insert($table, $fields);
 					}
@@ -945,9 +938,7 @@ class StockController extends \Controller {
 			$itemnumbers_arr = explode(",", $item->itemNumbers);
 			$options_data = "<option value=''>-- select item number --</option>";
 			foreach ($itemnumbers_arr as $itemnumber){
-				if($itemnumber != ""){
-					$options_data = $options_data."<option value='".$itemnumber."' >".$itemnumber."</option>";
-				}
+				$options_data = $options_data."<option value='".$itemnumber."' >".$itemnumber."</option>";
 			}
 			$jsondata["itemnumbers"] = $options_data;
 		}

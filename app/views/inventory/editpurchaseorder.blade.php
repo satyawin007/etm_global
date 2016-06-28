@@ -532,19 +532,6 @@ use Illuminate\Support\Facades\Input;
 				}
 			}
 
-			function getCreditSupplierByState(val){
-				$.ajax({
-				  url: "getcreditsuppliersbystate?branchId="+val,
-				  success: function(data) {
-					  var obj = JSON.parse(data);
-					  $("#creditsupplier").html(obj.suppliers);
-					  $("#receivedby").html(obj.incharges);
-					  $('.chosen-select').trigger('chosen:updated');
-				  },
-				  type: 'GET'
-			   });
-			}
-
 			function enableIncharge(val){
 				if(val == "YES"){
 			  		$("#amountpaid").val("Yes");

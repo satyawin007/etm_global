@@ -109,7 +109,7 @@
 										$joindate_month = date('m', strtotime($entity->joiningDate));
 										$joiningdate_gen = date("Y")."-".$joindate_month."-".$joindate_day;
 										
-										$empsalarydet = \SalaryDetails::where("empId","=",$entity->id)->first();
+										$empsalarydet = \SalaryDetails::where("id","=",$entity->id)->first();
 										if(count($empsalarydet)>0){
 											$incrementdate = $empsalarydet->increamentDate;
 	 										if($joiningdate_gen < $incrementdate){

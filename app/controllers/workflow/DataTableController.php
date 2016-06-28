@@ -503,7 +503,7 @@ class DataTableController extends \Controller {
 							->where("purchase_orders.status","=","ACTIVE")
 							->whereRaw('purchase_orders.officeBranchId in('.$emp_branches_str.')')
 							->leftjoin("officebranch", "officebranch.id","=","purchase_orders.officeBranchId")
-							->leftjoin("creditsuppliers", "creditsuppliers.id","=","purchase_orders.creditSupplierId")
+							->leftjoin("creditsuppliers", "creditsuppliers.id","=","purchase_orders.officeBranchId")
 							->leftjoin("employee as employee2", "employee2.id","=","purchase_orders.createdBy")
 							->select($select_args)->limit($length)->offset($start)->get();
 			$total = \PurchasedOrders::whereIn("purchase_orders.officeBranchId",$branchids_arr)
@@ -519,7 +519,7 @@ class DataTableController extends \Controller {
 			$qry->whereRaw('purchase_orders.officeBranchId in('.$emp_branches_str.')')
 						->leftjoin("officebranch", "officebranch.id","=","purchase_orders.officeBranchId")
 						->leftjoin("employee as employee2", "employee2.id","=","purchase_orders.createdBy")
-						->leftjoin("creditsuppliers", "creditsuppliers.id","=","purchase_orders.creditSupplierId");
+						->leftjoin("creditsuppliers", "creditsuppliers.id","=","purchase_orders.officeBranchId");
 			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
 				
 			$qry =  \PurchasedOrders::where("purchase_orders.status","=","ACTIVE");

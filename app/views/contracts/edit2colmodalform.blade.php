@@ -97,19 +97,6 @@
 					foreach ($helpers as $helper){
 						$helpers_arr[$helper['id']] = $helper['fullName']." (".$helper->empCode.")";
 					}
-					
-					$parentId = \LookupTypeValues::where("name", "=", "VEHICLE TYPE")->get();
-					$vehtypes = array();
-					if(count($parentId)>0){
-						$parentId = $parentId[0];
-						$parentId = $parentId->id;
-						$vehtypes =  \LookupTypeValues::where("parentId","=",$parentId)->get();
-							
-					}
-					$vehtypes_arr = array();
-					foreach ($vehtypes as $vehtype){
-						$vehtypes_arr[$vehtype->id] = $vehtype->name;
-					}
 				
 					$con_vehs = \ContractVehicle::where("contractId","=",$values["id"])->get();
 					$con_vehs_str = "[";
@@ -129,23 +116,22 @@
 						else{
 							$veh->inActiveDate = "";
 						}
-						$con_vehs_text_str = $con_vehs_text_str."{ 'vehicle':'".$vehicles_arr[$veh->vehicleId]."', 'vehicletype':'".$vehtypes_arr[$veh->vehicleTypeId]."', 'driver1':'".$drivers_arr[$veh->driver1Id]."', 'driver2':'".$drv2."', 'helper':'".$helper."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))."', 'status':'".$veh->status."', 'id':'".$veh->id."'},";
-						$con_vehs_str = $con_vehs_str."{ 'vehicle':'".$veh->vehicleId."', 'vehicletype':'".$veh->vehicleTypeId."', 'driver1':'".$veh->driver1Id."', 'driver2':'".$veh->driver2Id."', 'helper':'".$veh->helperId."', 'status':'".$veh->status."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))."', 'id':'".$veh->id."'},";
+						$con_vehs_text_str = $con_vehs_text_str."{ 'vehicle':'".$vehicles_arr[$veh->vehicleId]."', 'driver1':'".$drivers_arr[$veh->driver1Id]."', 'driver2':'".$drv2."', 'helper':'".$helper."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))."', 'status':'".$veh->status."', 'id':'".$veh->id."'},";
+						$con_vehs_str = $con_vehs_str."{ 'vehicle':'".$veh->vehicleId."', 'driver1':'".$veh->driver1Id."', 'driver2':'".$veh->driver2Id."', 'helper':'".$veh->helperId."', 'status':'".$veh->status."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))."', 'id':'".$veh->id."'},";
 					}
 					$con_vehs_str = $con_vehs_str."]";
 					$con_vehs_text_str = $con_vehs_text_str."]";
 				?>
 				$("#updaterowbtn").hide();
 				$scope.vehicles = <?php echo $con_vehs_str; ?>;
-				$scope.ids = ['vehicle','vehicletype','driver1','driver2','helper','status'];
+				$scope.ids = ['vehicle','driver1','driver2','helper','status'];
 				$scope.vehicles_text = <?php echo $con_vehs_text_str; ?>;
 				$scope.addRow = function(){
 					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" || $scope.driver1 === "" || $scope.vehicle === "") {
 						return;
 					}	
-					$scope.vehicles.push({ 'vehicle':$scope.vehicle, 'vehicletype':$scope.vehicletype, 'driver1': $scope.driver1, 'driver2':$scope.driver2 , 'helper':$scope.helper, 'date':$scope.date, 'status':'ACTIVE', 'id':'-1' });
+					$scope.vehicles.push({ 'vehicle':$scope.vehicle, 'driver1': $scope.driver1, 'driver2':$scope.driver2 , 'helper':$scope.helper, 'date':$scope.date, 'status':'ACTIVE', 'id':'-1' });
 					$scope.vehicle='';
-					$scope.vehicletype='';
 					$scope.driver1='';
 					$scope.driver2='';
 					$scope.helper='';
@@ -206,7 +192,6 @@
 							index = i;
 							//alert($scope.helper);
 							$scope.vehicles[i]['driver1']=$scope.driver1;
-							$scope.vehicles[i]['vehicletype']=$scope.vehicletype;
 							$scope.vehicles[i]['driver2']=$scope.driver2;
 							$scope.vehicles[i]['helper']=$scope.helper;
 							$scope.vehicles[i]['status']=$scope.status;
@@ -231,7 +216,6 @@
 					}
 					$scope.vehicle='';
 					$scope.driver1='';
-					$scope.vehicletype='';
 					$scope.driver2='';
 					$scope.helper='';
 					$scope.status='';
@@ -353,7 +337,7 @@
 					alert("Please select route");
 					return false;
 				}
-				/*var vehicletype = $("#vehicletype").val();
+				var vehicletype = $("#vehicletype").val();
 				if(vehicletype != undefined && vehicletype ==""){
 					alert("Please select vehicletype");
 					return false;
@@ -362,7 +346,7 @@
 				if(vehicletype != undefined && vehicletype ==""){
 					alert("Please select vehicletype");
 					return false;
-				}*/
+				}
 				var cityname = $("#cityname").val();
 				if(cityname != undefined && cityname ==""){
 					alert("Please select cityname");
