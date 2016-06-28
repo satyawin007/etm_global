@@ -18,7 +18,7 @@
 	foreach ($warehouses as $warehouse){
 		$warehouse_arr = array();
 		$sub_warehouses = \Depot::where("status","=","ACTIVE")
-		->where("ParentWarehouse","=",$warehouse->id)->get();
+								->where("ParentWarehouse","=",$warehouse->id)->get();
 		foreach ($sub_warehouses as $sub_warehouse){
 			$warehouse_arr[$sub_warehouse->id] = $sub_warehouse->name."(".$sub_warehouse->code.")";
 		}
@@ -54,6 +54,8 @@
 	
 	$stockitems =  \PurchasedItems::where("purchase_orders.officeBranchId","=",$values["warehouseid"])
 					->where("purchased_items.status","=","ACTIVE")
+					->where("purchased_items.qty",">",0)
+					->where("purchase_orders.status","=","ACTIVE")
 					->join("purchase_orders","purchased_items.purchasedOrderId","=","purchase_orders.id")
 					->join("items","purchased_items.itemId","=","items.id")
 					->join("creditsuppliers","purchase_orders.creditSupplierId","=","creditsuppliers.id")
@@ -91,6 +93,12 @@
 ?>
 	@include("inventory.tablerowform",$form_fields);
 <?php } else if($values["action"] == "warehousetowarehouse"){
+	foreach($warehouse_arr_total as $val => $subarr) {
+		if(isset($warehouse_arr_total[$val][$values["warehouseid"]])){
+			unset($warehouse_arr_total[$val][$values["warehouseid"]]);
+		}
+	}
+	
 	$form_fields = array();
 	$form_field = array("name"=>"item", "id"=>"item",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getItemInfo(this.value)"),   "options"=>$stockitems_arr);
 	$form_fields[] = $form_field;
@@ -227,7 +235,7 @@
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"enableincharge", "content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "content"=>"payment type", "readonly"=>"", "required"=>"required","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"), "class"=>"form-control");
+		$form_field = array("name"=>"paymenttype", "content"=>"payment type", "readonly"=>"", "required"=>"required","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"), "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incharges_arr);
 		$form_fields[] = $form_field;

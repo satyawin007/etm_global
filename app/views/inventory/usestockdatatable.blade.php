@@ -778,6 +778,10 @@
 			    	  $("#units").attr("disabled",true);
 			    	  $('.chosen-select').chosen();
 			    	  $('.chosen-select').trigger('chosen:updated');
+			    	  $('.date-picker').datepicker({
+							autoclose: true,
+							todayHighlight: true
+						})
 			      },
 			      type: 'GET'
 			   });
@@ -987,6 +991,26 @@
 						    	  bootbox.alert('ADDED STOCK ITEM COULD NOT BE DELETED!', function(result) {});
 						      }
 						      window.setTimeout(function(){location.reload();}, 3000 );	
+					      },
+					      type: 'GET'
+					   });	
+					}
+				});
+			};
+
+			function deletePurchaseOrder(id) {
+				bootbox.confirm("Are you sure, you want to delete this purchase order?", function(result) {
+					if(result) {
+						$.ajax({
+					      url: "deletepurchaseorder?id="+id,
+					      success: function(data) {
+						      if(data=="success"){
+						    	  bootbox.alert('PURCHASE ORDER SUCCESSFULLY DELETED!');
+						    	  window.setTimeout(function(){location.reload();}, 3000 );	
+						      }
+						      else{
+						    	  bootbox.alert('PURCHASE ORDER COULD NOT BE DELETED!');
+						      }
 					      },
 					      type: 'GET'
 					   });	
@@ -1453,7 +1477,6 @@
 					$("#"+entry).val(comArr1[index][entry]);
 				});	
 				ids.forEach(function(entry) {
-					alert(entry+" - "+comArr1[index][entry]);
 					if(entry=="itemnumbers"){
 						itemnums = comArr1[index][entry].split(",");
 						for(i=0; i<itemnums.length; i++) {

@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
+use settings\AppSettingsController;
+use masters\OfficeBranchController;
 class PurchaseOrderController extends \Controller {
 
 	/**
@@ -203,7 +205,7 @@ class PurchaseOrderController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"amountpaid", "id"=>"amountpaid", "value"=>$entity->amountPaid, "content"=>"amount paid", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onChange","script"=>"enablePaymentType(this.value)"), "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"paymenttype", "id"=>"paymenttype", "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD"), "class"=>"form-control");
+			$form_field = array("name"=>"paymenttype", "id"=>"paymenttype", "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"), "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"comments", "id"=>"comments", "value"=>$entity->comments, "content"=>"comments", "readonly"=>"", "required"=>"required","type"=>"textarea", "class"=>"form-control ");
 			$form_fields[] = $form_field;
@@ -378,11 +380,14 @@ class PurchaseOrderController extends \Controller {
 		foreach ($emps as $emp){
 			$emp_arr[$emp->id] = $emp->fullName;
 		}
-	
+		
 		$warehouse_arr = array();
-		$warehouses = \OfficeBranch::where("isWareHouse","=","Yes")->get();
+		$warehouses = AppSettingsController::getEmpBranches();
 		foreach ($warehouses as $warehouse){
-			$warehouse_arr[$warehouse->id] = $warehouse->name;
+			$branch = \OfficeBranch::where("id","=",$warehouse["id"])->first();
+			if($branch->isWareHouse == "Yes"){
+				$warehouse_arr[$warehouse["id"]] = $warehouse["name"];
+			}
 		}
 		
 		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
@@ -391,12 +396,13 @@ class PurchaseOrderController extends \Controller {
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;
 		}
-	
+		
+		
+		$form_field = array("name"=>"warehouse", "content"=>"warehouse", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$warehouse_arr, "action"=>array("type"=>"onChange","script"=>"getCreditSupplierByState(this.value)"), "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
 		$form_field = array("name"=>"creditsupplier", "content"=>"credit supplier", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$credit_sup_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"warehouse", "content"=>"warehouse", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$warehouse_arr, "class"=>"form-control chosen-select");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"receivedby", "content"=>"received by", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"receivedby", "content"=>"received by", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$incharges_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"orderdate", "content"=>"order date", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
@@ -406,7 +412,7 @@ class PurchaseOrderController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"enableincharge", "content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "content"=>"payment type", "readonly"=>"", "required"=>"required","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"), "class"=>"form-control");
+		$form_field = array("name"=>"paymenttype", "id"=>"paymenttype", "content"=>"payment type", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"), "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange", "script"=>"getInchargeBalance(this.value)"),  "options"=>$incharges_arr);
 		$form_fields[] = $form_field;
@@ -688,9 +694,12 @@ class PurchaseOrderController extends \Controller {
 			}
 			
 			$warehouse_arr = array();
-			$warehouses = \OfficeBranch::where("isWareHouse","=","Yes")->get();
+			$warehouses = AppSettingsController::getEmpBranches();
 			foreach ($warehouses as $warehouse){
-				$warehouse_arr[$warehouse->id] = $warehouse->name;
+				$branch = \OfficeBranch::where("id","=",$warehouse["id"])->first();
+				if($branch->isWareHouse == "Yes"){
+					$warehouse_arr[$warehouse["id"]] = $warehouse["name"];
+				}
 			}
 			
 			$incharges =  \InchargeAccounts::join("employee", "employee.id","=","inchargeaccounts.empid")
@@ -702,14 +711,14 @@ class PurchaseOrderController extends \Controller {
 			
 			$form_fields = array();
 			$form_payment_fields= array();
+			$form_field = array("name"=>"warehouse", "id"=>"warehouse", "value"=>$entity->officeBranchId, "content"=>"warehouse", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$warehouse_arr, "action"=>array("type"=>"onChange", "script"=>"getCreditSupplierByState(this.value)"), "class"=>"form-control chosen-select");
+			$form_fields[] = $form_field;
 			if($entity->type == "PURCHASE ORDER" || $entity->type == "TO CREDIT SUPPLIER REPAIR"){
 				$form_field = array("name"=>"creditsupplier", "id"=>"creditsupplier", "value"=>$entity->creditSupplierId, "content"=>"credit supplier", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$credit_sup_arr, "class"=>"form-control chosen-select");
 				$form_fields[] = $form_field;
 			}
-			$form_field = array("name"=>"warehouse", "id"=>"warehouse", "value"=>$entity->officeBranchId, "content"=>"warehouse", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$warehouse_arr, "class"=>"form-control chosen-select");
-			$form_fields[] = $form_field;
 			if($entity->type == "PURCHASE ORDER" || $entity->type == "TO CREDIT SUPPLIER REPAIR"){
-				$form_field = array("name"=>"receivedby", "id"=>"receivedby", "value"=>$entity->receivedBy, "content"=>"received by", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+				$form_field = array("name"=>"receivedby", "id"=>"receivedby", "value"=>$entity->receivedBy, "content"=>"received by", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$incharges_arr, "class"=>"form-control chosen-select");
 				$form_fields[] = $form_field;
 			}
 			$form_field = array("name"=>"orderdate", "id"=>"orderdate", "value"=> date("d-m-Y",strtotime($entity->orderDate)), "content"=>"order date", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
@@ -735,7 +744,7 @@ class PurchaseOrderController extends \Controller {
 				if($entity->amountPaid == "No"){
 					$entity->paymentType = "";
 				}
-				$form_field = array("name"=>"paymenttype", "id"=>"paymenttype", "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD"), "class"=>"form-control");
+				$form_field = array("name"=>"paymenttype", "id"=>"paymenttype", "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"", "required"=>"","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"), "class"=>"form-control");
 				$form_fields[] = $form_field;
 				if($entity->paymentType === "cheque_credit"){
 					$bankacts =  \BankDetails::All();
@@ -821,7 +830,6 @@ class PurchaseOrderController extends \Controller {
 			}
 			$item_info_arr = array("1"=>"info1","2"=>"info2");
 			
-			
 			if ($values["type"] == "repairs"){
 				$vehicles =  \Vehicle::all();
 				$vehicles_arr = array();
@@ -866,7 +874,6 @@ class PurchaseOrderController extends \Controller {
 				$form_info["form_fields"] = $form_fields;
 				$modals[] = $form_info;
 			}
-		
 			$values["provider"] = "purchasedorder";
 		
 			$values["modals"] = $modals;
@@ -975,6 +982,33 @@ class PurchaseOrderController extends \Controller {
 			}
 		}
 		$jsondata["manufactures"] = $mans;
+		echo json_encode($jsondata);
+	}
+	
+	public function getCreditSuppliersByState(){
+		$values = Input::all();
+		$jsondata = array();
+		$branchId = $values["branchId"];
+		$stateId = 0;
+		$branch = \OfficeBranch::where("id","=",$branchId)->first();
+		$stateId = $branch->stateId;
+		$suppliers = \CreditSupplier::where("stateId","=",$stateId)->where("status","=","ACTIVE")->get();
+		$suppliers_options = "";
+		foreach ($suppliers as $supplier){
+			$suppliers_options = $suppliers_options."<option value='".$supplier->id."' >".$supplier->supplierName."</option>";
+		}
+		$jsondata["suppliers"] = $suppliers_options;
+		
+		$incharges =  \InchargeAccounts::join("employee", "employee.id","=","inchargeaccounts.empid")
+							->join("cities", "cities.id","=","employee.cityId")
+							->where("cities.stateId","=",$stateId)
+							->select(array("inchargeaccounts.empid as id","employee.fullName as name"))
+							->groupBy("employee.id")->get();
+		$incharges_options = "";
+		foreach ($incharges as $incharge){
+			$incharges_options = $incharges_options."<option value='".$incharge->id."' >".$incharge->name."</option>";
+		}
+		$jsondata["incharges"] = $incharges_options;
 		echo json_encode($jsondata);
 	}
 	

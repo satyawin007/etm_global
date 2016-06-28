@@ -194,7 +194,7 @@ use settings\AppSettingsController;
 			var app = angular.module('myApp', []);
 			app.controller('myCtrl', function($scope, $http) {
 				$scope.vehicles = [];
-				$scope.ids = ['vehicle','driver1','driver2','helper'];
+				$scope.ids = ['vehicle','vehicletype','driver1','driver2','helper'];
 				$scope.vehicles_text = [];
 				$scope.addRow = function(){
 					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" || $scope.driver1 === "" || $scope.vehicle === "" || $scope.driver1 == $scope.driver2) {
@@ -213,7 +213,7 @@ use settings\AppSettingsController;
 						alert( "duplicate value" );
 						return;
 					}
-					$scope.vehicles.unshift({ 'vehicle':$scope.vehicle, 'driver1': $scope.driver1, 'driver2':$scope.driver2 , 'helper':$scope.helper, 'startdt':$scope.startdt });
+					$scope.vehicles.unshift({ 'vehicle':$scope.vehicle, 'vehicletype':$scope.vehicletype, 'driver1': $scope.driver1, 'driver2':$scope.driver2 , 'helper':$scope.helper, 'startdt':$scope.startdt });
 
 					text_arr = [];
 					$scope.ids.forEach(function(entry) {
@@ -225,6 +225,7 @@ use settings\AppSettingsController;
 					$scope.vehicles_text.unshift(text_arr);
 					$('.chosen-select').trigger("chosen:updated");
 					$scope.vehicle='';
+					$scope.vehicletype='';
 					$scope.driver1='';
 					$scope.driver2='';
 					$scope.helper='';
@@ -287,6 +288,7 @@ use settings\AppSettingsController;
 						return;
 					}
 					$scope.vehicle='';
+					$scope.vehicletype='';
 					$scope.driver1='';
 					$scope.driver2='';
 					$scope.helper='';
@@ -334,7 +336,8 @@ use settings\AppSettingsController;
                             	bootbox.alert(response.message, function(result) {});
                             	resetForm("{{$form_info['name']}}");
                             	$scope.vehicles= [];	
-            					$scope.vehicles_text = [];		
+            					$scope.vehicles_text = [];	
+            					window.setTimeout(function(){location.reload();}, 2000);	
                             }
                             if(response.status=="fail"){
                             	bootbox.alert(response.message, function(result) {});
@@ -452,7 +455,7 @@ use settings\AppSettingsController;
 					alert("Please select route");
 					return false;
 				}
-				var vehicletype = $("#vehicletype").val();
+				/*var vehicletype = $("#vehicletype").val();
 				if(vehicletype != undefined && vehicletype ==""){
 					alert("Please select vehicletype");
 					return false;
@@ -461,7 +464,7 @@ use settings\AppSettingsController;
 				if(vehicletype != undefined && vehicletype ==""){
 					alert("Please select vehicletype");
 					return false;
-				}
+				}*/
 				noofvehicles  = $("#noofvehicles").val();
 				if(noofvehicles != undefined && noofvehicles ==""){
 					alert("Please enter no of vehicles");

@@ -186,7 +186,7 @@ class SalariesController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"casualleaves", "value"=>$casual_leaves, "content"=>"casual leaves", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"updateCasualLeaves(this.value)"), "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"hidden", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"hidden", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 		$form_fields[] = $form_field;
 		
 		

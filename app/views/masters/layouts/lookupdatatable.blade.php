@@ -49,6 +49,7 @@
 						($form_info['action']=="addservicedetails" && in_array(221, $jobs)) or
 						($form_info['action']=="addlookupvalue" && in_array(225, $jobs)) or
 						($form_info['action']=="addbankdetails" && in_array(227, $jobs)) or 
+						($form_info['action']=="addcard" && in_array(227, $jobs)) or
 						($form_info['action']=="addfinancecompany" && in_array(229, $jobs)) or 
 						($form_info['action']=="addcreditsupplier" && in_array(231, $jobs)) or
 						($form_info['action']=="addfuelstation" && in_array(235, $jobs)) or
@@ -531,6 +532,19 @@
 			      type: 'GET'
 			   });
 			}
+
+			function validateCard(val){
+				$.ajax({
+			      url: "validatecardnumber?cardnumber="+val,
+			      success: function(data) {
+				      if(data == "YES"){
+					      alert("CARD NUMBER ALREADY EXISTS");
+				    	  $("#cardnumber").val("");
+				      }
+			      },
+			      type: 'GET'
+			   });
+			}
 			<?php 
 				if(Session::has('message')){
 					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
@@ -584,7 +598,7 @@
 			});
 
 			$('.input-mask-phone').mask('(999) 999-9999');
-			
+			$('#cardnumber').mask('9999-9999-9999-9999');
 
 			jQuery(function($) {		
 				//initiate dataTables plugin

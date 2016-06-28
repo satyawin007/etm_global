@@ -80,6 +80,11 @@ class DataTableController extends \Controller {
 			$total = $ret_arr["total"];
 			$data = $ret_arr["data"];
 		}
+		else if(isset($values["name"]) && $values["name"]=="cards") {
+			$ret_arr = $this->getCards($values, $length, $start);
+			$total = $ret_arr["total"];
+			$data = $ret_arr["data"];
+		}
 		else if(isset($values["name"]) && $values["name"]=="financecompanies") {
 			$ret_arr = $this->getFinanceCompanies($values, $length, $start);
 			$total = $ret_arr["total"];
@@ -1007,6 +1012,59 @@ class DataTableController extends \Controller {
 			//$entities = \BankDetails::join("cities","cities.id","=","servicedetails.sourceCity")->join("cities as cities1","cities1.id","=","servicedetails.destinationCity")->select($select_args)->limit($length)->offset($start)->get();
 			$entities = \BankDetails::where("status", "=", "ACTIVE")->select($select_args)->limit($length)->offset($start)->get();
 			$total = \BankDetails::where("status", "=", "ACTIVE")->count();
+		}
+		$entities = $entities->toArray();
+		foreach($entities as $entity){
+			$data_values = array_values($entity);
+			$actions = $values['actions'];
+			$action_data = "";
+			foreach($actions as $action){
+				if($action["type"] == "modal"){
+					$jsfields = $action["jsdata"];
+					$jsdata = "";
+					$i=0;
+					for($i=0; $i<(count($jsfields)-1); $i++){
+						$jsdata = $jsdata." '".$entity[$jsfields[$i]]."', ";
+					}
+					$jsdata = $jsdata." '".$entity[$jsfields[$i]];
+					$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+				}
+				else {
+					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+				}
+			}
+			$data_values[7] = $action_data;
+			$data[] = $data_values;
+		}
+		return array("total"=>$total, "data"=>$data);
+	}
+	
+	private function getCards($values, $length, $start){
+		$total = 0;
+		$data = array();
+	
+		$select_args = array('cardNumber','cardType', "cardHolderName", "lookuptypevalues.name as bank", "creditLimit", "expireDate", 'cards.status as status', 'cards.id as id');
+		$actions = array();
+		if(in_array(228, $this->jobs)){
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditCard(", "jsdata"=>array("id","cardNumber","cardType", "cardHolderName", "bank",  "creditLimit",  "expireDate", "status"), "text"=>"EDIT");
+			$actions[] = $action;
+		}
+		$values["actions"] = $actions;
+			
+		$search = $_REQUEST["search"];
+		$search = $search['value'];
+		if($search != ""){
+			$entities = \BankDetails::where("bankName", "like", "%$search%")
+			->where("status", "=", "ACTIVE")
+			->select($select_args)->limit($length)->offset($start)->get();
+			$total = \BankDetails::where("bankName", "like", "%$search%")->where("status", "=", "ACTIVE")->count();
+		}
+		else{
+			//$entities = \BankDetails::join("cities","cities.id","=","servicedetails.sourceCity")->join("cities as cities1","cities1.id","=","servicedetails.destinationCity")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \Cards::where("cards.status", "=", "ACTIVE")
+								->leftjoin("lookuptypevalues","lookuptypevalues.id","=","cards.lookupValueId")
+								->select($select_args)->limit($length)->offset($start)->get();
+			$total = \Cards::where("status", "=", "ACTIVE")->count();
 		}
 		$entities = $entities->toArray();
 		foreach($entities as $entity){

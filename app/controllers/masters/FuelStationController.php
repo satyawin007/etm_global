@@ -189,7 +189,7 @@ class FuelStationController extends \Controller {
 			$form_fields[] = $form_field;					
 			$form_field = array("name"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"bank account", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$banks_arr, "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+			$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 			$form_fields[] = $form_field;
 			if($entity->paymentType === "cheque_credit"){
 				//die();
@@ -340,7 +340,7 @@ class FuelStationController extends \Controller {
 // 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"securitydepositamount", "content"=>"security deposit amt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control number");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"securitypaymenttype", "id"=>"securitypaymenttype",  "content"=>"security payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+		$form_field = array("name"=>"securitypaymenttype", "id"=>"securitypaymenttype",  "content"=>"security payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"securitypaymentdate", "content"=>"security payment date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
@@ -398,7 +398,7 @@ class FuelStationController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"securitydepositamount1", "content"=>"sec. depo. amt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control number");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"securitypaymenttype1", "id"=>"securitypaymenttype1",  "content"=>"security pmt type", "readonly"=>"", "required"=>"", "type"=>"select", "class"=>"form-control  chosen-select",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+		$form_field = array("name"=>"securitypaymenttype1", "id"=>"securitypaymenttype1",  "content"=>"security pmt type", "readonly"=>"", "required"=>"", "type"=>"select", "class"=>"form-control  chosen-select",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"securitypaymentdate1", "content"=>"security pmt date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
