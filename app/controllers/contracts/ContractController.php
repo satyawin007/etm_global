@@ -51,6 +51,7 @@ class ContractController extends \Controller {
 					$fields = array();
 					$fields["contractId"] = $recid;
 					$fields["vehicleId"] = $jsonitem->vehicle;
+					$fields["vehicleTypeId"] = $jsonitem->vehicletype;
 					$fields["driver1Id"] = $jsonitem->driver1;
 					if(isset($jsonitem->driver2)){
 						$fields["driver2Id"] = $jsonitem->driver2;
@@ -165,6 +166,7 @@ class ContractController extends \Controller {
 							$fields = array();
 							$fields["contractId"] = $entity->contractId;
 							$fields["vehicleId"] = $jsonitem->vehicle;
+							$fields["vehicleTypeId"] = $jsonitem->vehicletype;
 							$fields["driver1Id"] = $jsonitem->driver1;
 							$fields["driver2Id"] = $jsonitem->driver2;
 							$fields["helperId"] = $jsonitem->helper;
@@ -177,6 +179,9 @@ class ContractController extends \Controller {
 							$fields["driver1Id"] = $jsonitem->driver1;
 							if(isset($jsonitem->driver2)){
 								$fields["driver2Id"] = $jsonitem->driver2;
+							}
+							if(isset($jsonitem->vehicletype)){
+								$fields["vehicleTypeId"] = $jsonitem->vehicletype;
 							}
 							if(isset($jsonitem->helperId)){
 								$fields["helperId"] = $jsonitem->helper;
@@ -198,6 +203,9 @@ class ContractController extends \Controller {
 						$fields["driver1Id"] = $jsonitem->driver1;
 						if(isset($jsonitem->driver2)){
 							$fields["driver2Id"] = $jsonitem->driver2;
+						}
+						if(isset($jsonitem->vehicletype)){
+							$fields["vehicleTypeId"] = $jsonitem->vehicletype;
 						}
 						if(isset($jsonitem->helperId)){
 							$fields["helperId"] = $jsonitem->helper;
@@ -310,8 +318,6 @@ class ContractController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"route", "value"=>$entity->routeId, "content"=>"route", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$services_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"vehicletype", "value"=>$entity->vehicleTypeId, "content"=>"vehicle type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehtypes_arr);
-			$form_fields[] = $form_field;
 			$form_field = array("name"=>"avgkms", "value"=>$entity->avgKms, "content"=>"average kms", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"distance", "value"=>$entity->distance, "content"=>"distance", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
@@ -378,6 +384,8 @@ class ContractController extends \Controller {
 			}
 			$form_fields =  array();
 			$form_field = array("name"=>"vehicle", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"vehicletype", "content"=>"vehicle type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehtypes_arr);
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"driver1", "content"=>"driver1", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
 			$form_fields[] = $form_field;
@@ -555,8 +563,6 @@ class ContractController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"route", "content"=>"route", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$services_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"vehicletype", "content"=>"vehicle type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehtypes_arr);
-		$form_fields[] = $form_field;
 		$form_field = array("name"=>"avgkms", "content"=>"average kms", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"distance", "content"=>"distance", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
@@ -620,6 +626,8 @@ class ContractController extends \Controller {
 		}
 		$form_fields =  array();
 		$form_field = array("name"=>"vehicle", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"vehicletype", "content"=>"vehicle type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehtypes_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"driver1", "content"=>"driver1", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
 		$form_fields[] = $form_field;

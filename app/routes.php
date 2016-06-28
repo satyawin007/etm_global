@@ -119,7 +119,7 @@ Route::post('/login', function()
 	    $table = "LoginLog";
 	    $db_functions_ctrl->insert($table, $fields);
 	    
-		return Redirect::intended('masters');
+		return Redirect::intended('dashboard');
 	}
 	else{
 		Session::flash('message', 'wrong username/password');
@@ -236,6 +236,14 @@ Route::get('/bankdetails', "masters\BankDetailsController@manageBankDetails");
 Route::any('/addbankdetails', "masters\BankDetailsController@addBankDetails");
 
 Route::any('/editbankdetails', "masters\BankDetailsController@editBankDetails");
+
+Route::get('/cards', "masters\CardsController@manageCards");
+
+Route::any('/addcard', "masters\CardsController@addCard");
+
+Route::any('/editcard', "masters\CardsController@editCard");
+
+Route::any('/validatecardnumber', "masters\CardsController@validateCardNumber");
 
 Route::get('/financecompanies', "masters\FinanceCompanyController@manageFinanceCompanies");
 
@@ -454,6 +462,8 @@ Route::any('/editpurchaseditem', "inventory\purchaseOrderItemController@editPurc
 Route::any('/deletepurchaseorderitem', "inventory\purchaseOrderItemController@deletePurchaseOrderItem");
 
 Route::get('/getmanufacturers', "inventory\PurchaseOrderController@getManufacturers");
+
+Route::get('/getcreditsuppliersbystate', "inventory\PurchaseOrderController@getCreditSuppliersByState");
 
 Route::any('/manufacturers', "inventory\ManufacturesController@manageManufacturers");
 

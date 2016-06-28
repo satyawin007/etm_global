@@ -117,6 +117,13 @@
 				&nbsp; BANK ACCOUNTS &nbsp; 
 			</button>
 			</a>
+			<?php } if(in_array(161, $jobs)){?>
+			<a href="cards">
+			<button>
+				<i class="ace-icon fa fa-credit-card bigger-300"></i><BR/>
+				&nbsp; CARDS &nbsp; 
+			</button>
+			</a>
 			<?php } if(in_array(162, $jobs)){?>
 			<a href="financecompanies">
 			<button>

@@ -661,7 +661,7 @@ class TransactionController extends \Controller {
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"billfile", "content"=>"upload bill", "value"=>$entity->filePath, "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
 				$form_fields[] = $form_field;
-				$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+				$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 				$form_fields[] = $form_field;
 				if($entity->paymentType === "cheque_credit"){
 					$bankacts =  \BankDetails::All();
@@ -827,7 +827,7 @@ class TransactionController extends \Controller {
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"billfile", "content"=>"upload bill", "value"=>$entity->filePath, "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
 				$form_fields[] = $form_field;
-				$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+				$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 				$form_fields[] = $form_field;
 				if($entity->paymentType === "cheque_credit"){
 					$bankacts =  \BankDetails::All();
@@ -988,7 +988,7 @@ class TransactionController extends \Controller {
 				if($entity->paymentPaid == "No"){
 					$entity->paymentType = "";
 				}
-				$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+				$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 				$form_fields[] = $form_field;
 				if($entity->paymentType === "cheque_credit"){
 					$bankacts =  \BankDetails::All();
@@ -1191,8 +1191,34 @@ class TransactionController extends \Controller {
 			}
 			$form_field = array("name"=>"bankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
 			$form_fields[] = $form_field;
+			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
 			$form_info["form_fields"] = $form_fields;
-		}		
+		}
+		if(isset($values["paymenttype"]) && ($values["paymenttype"] === "credit_card")){
+			$bankacts =  \BankDetails::where("Status","=","ACTIVE")->get();
+			$bankacts_arr = array();
+			foreach ($bankacts as $bankact){
+				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+			}
+			$form_field = array("name"=>"cardnumber", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_info["form_fields"] = $form_fields;
+		}
+		if(isset($values["paymenttype"]) && ($values["paymenttype"] === "debit_card")){
+			$bankacts =  \BankDetails::where("Status","=","ACTIVE")->get();
+			$bankacts_arr = array();
+			foreach ($bankacts as $bankact){
+				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+			}
+			$form_field = array("name"=>"cardnumber", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_info["form_fields"] = $form_fields;
+		}
 		return view::make("transactions.paymentform",array("form_info"=>$form_info));
 	}
 	
@@ -1273,6 +1299,32 @@ class TransactionController extends \Controller {
 			$form_field = array("name"=>"bankname", "content"=>"bank name", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"accountnumber", "content"=>"account number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_info["form_fields"] = $form_fields;
+		}
+		if(isset($values["paymenttype"]) && ($values["paymenttype"] === "credit_card")){
+			$bankacts =  \BankDetails::where("Status","=","ACTIVE")->get();
+			$bankacts_arr = array();
+			foreach ($bankacts as $bankact){
+				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+			}
+			$form_field = array("name"=>"cardnumber", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_info["form_fields"] = $form_fields;
+		}
+		if(isset($values["paymenttype"]) && ($values["paymenttype"] === "debit_card")){
+			$bankacts =  \BankDetails::where("Status","=","ACTIVE")->get();
+			$bankacts_arr = array();
+			foreach ($bankacts as $bankact){
+				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+			}
+			$form_field = array("name"=>"cardnumber", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_info["form_fields"] = $form_fields;
 		}
@@ -1774,7 +1826,7 @@ class TransactionController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"billfile", "content"=>"upload bill", "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+			$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -1879,7 +1931,7 @@ class TransactionController extends \Controller {
 				$form_field = array("name"=>"inchargebalance", "content"=>"Incharge balance", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
 				$form_fields[] = $form_field;
 			}
-			$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+			$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -1905,7 +1957,7 @@ class TransactionController extends \Controller {
 				$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incharges_arr);
 				$form_fields[] = $form_field;
 			}
-			$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+			$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 			$form_fields[] = $form_field;
