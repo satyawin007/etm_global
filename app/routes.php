@@ -667,3 +667,5 @@ Route::get('/dashboard', function()
 	return View::make('settings.dashboard');
 });
 
+Route::any('/getDashboardDataTableData', "settings\DashboardController@getDashboardDataTableData");
+
