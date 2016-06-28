@@ -103,6 +103,13 @@ use Illuminate\Support\Facades\Input;
 											alerts
 										</a>
 									</li>
+									
+									<li class="">
+										<a data-toggle="tab" href="#edit-dashboardmessage" aria-expanded="false">
+											<i class="green ace-icon fa fa-sticky-note bigger-125"></i>
+											Dashboard message
+										</a>
+									</li>
 								</ul>
 
 								<div class="tab-content profile-edit-tab-content">
@@ -207,6 +214,40 @@ use Illuminate\Support\Facades\Input;
 																$rec = $rec[0];
 															?>
 															<input class="col-xs-12" name="alertdays" type="text" id="form-field-username" placeholder="0" value="{{$rec->value}}" >
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="clearfix form-actions">
+												<div class="col-md-offset-3 col-md-9">
+													<button class="btn btn-info" type="submit">
+														<i class="ace-icon fa fa-check bigger-110"></i>
+														Save
+													</button>
+				
+													&nbsp; &nbsp;
+													<button class="btn" type="reset">
+														<i class="ace-icon fa fa-undo bigger-110"></i>
+														Reset
+													</button>
+												</div>
+											</div>
+										</form>
+									</div>
+									
+									<div id="edit-dashboardmessage" class="tab-pane">
+										<form class="form-horizontal" action="updatebannersettings" method="post">
+											<h4 class="header blue bolder smaller">DASHBOARD MESSAGE </h4>
+											<div class="row">
+												<div class="col-xs-6">
+													<div class="form-group">
+														<span class="col-sm-10 no-padding-right" >Please enter the text to update your dashboard message...</span>
+														<div class="col-sm-10">
+															<?php 
+																$rec = Parameters::where("name","=","dashboardmessage")->get();
+																$rec = $rec[0];
+															?>
+															<textarea rows="6" cols="100" class="col-xs-12" name="dashboardmessage" placeholder="Enter message..." >{{$rec->value}}</textarea>
 														</div>
 													</div>
 												</div>
