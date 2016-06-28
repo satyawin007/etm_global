@@ -1055,8 +1055,8 @@ class DataTableController extends \Controller {
 		$search = $search['value'];
 		if($search != ""){
 			$entities = \BankDetails::where("bankName", "like", "%$search%")
-			->where("status", "=", "ACTIVE")
-			->select($select_args)->limit($length)->offset($start)->get();
+					->where("status", "=", "ACTIVE")
+					->select($select_args)->limit($length)->offset($start)->get();
 			$total = \BankDetails::where("bankName", "like", "%$search%")->where("status", "=", "ACTIVE")->count();
 		}
 		else{
@@ -1068,6 +1068,7 @@ class DataTableController extends \Controller {
 		}
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			$entity["expireDate"] = date("m/Y",strtotime($entity["expireDate"]));
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";

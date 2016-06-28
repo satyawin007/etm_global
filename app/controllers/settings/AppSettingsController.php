@@ -53,12 +53,6 @@ class AppSettingsController extends \Controller {
 				$fields["updatedBy"] = \Auth::user()->id;
 				\Parameters::where("name",'=',"alertdays")->update($fields);
 			}
-			if (isset($values["dashboardmessage"])) {
-				$fields = array();
-				$fields["value"] = $values["dashboardmessage"];
-				$fields["updatedBy"] = \Auth::user()->id;
-				\Parameters::where("name",'=',"dashboardmessage")->update($fields);
-			}
 			\Session::put("message","Operation completed Successfully");
 			return \Redirect::to("settings");
 		}

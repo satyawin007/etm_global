@@ -383,6 +383,17 @@
 				$("#id1").val(id);		
 				$('.chosen-select').trigger("chosen:updated");	
 			}
+			function modalEditCard(id, cardNumber, cardType, cardHolderName, bank, creditLimit, expireDate, status){
+				$("#cardnumber1").val(cardNumber);				
+				$("#cardholdername1").val(cardHolderName);
+				$("#creditlimit1").val(creditLimit);
+				$("#expiredate1").val(expireDate);
+				$("#cardtype1 option").each(function() {this.selected = (this.text == cardType); });
+				$("#bank1 option").each(function() {this.selected = (this.text == bank); });
+				$("#status1 option").each(function() { this.selected = (this.text == status); });
+				$("#id1").val(id);		
+				$('.chosen-select').trigger("chosen:updated");	
+			}
 
 			function modalEditService(id, source, dest, serviceno, description, status, servstatus){
 				$("#sourcecity1 option").each(function() {this.selected = (this.text == source); });
@@ -599,6 +610,7 @@
 
 			$('.input-mask-phone').mask('(999) 999-9999');
 			$('#cardnumber').mask('9999-9999-9999-9999');
+			$('#cardnumber1').mask('9999-9999-9999-9999');
 
 			jQuery(function($) {		
 				//initiate dataTables plugin

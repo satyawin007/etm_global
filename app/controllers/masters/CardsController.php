@@ -14,6 +14,7 @@ class CardsController extends \Controller {
 		if (\Request::isMethod('post'))
 		{
 			$values = Input::all();
+			//$values['DSf'];
 			$field_names = array("cardnumber"=>"cardNumber","cardtype"=>"cardType","cardholdername"=>"cardHolderName","bank"=>"lookupValueId","creditlimit"=>"creditLimit","expiredate"=>"expireDate");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
@@ -82,24 +83,27 @@ class CardsController extends \Controller {
 		$values = Input::all();
 		if (\Request::isMethod('post'))
 		{
-			$field_names = array("statename1"=>"name","statecode1"=>"code","status1"=>"status");
+			$field_names = array("cardnumber1"=>"cardNumber","cardtype1"=>"cardType","cardholdername1"=>"cardHolderName","bank1"=>"lookupValueId","creditlimit1"=>"creditLimit", "expiredate1"=>"expireDate","status1"=>"status");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
-				if(isset($values[$key])){
+				if(isset($values[$key]) && $key=="expiredate"){
+					$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+				}
+				else if(isset($values[$key])){
 					$fields[$val] = $values[$key];
 				}
 			}
 			$data = array('id'=>$values['id1']);			
 			$db_functions_ctrl = new DBFunctionsController();
-			$table = "\State";
+			$table = "\Cards";
 			$values = array();
 			if($db_functions_ctrl->update($table, $fields, $data)){
 				\Session::put("message","Operation completed Successfully");
-				return \Redirect::to("states");
+				return \Redirect::to("cards");
 			}
 			else{
 				\Session::put("message","Operation Could not be completed, Try Again!");
-				return \Redirect::to("states");
+				return \Redirect::to("cards");
 			}
 		}
 		$form_info = array();
@@ -166,7 +170,7 @@ class CardsController extends \Controller {
 		$banks =  \LookupTypeValues::where("parentId","=",$parentId)->where("status","=","ACTIVE")->get();
 		$bank_arr = array();
 		foreach ($banks as $bank){
-			$bank_arr [$bank->name] = $bank->name;
+			$bank_arr [$bank->id] = $bank->name;
 		}
 		
 		$form_fields = array();		
@@ -189,22 +193,30 @@ class CardsController extends \Controller {
 		
 		$form_info = array();
 		$form_info["name"] = "edit";
-		$form_info["action"] = "editstate";
+		$form_info["action"] = "editcard";
 		$form_info["method"] = "post";
 		$form_info["class"] = "form-horizontal";
-		$form_info["back_url"] = "states";
-		$form_info["bredcum"] = "add state";
+		$form_info["back_url"] = "cards";
+		$form_info["bredcum"] = "add card";
 		
 		$modals = array();
-		$form_fields = array();
-		$form_field = array("name"=>"statename1", "value"=>"", "content"=>"state name", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_fields = array(); 
+		$form_field = array("name"=>"cardnumber1", "content"=>"card number", "readonly"=>"","action"=>array("type"=>"onchange","script"=>"validateCard(this.value)"), "required"=>"required", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"statecode1", "value"=>"", "content"=>"state code", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"cardtype1", "content"=>"card type", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>array("DEBIT CARD"=>"DEBIT CARD", "CREDIT CARD"=>"CREDIT CARD"), "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"id1", "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden", "class"=>"form-control");
+		$form_field = array("name"=>"cardholdername1", "content"=>"card holder name", "readonly"=>"", "required"=>"required", "type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"bank1", "content"=>"bank name", "readonly"=>"", "required"=>"required", "type"=>"select", "options"=>$bank_arr, "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"creditlimit1", "content"=>"credit limit", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"expiredate1", "content"=>"expire date", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"status1", "value"=>"", "content"=>"status", "readonly"=>"", "value"=>"", "required"=>"", "type"=>"select", "options"=>array("ACTIVE"=>"ACTIVE","INACTIVE"=>"INACTIVE"), "class"=>"form-control");
 		$form_fields[] = $form_field;	
+		$form_field = array("name"=>"id1", "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden", "class"=>"form-control");
+		$form_fields[] = $form_field;
 		
 		$form_info["form_fields"] = $form_fields;
 		$modals[] = $form_info;
