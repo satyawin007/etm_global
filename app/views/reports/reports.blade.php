@@ -138,7 +138,7 @@ use Illuminate\Support\Facades\Input;
 								
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
-									<a target="_blank" href="report?reporttype=creditsupplier"> VEHICLE MILEAGE REPORT (FULL) </a>
+									<a target="_blank" href="report?reporttype=vehiclemileage_full"> VEHICLE MILEAGE REPORT (FULL) </a>
 								</li>
 								
 								<li>
