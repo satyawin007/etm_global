@@ -221,6 +221,9 @@ class ReportsController extends \Controller {
 		if(isset($values["reporttype"]) && $values["reporttype"] == "employeemainloginlog"){
 			return $this->getEmployeeMainLoginLogInfo($values);
 		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "vehiclemileage_full"){
+			return $this->getVehicleMileageFullReport($values);
+		}
 	}
 	
 	private function getDailyTransactiosReport($values){
@@ -3359,8 +3362,37 @@ class ReportsController extends \Controller {
 			$resp = array();
 			$select_args = array();//'Finance Company',"Loan Amount",'Loan No', "Paid Amount", "Paid Date","Office Branch", "Created By"
 			$select_args[] = "financecompanies.name as name";
-			$select_args[] = "fuelstationdetails.name as fname";
-			$select_args[] = "cities.name as cname";
+			$select_args[] = "officebranch.name as bname";
+			$select_args[] = "expensetransactions.date as date";
+			$select_args[] = "expensetransactions.amount as amount";
+			$select_args[] = "employee.fullName as ename";
+			$select_args[] = "expensetransactions.paymentType as paymentType";
+			$select_args[] = "expensetransactions.createdBy as createdBy";
+			$recs = \ExpenseTransaction::where("expensetransactions.entity","=","DAILY FINANCE PAYMENT")
+										->leftjoin("dailyfinances","expensetransactions.entityValue","=","dailyfinances.Id")
+										->leftjoin("financecompanies","dailyfinances.financeCompanyId","=","financecompanies.Id")
+										->leftjoin("officebranch","dailyfinances.branchId","=","officebranch.Id")
+										->leftjoin("inchargeaccounts","expensetransactions.inchargeId","=","inchargeaccounts.Id")
+										->leftjoin("employee","inchargeaccounts.empid","=","employee.Id")
+										->where("expensetransactions.entityValue","=",$values["dailyfinance"])
+										->whereBetween('expensetransactions.date', array($frmDt, $toDt))
+										->select($select_args)->get();
+// 								$val = "%FINA%";
+// 										$recs = \ExpenseTransaction::where("entity","like",$val)->get();
+// 			print_r($recs);
+// 			die();
+			foreach($recs as  $rec) {
+				$row = array();
+				$row["name"] = $rec->name;
+				$row["bname"] = $rec->bname;
+				$row["date"] = date("d-m-Y",strtotime($rec->date));
+				$row["amount"] = $rec->amount;
+				$row["ename"] = $rec->ename;
+				$row["paymentType"] = $rec->paymentType;
+				$single = \Employee::where("id","=",$rec->createdBy)->first();
+				$row["createdBy"] = $single->fullName;
+				$resp[] = $row;
+			}
 			echo json_encode($resp);
 			return;
 		}
@@ -5391,5 +5423,145 @@ class ReportsController extends \Controller {
 		//$values['provider'] = "loginlog";
 	
 		return View::make('reports.vehicleperformancereport', array("values"=>$values));
+	}
+	
+	private function getVehicleMileageFullReport($values){
+		if (\Request::isMethod('post'))
+		{
+			if(!isset($values["fromdate"])){
+				$values["fromdate"] = "10-10-2013";
+			}
+			if(!isset($values["todate"])){
+				$values["todate"] = date("d-m-Y");
+			}
+			$frmDt = date("Y-m-d", strtotime($values["fromdate"]));
+			$toDt = date("Y-m-d", strtotime($values["todate"]));
+			$resp = array();
+			if($values["reporttype"] == "vehiclemileage_full"){
+				
+				$select_args = array();
+				$select_args[] = "vehicle.id as id";
+				$select_args[] = "vehicle.veh_reg as veh_reg";
+				$select_args[] = "fueltransactions.startReading as startReading";
+				$select_args[] = "fueltransactions.litres as litres";
+				
+				if($values["vehicle"]==0){
+					$recs1 = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+								->whereBetween("fueltransactions.filledDate",array($frmDt,$toDt))->groupBy("vehicleId")->get();
+					foreach ($recs1 as $rec1) {
+						$recs = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+									->join("vehicle","fueltransactions.vehicleId","=","vehicle.id")
+									->where("fueltransactions.vehicleId","=",$rec1->vehicleId)
+									->whereBetween("fueltransactions.filledDate",array($frmDt,$toDt))
+									->select($select_args)->get();
+						
+						$liters = \FuelTransaction::where("fueltransactions.vehicleId","=",$values["vehicle"])->whereBetween("fueltransactions.filledDate",array($frmDt,$toDt))
+									->sum("fueltransactions.litres");
+						$row = array();
+						$len = count($recs);
+						$distance = 1;
+						if(count($recs)>1){
+							$distance = $recs[$len-1]->startReading-$recs[0]->startReading;
+						}
+						$row["veh_reg"] = $recs[0]->veh_reg;
+						$row["distance"] = $distance;
+						$row["liters"] = $liters;
+						$row["mileage"] = $distance/$liters;
+						$resp[] = $row;
+					}
+					
+				}
+				else{
+					$recs = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+												->join("vehicle","fueltransactions.vehicleId","=","vehicle.id")
+												->where("fueltransactions.vehicleId","=",$values["vehicle"])
+												->whereBetween("fueltransactions.filledDate",array($frmDt,$toDt))
+												->select($select_args)->get();
+		
+					$liters = \FuelTransaction::where("fueltransactions.vehicleId","=",$values["vehicle"])->whereBetween("fueltransactions.filledDate",array($frmDt,$toDt))
+									->sum("fueltransactions.litres");
+					$row = array();
+					$len = count($recs);
+					$distance = 1;
+					if(count($recs)>1){
+						$distance = $recs[$len-1]->startReading-$recs[0]->startReading;
+					}
+					$row["veh_reg"] = $recs[0]->veh_reg;
+					$row["distance"] = $distance;	
+					$row["liters"] = $liters;
+					$row["mileage"] = $distance/$liters;
+					$resp[] = $row;
+				}
+				
+				
+			}
+			echo json_encode($resp);
+			return;
+		}
+	
+		$values['bredcum'] = strtoupper($values["reporttype"]);
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'getreport';
+		$values['form_action'] = 'getreport';
+		$values['action_val'] = '';
+		$theads = array('Bank Name','Branch Name', "Account Name", "Account No", "Account Type");
+		$values["theads"] = $theads;
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "bankdetails";
+		$form_info["bredcum"] = "add bank details";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+		$form_fields = array();
+		$select_args = array();
+		$select_args[] = "vehicle.id as id";
+		$select_args[] = "vehicle.veh_reg as veh_reg";
+		
+		$vehicles = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+									->join("vehicle","fueltransactions.vehicleId","=","vehicle.id")
+									->groupBy("fueltransactions.vehicleId")
+									->select($select_args)->get();
+	
+		$vehicles_arr = array();
+		$vehicles_arr["0"] = "ALL VEHICLES";
+		foreach ($vehicles as $vehicle){
+			$vehicles_arr[$vehicle->id] = $vehicle->veh_reg;
+		}
+	
+		$supplier_rep_arr = array();
+		$supplier_rep_arr['balanceSheetNoDt'] = "Credit Supplier Balance Sheet";
+		$supplier_rep_arr['balanceSheet'] = "Credit Supplier Range Sheet";
+		$supplier_rep_arr['payment'] = "Credit Supplier Payments";
+		$supplier_rep_arr['repairs'] = "Repairs";
+		$supplier_rep_arr['purchase'] = "Purchases";
+		$supplier_rep_arr['vehicleReport'] = "Track By Vehicle";
+	
+		$form_field = array("name"=>"vehicle", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$vehicles_arr, "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+	
+		$add_form_fields = array();
+		$vehs =  \Vehicle::All();
+		$vehs_arr = array();
+		foreach ($vehs as $veh){
+			$vehs_arr[$veh->id] = $veh->veh_reg;
+		}
+		$form_field = array("name"=>"creditsupplier", "content"=>"by supplier", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>array(), "class"=>"form-control chosen-select");
+		$add_form_fields[] = $form_field;
+		$form_field = array("name"=>"vehicle", "content"=>"by vehicle", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$vehs_arr, "class"=>"form-control chosen-select");
+		$add_form_fields[] = $form_field;
+	
+		$form_info["form_fields"] = $form_fields;
+		$form_info["add_form_fields"] = $add_form_fields;
+		$values["form_info"] = $form_info;
+		$values["provider"] = "bankdetails";
+		return View::make('reports.vehiclemileage_fullreport', array("values"=>$values));
 	}
 }

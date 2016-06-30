@@ -14,12 +14,12 @@
 			    padding-bottom: 0px;
 			    background-color: #EFF3F8;
 			}
-			th {
+			/* th {
 			    white-space: nowrap;
 			}
 			td {
 			    white-space: nowrap;
-			}
+			} */
 			table {
 				min-width: 100% !important;
 			}
@@ -99,7 +99,7 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+						Results for CREDIT SUPPLIER RANGE				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -107,14 +107,10 @@
 						<table id="dynamic-table1" class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
-									<td>FINANCE COMPANY</td>
-									<td>PAID FROM BRANCH</td>
-									<td>PAYMENT DATE</td>
-									<td>PAID AMOUNT</td>
-									<td>INCHARGE</td>
-									<td>PAYMENT TYPE</td>
-									<td>CREATED BY</td>
-									
+									<td>VEHICLE NO</td>
+									<td>TOTAL DISTANCE</td>
+									<td>TOTAL FUEL</td>
+									<td>MILEAGE</td>
 								</tr>
 							</thead>
 							<tbody id="tbody1">
@@ -123,66 +119,7 @@
 					</div>
 				</div>					
 			</div>
-			<div id="table2">
-				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
-					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
-					<div class="clearfix">
-						<div id="tableTools-container2" class="pull-right tableTools-container"></div>
-					</div>
-					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
-					</div>
-					<!-- div.table-responsive -->
-					<!-- div.dataTables_borderWrap -->
-					<div>
-						<table id="dynamic-table2" class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<td>FUEL STATION</td>
-									<td>PAID AMOUNT</td>
-									<td>PAID DATE</td>
-									<td>PAYMENT INFO</td>
-									<td>COMMENTS</td>
-									<td>CREATED BY</td>
-								</tr>
-							</thead>
-							<tbody id="tbody2">
-							</tbody>
-						</table>								
-					</div>
-				</div>					
-			</div>
-			<div id="table3">
-				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
-					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
-					<div class="clearfix">
-						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
-					</div>
-					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
-					</div>
-					<!-- div.table-responsive -->
-					<!-- div.dataTables_borderWrap -->
-					<div>
-						<table id="dynamic-table3" class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<td>FUEL STATION</td>
-									<td>VEHICLE</td>
-									<td>FILLED DATE</td>
-									<td>NO OF LTRS</td>
-									<td>AMOUNT</td>
-									<td>PAID BY BRANCH</td>
-									<td>COMMENTS</td>
-									<td>CREATED BY</td>
-								</tr>
-							</thead>
-							<tbody id="tbody2">
-							</tbody>
-						</table>								
-					</div>
-				</div>					
-			</div>
+			
 		</div>
 
 		<?php 
@@ -239,23 +176,23 @@
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#processing").hide();
-			$("#fuelstationid").hide();
+			$("#creditsupplierid").hide();
 			$("#vehicleid").hide();
-			$("#driverid").hide();
 			reporttype = "";
+
 			var refresh1 = 0;
 			var refresh2 = 0;
 			var refresh3 = 0;
+
 			function generateReport(){
 				reporttype = "ticket_corgos_summery";
 				paginate(1);
 			}
 
 			function showSelectionType(val){
-				if(val=="balanceSheetNoDt" || val=="payment" || val=="balanceSheet" || val=="tracking"){
-					$("#fuelstationid").show();
+				if(val=="balanceSheetNoDt" || val=="payment" || val=="balanceSheet" || val=="repairs"|| val=="purchase"){
+					$("#creditsupplierid").show();
 					$("#vehicleid").hide();
-					$("#driverid").hide();
 					if(val=="balanceSheetNoDt"){
 						$("#fromdate").prop("disabled",true);
 						$("#todate").prop("disabled",true);
@@ -266,14 +203,8 @@
 					}
 				}
 				else if(val=="vehicleReport"){
-					$("#fuelstationid").hide();
+					$("#creditsupplierid").hide();
 					$("#vehicleid").show();
-					$("#driverid").hide();
-				}
-				else if(val=="employeeReport"){
-					$("#fuelstationid").hide();
-					$("#vehicleid").hide();
-					$("#driverid").show();
 				}
 			}
 
@@ -310,7 +241,7 @@
 			        url:form.attr("action"),
 			        data:form.serialize(),
 			        success: function(response){
-			           //alert(response);  
+			           alert(response);  
 			           var json = JSON.parse(response);
 			           var arr = [];
 			           for(var i = 0; i < json.length; i++) {
@@ -321,41 +252,11 @@
 				            }
 				            arr.push(row);
 			        	}
-			        	if(reporttype == "dailyfinancedetailed" || reporttype == "dailyfinancedetailed"){
+			        	if(reporttype == "vehiclemileage_full" || reporttype == "vehiclemileage_full"){
 							myTable1.clear().draw();
 							myTable1.rows.add(arr); // Add new data
 							myTable1.columns.adjust().draw(); // Redraw 
 							$("#table1").show();
-							$("#table2").hide();
-							$("#table3").hide();
-							if(refresh1 == 0){
-								refresh1 = 1;
-								myTable1.draw();
-							}		
-			        	}
-			        	else if(reporttype == "payment"){
-							myTable2.clear().draw();
-							myTable2.rows.add(arr); // Add new data
-							myTable2.columns.adjust().draw(); // Redraw theDataTable
-							$("#table1").hide();
-							$("#table2").show();	
-							$("#table3").hide();
-							if(refresh2 == 0){
-								refresh2 = 1;
-								myTable2.draw();
-							}	
-			        	}
-			        	else if(reporttype == "tracking" || reporttype == "vehicleReport"){
-							myTable3.clear().draw();
-							myTable3.rows.add(arr); // Add new data
-							myTable3.columns.adjust().draw(); // Redraw theDataTable
-							$("#table1").hide();
-							$("#table2").hide();
-							$("#table3").show();
-							if(refresh3 == 0){
-								refresh3 = 1;
-								myTable3.draw();
-							}		
 			        	}
 						$("#processing").hide();
 			        }
@@ -485,8 +386,8 @@
 			}
 
 			var myTable1 = null;
-			var myTable2 = null;
-
+			
+			
 			jQuery(function($) {
 					//initiate dataTables plugin
 					myTable1 = $('#dynamic-table1')
@@ -516,7 +417,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null,  null
+						  null, null, null,null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -530,96 +431,11 @@
 						}
 				    } );
 					
-					//initiate dataTables plugin
-					myTable2 = $('#dynamic-table2')
-					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
-					.DataTable( {
-						dom: 'Bfrtip',
-						buttons: [
-							{
-								extend:'colvis',
-								text : "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>"
-							},
-							{
-								extend: 'excelHtml5',
-								 title: 'reportTitle',
-								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							},
-							{
-								extend: 'pdfHtml5',
-								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							}
-							
-						], 
-						bAutoWidth: false,
-						"aoColumns": [
-						  null, null, null, null, null, null
-						],
-						"aaSorting": [],
-						//"sScrollY": "500px",
-						//"bPaginate": false,
-						"sScrollX" : "true",
-						//"sScrollX": "300px",
-						//"sScrollXInner": "120%",
-						"bScrollCollapse": true,
-						select: {
-							style: 'multi'
-						}
-				    } );
-
-					//initiate dataTables plugin
-					myTable3 = $('#dynamic-table3')
-					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
-					.DataTable( {
-						dom: 'Bfrtip',
-						buttons: [
-							{
-								extend:'colvis',
-								text : "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>"
-							},
-							{
-								extend: 'excelHtml5',
-								 title: 'reportTitle',
-								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							},
-							{
-								extend: 'pdfHtml5',
-								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							}
-							
-						], 
-						bAutoWidth: false,
-						"aoColumns": [
-						  null, null, null, null, null, null, null, null
-						],
-						"aaSorting": [],
-						//"sScrollY": "500px",
-						//"bPaginate": false,
-						"sScrollX" : "true",
-						//"sScrollX": "300px",
-						//"sScrollXInner": "120%",
-						"bScrollCollapse": true,
-						select: {
-							style: 'multi'
-						}
-				    } );
 					////
 					setTimeout(function() {
-						//$("#table1").hide();
-						$("#table2").hide();
-						$("#table3").hide();
+// 						$("#table1").hide();
+// 						$("#table2").hide();
+// 						$("#table3").hide();
 					}, 500);
 				})
 			
