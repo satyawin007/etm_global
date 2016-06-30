@@ -294,7 +294,7 @@ class AppSettingsController extends \Controller {
 			 		->where("clients.status","=","ACTIVE")
 					->join("contracts", "clients.id", "=","contracts.clientId")
 					->join("depots", "depots.id", "=","contracts.depotId")
-			 		->select(array("clients.id as id","clients.name as name"))->get();
+			 		->select(array("clients.id as id","clients.name as name"))->groupBy("clients.id")->get();
 		}
 		 return $entities->toArray();
 	}

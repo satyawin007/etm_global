@@ -118,7 +118,9 @@
 						$drv2 = "";
 						$helper = "";
 						if($veh->driver2Id != 0){
-							$drv2 = $drivers_arr[$veh->driver2Id];
+							if(isset($drivers_arr[$veh->driver2Id])){
+								$veh_type = $drivers_arr[$veh->driver2Id];
+							}
 						}
 						if($veh->helperId != 0){
 							$helper = $helpers_arr[$veh->helperId];
@@ -129,7 +131,11 @@
 						else{
 							$veh->inActiveDate = "";
 						}
-						$con_vehs_text_str = $con_vehs_text_str."{ 'vehicle':'".$vehicles_arr[$veh->vehicleId]."', 'vehicletype':'".$vehtypes_arr[$veh->vehicleTypeId]."', 'driver1':'".$drivers_arr[$veh->driver1Id]."', 'driver2':'".$drv2."', 'helper':'".$helper."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))."', 'status':'".$veh->status."', 'id':'".$veh->id."'},";
+						$veh_type = "";
+						if(isset($vehtypes_arr[$veh->vehicleTypeId])){
+							$veh_type = $vehtypes_arr[$veh->vehicleTypeId];
+						}
+						$con_vehs_text_str = $con_vehs_text_str."{ 'vehicle':'".$vehicles_arr[$veh->vehicleId]."', 'vehicletype':'".$veh_type."', 'driver1':'".$drivers_arr[$veh->driver1Id]."', 'driver2':'".$drv2."', 'helper':'".$helper."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))."', 'status':'".$veh->status."', 'id':'".$veh->id."'},";
 						$con_vehs_str = $con_vehs_str."{ 'vehicle':'".$veh->vehicleId."', 'vehicletype':'".$veh->vehicleTypeId."', 'driver1':'".$veh->driver1Id."', 'driver2':'".$veh->driver2Id."', 'helper':'".$veh->helperId."', 'status':'".$veh->status."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))."', 'id':'".$veh->id."'},";
 					}
 					$con_vehs_str = $con_vehs_str."]";

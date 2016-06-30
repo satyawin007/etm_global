@@ -423,12 +423,14 @@
 								</a>
 							</li>
 							<?php } if(in_array(113, $jobs)){?>
+							<!-- 
 							<li class="hover">
 								<a href="leaves">
 									<i class="menu-icon fa fa-caret-right"></i>
 									EMPLOYEE LEAVES
 								</a>
 							</li>
+							 -->
 							<?php } if(in_array(114, $jobs)){?>
 							<li class="hover">
 								<a href="salaryadvances">

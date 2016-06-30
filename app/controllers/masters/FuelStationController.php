@@ -228,6 +228,28 @@ class FuelStationController extends \Controller {
 				$form_field = array("name"=>"accountnumber", "id"=>"accountnumber","value"=>$entity->accountNumber, "content"=>"account number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 				$form_fields[] = $form_field;
 			}
+			if($entity->paymentType === "credit_card"){
+				$cards =  \Cards::where("Status","=","ACTIVE")->where("cardType","=","CREDIT CARD")->get();
+				$cards_arr = array();
+				foreach ($cards as $card){
+					$cards_arr[$card->id] = $card->cardNumber." (".$card->cardHolderName.")";
+				}
+				$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"credit card", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$cards_arr);
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"chequenumber", "id"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+				$form_fields[] = $form_field;
+			}
+			if($entity->paymentType === "debit_card"){
+				$cards =  \Cards::where("Status","=","ACTIVE")->where("cardType","=","DEBIT CARD")->get();
+				$cards_arr = array();
+				foreach ($cards as $card){
+					$cards_arr[$card->id] = $card->cardNumber." (".$card->cardHolderName.")";
+				}
+				$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"debit card", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$cards_arr);
+				$form_fields[] = $form_field;
+				$form_field = array("name"=>"chequenumber", "id"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+				$form_fields[] = $form_field;
+			}
 			$form_field = array("name"=>"paymentexpectedday", "value"=>$entity->paymentExpectedDay, "content"=>"payment expected day", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"statename", "value"=>$entity->stateId, "content"=>"state name", "readonly"=>"",  "required"=>"required", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"),  "type"=>"select", "class"=>"form-control", "options"=>$state_arr);

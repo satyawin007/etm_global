@@ -470,6 +470,9 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "manage USE STOCK ITEMS";
                                             		$menu_arr[] = "create ESTIMATE PURCHASE ORDER";
                                             		$menu_arr[] = "manage ESTIMATE PURCHASE ORDER";
+                                            		
+                                            		$menu_arr[] = "add ATTENDENCE";
+                                            		$menu_arr[] = "manage ATTENDENCE";
                                             		$i=301;
                                             		foreach ($menu_arr as $menu_item){
                                             			$chk = "";

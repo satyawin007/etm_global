@@ -1444,7 +1444,7 @@
 							total = Number(total) + (Number(entities_text[i][entry]) * Number(entities_text[i]['qty']));
 							alert(total);
 							$("#totalamount").val(total);
-							$("#totalamount").attr("disabled", true); 
+							$("#totalamount").attr("readonly", true); 
 						}
 						table_data = table_data+"<td>"+entities_text[i][entry]+"</td>"
 					});

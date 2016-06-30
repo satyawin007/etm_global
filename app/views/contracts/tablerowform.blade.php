@@ -269,7 +269,7 @@
 										<th>HELPER</th>
 										<th>START DT</th>
 										<th>STATUS</th>
-<!-- 										<th>REMARKS</th> -->
+										<th>REMARKS</th>
 										<th>ACTIONS</th>
 									</tr>
 								</thead>
@@ -281,7 +281,7 @@
 									<td>@{{vehicle.helper}}</td>
 									<td>@{{vehicle.startdt}}</td>
 									<td>@{{vehicle.status}} @{{vehicle['date'] ? "("+vehicle['date']+")" : ''}}</td>
-<!-- 									<td>@{{vehicle.remarks}}</td> -->
+									<td>@{{vehicle.remarks}}</td>
 									<?php 
 										if(isset($form_info['btn_action_type']) && $form_info['btn_action_type']=="edit"){
 									?>

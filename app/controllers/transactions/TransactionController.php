@@ -703,6 +703,28 @@ class TransactionController extends \Controller {
 					$form_fields[] = $form_field;
 					$form_info["form_fields"] = $form_fields;
 				}
+				if($entity->paymentType === "credit_card"){
+					$cards =  \Cards::where("Status","=","ACTIVE")->where("cardType","=","CREDIT CARD")->get();
+					$cards_arr = array();
+					foreach ($cards as $card){
+						$cards_arr[$card->id] = $card->cardNumber." (".$card->cardHolderName.")";
+					}
+					$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"credit card", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$cards_arr);
+					$form_fields[] = $form_field;
+					$form_field = array("name"=>"chequenumber", "id"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+					$form_fields[] = $form_field;
+				}
+				if($entity->paymentType === "debit_card"){
+					$cards =  \Cards::where("Status","=","ACTIVE")->where("cardType","=","DEBIT CARD")->get();
+					$cards_arr = array();
+					foreach ($cards as $card){
+						$cards_arr[$card->id] = $card->cardNumber." (".$card->cardHolderName.")";
+					}
+					$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"debit card", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$cards_arr);
+					$form_fields[] = $form_field;
+					$form_field = array("name"=>"chequenumber", "id"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+					$form_fields[] = $form_field;
+				}
 				$form_field = array("name"=>"remarks", "id"=>"remarks", "value"=>$entity->remarks, "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"type1", "id"=>"type", "value"=>$values["type"], "content"=>"", "readonly"=>"",  "required"=>"", "type"=>"hidden", "class"=>"form-control");
@@ -877,6 +899,28 @@ class TransactionController extends \Controller {
 					$form_fields[] = $form_field;
 					$form_info["form_fields"] = $form_fields;
 				}
+				if($entity->paymentType === "credit_card"){
+					$cards =  \Cards::where("Status","=","ACTIVE")->where("cardType","=","CREDIT CARD")->get();
+					$cards_arr = array();
+					foreach ($cards as $card){
+						$cards_arr[$card->id] = $card->cardNumber." (".$card->cardHolderName.")";
+					}
+					$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"credit card", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$cards_arr);
+					$form_fields[] = $form_field;
+					$form_field = array("name"=>"chequenumber", "id"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+					$form_fields[] = $form_field;
+				}
+				if($entity->paymentType === "debit_card"){
+					$cards =  \Cards::where("Status","=","ACTIVE")->where("cardType","=","DEBIT CARD")->get();
+					$cards_arr = array();
+					foreach ($cards as $card){
+						$cards_arr[$card->id] = $card->cardNumber." (".$card->cardHolderName.")";
+					}
+					$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"debit card", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$cards_arr);
+					$form_fields[] = $form_field;
+					$form_field = array("name"=>"chequenumber", "id"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+					$form_fields[] = $form_field;
+				}
 				$form_field = array("name"=>"remarks", "id"=>"remarks", "value"=>$entity->remarks, "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"type1", "id"=>"type", "value"=>$values["type"], "content"=>"", "readonly"=>"",  "required"=>"", "type"=>"hidden", "class"=>"form-control");
@@ -1038,6 +1082,28 @@ class TransactionController extends \Controller {
 					$form_fields[] = $form_field;
 					$form_info["form_fields"] = $form_fields;
 				}
+				if($entity->paymentType === "credit_card"){
+					$cards =  \Cards::where("Status","=","ACTIVE")->where("cardType","=","CREDIT CARD")->get();
+					$cards_arr = array();
+					foreach ($cards as $card){
+						$cards_arr[$card->id] = $card->cardNumber." (".$card->cardHolderName.")";
+					}
+					$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"credit card", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$cards_arr);
+					$form_fields[] = $form_field;
+					$form_field = array("name"=>"chequenumber", "id"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+					$form_fields[] = $form_field;
+				}
+				if($entity->paymentType === "debit_card"){
+					$cards =  \Cards::where("Status","=","ACTIVE")->where("cardType","=","DEBIT CARD")->get();
+					$cards_arr = array();
+					foreach ($cards as $card){
+						$cards_arr[$card->id] = $card->cardNumber." (".$card->cardHolderName.")";
+					}
+					$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "value"=>$entity->bankAccount, "content"=>"debit card", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$cards_arr);
+					$form_fields[] = $form_field;
+					$form_field = array("name"=>"chequenumber", "id"=>"chequenumber", "value"=>$entity->chequeNumber, "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+					$form_fields[] = $form_field;
+				}
 				$form_field = array("name"=>"type1", "id"=>"type", "value"=>$values["type"], "content"=>"", "readonly"=>"",  "required"=>"", "type"=>"hidden", "class"=>"form-control");
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"id", "id"=>"type", "value"=>$values["id"], "content"=>"", "readonly"=>"",  "required"=>"", "type"=>"hidden", "class"=>"form-control");
@@ -1191,33 +1257,33 @@ class TransactionController extends \Controller {
 			}
 			$form_field = array("name"=>"bankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"chequenumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_info["form_fields"] = $form_fields;
 		}
 		if(isset($values["paymenttype"]) && ($values["paymenttype"] === "credit_card")){
-			$bankacts =  \BankDetails::where("Status","=","ACTIVE")->get();
+			$bankacts =  \Cards::where("cardType","=","CREDIT CARD")->where("Status","=","ACTIVE")->get();
 			$bankacts_arr = array();
 			foreach ($bankacts as $bankact){
-				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+				$bankacts_arr[$bankact->id] = $bankact->cardNumber." (".$bankact->cardHolderName.")";
 			}
-			$form_field = array("name"=>"cardnumber", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
+			$form_field = array("name"=>"bankaccount", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"chequenumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_info["form_fields"] = $form_fields;
 		}
 		if(isset($values["paymenttype"]) && ($values["paymenttype"] === "debit_card")){
-			$bankacts =  \BankDetails::where("Status","=","ACTIVE")->get();
+		$bankacts =  \Cards::where("cardType","=","DEBIT CARD")->where("Status","=","ACTIVE")->get();
 			$bankacts_arr = array();
 			foreach ($bankacts as $bankact){
-				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+				$bankacts_arr[$bankact->id] = $bankact->cardNumber." (".$bankact->cardHolderName.")";
 			}
-			$form_field = array("name"=>"cardnumber", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
+			$form_field = array("name"=>"bankaccount", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"chequenumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_info["form_fields"] = $form_fields;
+			$form_info["form_fields"] = $form_fields;  
 		}
 		return view::make("transactions.paymentform",array("form_info"=>$form_info));
 	}
@@ -1300,33 +1366,33 @@ class TransactionController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"accountnumber", "content"=>"account number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"chequenumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_info["form_fields"] = $form_fields;
+			$form_info["form_fields"] = $form_fields;  
 		}
 		if(isset($values["paymenttype"]) && ($values["paymenttype"] === "credit_card")){
-			$bankacts =  \BankDetails::where("Status","=","ACTIVE")->get();
+			$bankacts =  \Cards::where("cardType","=","CREDIT CARD")->where("Status","=","ACTIVE")->get();
 			$bankacts_arr = array();
 			foreach ($bankacts as $bankact){
-				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+				$bankacts_arr[$bankact->id] = $bankact->cardNumber." (".$bankact->cardHolderName.")";
 			}
-			$form_field = array("name"=>"cardnumber", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
+			$form_field = array("name"=>"bankaccount", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"chequenumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_info["form_fields"] = $form_fields;
+			$form_info["form_fields"] = $form_fields;  
 		}
 		if(isset($values["paymenttype"]) && ($values["paymenttype"] === "debit_card")){
-			$bankacts =  \BankDetails::where("Status","=","ACTIVE")->get();
+		$bankacts =  \Cards::where("cardType","=","DEBIT CARD")->where("Status","=","ACTIVE")->get();
 			$bankacts_arr = array();
 			foreach ($bankacts as $bankact){
-				$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+				$bankacts_arr[$bankact->id] = $bankact->cardNumber." (".$bankact->cardHolderName.")";
 			}
-			$form_field = array("name"=>"cardnumber", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
+			$form_field = array("name"=>"bankaccount", "content"=>"card number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"transactionnumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_field = array("name"=>"chequenumber", "content"=>"transaction number", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_info["form_fields"] = $form_fields;
+			$form_info["form_fields"] = $form_fields; 
 		}
 		return view::make("masters.layouts.paymentform",array("form_info"=>$form_info));
 	}
@@ -1522,7 +1588,7 @@ class TransactionController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymentpaid", "value"=>"No", "content"=>"payment paid", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "action"=>array("type"=>"onChange","script"=>"enablePaymentType(this.value)"), "options"=>array("Yes"=>"YES","No"=>"NO"));
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD"));
+		$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 		$form_fields[] = $form_field;
 			
 		$form_info["form_fields"] = $form_fields;

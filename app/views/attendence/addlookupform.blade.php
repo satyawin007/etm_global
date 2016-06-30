@@ -151,6 +151,7 @@
 					</div>							
 					
 					<?php } ?>
+					<?php $jobs = Session::get("jobs");?>
 					<div class="clearfix">
 						<div class="col-md-offset-0 col-md-12 form-actions" style="margin: 0px">
 							<div class="col-md-offset-4 col-md-5">
@@ -158,14 +159,15 @@
 									<i class="ace-icon fa fa-cross bigger-110"></i>
 									GET
 								</div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-								
+				
+								<?php if(in_array(336, $jobs)) {?>
 								<div class="btn primary" id="add" onclick="postData()">
 									<i class="ace-icon fa fa-cross bigger-110"></i>
 									ADD
 								</div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								
-								
+								<?php } if(in_array(337, $jobs)) {?>
 								<div class="btn primary" id="modify" onclick="getEmployeesToUpdate()">
 									<i class="ace-icon fa fa-cross bigger-110"></i>
 									MODIFY
@@ -175,6 +177,7 @@
 									<i class="ace-icon fa fa-cross bigger-110"></i>
 									UPDATE
 								</div>
+								<?php }?>
 							</div>
 						</div>
 					</div>

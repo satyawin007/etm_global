@@ -141,7 +141,17 @@
 ?>
 	@include("inventory.tablerowform",$form_fields);
 <?php } else if($values["action"] == "TO VEHICLE1"){
+	$branchId = $values["warehouseid"];
+	$stateId = 0;
+	if($branchId>1000){
+		$branch = \Depot::where("id","=",$branchId)->first();
+	}
+	else {
+		$branch = \OfficeBranch::where("id","=",$branchId)->first();
+	}
+	$stateId = $branch->stateId;
 	$creditsuppliers =  CreditSupplier::where("purchase_orders.type","=","TO CREDIT SUPPLIER REPAIR")
+							->where("stateId","=",$stateId)
 							->join("purchase_orders","purchase_orders.creditSupplierId", "=", "creditsuppliers.id")
 							->select(array("creditsuppliers.id as id", "creditsuppliers.supplierName as supplierName"))
 							->groupBy("creditsuppliers.id")->get();
@@ -171,7 +181,18 @@
 	@include("inventory.tablerowform",$form_fields);
 
 <?php } else if($values["action"] == "TO WAREHOUSE1"){
+	
+	$branchId = $values["warehouseid"];
+	$stateId = 0;
+	if($branchId>1000){
+		$branch = \Depot::where("id","=",$branchId)->first();
+	}
+	else {
+		$branch = \OfficeBranch::where("id","=",$branchId)->first();
+	}
+	$stateId = $branch->stateId;
 	$creditsuppliers =  CreditSupplier::where("purchase_orders.type","=","TO CREDIT SUPPLIER REPAIR")
+							->where("stateId","=",$stateId)
 							->join("purchase_orders","purchase_orders.creditSupplierId", "=", "creditsuppliers.id")
 							->select(array("creditsuppliers.id as id", "creditsuppliers.supplierName as supplierName"))
 							->groupBy("creditsuppliers.id")->get();
@@ -201,9 +222,18 @@
 	@include("inventory.tablerowform",$form_fields);	
 	
 <?php } else if($values["action"] == "TO CREDIT SUPPLIER"){?>
-	<?php 
+	<?php
+		$branchId = $values["warehouseid"];
+		$stateId = 0;
+		if($branchId>1000){
+			$branch = \Depot::where("id","=",$branchId)->first();
+		}
+		else {
+			$branch = \OfficeBranch::where("id","=",$branchId)->first();
+		}
+		$stateId = $branch->stateId;
+		$credit_sups = \CreditSupplier::where("stateId","=",$stateId)->where("status","=","ACTIVE")->get();
 		$credit_sup_arr = array();
-		$credit_sups = \CreditSupplier::All();
 		foreach ($credit_sups as $credit_sup){
 			$credit_sup_arr[$credit_sup->id] = $credit_sup->supplierName;
 		}
@@ -219,7 +249,11 @@
 			$warehouse_arr[$warehouse->id] = $warehouse->name;
 		}
 		
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+							->join("cities", "cities.id","=","employee.cityId")
+							->where("cities.stateId","=",$stateId)
+							->groupBy("employee.id")
+							->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;
