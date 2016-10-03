@@ -314,6 +314,30 @@
 				$("#totalamount").val(ltrs*price);
 			}
 
+			getpreviouslogs();
+			function getpreviouslogs(){
+				var vehicleid = $("#vehicleno").val();
+				$("#previousreading").val("");
+				filleddate = $("#date").val();
+				if(filleddate == ""){
+					alert("select filled date");
+					return;
+				}
+				vehicleno = $("#vehicleno").val();
+				if(vehicleno == ""){
+					alert("select vehicle no");
+					return;
+				}
+				$.ajax({
+			      url: "getendreading?id="+vehicleno+"&date="+filleddate,
+			      success: function(data) {
+			    	  json_data = JSON.parse(data);
+			    	  $("#previousreading").val(json_data.endReading);
+			      },
+			      type: 'GET'
+			   });			   
+			}
+
 			function getInchargeBalance(val){
 				$.ajax({
 				  url: "getinchargebalance?id="+val,
@@ -322,6 +346,67 @@
 				  },
 				  type: 'GET'
 			   });
+			}
+
+			$('input[type=radio][name=fulltank]').change(function() {
+			  	vehicleid = $("#vehicleno").val();
+			  	date = $("#date").val();
+		        if (this.value == 'YES') {		        	
+		        	litres = $("#litres").val();
+		        	if(litres==""){
+			        	alert("enter litres");
+			        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+			        	return;
+		        	}
+		        	startreading = $("#startreading").val();
+		        	if(startreading==""){
+			        	alert("enter startreading");
+			        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+			        	return;
+		        	}
+		        	calculateMilage();
+		        }
+		    });
+
+			function calculateMilage(){
+				startreading = $("#startreading").val();
+	        	if(startreading != ""){
+	        		previousreading = $("#previousreading").val();
+	        		previousreading = parseInt(previousreading);
+	        		startreading = parseInt(startreading);
+	        		if(previousreading>startreading){
+		        		alert("Current reading must be greater than previous reading");
+		        		$("#startreading").val("");
+		        		return;
+	        		}
+	        	}
+				vehicleid = $("#vehicleno").val();
+			  	date = $("#date").val();
+	        	if(vehicleid==""){
+		        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+		        	return;
+	        	}
+	        	litres = $("#litres").val();
+	        	if(litres==""){
+		        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+		        	return;
+	        	}
+	        	startreading = $("#startreading").val();
+	        	if(startreading==""){
+		        	$('input[type=radio][name=fulltank]').removeAttr("checked");
+		        	return;
+	        	}
+	        	status = $('input[type=radio][name=fulltank]:checked').val() ;
+	        	if(status == "YES"){
+		            $.ajax({
+					      url: "getvehiclelastreading?vehicleId="+vehicleid+"&date="+date,
+					      success: function(prev_reading) {
+						      mileage = (startreading-prev_reading)/litres;
+						      mileage = parseFloat(mileage).toFixed(2);
+						      $("#mileage").val(mileage);
+					      }
+		            });
+	        	}
 			}
 
 			function changeCity(val){

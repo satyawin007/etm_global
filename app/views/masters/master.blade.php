@@ -389,6 +389,13 @@
 									BILLS & PAYMENTS
 								</a>
 							</li>
+							<?php } if(in_array(110, $jobs)){?>								
+							<li class="hover">
+								<a href="loanpayments">
+									<i class="menu-icon fa fa-caret-right"></i>
+									LOAN PAYMENTS
+								</a>
+							</li>
 							<?php } ?>
 							
 						</ul>
@@ -423,14 +430,12 @@
 								</a>
 							</li>
 							<?php } if(in_array(113, $jobs)){?>
-							<!-- 
 							<li class="hover">
 								<a href="leaves">
 									<i class="menu-icon fa fa-caret-right"></i>
 									EMPLOYEE LEAVES
 								</a>
 							</li>
-							 -->
 							<?php } if(in_array(114, $jobs)){?>
 							<li class="hover">
 								<a href="salaryadvances">
@@ -467,13 +472,15 @@
 									MANUFACTURERS
 								</a>
 							</li>
-							<?php } if(in_array(117, $jobs)){?>
+							<?php //} if(in_array(117, $jobs)){?>
+							<!-- 
 							<li class="hover">
 								<a href="itemcategories">
 									<i class="menu-icon fa fa-caret-right"></i>
-									ITEM CATEGORIES
+									ITEM NAMES
 								</a>
 							</li>
+							 -->
 							<?php } if(in_array(118, $jobs)){?>
 							<li class="hover">
 								<a href="itemtypes">
@@ -500,6 +507,13 @@
 								<a href="useitems">
 									<i class="menu-icon fa fa-caret-right"></i>
 									USE STOCK ITEMS
+								</a>
+							</li>
+							<?php } if(in_array(121, $jobs)){?>
+							<li class="hover">
+								<a href="useitems?stocktype=office">
+									<i class="menu-icon fa fa-caret-right"></i>
+									USE OFFICE STOCK ITEMS
 								</a>
 							</li>
 							<?php } if(in_array(122, $jobs)){?>
@@ -551,6 +565,20 @@
 								<a href="workflow?type=inchargetransactions">
 									<i class="menu-icon fa fa-caret-right"></i>
 									INCHARGE TRANSACTIONS
+								</a>
+							</li>
+							<?php } if(in_array(504, $jobs)){?>
+							<li class="hover">
+								<a href="workflow?type=expensetransactions">
+									<i class="menu-icon fa fa-caret-right"></i>
+									EXPENSE TRANSACTIONS
+								</a>
+							</li>
+							<?php } if(in_array(504, $jobs)){?>
+							<li class="hover">
+								<a href="workflow?type=employeeleaves">
+									<i class="menu-icon fa fa-caret-right"></i>
+									EMPLOYEE LEAVES
 								</a>
 							</li>
 							<?php }?>

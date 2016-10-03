@@ -49,18 +49,24 @@ class DataTableController extends \Controller {
 		$select_args[] = "empdueamount.amount as amount";
 		$select_args[] = "officebranch.name as branchId";
 		$select_args[] = "empdueamount.paymentDate as paymentDate";
+		$select_args[] = "empdueamount.paymentType as paymentType";
 		$select_args[] = "empdueamount.comments as comments";
 		$select_args[] = "empdueamount.status as status";
 		$select_args[] = "empdueamount.id as id";
 		$select_args[] = "employee.id as empId1";
+		$select_args[] = "empdueamount.chequeNumber as chequeNumber";
+		$select_args[] = "empdueamount.bankAccount as bankAccount";
 		
 		$actions = array();
-		$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditSalaryAdvance(", "jsdata"=>array("id","empId1", "empname", "amount", "branchId", "paymentDate", "comments", "status"), "text"=>"EDIT");
-		$actions[] = $action;
-		$action = array("url"=>"#","css"=>"danger", "id"=>"deleteSalryAdvance", "type"=>"", "text"=>"DELETE");
-		$actions[] = $action;
-		$action = array("url"=>"printadvancevoucher?", "type"=>"", "css"=>"info", "js"=>"modalEditAssignedValues(", "jsdata"=>array("id","empId", "empname", "amount", "branchId", "paymentDate", "comments", "status"), "text"=>"PRINT");
-		$actions[] = $action;
+		$jobs = \Session::get("jobs");
+		if(in_array(341, $jobs)){
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditSalaryAdvance(", "jsdata"=>array("id"), "text"=>"EDIT");
+			$actions[] = $action;
+			$action = array("url"=>"#","css"=>"danger", "id"=>"deleteSalryAdvance", "type"=>"", "text"=>"DELETE");
+			$actions[] = $action;
+			//$action = array("url"=>"printadvancevoucher?", "type"=>"", "css"=>"info", "js"=>"modalEditAssignedValues(", "jsdata"=>array("id","empId", "empname", "amount", "branchId", "paymentDate", "comments", "status"), "text"=>"PRINT");
+			//$actions[] = $action;
+		}
 		$values["actions"] = $actions;
 		
 		$drivers = \Employee::where("roleId","=",19)->orWhere("roleId","=",20)->get();
@@ -80,21 +86,48 @@ class DataTableController extends \Controller {
 			$entities = \EmpDueAmount::where("employee.fullName", "like", "%".$search."%")
 						->leftjoin("employee", "employee.id","=","empdueamount.empId")
 						->leftjoin("officebranch","officebranch.id","=","empdueamount.branchId")
+						->where("empdueamount.status","=","ACTIVE")
 						->select($select_args)->limit($length)->offset($start)->get();
 			
 			$total = \EmpDueAmount::where("fullName","like", "'%$search%'")
 						->leftjoin("employee", "employee.id","=","empdueamount.empId")
 						->leftjoin("officebranch","officebranch.id","=","empdueamount.branchId")
+						->where("empdueamount.status","=","ACTIVE")
 						->count();
 		}
 		else{
-			$entities = \EmpDueAmount::join("employee","employee.id","=","empdueamount.empId")->join("officebranch","officebranch.id","=","empdueamount.branchId")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \EmpDueAmount::join("employee","employee.id","=","empdueamount.empId")
+							->leftjoin("officebranch","officebranch.id","=","empdueamount.branchId")
+							->where("empdueamount.status","=","ACTIVE")
+							->select($select_args)->limit($length)->offset($start)->get();
 			$total = \EmpDueAmount::count();
 		}
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
 			$entity["paymentDate"] = date("d-m-Y",strtotime($entity["paymentDate"]));
+			if($entity["paymentType"] != "cash"){
+				if($entity["paymentType"] == "ecs" || $entity["paymentType"] == "neft" || $entity["paymentType"] == "rtgs" || $entity["paymentType"] == "cheque_debit" || $entity["paymentType"] == "cheque_credit"){
+					$entity["paymentType"] = "Payment Type : ".$entity["paymentType"]."<br/>";
+					$bank_dt = \BankDetails::where("id","=",$entity["bankAccount"])->first();
+					if(count($bank_dt)>0){
+						$entity["paymentType"] = $entity["paymentType"]."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
+					}
+					$entity["paymentType"] = $entity["paymentType"]."Ref No : ".$entity["chequeNumber"];
+				}
+				if($entity["paymentType"] == "credit_card" || $entity["paymentType"] == "debit_card"){
+					$entity["paymentType"] = "Payment Type : ".$entity["paymentType"]."<br/>";
+					$bank_dt = \Cards::where("id","=",$entity["bankAccount"])->first();
+					if(count($bank_dt)>0){
+						$entity["paymentType"] = $entity["paymentType"]."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
+					}
+					$entity["paymentType"] = $entity["paymentType"]."Ref No : ".$entity["chequeNumber"];
+				}
+				if($entity["paymentType"] == "dd"){
+					$entity["paymentType"] = "Payment Type : ".$entity["paymentType"]."<br/>";
+					$entity["paymentType"] = $entity["paymentType"]."Ref No : ".$entity["chequeNumber"];
+				}
+			}
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
@@ -116,7 +149,7 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[7] = $action_data;
+			$data_values[8] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);
@@ -127,12 +160,15 @@ class DataTableController extends \Controller {
 		$data = array();
 			
 		$actions = array();
-		$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditLeave(", "jsdata"=>array("id"), "text"=>"EDIT");
-		$actions[] = $action;
-		$action = array("url"=>"approve","css"=>"success", "type"=>"js", "text"=>"Approve");
-		$actions[] = $action;
-		$action = array("url"=>"reject","css"=>"danger", "type"=>"js",  "text"=>"Reject");
-		$actions[] = $action;
+		$jobs = \Session::get("jobs");
+		if(in_array(343, $jobs)){
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditLeave(", "jsdata"=>array("id"), "text"=>"EDIT");
+			$actions[] = $action;
+			//$action = array("url"=>"approve","css"=>"success", "type"=>"js", "text"=>"Approve");
+			//$actions[] = $action;
+			//$action = array("url"=>"reject","css"=>"danger", "type"=>"js",  "text"=>"Reject");
+			//$actions[] = $action;
+		}
 		$values["actions"] = $actions;
 			
 		$select_args = array();
@@ -144,7 +180,9 @@ class DataTableController extends \Controller {
 		$select_args[] = "leaves.toDate as toDate";
 		$select_args[] = "leaves.toMrngEve as toMrngEve";
 		$select_args[] = "leaves.noOfLeaves as noOfLeaves";
-		$select_args[] = "leaves.status as status";
+		$select_args[] = "leaves.leavesTaken as leavesTaken";
+		$select_args[] = "leaves.workFlowStatus as status";
+		$select_args[] = "leaves.workFlowRemarks as workFlowRemarks";
 		$select_args[] = "leaves.id as id";
 	
 		$search = $_REQUEST["search"];
@@ -155,11 +193,11 @@ class DataTableController extends \Controller {
 			foreach($fincomids as $fincomid){
 				$fincomids_arr[] = $fincomid->id;
 			}
-			$entities = \Leaves::whereIn("empId", $fincomids_arr)->join("employee","employee.id","=","leaves.empId")->join("officebranch","officebranch.id","=","employee.officeBranchId")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \Leaves::whereIn("empId", $fincomids_arr)->leftjoin("employee","employee.id","=","leaves.empId")->leftjoin("officebranch","officebranch.id","=","leaves.branchId")->select($select_args)->limit($length)->offset($start)->get();
 			$total = \Leaves::whereIn("empId", $fincomids_arr)->count();
 		}
 		else{
-			$entities = \Leaves::where("leaves.id",">",0)->join("employee","employee.id","=","leaves.empId")->join("officebranch","officebranch.id","=","employee.officeBranchId")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \Leaves::where("leaves.id",">",0)->leftjoin("employee","employee.id","=","leaves.empId")->leftjoin("officebranch","officebranch.id","=","leaves.branchId")->select($select_args)->limit($length)->offset($start)->get();
 			$total = \Leaves::count();
 		}
 		$entities = $entities->toArray();
@@ -196,7 +234,7 @@ class DataTableController extends \Controller {
 					}
 				}
 			}
-			$data_values[9] = $action_data;
+			$data_values[11] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

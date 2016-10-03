@@ -9,7 +9,7 @@
 			    border-radius: 4px;
 			}
 			.dataTables_wrapper .row:last-child {
-			    border-bottom: 0px solid #e0e0e0;ser
+			    border-bottom: 0px solid #e0e0e0;
 			    
 			    padding-top: 5px;
 			    padding-bottom: 0px;
@@ -250,7 +250,7 @@
 			var app = angular.module('myApp', []);
 			app.controller('myCtrl', function($scope, $http) {
 				$scope.vehicles = [];
-				$scope.ids = ['vehicle', 'servicedate', 'substitutevehicle', 'starttime', 'driver1', 'driver2', 'helper', 'penalitiestype'];
+				$scope.ids = ['vehicle', 'servicedate', 'substitutevehicle', 'starttime', 'driver1', 'driver2', 'driver3', 'driver4', 'driver5', 'helper', 'penalitiestype'];
 				$scope.vars = ['distance','repairkms', 'startreading', 'endreading', 'penalityamount', 'remarks' ];
 				$scope.vehicles_text = [];
 				exe_recs_text = [];
@@ -581,6 +581,34 @@
 			   });
 			}
 
+			function getStartReadingSubstitute(val){
+				//vehicleid = $("#substitutevehicle").val();
+				subvehicleid = val;
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+				vehicleid = $("#vehicle").val();
+				servicedate = $("#servicedate").val();
+				url = "getstartreadingsubstitute?clientid="+clientId+"&depotid="+depotId+"&date="+val+"&subvehicleid="+subvehicleid+"&vehicleid="+vehicleid+"&servicedate="+servicedate;
+				$.ajax({
+			      url: url,
+			      success: function(data) {
+			    	  data = JSON.parse(data);
+			    	  if(data[0] == "0"){
+				    	  alert("Please Set start meeter reading for the vehicle");
+				    	  //location.reload();
+			    	  }
+			    	  $("#startreading").val(data[0]);
+			    	  $("#startreading").trigger('input');
+			    	  $("#endreading").val("");
+					  $("#endreading").trigger('input');
+					  $("#distance").val("");
+					  $("#distance").trigger('input');
+					  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
+			}
+
 			function getDriverHelper(val){
 				clientId =  $("#clientname").val();
 				depotId = $("#depot").val();
@@ -595,8 +623,11 @@
 							      data = JSON.parse(data);
 						    	  $("#driver1").html(data[0]);
 						    	  $("#driver2").html(data[1]);
-						    	  $("#helper").html(data[2]);
-						    	  $("#servicedate").html(data[3]);
+						    	  $("#driver3").html(data[2]);
+						    	  $("#driver4").html(data[3]);
+						    	  $("#driver5").html(data[4]);
+						    	  $("#helper").html(data[5]);
+						    	  $("#servicedate").html(data[6]);
 						    	  $("#starttime option").each(function() {  this.selected =(this.text == "07:00 AM")});
 								  $("#starttime option").find('option:selected').attr("selected", "selected"); 
 						    	  $('.chosen-select').trigger("chosen:updated");
@@ -687,12 +718,15 @@
 				$("#distance").attr("readonly",true);	
 				$("#div_driver1").hide();	
 		    	$("#div_driver2").hide();
+		    	$("#div_driver3").hide();
+		    	$("#div_driver4").hide();
+		    	$("#div_driver5").hide();
 		    	$("#div_helper").hide();	
 
 				$('#endreading').on('change', function() { 
 					endreading = parseInt($('#endreading').val());
 					startreading = parseInt($('#startreading').val());
-					if(endreading<=startreading){
+					if(endreading<startreading){
 						alert("End Reading must be greater than Start Reading");
 						$('#endreading').val("");
 						return;
@@ -703,7 +737,9 @@
 				});
 
 				$('#endreading1').on('change', function() { 
-					if($('#endreading1').val()<$('#startreading1').val()){
+					er = parseInt($('#endreading1').val());
+					sr = parseInt($('#startreading1').val());
+					if(er<sr){
 						alert("End Reading must be greater than Start Reading");
 						$('#endreading1').val("");
 						return;
@@ -783,11 +819,17 @@
 				    if (this.checked) {
 				    	$("#div_driver1").show();	
 				    	$("#div_driver2").show();
+				    	$("#div_driver3").show();
+				    	$("#div_driver4").show();
+				    	$("#div_driver5").show();
 				    	$("#div_helper").show();
 				    }
 				    else{
 				    	$("#div_driver1").hide();	
 				    	$("#div_driver2").hide();
+				    	$("#div_driver3").hide();
+				    	$("#div_driver4").hide();
+				    	$("#div_driver5").hide();				    	
 				    	$("#div_helper").hide();
 				    }
 				});
@@ -797,6 +839,11 @@
 				        // DO STUFF
 				        return false; // return false to cancel form action
 				 });
+
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+				url = "getservicelogsdatatabledata?name=servicelogs&clientid="+clientId+"&depotid="+depotId;
+
 					
 				//initiate dataTables plugin
 				myTable = 
@@ -819,7 +866,7 @@
 					"bProcessing": true,
 			        "bServerSide": true,
 					"ajax":{
-		                url :"getservicelogsdatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
+		                url :url,//"getservicelogsdatatabledata?name=<?php //echo $values["provider"] ?>",  json datasource
 		                type: "post",  // method  , by default get
 		                error: function(){  // error handling
 		                    $(".employee-grid-error").html("");

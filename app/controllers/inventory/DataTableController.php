@@ -156,11 +156,11 @@ class DataTableController extends \Controller {
 		$search = $search['value'];
 		if($search != ""){
 			$entities = \ItemCategories::where("name", "like", "%$search%")->select($select_args)->limit($length)->offset($start)->get();
-			$total = count($entities);
+			$total = \ItemCategories::where("name", "like", "%$search%")->count();
 		}
 		else{
 			$entities = \ItemCategories::where("id",">",0)->select($select_args)->limit($length)->offset($start)->get();
-			$total = count($entities);
+			$total = \ItemCategories::count();
 		}
 	
 		$entities = $entities->toArray();
@@ -195,11 +195,11 @@ class DataTableController extends \Controller {
 		$select_args = array();
 		$select_args[] = "item_types.id as id";
 		$select_args[] = "item_types.name as name";
-		$select_args[] = "item_categories.name as itemCategoryId";
+		//$select_args[] = "item_categories.name as itemCategoryId";
 		$select_args[] = "item_types.description as description";
 		$select_args[] = "item_types.status as status";
 		$select_args[] = "item_types.id as id";
-	
+		$select_args[] = "item_types.name as itemCategoryId";
 		$actions = array();
 	
 		if(in_array(327, $this->jobs)){
@@ -211,12 +211,14 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \ItemTypes::where("item_types.name", "like", "%$search%")->join("item_categories","item_categories.id","=","item_types.itemCategoryId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = count($entities);
+			//->join("item_categories","item_categories.id","=","item_types.itemCategoryId")
+			$entities = \ItemTypes::where("item_types.name", "like", "%$search%")->select($select_args)->limit($length)->offset($start)->get();
+			$total = \ItemTypes::where("item_types.name", "like", "%$search%")->count();
 		}
 		else{
-			$entities = \ItemTypes::join("item_categories","item_categories.id","=","item_types.itemCategoryId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = count($entities);
+			//join("item_categories","item_categories.id","=","item_types.itemCategoryId")->
+			$entities = \ItemTypes::select($select_args)->limit($length)->offset($start)->get();
+			$total = \ItemTypes::count();
 		}
 	
 		$entities = $entities->toArray();
@@ -231,7 +233,7 @@ class DataTableController extends \Controller {
 					$i=0;
 					for($i=0; $i<(count($jsfields)-1); $i++){
 						$jsdata = $jsdata." '".$entity[$jsfields[$i]]."', ";
-					}
+					}	
 					$jsdata = $jsdata." '".$entity[$jsfields[$i]];
 					$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
@@ -239,7 +241,7 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[5] = $action_data;
+			$data_values[4] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);
@@ -255,7 +257,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "inventorylookupvalues.name as unitsOfMeasure";
 		$select_args[] = "items.tags as tags";
 		$select_args[] = "items.itemModel as itemModel";
-		$select_args[] = "item_types.name as itemTypeId";
+		$select_args[] = "items.itemTypeId as itemTypeId";
 		$select_args[] = "items.manufactures as manufactures";
 		$select_args[] = "items.stockable as stockable";
 		$select_args[] = "items.expirable as expirable";
@@ -273,12 +275,15 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \Items::where("items.name", "like", "%$search%")->join("inventorylookupvalues","inventorylookupvalues.id","=","items.unitsOfMeasure")->join("item_types","item_types.id","=","items.itemTypeId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = count($entities);
+			$entities = \Items::where("items.name", "like", "%$search%")
+							->leftjoin("inventorylookupvalues","inventorylookupvalues.id","=","items.unitsOfMeasure")
+							->select($select_args)->limit($length)->offset($start)->get();
+			$total = \Items::where("items.name", "like", "%$search%")->count();
 		}
 		else{
-			$entities = \Items::join("inventorylookupvalues","inventorylookupvalues.id","=","items.unitsOfMeasure")->join("item_types","item_types.id","=","items.itemTypeId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = count($entities);
+			$entities = \Items::leftjoin("inventorylookupvalues","inventorylookupvalues.id","=","items.unitsOfMeasure")
+						->select($select_args)->limit($length)->offset($start)->get();
+			$total = \Items::count();
 		}
 	
 		$entities = $entities->toArray();
@@ -294,6 +299,19 @@ class DataTableController extends \Controller {
 				}
 			}
 			$entity["manufactures"] = $mans;
+			
+			$itemtypes = "";
+			$itemtypes_arr = explode(",",$entity["itemTypeId"]);
+			foreach ($itemtypes_arr as $itemtype){
+				if($itemtype != "") {
+					$itemtp = \ItemTypes::where("id","=",$itemtype)->get();
+					$itemtp = $itemtp[0];
+					$itemtp = $itemtp->name;
+					$itemtypes = $itemtypes.$itemtp.", ";
+				}
+			}			
+			$entity["itemTypeId"] = $itemtypes;
+			
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
@@ -389,8 +407,12 @@ class DataTableController extends \Controller {
 		$select_args = array();
 		$select_args[] = "creditsuppliers.suppliername as creditSupplierId";
 		$select_args[] = "officebranch.name as officeBranchId";
+		$select_args[] = "purchase_orders.type as stocktype";
+		$select_args[] = "purchase_orders.type as items";
+		$select_args[] = "employee4.fullName as incharge";
 		$select_args[] = "employee.fullName as receivedBy";
 		$select_args[] = "purchase_orders.orderDate as orderDate";
+		$select_args[] = "purchase_orders.paymentDate as paymentDate";
 		$select_args[] = "purchase_orders.billNumber as billNumber";
 		$select_args[] = "purchase_orders.amountPaid as amountPaid";
 		$select_args[] = "purchase_orders.paymentType as paymentType";
@@ -422,28 +444,58 @@ class DataTableController extends \Controller {
 						->leftjoin("employee","employee.id","=","purchase_orders.receivedBy")
 						->leftjoin("employee as employee2", "employee2.id","=","purchase_orders.createdBy")
 						->leftjoin("employee as employee3", "employee3.id","=","purchase_orders.updatedBy")
+						->leftjoin("employee as employee4", "employee4.id","=","purchase_orders.inchargeId")
 						->select($select_args)->limit($length)->offset($start)->get();
-			$total = count($entities);
+			$total = \PurchasedOrders::where("creditsuppliers.supplierName", "like", "%$search%")
+						->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+						->where("purchase_orders.status","ACTIVE")->count();
 		}
 		else{
 			$entities = \PurchasedOrders::where("purchase_orders.status","ACTIVE")
-						->where("purchase_orders.type","=","PURCHASE ORDER")
+						->whereIn("purchase_orders.type",array("PURCHASE ORDER","OFFICE PURCHASE ORDER"))
 						->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
 						->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
 						->leftjoin("employee","employee.id","=","purchase_orders.receivedBy")
 						->leftjoin("employee as employee2", "employee2.id","=","purchase_orders.createdBy")
 						->leftjoin("employee as employee3", "employee3.id","=","purchase_orders.updatedBy")
+						->leftjoin("employee as employee4", "employee4.id","=","purchase_orders.inchargeId")
 						->select($select_args)->limit($length)->offset($start)->get();
 			$total = \PurchasedOrders::where("purchase_orders.status","ACTIVE")
-						->where("purchase_orders.type","PURCHASE ORDER")->count();
+						->whereIn("purchase_orders.type",array("PURCHASE ORDER","OFFICE PURCHASE ORDER"))->count();
 		}
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			$items = \PurchasedItems::leftjoin("items","items.id","=","purchased_items.itemId")
+						->where("purchasedOrderId","=",$entity["id"])->where("purchased_items.status","=","ACTIVE")
+						->select("items.name as name","purchased_items.purchasedQty as qty")->Get();
+			$item_str = "";
+			foreach ($items as $item){
+				$item_str = $item_str.$item->name." (".$item->qty."),<br/>";
+			}
+			$entity["items"] = $item_str;
 			if($entity["billNumber"] != ""){
-				$entity["billNumber"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNumber"]."</a>";
+				if($entity["filePath"]==""){
+					$entity["billNumber"] = "<span style='color:red; font-weight:bold;'>".$entity["billNumber"]."</span>";
+				}
+				else{
+					$entity["billNumber"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNumber"]."</a>";
+				}
+				
+			}
+			
+			if($entity["stocktype"] == "OFFICE PURCHASE ORDER"){
+				$entity["stocktype"] = "OFFICE STOCK";
+			}
+			else{
+				$entity["stocktype"] = "NON OFFICE STOCK";
 			}
 			$entity["orderDate"] = date("d-m-Y",strtotime($entity["orderDate"]));
+			$pmtdate = date("d-m-Y",strtotime($entity["paymentDate"]));
+			if($pmtdate=="00-00-0000" || $pmtdate=="01-01-1970"){
+				$pmtdate = "";
+			}
+			$entity["paymentDate"] = $pmtdate;
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
@@ -462,13 +514,17 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<button class='btn btn-minier btn-".$action["css"]."' onclick='".$action["id"]."(".$entity["id"].")' >".strtoupper($action["text"])."</button>&nbsp; &nbsp;" ;
 				}
 				else {
+					$action['url'] = "editpurchaseorder?stocktype=nonoffice";
+					if($entity["stocktype"] == "OFFICE STOCK"){
+						$action['url'] = "editpurchaseorder?stocktype=office";
+					}
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
 			if(isset($entity["workFlowStatus"]) && $entity["workFlowStatus"]=="Approved"){
 				$action_data = "";
 			}
-			$data_values[14] = $action_data;
+			$data_values[15] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);
@@ -553,6 +609,8 @@ class DataTableController extends \Controller {
 		$select_args[] = "inventory_transaction.action as action";
 		$select_args[] = "inventory_transaction.id as id";
 		$select_args[] = "purchased_items.itemId as itemId";
+		$select_args[] = "inventory_transaction.meeterReading as meeterReading";
+		$select_args[] = "purchase_orders.billNumber as billNumber";
 	
 		$actions = array();
 		//$action = array("url"=>"editusedstock?", "type"=>"", "css"=>"primary", "js"=>"modalEditPurchaseOrderItem(", "jsdata"=>array("id","itemId","manufacturerId", "qty", "unitPrice", "itemStatus", "status"), "text"=>"EDIT");
@@ -606,7 +664,7 @@ class DataTableController extends \Controller {
 				$values["fromdate"] = date("Y-m-d",strtotime($values["fromdate"]));
 				$values["todate"] = date("Y-m-d",strtotime($values["todate"]));
 				$entities = \PurchasedOrders::where("purchase_orders.status","ACTIVE")
-							->where("purchase_orders.type", "!=", "PURCHASE ORDER")
+							->whereNotIn("purchase_orders.type",array("PURCHASE ORDER","OFFICE PURCHASE ORDER"))
 							->where("purchase_orders.officeBranchId", "=", $values["warehouse"])
 							->whereBetween("purchase_orders.orderDate",array($values["fromdate"],$values["todate"]))
 							->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
@@ -674,7 +732,13 @@ class DataTableController extends \Controller {
 					foreach ($vehids as $vehid){
 						$vehids_arr[] = $vehid->id;
 					}
-					$entities = \InventoryTransactions::whereIn("fromVehicleId",$vehids_arr)->orWhereIn("toVehicleId",$vehids_arr)->where("inventory_transaction.status","=","ACTIVE")->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")->leftjoin("items","items.id","=","purchased_items.itemId")->select($select_args)->limit($length)->offset($start)->get();
+					$entities = \InventoryTransactions::whereIn("fromVehicleId",$vehids_arr)
+									->orWhereIn("toVehicleId",$vehids_arr)
+									->where("inventory_transaction.status","=","ACTIVE")
+									->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")
+									->leftjoin("purchased_orders","purchased_orders.id","=","purchased_items.purchasedOrderId")
+									->leftjoin("items","items.id","=","purchased_items.itemId")
+									->select($select_args)->limit($length)->offset($start)->get();
 					$total = \InventoryTransactions::whereIn("fromVehicleId",$vehids_arr)->orWhereIn("toVehicleId",$vehids_arr)->where("inventory_transaction.status","=","ACTIVE")->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")->leftjoin("items","items.id","=","purchased_items.itemId")->select($select_args)->count();
 				}
 			}
@@ -682,12 +746,21 @@ class DataTableController extends \Controller {
 				if(isset($values["fromdate"]) && isset($values["todate"]) && isset($values["warehouse"])){
 					$values["fromdate"] = date("Y-m-d",strtotime($values["fromdate"]));
 					$values["todate"] = date("Y-m-d",strtotime($values["todate"]));
-					$entities = \InventoryTransactions::where("fromWareHouseId","=",$values["warehouse"])
-									->where("inventory_transaction.status","=","ACTIVE")
+					$sql = \InventoryTransactions::where("fromWareHouseId","=",$values["warehouse"])
+									->where("inventory_transaction.status","=","ACTIVE");
+									if(isset($values["stocktype"]) && $values["stocktype"]=="office"){
+										$sql = $sql->where("purchase_orders.type","=","OFFICE PURCHASE ORDER");
+									}
+									else{
+										$sql = $sql->where("purchase_orders.type","!=","OFFICE PURCHASE ORDER");
+									}
+									$sql->where("inventory_transaction.status","=","ACTIVE")
 									->wherebetween("date",array($values["fromdate"],$values["todate"]))
 									->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")
-									->leftjoin("items","items.id","=","purchased_items.itemId")
-									->select($select_args)->limit($length)->offset($start)->get();
+									->leftjoin("purchase_orders","purchased_items.purchasedOrderId","=","purchase_orders.id")
+									->leftjoin("items","items.id","=","purchased_items.itemId");
+					 $entities = 	$sql->select($select_args)->limit($length)->offset($start)->get();
+				
 					$total =\InventoryTransactions::where("fromWareHouseId","=",$values["warehouse"])
 									->where("inventory_transaction.status","=","ACTIVE")
 									->wherebetween("date",array($values["fromdate"],$values["todate"]))->count();
@@ -719,6 +792,9 @@ class DataTableController extends \Controller {
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			if($entity["billNumber"] != ""){
+				$entity["qty"] = $entity["qty"]." (".$entity["billNumber"].")";
+			}
 			$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 			if($entity["fromVehicleId"] != 0){
 				$entity["fromVehicleId"] = $vehicles_arr[$entity["fromVehicleId"]];
@@ -728,6 +804,9 @@ class DataTableController extends \Controller {
 			}
 			if($entity["toVehicleId"] != 0){
 				$entity["toVehicleId"] = $vehicles_arr[$entity["toVehicleId"]];
+				if($entity["meeterReading"] != 0){
+					$entity["toVehicleId"] = $entity["toVehicleId"]."(".$entity["meeterReading"].")";
+				}
 			}
 			else{
 				$entity["toVehicleId"] = "";

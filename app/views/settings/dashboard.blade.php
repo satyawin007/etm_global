@@ -36,7 +36,7 @@
 					$rec = Parameters::where("name","=","dashboardmessage")->get();
 					$rec = $rec[0];
 				?>
-				<marquee style="font-size: 28px;font-weight: bold;color: chocolate;">{{$rec->value}}<span style="color: darkblue;"> - GLOBAL management</span> </marquee>
+				<marquee>{{$rec->value}}</marquee>
 			</div>
 			<div class="col-xs-6">
 				<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 10px;">VEHICLE RENEWALS</h3>
@@ -48,6 +48,72 @@
 							<th>EXPIRED DAYS</th>
 							<th>EXPIRED IN 10 DAYS</th>
 							<th>EXPIRED IN 30 DAYS</th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php 
+						$select_args = array();
+						$select_args[] = "vehicle.veh_reg as veh_reg";
+						$select_args[] = "lookuptypevalues.name as name";
+						$select_args[] = "expensetransactions.nextAlertDate as nextAlertDate";
+						$entities = \Vehicle::where("vehicle.status","=","ACTIVE")
+									->where("expensetransactions.nextAlertDate","!=","0000-00-00")
+									->where("expensetransactions.nextAlertDate","!=","1970-01-01")
+									->leftjoin("expensetransactions","expensetransactions.vehicleIds","=","vehicle.id")
+									->leftjoin("lookuptypevalues","expensetransactions.lookupValueId","=","lookuptypevalues.id")
+									->select($select_args)->orderBy("vehicle.id")->get();
+						$cnt = 0;
+						$today = date("Y-m-d");
+						foreach ($entities as $entity){
+							$date1=date_create($today);
+							$date2=date_create($entity->nextAlertDate);
+							$diff=date_diff($date1,$date2);
+							// 				echo $diff->format("%R%a").", "; continue;
+							$row = array();
+							if($diff->format("%R%a") > 0 && $diff->format("%R%a") < 30){
+								echo "<tr>";
+								echo "<td>".$entity->veh_reg."</td>";
+								echo "<td>".$entity->name."</td>";
+								echo "<td></td>";
+								if($diff->format("%R%a") > 0 && $diff->format("%R%a") < 10){
+									echo "<td>".'<span class="badge badge-warning">'.($diff->format("%a")).'</span>'."</td>";
+								}
+								else{
+									echo "<td></td>";
+								}
+								if($diff->format("%R%a") >= 10){
+									echo "<td>".'<span class="badge badge-danger">'.($diff->format("%a")).'</span>'."</td>";
+								}
+								else{
+									echo "<td></td>";
+								}
+								echo "</tr>";
+							}
+							else if($diff->format("%R%a") < 0){
+								echo "<tr>";
+								echo "<td>".$entity->veh_reg."</td>";
+								echo "<td>".$entity->name."</td>";
+								echo "<td>".'<span class="badge badge-inverse">'.$diff->format("%a").'</span>'."</td>";
+								echo "<td></td>";
+								echo "<td></td>";
+								echo "</tr>";
+							}
+						}
+					?>
+					</tbody>
+				</table>								
+			</div>
+			
+			<div class="col-xs-6">
+				<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 10px;">EMPLOYEE LEAVES STATUS</h3>
+				<table id="dynamic-table6" class="table table-striped table-bordered table-hover">
+					<thead>
+						<tr>
+							<th>EMPLOYEE</th>
+							<th>APPRVODE</th>
+							<th>SENT FOR APP</th>
+							<th>PENDING FOR APP</th>
+							<th>REJECTED</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -63,6 +129,7 @@
 					<thead>
 						<tr>
 							<th>EMPLOYEE</th>
+							<th>APPRVODE</th>
 							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
 							<th>REJECTED</th>
@@ -80,6 +147,7 @@
 					<thead>
 						<tr>
 							<th>EMPLOYEE</th>
+							<th>APPRVODE</th>
 							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
 							<th>REJECTED</th>
@@ -99,6 +167,7 @@
 					<thead>
 						<tr>
 							<th>EMPLOYEE</th>
+							<th>APPRVODE</th>
 							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
 							<th>REJECTED</th>
@@ -117,6 +186,7 @@
 						<tr>
 							<th>EMPLOYEE</th>
 							<th>EXPENSE TYPE</th>
+							<th>APPRVODE</th>
 							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
 							<th>REJECTED</th>
@@ -232,9 +302,9 @@
 						oLanguage: {
 					        sProcessing: '<i class="ace-icon fa fa-spinner fa-spin orange bigger-250"></i>'
 					    },
-						"bProcessing": true,
-				        "bServerSide": true,
-						"ajax":{
+						"bProcessing": false,
+				        "bServerSide": false,
+						/*"ajax":{
 			                url :"getDashboardDataTableData?name=vehiclerenewals", // json datasource
 			                type: "post",  // method  , by default get
 			                error: function(){  // error handling
@@ -243,7 +313,7 @@
 			                    $("#employee-grid_processing").css("display","none");
 			 
 			                }
-			            },
+			            },*/
 				
 						"sScrollX" : "true",
 						"bScrollCollapse": true,
@@ -261,7 +331,7 @@
 							"bDestroy": true,
 							bInfo: true,
 							"aoColumns": [
-							  <?php $cnt=4; for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
+							  <?php $cnt=5; for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
 							],
 							"aaSorting": [],
 							oLanguage: {
@@ -284,8 +354,113 @@
 							"bScrollCollapse": true,
 					    } );
 
-						var myTable3 = 
-							$('#dynamic-table3')
+			var myTable3 = 
+				$('#dynamic-table3')
+				//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
+
+				//.wrap("<div id='tableData' style='width:300px; overflow: auto;overflow-y: hidden;-ms-overflow-y: hidden; position:relative; margin-right:5px; padding-bottom: 15px;display:block;'/>"); 
+		
+				.DataTable( {
+					bJQueryUI: true,
+					"bPaginate": true, "bDestroy": true,
+					"bDestroy": true,
+					bInfo: true,
+					"aoColumns": [
+					  <?php $cnt=5; for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
+					],
+					"aaSorting": [],
+					oLanguage: {
+				        sProcessing: '<i class="ace-icon fa fa-spinner fa-spin orange bigger-250"></i>'
+				    },
+					"bProcessing": true,
+			        "bServerSide": true,
+					"ajax":{
+		                url :"getDashboardDataTableData?name=repairtransactionsstatus", // json datasource
+		                type: "post",  // method  , by default get
+		                error: function(){  // error handling
+		                    $(".employee-grid-error").html("");
+		                    $("#dynamic-table").append('<tbody class="employee-grid-error"><tr>No data found in the server</tr></tbody>');
+		                    $("#employee-grid_processing").css("display","none");
+		 
+		                }
+		            },
+			
+					"sScrollX" : "true",
+					"bScrollCollapse": true,
+			    } );
+
+				var myTable4 = 
+					$('#dynamic-table4')
+					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
+	
+					//.wrap("<div id='tableData' style='width:300px; overflow: auto;overflow-y: hidden;-ms-overflow-y: hidden; position:relative; margin-right:5px; padding-bottom: 15px;display:block;'/>"); 
+			
+					.DataTable( {
+						bJQueryUI: true,
+						"bPaginate": true, "bDestroy": true,
+						"bDestroy": true,
+						bInfo: true,
+						"aoColumns": [
+						  <?php $cnt=5; for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
+						],
+						"aaSorting": [],
+						oLanguage: {
+					        sProcessing: '<i class="ace-icon fa fa-spinner fa-spin orange bigger-250"></i>'
+					    },
+						"bProcessing": true,
+				        "bServerSide": true,
+						"ajax":{
+			                url :"getDashboardDataTableData?name=purchaseordersstatus", // json datasource
+			                type: "post",  // method  , by default get
+			                error: function(){  // error handling
+			                    $(".employee-grid-error").html("");
+			                    $("#dynamic-table").append('<tbody class="employee-grid-error"><tr>No data found in the server</tr></tbody>');
+			                    $("#employee-grid_processing").css("display","none");
+			 
+			                }
+			            },
+				
+						"sScrollX" : "true",
+						"bScrollCollapse": true,
+				    } );
+
+					var myTable5 = 
+						$('#dynamic-table5')
+						//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
+		
+						//.wrap("<div id='tableData' style='width:300px; overflow: auto;overflow-y: hidden;-ms-overflow-y: hidden; position:relative; margin-right:5px; padding-bottom: 15px;display:block;'/>"); 
+				
+						.DataTable( {
+							bJQueryUI: true,
+							"bPaginate": true, "bDestroy": true,
+							"bDestroy": true,
+							bInfo: true,
+							"aoColumns": [
+							  <?php $cnt=6; for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
+							],
+							"aaSorting": [],
+							oLanguage: {
+						        sProcessing: '<i class="ace-icon fa fa-spinner fa-spin orange bigger-250"></i>'
+						    },
+							"bProcessing": true,
+					        "bServerSide": true,
+							"ajax":{
+				                url :"getDashboardDataTableData?name=inchargetransactionsstatus", // json datasource
+				                type: "post",  // method  , by default get
+				                error: function(){  // error handling
+				                    $(".employee-grid-error").html("");
+				                    $("#dynamic-table").append('<tbody class="employee-grid-error"><tr>No data found in the server</tr></tbody>');
+				                    $("#employee-grid_processing").css("display","none");
+				 
+				                }
+				            },
+					
+							"sScrollX" : "true",
+							"bScrollCollapse": true,
+					    } );
+
+						var myTable6 = 
+							$('#dynamic-table6')
 							//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
 			
 							//.wrap("<div id='tableData' style='width:300px; overflow: auto;overflow-y: hidden;-ms-overflow-y: hidden; position:relative; margin-right:5px; padding-bottom: 15px;display:block;'/>"); 
@@ -296,7 +471,7 @@
 								"bDestroy": true,
 								bInfo: true,
 								"aoColumns": [
-								  <?php $cnt=4; for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
+								  <?php $cnt=5; for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
 								],
 								"aaSorting": [],
 								oLanguage: {
@@ -305,7 +480,7 @@
 								"bProcessing": true,
 						        "bServerSide": true,
 								"ajax":{
-					                url :"getDashboardDataTableData?name=repairtransactionsstatus", // json datasource
+					                url :"getDashboardDataTableData?name=employeeleaves", // json datasource
 					                type: "post",  // method  , by default get
 					                error: function(){  // error handling
 					                    $(".employee-grid-error").html("");
@@ -318,76 +493,6 @@
 								"sScrollX" : "true",
 								"bScrollCollapse": true,
 						    } );
-
-							var myTable4 = 
-								$('#dynamic-table4')
-								//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
-				
-								//.wrap("<div id='tableData' style='width:300px; overflow: auto;overflow-y: hidden;-ms-overflow-y: hidden; position:relative; margin-right:5px; padding-bottom: 15px;display:block;'/>"); 
-						
-								.DataTable( {
-									bJQueryUI: true,
-									"bPaginate": true, "bDestroy": true,
-									"bDestroy": true,
-									bInfo: true,
-									"aoColumns": [
-									  <?php $cnt=4; for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
-									],
-									"aaSorting": [],
-									oLanguage: {
-								        sProcessing: '<i class="ace-icon fa fa-spinner fa-spin orange bigger-250"></i>'
-								    },
-									"bProcessing": true,
-							        "bServerSide": true,
-									"ajax":{
-						                url :"getDashboardDataTableData?name=purchaseordersstatus", // json datasource
-						                type: "post",  // method  , by default get
-						                error: function(){  // error handling
-						                    $(".employee-grid-error").html("");
-						                    $("#dynamic-table").append('<tbody class="employee-grid-error"><tr>No data found in the server</tr></tbody>');
-						                    $("#employee-grid_processing").css("display","none");
-						 
-						                }
-						            },
-							
-									"sScrollX" : "true",
-									"bScrollCollapse": true,
-							    } );
-
-								var myTable5 = 
-									$('#dynamic-table5')
-									//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
-					
-									//.wrap("<div id='tableData' style='width:300px; overflow: auto;overflow-y: hidden;-ms-overflow-y: hidden; position:relative; margin-right:5px; padding-bottom: 15px;display:block;'/>"); 
-							
-									.DataTable( {
-										bJQueryUI: true,
-										"bPaginate": true, "bDestroy": true,
-										"bDestroy": true,
-										bInfo: true,
-										"aoColumns": [
-										  <?php $cnt=5; for($i=0; $i<$cnt; $i++){ echo '{ "bSortable": false },'; }?>
-										],
-										"aaSorting": [],
-										oLanguage: {
-									        sProcessing: '<i class="ace-icon fa fa-spinner fa-spin orange bigger-250"></i>'
-									    },
-										"bProcessing": true,
-								        "bServerSide": true,
-										"ajax":{
-							                url :"getDashboardDataTableData?name=inchargetransactionsstatus", // json datasource
-							                type: "post",  // method  , by default get
-							                error: function(){  // error handling
-							                    $(".employee-grid-error").html("");
-							                    $("#dynamic-table").append('<tbody class="employee-grid-error"><tr>No data found in the server</tr></tbody>');
-							                    $("#employee-grid_processing").css("display","none");
-							 
-							                }
-							            },
-								
-										"sScrollX" : "true",
-										"bScrollCollapse": true,
-								    } );
 			
 				
 				$('<button style="margin-top:-5px;" class="btn btn-minier btn-primary" id="refresh"><i style="margin-top:-2px; padding:6px; padding-right:5px;" class="ace-icon fa fa-refresh bigger-110"></i></button>').appendTo('div.dataTables_filter');

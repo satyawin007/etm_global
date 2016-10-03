@@ -120,7 +120,11 @@ class DataTableController extends \Controller {
 			$total = $ret_arr["total"];
 			$data = $ret_arr["data"];
 		}
-		
+		else if(isset($values["name"]) && $values["name"]=="uploads") {
+			$ret_arr = $this->getUploads($values, $length, $start);
+			$total = $ret_arr["total"];
+			$data = $ret_arr["data"];
+		}
 		else if(isset($values["name"]) && $values["name"]=="leaves") {
 			$ret_arr = $this->getLeaves($values, $length, $start);
 			$total = $ret_arr["total"];
@@ -143,6 +147,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "employee.empCode as empCode";
 		$select_args[] = "employee.fullName as fullName";
 		$select_args[] = "employee.officeBranchIds as officeBranchIds";
+		$select_args[] = "employee.fullName as clientBranch";
 		$select_args[] = "employee.mobileNo as mobileNo";
 		$select_args[] = "role.roleName as name";
 		$select_args[] = "employee.emailid as emailid";
@@ -157,7 +162,7 @@ class DataTableController extends \Controller {
 			$action = array("url"=>"editsalarydetails?","css"=>"success", "type"=>"", "text"=>"salary Add/Edit");
 			$actions[] = $action; 
 		}
-		if(in_array(203, $this->jobs)){
+		if(in_array(203, $this->jobs) || in_array(204, $this->jobs)){
 			$action = array("url"=>"employeeprofile?","css"=>"primary", "type"=>"", "text"=>"Edit");
 			$actions[] = $action;
 		}
@@ -193,23 +198,41 @@ class DataTableController extends \Controller {
 			
 		}
 		$values["actions"] = $actions;
+		$branch = 0;
+		if(isset($values['branch'])){
+			$branch = $values['branch'];
+		}
 	
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \Employee::where('fullName',"like","%$search%")
-								->where("employee.status","=","ACTIVE")
-								->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+			$sql = \Employee::where('fullName',"like","%$search%")
+								->where("employee.status","=","ACTIVE");
+								if(isset($values['action']) && $values['action']=="all") {
+									if(isset($values['branch']) && $values['branch'] != ""){
+										$sql->whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")
+											->where('roleId',"!=",20)->where("roleId", "!=",19);
+									}
+									else{
+										$sql->where('roleId',"!=",20)->where("roleId", "!=",19);
+									}
+								}
+								else{
+									if(isset($values['branch']) && $values['branch'] != ""){
+										$sql->whereRaw(" (roleId=20 or roleId=19) and employee.status='ACTIVE' and FIND_IN_SET('$branch',employee.officeBranchIds)");
+									}
+									else{
+										$sql->whereRaw(" (roleId=20 or roleId=19) and employee.status='ACTIVE'");
+									}
+								}
+								$sql->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 								->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
-								->leftjoin('role','employee.roleId','=','role.id')
-								->select($select_args)->limit($length)->offset($start)->get();
+								->leftjoin('role','employee.roleId','=','role.id');
+			$entities =  $sql->select($select_args)->limit($length)->offset($start)->get();
 			$total = \Employee::where('fullName',"like","%$search%")->count();
 		}
 		else{
-			$branch = 0;
-			if(isset($values['branch'])){
-				$branch = $values['branch'];
-			}
+						
 			if(isset($values['action']) && $values['action']=="driver_helpers"){
 				if(isset($values['branch']) && $values['branch'] != ""){
 					$branch = $values['branch'];
@@ -222,16 +245,16 @@ class DataTableController extends \Controller {
 										->where("employee.status","=","ACTIVE")->count();
 				}
 				else{
-					$entities = \Employee::leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
-											->whereRaw(" (roleId=20 or roleId=19) and employee.status='ACTIVE' ")
-											->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
-											->leftjoin('role','employee.roleId','=','role.id')
-											->select($select_args)->limit($length)->offset($start)->get();
+					$entities = \Employee::whereRaw(" (roleId=20 or roleId=19) and employee.status='ACTIVE' and FIND_IN_SET('$branch',employee.officeBranchIds)")
+										->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
+										->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
+										->leftjoin('role','employee.roleId','=','role.id')
+										->select($select_args)->limit($length)->offset($start)->get();
 					$total = \Employee::where('roleId',"=",20)->orwhere("roleId", "=",19)->where("employee.status","=","ACTIVE")->count();
 				}
 			}
 			if(isset($values['action']) && $values['action']=="blocked"){
-				$select_args[] = "employee_activity.reason as blockedReson";
+				$select_args[] = "employee_activity.reason as blockedReason";
 				if(isset($values['branch']) && $values['branch'] != ""){
 					$branch = $values['branch'];
 					$entities = \Employee::whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")
@@ -242,10 +265,10 @@ class DataTableController extends \Controller {
 										  ->leftjoin('employee_activity','employee_activity.empid','=','employee.id')
 										  ->select($select_args)->orderBy("employee_activity.date","desc")->limit($length)->offset($start)->get();
 					$total = \Employee::whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")
-											->where("status","=","BLOCKED")->count();
+											->where("employee.status","=","BLOCKED")->count();
 				}
 				else{
-					$entities = \Employee::where("employee.status","=","BLOCKED")
+					$entities = \Employee::whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")->where("employee.status","=","BLOCKED")
 										  ->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 										  ->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
 										  ->leftjoin('role','employee.roleId','=','role.id')
@@ -266,7 +289,8 @@ class DataTableController extends \Controller {
 					$total = \Employee::whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")->where("status","=","TERMINATED")->count();
 				}
 				else{
-					$entities = \Employee::where("employee.status","=","TERMINATED")
+					$entities = $entities = \Employee::whereRaw("FIND_IN_SET('$branch',employee.officeBranchIds)")
+								->where("employee.status","=","TERMINATED")
 								->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 								->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
 								->leftjoin('role','employee.roleId','=','role.id')
@@ -297,6 +321,10 @@ class DataTableController extends \Controller {
 				}
 			}
 		}
+		if(isset($values['action']) && $values['action']=="none"){
+			$entities = \Employee::where("id","=","0")->get();
+			$total = 0;
+		}
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
@@ -310,6 +338,27 @@ class DataTableController extends \Controller {
 			}
 			$entity["officeBranchIds"] = $branches_str;
 			
+			$client_branch_str = "";
+			$clients = \ContractVehicle::join("contracts","contracts.id","=","contract_vehicles.contractId")
+										->join("depots","depots.id","=","contracts.depotId")
+										->join("clients","clients.id","=","contracts.clientId")
+										->where("contract_vehicles.status","=","ACTIVE")
+										->whereRaw("contract_vehicles.driver1Id=".$entity["id"]." or "."contract_vehicles.driver2Id=".$entity["id"]." or "."contract_vehicles.helperId=".$entity["id"])
+										->select(array("clients.name as cname","depots.name as dname"))->get();
+			foreach ($clients as $client){
+				$client_branch_str = $client_branch_str.$client->dname." (".$client->cname.")<br/>";
+			}
+			$entity["clientBranch"] = $client_branch_str;
+				
+			
+			$uploads = \Uploads::join("lookuptypevalues","lookuptypevalues.id","=","uploads.lookupValueId")
+								->where("uploads.type","=","EMPLOYEE")->where("refId","=",$entity["id"])->where("uploads.status","=","ACTIVE")
+								->select(array("lookuptypevalues.name as lookupValueId","uploads.filePath as filePath"))->get();
+			$attachments = "";
+			foreach ($uploads as $upload){
+				$attachments = $attachments.$upload->lookupValueId."-  <a href='../app/storage/uploads/".$upload->filePath."' target='_blank'>DOCUMENT</a>"."<br/>";
+			}
+			$entity["proofs"] = $attachments;
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
@@ -329,7 +378,7 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[9] = $action_data;
+			$data_values[10] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);
@@ -439,6 +488,75 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
+			$data_values[5] = $action_data;
+			$data[] = $data_values;
+		}
+		return array("total"=>$total, "data"=>$data);
+	}
+	
+	private function getUploads($values, $length, $start){
+		$total = 0;
+		$data = array();
+		$select_args = array();
+		$select_args[] = "uploads.type as type";
+		$select_args[] = "uploads.refId as refId";
+		$select_args[] = "lookuptypevalues.name as lookupvalue";
+		$select_args[] = "uploads.filePath as filePath";
+		$select_args[] = "uploads.status as status";
+		$select_args[] = "uploads.id as id";
+		$select_args[] = "employee.fullName as fullName";
+		$select_args[] = "employee.empCode as empCode";
+		$select_args[] = "vehicle.veh_reg as veh_reg";
+			
+		$actions = array();
+		if(in_array(211, $this->jobs)){
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditUpload(", "jsdata"=>array("id", "type", "refId", "lookupvalue", "filePath", "status"), "text"=>"EDIT");
+			$actions[] = $action;
+		}
+		$values["actions"] = $actions;
+	
+		$search = $_REQUEST["search"];
+		$search = $search['value'];
+		if($search != ""){
+			$entities = \City::where("cities.name", "like", "%$search%")->join("states","states.id", "=", "cities.stateId")->select($select_args)->limit($length)->offset($start)->get();
+			$total = count($entities);
+		}
+		else{
+			$entities = \Uploads::leftjoin("lookuptypevalues","lookuptypevalues.id", "=", "uploads.lookupvalueId")
+								  ->leftjoin("employee","employee.id", "=", "uploads.refId")
+								  ->leftjoin("vehicle","vehicle.id", "=", "uploads.refId")
+								  ->where("uploads.status","=","ACTIVE")
+								  ->select($select_args)->limit($length)->offset($start)->get();
+			$total = \Uploads::where("uploads.status","=","ACTIVE")->count();
+		}
+	
+		$entities = $entities->toArray();
+		foreach($entities as $entity){
+			if($entity["type"]=="EMPLOYEE"){
+				$entity["refId"] = $entity["fullName"]." (".$entity["empCode"].")";
+			}
+			else{
+				$entity["refId"] = $entity["veh_reg"];
+			}
+			$actions = $values['actions'];
+			$action_data = "";
+			foreach($actions as $action){
+				if($action["type"] == "modal"){
+					$jsfields = $action["jsdata"];
+					$jsdata = "";
+					$i=0;
+					for($i=0; $i<(count($jsfields)-1); $i++){
+						$jsdata = $jsdata." '".$entity[$jsfields[$i]]."', ";
+					}
+					$jsdata = $jsdata." '".$entity[$jsfields[$i]];
+					$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+				}
+				else {
+					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+				}
+			}
+			$entity["filePath"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>DOCUMENT</a>";
+			$data_values = array_values($entity);
 			$data_values[5] = $action_data;
 			$data[] = $data_values;
 		}
@@ -767,6 +885,8 @@ class DataTableController extends \Controller {
 		$select_args[] = "lookuptypevalues.name as veh_type";
 		$select_args[] = "vehicle.yearof_pur as yearof_pur";
 		$select_args[] = "vehicle.seat_cap as seat_cap";
+		$select_args[] = "vehicle.seat_cap as attachments";
+		$select_args[] = "vehicle.seat_cap as renewals";
 		$select_args[] = "vehicle.status as status";
 		$select_args[] = "vehicle.id as id";
 			
@@ -817,7 +937,7 @@ class DataTableController extends \Controller {
 		else{
 			if(isset($values['action']) && $values['action']=="blocked"){
 				$entities = \Vehicle::where("vehicle.status","=","BLOCKED")->leftjoin("lookuptypevalues","lookuptypevalues.id", "=", "vehicle.vehicle_type")->select($select_args)->limit($length)->offset($start)->get();
-				$total = \Vehicle::where("status","=","BLOCKED")->	count();
+				$total = \Vehicle::where("vehicle.status","=","BLOCKED")->	count();
 			}
 			else if(isset($values['action']) && $values['action']=="sell"){
 				$entities = \Vehicle::where("vehicle.status","=","SOLD")->leftjoin("lookuptypevalues","lookuptypevalues.id", "=", "vehicle.vehicle_type")->select($select_args)->limit($length)->offset($start)->get();
@@ -834,6 +954,23 @@ class DataTableController extends \Controller {
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
+			$uploads = \Uploads::join("lookuptypevalues","lookuptypevalues.id","=","uploads.lookupValueId")
+									->where("uploads.type","=","VEHICLE")->where("refId","=",$entity["id"])->where("uploads.status","=","ACTIVE")
+									->select(array("lookuptypevalues.name as lookupValueId","uploads.filePath as filePath"))->get();
+			$attachments = "";
+			foreach ($uploads as $upload){
+				$attachments = $attachments.$upload->lookupValueId."-  <a href='../app/storage/uploads/".$upload->filePath."' target='_blank'>DOCUMENT</a>"."<br/>";
+			}
+			$entity["attachments"] = $attachments;
+			$renewals = \ExpenseTransaction::leftjoin("lookuptypevalues","lookuptypevalues.id","=","expensetransactions.lookupValueId")
+									->where("vehicleIds","=",$entity["id"])->where("expensetransactions.status","=","ACTIVE")
+									->select(array("lookuptypevalues.name as lookupValueId","expensetransactions.nextAlertDate as nextAlertDate"))->get();
+			$renewals_str = "";
+			foreach ($renewals as $renewal){
+				$renewals_str = $renewals_str.$renewal->lookupValueId." (".date("d-m-Y",strtotime($renewal->nextAlertDate)).")<br/>";
+			}
+			$entity["renewals"] = $renewals_str;
+			
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
@@ -852,7 +989,7 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[5] = $action_data;
+			$data_values[7] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);
@@ -1043,10 +1180,10 @@ class DataTableController extends \Controller {
 		$total = 0;
 		$data = array();
 	
-		$select_args = array('cardNumber','cardType', "cardHolderName", "lookuptypevalues.name as bank", "creditLimit", "expireDate", 'cards.status as status', 'cards.id as id');
+		$select_args = array('cardNumber','cardType', "cardHolderName", "lookuptypevalues.name as bank", "bankdetails.accountNo AS accountno", "creditLimit", "expireDate", 'cards.status as status', 'cards.id as id');
 		$actions = array();
 		if(in_array(228, $this->jobs)){
-			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditCard(", "jsdata"=>array("id","cardNumber","cardType", "cardHolderName", "bank",  "creditLimit",  "expireDate", "status"), "text"=>"EDIT");
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditCard(", "jsdata"=>array("id","cardNumber","cardType", "cardHolderName", "bank", "accountno",  "creditLimit",  "expireDate", "status"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
 		$values["actions"] = $actions;
@@ -1055,13 +1192,17 @@ class DataTableController extends \Controller {
 		$search = $search['value'];
 		if($search != ""){
 			$entities =  \Cards::where("cardType","like","%$search%")
+							->where("cards.status","=","ACTIVE")
 							->leftjoin("lookuptypevalues","lookuptypevalues.id","=","cards.lookupValueId")
+							->leftjoin("bankdetails","bankdetails.id","=","cards.bankAccountId")
 							->select($select_args)->limit($length)->offset($start)->get();
 			$total = \Cards::where("cardType","like","%$search%")->count();
 		}
 		else{
 			//$entities = \BankDetails::join("cities","cities.id","=","servicedetails.sourceCity")->join("cities as cities1","cities1.id","=","servicedetails.destinationCity")->select($select_args)->limit($length)->offset($start)->get();
 			$entities = \Cards::leftjoin("lookuptypevalues","lookuptypevalues.id","=","cards.lookupValueId")
+								->leftjoin("bankdetails","bankdetails.id","=","cards.bankAccountId")
+								->where("cards.status","=","ACTIVE")
 								->select($select_args)->limit($length)->offset($start)->get();
 			$total = \Cards::count();
 		}
@@ -1086,7 +1227,7 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[7] = $action_data;
+			$data_values[8] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

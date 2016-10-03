@@ -136,7 +136,12 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \Depot::where("depots.name", "like", "%$search%")->join("states","states.id", "=", "depots.stateId")->join("cities","cities.id", "=", "depots.cityId")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \Depot::where("depots.name", "like", "%$search%")
+					->join("states","states.id", "=", "depots.stateId")
+					->join("officebranch","officebranch.id", "=", "depots.parentWarehouse")
+					->join("cities","cities.id", "=", "depots.cityId")
+					->join("districts","districts.id", "=", "depots.districtId")
+					->select($select_args)->limit($length)->offset($start)->get();
 			$total = count($entities);
 		}
 		else{
@@ -196,11 +201,13 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$entities = \Depot::where("depots.name", "like", "%$search%")->join("states","states.id", "=", "depots.stateId")->join("cities","cities.id", "=", "depots.cityId")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \VehicleMeeter::where("vehicle.veh_reg", "like", "%$search%")
+						->leftjoin("vehicle","vehicle.id", "=", "vehiclemeterdetails.vehicleId")
+						->select($select_args)->limit($length)->offset($start)->get();
 			$total = count($entities);
 		}
 		else{
-			$entities = \VehicleMeeter::join("vehicle","vehicle.id", "=", "vehiclemeterdetails.vehicleId")
+			$entities = \VehicleMeeter::leftjoin("vehicle","vehicle.id", "=", "vehiclemeterdetails.vehicleId")
 			->select($select_args)->limit($length)->offset($start)->get();
 			$total = \VehicleMeeter::All()->count();
 		}
@@ -263,7 +270,8 @@ class DataTableController extends \Controller {
 		$search = $search['value'];
 		if($search != ""){
 			$contract_arr =  array();
-			$con_vehs = \DB::select(\DB::raw("select contractId from contract_vehicles where vehicleId in(select id from vehicle where veh_reg like '%$search%')"));
+			//$con_vehs = \DB::select(\DB::raw("select contractId from contract_vehicles where vehicleId in(select id from vehicle where veh_reg like '%$search%')"));
+			$con_vehs = \DB::select(\DB::raw("select id as contractId from contracts where depotId in(select id from depots where name like '%$search%')"));
 			foreach ($con_vehs as  $con_veh){
 				$contract_arr[] = $con_veh->contractId;
 			}
@@ -304,16 +312,73 @@ class DataTableController extends \Controller {
 				if($service->description != ""){
 					$desc = " ".$service->description;
 				}
-				$services_data = $service->name1."-".$service->name2.$desc;
+				$services_data = $service->name1."-".$service->name2.$desc."<br/>";
 			}
 			$entity["routeId"] = $services_data;
+			
+			$floorrates =  \ContractVehicle::where("contractId","=",$entity["id"])->where("contract_vehicles.status","=","ACTIVE")
+							->select("floorRate as floorRate")->get();
+			$floorrates_str = "";
+			foreach ($floorrates as $floorrate){
+				if($floorrate->floorRate != "0.00"){
+					$floorrates_str = $floorrate->floorRate."<br/>".$floorrates_str;
+				}
+			}
+			if($entity["floorRate"] != 0){
+				$entity["floorRate"] = $entity["floorRate"]."<br/>".$floorrates_str;
+			}
+			else{
+				$entity["floorRate"] = $floorrates_str;
+			}
+			
+			
+			$routes =  \ContractVehicle::where("contractId","=",$entity["id"])->where("contract_vehicles.status","=","ACTIVE")
+							->select("routes as routes")->get();
+			if(count($routes)>0){
+				$routes_str = "";
+				foreach ($routes as $route){
+					if($route->routes!=""){
+						$routes_str = $routes_str.",".$route->routes;
+					}
+				}
+				$routes_str = substr($routes_str, 1);
+				if($routes_str != ""){
+					$routes = explode(",",$routes_str);
+					foreach ($routes as $route){
+						$services =  \DB::select(\DB::raw("select servicedetails.id as id, city1.name as name1, city2.name as name2, servicedetails.description from servicedetails join cities as city1 on city1.id=servicedetails.sourceCity join cities as city2 on servicedetails.destinationCity=city2.id where servicedetails.id=".$route.";"));
+						$services_data = "";
+						foreach ($services as $service){
+							$desc = "";
+							if($service->description != ""){
+								$desc = " ".$service->description;
+							}
+							$services_data = $service->name1."-".$service->name2.$desc.",<br/>";
+						}
+						$entity["routeId"] = $entity["routeId"].$services_data;
+					}
+				}
+			}
 			$convehicles =  \ContractVehicle::where("contractId","=",$entity["id"])->where("contract_vehicles.status","=","ACTIVE")
-							->join("vehicle","vehicle.id","=","contract_vehicles.vehicleId")->select("vehicle.veh_reg as vehicle")->get();
+										->join("vehicle","vehicle.id","=","contract_vehicles.vehicleId")->select("vehicle.veh_reg as vehicle","vehicleStartDate as startDate")->get();
 			$convehicles_data = "";
 			foreach ($convehicles as $convehicle){
-				$convehicles_data = $convehicles_data.$convehicle->vehicle.", ";
+				$convehicles_data = $convehicles_data.$convehicle->vehicle."(".date("d-m-Y",strtotime($convehicle->startDate))."),<br/> ";
 			}
 			$entity["vehicles"] = $convehicles_data;
+			
+			$convehicles =  \ContractVehicle::where("contractId","=",$entity["id"])->where("contract_vehicles.status","=","ACTIVE")
+										->join("lookuptypevalues","lookuptypevalues.id","=","contract_vehicles.vehicleTypeId")->select("lookuptypevalues.name as vehtype")->get();
+			$convehicletypes_data = "";
+			foreach ($convehicles as $convehicle){
+				$convehicletypes_data = $convehicletypes_data.$convehicle->vehtype.", <br/>";
+			}
+			if($entity["vehicleTypeId"] != ""){
+				$entity["vehicleTypeId"] = $entity["vehicleTypeId"].", ".$convehicletypes_data;
+			}
+			else{
+				$entity["vehicleTypeId"] = $convehicletypes_data;
+			}				
+			
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
@@ -382,28 +447,34 @@ class DataTableController extends \Controller {
 		if($search != ""){
 			$entities = \ClientHolidays::where("depots.name","like","%$search%")
 					->whereIn("depotId", $depot_arr)
+					->where("clients.id", $values["clientid"])
 					->leftjoin("contracts","contracts.id", "=", "clientholidays.contractId")
 					->leftjoin("clients","clients.id", "=", "contracts.clientId")
 					->leftjoin("depots","depots.id", "=", "contracts.depotId")
 					->leftjoin("employee","employee.id", "=", "clientholidays.openedBy")
-					->select($select_args)->limit($length)->offset($start)->get();
+					->select($select_args)->orderBy("clientholidays.id","desc")->limit($length)->offset($start)->get();
 			$total = \ClientHolidays::join("contracts","contracts.id", "=", "clientholidays.contractId")
 							->leftjoin("depots","depots.id", "=", "contracts.depotId")
 							->where("depots.name","like","%$search%")
+							->where("contracts.clientId", $values["clientid"])
 							->where("clientholidays.deleted","=","No")->whereIn("depotId", $depot_arr)->count();
 		}
 		else{
-			$entities = \ClientHolidays::join("contracts","contracts.id", "=", "clientholidays.contractId")
+			$entities = \ClientHolidays::leftjoin("contracts","contracts.id", "=", "clientholidays.contractId")
 							->leftjoin("clients","clients.id", "=", "contracts.clientId")
 							->leftjoin("depots","depots.id", "=", "contracts.depotId")
 							->where("clients.id","=", $values["clientid"])
 							->whereIn("depotId", $depot_arr)
+							->where("clientholidays.deleted","=","No")
 							->whereIn("clientholidays.status",$logstatus_arr)
 							->leftjoin("employee","employee.id", "=", "clientholidays.openedBy")
-							->select($select_args)->limit($length)->offset($start)->get();
-			$total = \ClientHolidays::join("contracts","contracts.id", "=", "clientholidays.contractId")
+							->select($select_args)->orderBy("clientholidays.id","desc")->limit($length)->offset($start)->get();
+			$total = \ClientHolidays::leftjoin("contracts","contracts.id", "=", "clientholidays.contractId")
 							->leftjoin("clients","clients.id", "=", "contracts.clientId")
-							->where("clients.id","=", $values["clientid"])->where("clientholidays.deleted","=","No")->whereIn("depotId", $depot_arr)->count();
+							->where("clients.id","=", $values["clientid"])
+							->whereIn("depotId", $depot_arr)
+							->where("clientholidays.deleted","=","No")
+			                ->whereIn("clientholidays.status",$logstatus_arr)->count();
 		}
 	
 		$entities = $entities->toArray();
@@ -431,7 +502,12 @@ class DataTableController extends \Controller {
 				}
 			}
 			$data_values[9] = $action_data;
-			$data_values[10] = $action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$entity['id'].'"> <span class="lbl">&nbsp;</span></label>';
+			if(in_array(416, $this->jobs)){
+				$data_values[10] = $action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$entity['id'].'"> <span class="lbl">&nbsp;</span></label>';
+			}
+			else{
+				$data_values[10] = " ";
+			}
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

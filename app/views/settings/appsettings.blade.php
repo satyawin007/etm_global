@@ -239,7 +239,7 @@ use Illuminate\Support\Facades\Input;
 										<form class="form-horizontal" action="updatebannersettings" method="post">
 											<h4 class="header blue bolder smaller">DASHBOARD MESSAGE </h4>
 											<div class="row">
-												<div class="col-xs-6">
+												<div class="col-xs-12">
 													<div class="form-group">
 														<span class="col-sm-10 no-padding-right" >Please enter the text to update your dashboard message...</span>
 														<div class="col-sm-10">
@@ -247,14 +247,15 @@ use Illuminate\Support\Facades\Input;
 																$rec = Parameters::where("name","=","dashboardmessage")->get();
 																$rec = $rec[0];
 															?>
-															<textarea rows="6" cols="100" class="col-xs-12" name="dashboardmessage" placeholder="Enter message..." >{{$rec->value}}</textarea>
+															<div class="wysiwyg-editor" id="editor1">{{$rec->value}}</div>
 														</div>
 													</div>
+													<input type="hidden" id="dashboardmessage" name="dashboardmessage" value=""/>
 												</div>
 											</div>
 											<div class="clearfix form-actions">
 												<div class="col-md-offset-3 col-md-9">
-													<button class="btn btn-info" type="submit">
+													<button class="btn btn-info" onclick="getContent()" type="submit">
 														<i class="ace-icon fa fa-check bigger-110"></i>
 														Save
 													</button>
@@ -311,11 +312,14 @@ use Illuminate\Support\Facades\Input;
 			}
 		?>
 
+		function getContent(){
+			content = $("#editor1").html();
+			//alert(content);
+			$("#dashboardmessage").val(content);
+		}
 		
 		jQuery(function($) {
-			
 			//editables on first profile page
-
 		$.fn.editable.defaults.mode = 'inline';
 		$.fn.editableform.loading = "<div class='editableform-loading'><i class='ace-icon fa fa-spinner fa-spin fa-2x light-blue'></i></div>";
 	    $.fn.editableform.buttons = '<button type="submit" class="btn btn-info editable-submit"><i class="ace-icon fa fa-check"></i></button>'+
@@ -329,7 +333,6 @@ use Illuminate\Support\Facades\Input;
 			type: 'text',
 			name: 'username'		
 	    });
-	
 	
 		
 		//select2 editable
@@ -744,6 +747,8 @@ use Illuminate\Support\Facades\Input;
 			$('.user-profile').parent().addClass('hide');
 			$('#user-profile-'+which).parent().removeClass('hide');
 		});
+
+		$('#editor1').ace_wysiwyg();
 		
 		
 		

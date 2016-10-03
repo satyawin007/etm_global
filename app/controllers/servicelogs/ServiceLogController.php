@@ -14,6 +14,7 @@ class ServiceLogController extends \Controller {
 	 */
 	public function addServiceLog()
 	{
+		//return json_encode(['status' => 'fail', 'message' => 'Please wait for sometime...!']);
 		if (\Request::isMethod('post'))
 		{
 			$values = Input::all();
@@ -45,6 +46,15 @@ class ServiceLogController extends \Controller {
 					if($jsonitem->driver2 != ""){
 						$fields["driver2Id"] = $jsonitem->driver2;
 					}
+					if($jsonitem->driver3 != ""){
+						$fields["driver3Id"] = $jsonitem->driver3;
+					}
+					if($jsonitem->driver4 != ""){
+						$fields["driver4Id"] = $jsonitem->driver4;
+					}
+					if($jsonitem->driver5 != ""){
+						$fields["driver5Id"] = $jsonitem->driver5;
+					}
 					if($jsonitem->helper != ""){
 						$fields["helperId"] = $jsonitem->helper;
 					}
@@ -65,19 +75,32 @@ class ServiceLogController extends \Controller {
 					if(isset($jsonitem->remarks) &&  $jsonitem->remarks != ""){
 						$fields["remarks"] = $jsonitem->remarks;
 					}
-					
+					$success = false;
 					$recs = \ServiceLog::where("contractVehicleId","=",$fields["contractVehicleId"])
 											->where("serviceDate","=",$fields["serviceDate"])
 											->where("startTime","=",$fields["startTime"])
+											->where("status","=","ACTIVE")
 											->get();
 					if(!(count($recs)>0)){
 						$db_functions_ctrl->insert($table, $fields);
+						$success = true;
 					}
-					
-					$veh_meeter = \VehicleMeeter::where("status","=","ACTIVE")
-										->where("vehicleId","=",$jsonitem->vehicle)
-										->update(array("endReading"=>$jsonitem->endreading,"endDate"=>date("Y-m-d")));
-					$success = true;
+					$veh_id = array();
+					if(isset($jsonitem->substitutevehicle) &&  $jsonitem->substitutevehicle != ""){
+						$veh_id = \Vehicle::where("vehicle.id","=",$jsonitem->substitutevehicle)
+									->where("status","=","ACTIVE")
+									->select(array("vehicle.id as vehicleId"))
+									->get();
+					}
+					else{
+						$veh_id = \ContractVehicle::where("contract_vehicles.id","=",$jsonitem->vehicle)->where("status","=","ACTIVE")->get();
+					}
+					if(count($veh_id)>0 && $success){
+						$veh_id  = $veh_id[0];
+						$veh_meeter = \VehicleMeeter::where("status","=","ACTIVE")
+										->where("vehicleId","=",$veh_id->vehicleId)
+										->update(array("endReading"=>$jsonitem->endreading,"endDate"=>$fields["serviceDate"]));
+					}
 				}
 			}
 			if($success){
@@ -166,12 +189,18 @@ class ServiceLogController extends \Controller {
 		$values = Input::all();
 		$response = "<option value=''> --select vehicle-- </option>";
 		$entities = \Contract::where("clientId","=",$values['clientid'])->where("depotId","=",$values['depotid'])->get();
+		$status = "ACTIVE";
+		if(isset($values["vehiclestatus"]) && $values["vehiclestatus"]=="INACTIVE"){
+			$status = "INACTIVE";
+		}
 		if(count($entities)>0){
 			$entities = $entities[0];
 			$contractId = $entities->id;
-			$entities = \ContractVehicle::join("vehicle","vehicle.id","=","contract_vehicles.vehicleId")->
-					where("contractId","=",$contractId)->where("contract_vehicles.status","=","ACTIVE")
-					->select(array("vehicle.id as id", "vehicle.veh_reg as name"))->get();
+			$entities = \ContractVehicle::join("vehicle","vehicle.id","=","contract_vehicles.vehicleId")
+							->where("contractId","=",$contractId)
+							->where("contract_vehicles.status","=",$status)
+							->select(array("contract_vehicles.id as id", "vehicle.veh_reg as name"))
+							->groupBy("vehicle.id")->get();
 			foreach ($entities as $entity){
 				$response = $response."<option value='".$entity->id."'>".$entity->name."</option>";
 			}
@@ -201,7 +230,7 @@ class ServiceLogController extends \Controller {
 			
 			$entities = \ContractVehicle::where("contract_vehicles.status","=","ACTIVE")->
 						where("contractId","=",$contractId)->
-						where("vehicleId","=",$values["vehicleid"])->get();
+						where("id","=",$values["vehicleid"])->get();
 			foreach ($entities as $entity){
 				$response[] = array("<option value=''> --select driver1-- </option>"."<option  selected value='".$entity->driver1Id."'>".$drivers_arr[$entity->driver1Id]."</option>");
 				if($entity->driver2Id != 0){
@@ -209,6 +238,24 @@ class ServiceLogController extends \Controller {
 				}
 				else{
 					$response[] = array("<option value=''> --select driver2-- </option>");
+				}
+				if($entity->driver3Id != 0){
+					$response[] = array("<option value=''> --select driver3-- </option>"."<option selected  value='".$entity->driver3Id."'>".$drivers_arr[$entity->driver3Id]."</option>");
+				}
+				else{
+					$response[] = array("<option value=''> --select driver3-- </option>");
+				}
+				if($entity->driver4Id != 0){
+					$response[] = array("<option value=''> --select driver4-- </option>"."<option selected  value='".$entity->driver4Id."'>".$drivers_arr[$entity->driver4Id]."</option>");
+				}
+				else{
+					$response[] = array("<option value=''> --select driver4-- </option>");
+				}
+				if($entity->driver5Id != 0){
+					$response[] = array("<option value=''> --select driver5-- </option>"."<option selected  value='".$entity->driver5Id."'>".$drivers_arr[$entity->driver5Id]."</option>");
+				}
+				else{
+					$response[] = array("<option value=''> --select driver5-- </option>");
 				}
 				if($entity->helperId != 0){
 					$response[] = array("<option value=''> --select helper-- </option>"."<option selected  value='".$entity->helperId."'>".$drivers_arr[$entity->helperId]."</option>");
@@ -231,31 +278,208 @@ class ServiceLogController extends \Controller {
 				}
 				$i++;
 			}
+			$ex_dates = array();
 			$dates = "<option value=''> --select service date-- </option>";
 			foreach ($dates_arr as $dt=>$val){
 				if($dt != "" && $dt!= "1970-01-01"){
-					$dates = $dates."<option value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+					if(!in_array($dt, $ex_dates)){
+						$dates = $dates."<option value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+					}
 				}
+				$ex_dates[] = $dt;
 			}
 			//$dates_arr = array_reverse($dates_arr);
 			$opendts = \ServiceLogRequest::where("contractId","=",$contractId)
 					//->where("vehicleId","=",$values["vehicleid"])
+					->where("deleted","=","No")
 					->where("status","=","Open")->get();
 			foreach ($opendts as $opendt){
 				$opendt_arr = explode(",", $opendt->pendingDates);
 				foreach ($opendt_arr as $opendt_arr_item){
 					if($opendt_arr_item != ""){
-						$dates = $dates."<option value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
+						if(!in_array($opendt_arr_item, $ex_dates)){
+							$dates = $dates."<option value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
+						}
 					}
+					$ex_dates[] = $opendt_arr_item;
 				}
 				if($opendt->customDate != "" && $opendt->customDate!= "1970-01-01"){
-					$dates = $dates."<option value='$opendt->customDate'>".date('d-m-Y',strtotime($opendt->customDate))."</option>";
+					if(!in_array($opendt->customDate, $ex_dates)){
+						$dates = $dates."<option value='$opendt->customDate'>".date('d-m-Y',strtotime($opendt->customDate))."</option>";
+					}
+					$ex_dates[] = $opendt->customDate;
 				}
 			}
 			$response[] = array($dates);
 		}
 		echo json_encode($response);
 	}
+	
+	/**
+	 * get all city based on stateId
+	 *
+	 * @return Response
+	 */
+	public function getStartReadingSubstitute()
+	{
+		$values = Input::all();
+		$startreading = "";
+		$response = array();
+		$response[0] = array(0);
+		$servlogs = array();
+		$contractId = 0;
+		$entities = \Contract::where("clientId","=",$values['clientid'])->where("depotId","=",$values['depotid'])->get();
+		if(count($entities)>0){
+			$entities = $entities[0];
+			$contractId = $entities->id;
+				
+			$selct_args = array();
+			$selct_args[] = "contract_vehicles.vehicleId as contractVehicleId1";
+			$selct_args[] = "service_logs.serviceDate as serviceDate";
+			$selct_args[] = "service_logs.startReading as startReading";
+			$selct_args[] = "service_logs.endReading as endReading";
+			$selct_args[] = "service_logs.driver1Id as driver1Id";
+			$selct_args[] = "service_logs.driver2Id as driver2Id";
+			$selct_args[] = "service_logs.driver3Id as driver3Id";
+			$selct_args[] = "service_logs.driver4Id as driver4Id";
+			$selct_args[] = "service_logs.driver5Id as driver5Id";
+			$selct_args[] = "service_logs.helperId as helperId";
+			$selct_args[] = "service_logs.remarks as remarks";
+			$selct_args[] = "service_logs.status as status";
+			$selct_args[] = "service_logs.contractVehicleId as contractVehicleId";
+			$servlogs = \ServiceLog::join("contract_vehicles","contract_vehicles.id","=","service_logs.contractVehicleId")
+									->where("service_logs.contractVehicleId","=",$values["vehicleid"])
+									->where("service_logs.status","=","ACTIVE")
+									->where("service_logs.contractId","=",$contractId)
+									->where("service_logs.serviceDate","<=",$values["date"])
+									->orderBy("serviceDate",'desc')->select($selct_args)->get();
+			$response[0] = 0;
+			$veh_meeter = \VehicleMeeter::where("vehiclemeterdetails.status","=","ACTIVE")
+							->where("vehiclemeterdetails.vehicleId","=",$values["subvehicleid"])->get();
+			if(count($veh_meeter)>0){
+				$veh_meeter = $veh_meeter[0];
+				$response[0] = array($veh_meeter->endReading);
+			}
+		}
+		$today = new \DateTime(date("Y-m-d"));
+		$dates_arr = array();
+		$i = 0;
+		$cmp_date = $today->modify("0 day");
+		while($i<=5){
+			$cmp_date = $cmp_date->format('Y-m-d');
+			$holidays = \DB::select(\DB::raw("SELECT count(*) as count FROM `clientholidays` left join contracts on contracts.id=clientholidays.contractId WHERE contractId=".$contractId." and clientholidays.status='Open' and  (fromDate<='".date('Y-m-d',strtotime("-".$i." days"))."' and toDate>='".date('Y-m-d',strtotime("-".$i." days"))."')"));
+			if(count($holidays)>0) {
+				$holidays = $holidays[0];
+				if($holidays->count==0)
+					$dates_arr[$cmp_date] = $cmp_date;
+			}
+			$i++;
+			$cmp_date = $today->modify("-1 day");
+			$today = $cmp_date;
+		}
+	
+		$dates = "";
+		$ex_dates = array();
+		foreach ($dates_arr as $dt=>$val){
+			if($dt != "" && $dt != "1970-01-01"){
+				if(!in_array($dt, $ex_dates)){
+					if($values["servicedate"]==$dt){
+						$dates = $dates."<option selected value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+					}
+					else{
+						$dates = $dates."<option value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+					}
+				}
+				$ex_dates[] = $dt;
+			}
+		}
+	
+		//$dates_arr = array_reverse($dates_arr);
+		$opendts = \ServiceLogRequest::where("contractId","=",$contractId)
+						//->where("vehicleId","=",$values["vehicleid"])
+						->where("deleted","=","No")->where("status","=","Open")->get();
+		foreach ($opendts as $opendt){
+			$opendt_arr = explode(",", $opendt->pendingDates);
+			foreach ($opendt_arr as $opendt_arr_item){
+				if($opendt_arr_item != ""){
+					if(!in_array($opendt_arr_item, $ex_dates)){
+						if($values["servicedate"]==$opendt_arr_item){
+							$dates = $dates."<option selected value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
+						}
+						else {
+							$dates = $dates."<option value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
+						}
+						$ex_dates[] = $opendt_arr_item;
+					}
+				}
+			}
+			if($opendt->customDate != "" && $opendt->customDate!= "1970-01-01"){
+				if(!in_array($opendt->customDate, $ex_dates)){
+					if($values["servicedate"]==$opendt->customDate){
+						$dates = $dates."<option selected value='$opendt->customDate'>".date('d-m-Y',strtotime($opendt->customDate))."</option>";
+					}
+					else{
+						$dates = $dates."<option value='$opendt->customDate'>".date('d-m-Y',strtotime($opendt->customDate))."</option>";
+					}
+					$ex_dates[] = $opendt->customDate;
+				}
+			}
+		}
+	
+		$response[] = array($dates);
+	
+		$vehicles =  \Vehicle::all();
+		$vehicles_arr = array();
+		foreach ($vehicles as $vehicle){
+			$vehicles_arr[$vehicle['id']] = $vehicle['veh_reg'];
+		}
+		$drivers =  \Employee::All();
+		$drivers_arr = array();
+		foreach ($drivers as $driver){
+			$drivers_arr[$driver['id']] = $driver['fullName']." (".$driver->empCode.")";
+		}
+	
+		$con_vehs_text_arr = array();
+		$i=0;
+	
+		foreach ($servlogs as $servlog){
+			if($i>=5){
+				break;
+			}
+			$i++;
+			$con_vehs_text = array();
+			$con_vehs_text['vehicle'] = $vehicles_arr[$servlog->contractVehicleId1];
+			$con_vehs_text['servicedate'] = date("d-m-Y",strtotime($servlog->serviceDate));
+			$con_vehs_text['reading'] = $servlog->startReading." - ".$servlog->endReading." = ".($servlog->endReading-$servlog->startReading);
+			$drivers = "";
+	
+			if($servlog->driver1Id != 0 && isset($drivers_arr[$servlog->driver1Id])){
+				$drivers = $drivers.$drivers_arr[$servlog->driver1Id].", ";
+			}
+			if($servlog->driver2Id != 0 && isset($drivers_arr[$servlog->driver2Id])){
+				$drivers = $drivers.$drivers_arr[$servlog->driver2Id].", ";
+			}
+			if($servlog->driver3Id != 0 && isset($drivers_arr[$servlog->driver3Id])){
+				$drivers = $drivers.$drivers_arr[$servlog->driver3Id].", ";
+			}
+			if($servlog->driver4Id != 0 && isset($drivers_arr[$servlog->driver4Id])){
+				$drivers = $drivers.$drivers_arr[$servlog->driver4Id].", ";
+			}
+			if($servlog->driver5Id != 0 && isset($drivers_arr[$servlog->driver5Id])){
+				$drivers = $drivers.$drivers_arr[$servlog->driver5Id].", ";
+			}
+			$con_vehs_text['drivers'] = $drivers;
+			if($servlog->helperId != 0 && !in_array($servlog->helperId, $drivers_arr)){
+				$con_vehs_text['helper'] = $drivers_arr[$servlog->helperId];
+			}
+			$con_vehs_text['remarks'] = $servlog->remarks;
+			$con_vehs_text['status'] = $servlog->status;
+			$con_vehs_text_arr[] = $con_vehs_text;
+		}
+		$response[] = $con_vehs_text_arr;
+		echo json_encode($response);;
+	}
+	
 	
 	/**
 	 * get all city based on stateId
@@ -274,22 +498,69 @@ class ServiceLogController extends \Controller {
 		if(count($entities)>0){
 			$entities = $entities[0];
 			$contractId = $entities->id;
-			$servlogs = \ServiceLog::where("status","=","ACTIVE")
-						->where("contractId","=",$contractId)
-						->where("substituteVehicleId","=",0)
-						->where("serviceDate","<=",$values["date"])
-						->where("contractVehicleId","=",$values["vehicleid"])->orderBy("serviceDate",'desc')->get();
+			
+			$selct_args = array();
+			$selct_args[] = "contract_vehicles.vehicleId as contractVehicleId1";
+			$selct_args[] = "service_logs.serviceDate as serviceDate";
+			$selct_args[] = "service_logs.substituteVehicleId as substituteVehicleId";
+			$selct_args[] = "service_logs.startReading as startReading";
+			$selct_args[] = "service_logs.endReading as endReading";
+			$selct_args[] = "service_logs.driver1Id as driver1Id";
+			$selct_args[] = "service_logs.driver2Id as driver2Id";
+			$selct_args[] = "service_logs.driver3Id as driver3Id";
+			$selct_args[] = "service_logs.driver4Id as driver4Id";
+			$selct_args[] = "service_logs.driver5Id as driver5Id";			
+			$selct_args[] = "service_logs.helperId as helperId";
+			$selct_args[] = "service_logs.remarks as remarks";
+			$selct_args[] = "service_logs.status as status";
+			$selct_args[] = "service_logs.contractVehicleId as contractVehicleId";
+			$servlogs = \ServiceLog::join("contract_vehicles","contract_vehicles.id","=","service_logs.contractVehicleId")
+						->where("service_logs.contractVehicleId","=",$values["vehicleid"])
+						->where("service_logs.status","=","ACTIVE")
+						->where("service_logs.contractId","=",$contractId)
+						//->where("substituteVehicleId","=",0)
+						->where("service_logs.serviceDate","<=",$values["date"])
+						->orderBy("serviceDate",'desc')->select($selct_args)->get();
 			if(count($servlogs)>0){
 				$len = count($servlogs);
 				$servlog = $servlogs[0];
-				$response[0] = array($servlog->endReading);
+				$veh_meeter = \VehicleMeeter::where("vehiclemeterdetails.status","=","ACTIVE")
+								->join("contract_vehicles","contract_vehicles.vehicleId","=","vehiclemeterdetails.vehicleId")
+								->where("contract_vehicles.id","=",$values["vehicleid"])->get();
+				if(count($veh_meeter)>0){
+					$veh_meeter = $veh_meeter[0];					
+					$mtr_dt = new \DateTime($veh_meeter->startDate);
+					$slog_dt = new \DateTime($servlog->serviceDate);					
+					if ($mtr_dt > $slog_dt) {
+						$response[0] = array($veh_meeter->startReading);
+					}
+					else{
+						foreach ($servlogs as $servlog){
+							if($servlog->substituteVehicleId>0){
+								continue;
+							}
+							$response[0] = array($servlog->endReading);
+							break;
+						}						
+					}
+				}
+				else{
+					foreach ($servlogs as $servlog){
+						if($servlog->substituteVehicleId>0){
+							continue;
+						}
+						$response[0] = array($servlog->endReading);
+						break;
+					}
+				}
 			}
 			else{
-				$veh_meeter = \VehicleMeeter::where("status","=","ACTIVE")->
-						where("vehicleId","=",$values["vehicleid"])->get();
+				$veh_meeter = \VehicleMeeter::where("vehiclemeterdetails.status","=","ACTIVE")
+								->join("contract_vehicles","contract_vehicles.vehicleId","=","vehiclemeterdetails.vehicleId")
+								->where("contract_vehicles.id","=",$values["vehicleid"])->get();
 				if(count($veh_meeter)>0){
 					$veh_meeter = $veh_meeter[0];
-					$response[0] = array($veh_meeter->startReading);
+					$response[0] = array($veh_meeter->endReading);
 				}
 			}
 		}
@@ -311,39 +582,49 @@ class ServiceLogController extends \Controller {
 		}
 		
 		$dates = "";
+		$ex_dates = array();
 		foreach ($dates_arr as $dt=>$val){
 			if($dt != "" && $dt != "1970-01-01"){
-				if($values["servicedate"]==$dt){
-					$dates = $dates."<option selected value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+				if(!in_array($dt, $ex_dates)){
+					if($values["servicedate"]==$dt){
+						$dates = $dates."<option selected value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+					}
+					else{
+						$dates = $dates."<option value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
+					}
 				}
-				else{
-					$dates = $dates."<option value='$dt'>".date('d-m-Y',strtotime($dt))."</option>";
-				}
+				$ex_dates[] = $dt;
 			}
 		}
 		
 		//$dates_arr = array_reverse($dates_arr);
 		$opendts = \ServiceLogRequest::where("contractId","=",$contractId)
 				//->where("vehicleId","=",$values["vehicleid"])
-				->where("status","=","Open")->get();
+				->where("deleted","=","No")->where("status","=","Open")->get();
 		foreach ($opendts as $opendt){
 			$opendt_arr = explode(",", $opendt->pendingDates);
 			foreach ($opendt_arr as $opendt_arr_item){
 				if($opendt_arr_item != ""){
-					if($values["servicedate"]==$opendt_arr_item){
-						$dates = $dates."<option selected value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
-					}
-					else {
-						$dates = $dates."<option value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
+					if(!in_array($opendt_arr_item, $ex_dates)){
+						if($values["servicedate"]==$opendt_arr_item){
+							$dates = $dates."<option selected value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
+						}
+						else {
+							$dates = $dates."<option value='$opendt_arr_item'>".date('d-m-Y',strtotime($opendt_arr_item))."</option>";
+						}
+						$ex_dates[] = $opendt_arr_item;
 					}
 				}
 			}
 			if($opendt->customDate != "" && $opendt->customDate!= "1970-01-01"){
-				if($values["servicedate"]==$opendt->customDate){
-					$dates = $dates."<option selected value='$opendt->customDate'>".date('d-m-Y',strtotime($opendt->customDate))."</option>";
-				}
-				else{
-					$dates = $dates."<option value='$opendt->customDate'>".date('d-m-Y',strtotime($opendt->customDate))."</option>";
+				if(!in_array($opendt->customDate, $ex_dates)){
+					if($values["servicedate"]==$opendt->customDate){
+						$dates = $dates."<option selected value='$opendt->customDate'>".date('d-m-Y',strtotime($opendt->customDate))."</option>";
+					}
+					else{
+						$dates = $dates."<option value='$opendt->customDate'>".date('d-m-Y',strtotime($opendt->customDate))."</option>";
+					}
+					$ex_dates[] = $opendt->customDate;
 				}
 			}
 		}
@@ -355,38 +636,47 @@ class ServiceLogController extends \Controller {
 		foreach ($vehicles as $vehicle){
 			$vehicles_arr[$vehicle['id']] = $vehicle['veh_reg'];
 		}
-		$drivers =  \Employee::where("roleId","=",19)->get();
+		$drivers =  \Employee::All();
 		$drivers_arr = array();
 		foreach ($drivers as $driver){
 			$drivers_arr[$driver['id']] = $driver['fullName']." (".$driver->empCode.")";
 		}
-		$helpers =  \Employee::where("roleId","=",20)->get();
-		$helpers_arr = array();
-		foreach ($helpers as $helper){
-			$helpers_arr[$helper['id']] = $helper['fullName']." (".$helper->empCode.")";
-		}
-		
+				
 		$con_vehs_text_arr = array();
 		$i=0;
+		
 		foreach ($servlogs as $servlog){
 			if($i>=5){
 				break;
 			}
 			$i++;
-			$con_vehs_text = array();
-			$con_vehs_text['vehicle'] = $vehicles_arr[$servlog->contractVehicleId];
+			$con_vehs_text = array();			 
+			$con_vehs_text['vehicle'] = $vehicles_arr[$servlog->contractVehicleId1];
+			if($servlog->substituteVehicleId>0){
+				$con_vehs_text['vehicle'] = $con_vehs_text['vehicle']."            (".$vehicles_arr[$servlog->substituteVehicleId].")";
+			}
 			$con_vehs_text['servicedate'] = date("d-m-Y",strtotime($servlog->serviceDate));
 			$con_vehs_text['reading'] = $servlog->startReading." - ".$servlog->endReading." = ".($servlog->endReading-$servlog->startReading);
 			$drivers = "";
-			if($servlog->driver1Id != 0){
+
+			if($servlog->driver1Id != 0 && isset($drivers_arr[$servlog->driver1Id])){
 				$drivers = $drivers.$drivers_arr[$servlog->driver1Id].", ";
 			}
-			if($servlog->driver2Id != 0){
+			if($servlog->driver2Id != 0 && isset($drivers_arr[$servlog->driver2Id])){
 				$drivers = $drivers.$drivers_arr[$servlog->driver2Id].", ";
 			}
+			if($servlog->driver3Id != 0 && isset($drivers_arr[$servlog->driver3Id])){
+				$drivers = $drivers.$drivers_arr[$servlog->driver3Id].", ";
+			}
+			if($servlog->driver4Id != 0 && isset($drivers_arr[$servlog->driver4Id])){
+				$drivers = $drivers.$drivers_arr[$servlog->driver4Id].", ";
+			}
+			if($servlog->driver5Id != 0 && isset($drivers_arr[$servlog->driver5Id])){
+				$drivers = $drivers.$drivers_arr[$servlog->driver5Id].", ";
+			}
 			$con_vehs_text['drivers'] = $drivers;
-			if($servlog->helperId != 0){
-				$con_vehs_text['helper'] = $helpers_arr[$servlog->helperId];
+			if($servlog->helperId != 0 && !in_array($servlog->helperId, $drivers_arr)){
+				$con_vehs_text['helper'] = $drivers_arr[$servlog->helperId];
 			}
 			$con_vehs_text['remarks'] = $servlog->remarks;
 			$con_vehs_text['status'] = $servlog->status;
@@ -409,13 +699,13 @@ class ServiceLogController extends \Controller {
 				$con_vehicles = \ContractVehicle::where("contract_vehicles.status","=","ACTIVE")
 										->leftjoin("vehicle","vehicle.id","=","contract_vehicles.vehicleId")
 										->where("contractId","=",$contractid)
-										->select(array("vehicleId as vehicleId", "vehicle.veh_reg as vehiclereg"))->get();
+										->select(array("contract_vehicles.id as convehId", "vehicleId as vehicleId", "vehicle.veh_reg as vehiclereg"))->get();
 				$clientname = \Client::where("id","=",$values["clientid"])->first();
 				$clientname = $clientname->name;
 				$depotname = \Depot::where("id","=",$values["depot"])->first();
 				$depotname = $depotname->name;
 				foreach($con_vehicles as $con_vehicle){
-					$args = array("vehicleid"=>$con_vehicle->vehicleId,"clientid"=>$values["clientid"],"depotid"=>$values["depot"]);
+					$args = array("vehicleid"=>$con_vehicle->convehId,"clientid"=>$values["clientid"],"depotid"=>$values["depot"]);
 					$dates = $this->getPendingServiceLogs($args);
 					if(count($dates)>0){
 						$data = $data."<tr>";
@@ -512,7 +802,7 @@ class ServiceLogController extends \Controller {
 			$contractId = $entities->id;
 			$entities = \ContractVehicle::where("contractId","=",$contractId)
 							->where("status","=","ACTIVE")
-							->where("vehicleId","=",$values['vehicleid'])->get();
+							->where("id","=",$values['vehicleid'])->get();
 			if(count($entities)>0){
 				$entities = $entities[0];
 				$contract_start_dt = $entities->vehicleStartDate;
@@ -551,6 +841,7 @@ class ServiceLogController extends \Controller {
 			$today = $cmp_date;
 		}
 		$open_dts = \ServiceLogRequest::where("contractId","=",$contractId)
+						->where("deleted","=",'No')
 						->where("status","=",'Open')->get();
 						//->where("vehicleId","=",$values["vehicleid"])->get();
 		foreach ($open_dts as $open_dt){
@@ -561,9 +852,10 @@ class ServiceLogController extends \Controller {
 				}
 			}
 		}
-		$service_logs = \ServiceLog::where("contractId","=",$contractId)
-							->where("status","=",'ACTIVE')
-							->where("contractVehicleId","=",$values["vehicleid"])->get();
+		$service_logs = \ServiceLog::join("contract_vehicles","contract_vehicles.contractId","=","service_logs.contractId")
+							->where("service_logs.contractId","=",$contractId)
+							->where("service_logs.status","=",'ACTIVE')
+							->where("service_logs.contractVehicleId","=",$values["vehicleid"])->get();
 		foreach ($service_logs as $service_log){
 			if (array_key_exists($service_log->serviceDate, $dates_arr)) {
 				unset($dates_arr[$service_log->serviceDate]);
@@ -606,7 +898,7 @@ class ServiceLogController extends \Controller {
 			$contractId = $entities->id;
 			$entities = \ContractVehicle::where("contractId","=",$contractId)
 							->where("status","=","ACTIVE")
-							->where("vehicleId","=",$values['vehicleid'])->get();
+							->where("id","=",$values['vehicleid'])->get();
 			if(count($entities)>0){
 				$entities = $entities[0];
 				$contract_start_dt = $entities->vehicleStartDate;
@@ -630,7 +922,6 @@ class ServiceLogController extends \Controller {
 				$end_days = 0;
 			}
 		}
-	
 		while($i<$end_days){
 			$cmp_date = $cmp_date->format('Y-m-d');
 			$holidays = \DB::select(\DB::raw("SELECT count(*) as count FROM `clientholidays` WHERE contractId=".$contractId." and clientholidays.status='Open' and  (fromDate<=STR_TO_DATE('".$cmp_date."','%Y-%m-%d') and toDate>=STR_TO_DATE('".$cmp_date."','%Y-%m-%d'))"));
@@ -645,6 +936,7 @@ class ServiceLogController extends \Controller {
 			$today = $cmp_date;
 		}
 		$open_dts = \ServiceLogRequest::where("contractId","=",$contractId)
+						->where("deleted","=","No")
 						->where("status","=",'Open')->get();
 						//->where("vehicleId","=",$values["vehicleid"])->get();
 		foreach ($open_dts as $open_dt){
@@ -655,11 +947,12 @@ class ServiceLogController extends \Controller {
 				}
 			}
 		}
-		$service_logs = \ServiceLog::where("contractId","=",$contractId)
-							->where("status","=",'ACTIVE')
-							->where("contractVehicleId","=",$values["vehicleid"])->get();
+		$service_logs = \ServiceLog::join("contract_vehicles","contract_vehicles.id","=","service_logs.contractVehicleId")
+							->where("service_logs.contractId","=",$contractId)
+							->where("service_logs.status","=",'ACTIVE')
+							->where("service_logs.contractVehicleId","=",$values["vehicleid"])->select(array("service_logs.serviceDate"))->get();
 		foreach ($service_logs as $service_log){
-			if (array_key_exists($service_log->serviceDate, $dates_arr)) {
+			if (array_key_exists($service_log->serviceDate, $dates_arr)) {				
 				unset($dates_arr[$service_log->serviceDate]);
 			}
 		}
@@ -802,8 +1095,9 @@ class ServiceLogController extends \Controller {
 		$vehicles =  \Vehicle::all();
 		$vehicles_arr = array();
 		foreach ($vehicles as $vehicle){
+			$vehicles_arr[$vehicle['id']] = $vehicle['veh_reg'];
 			if(!in_array($vehicle['id'],$ex_Vehicles_arr)){
-				$vehicles_arr[$vehicle['id']] = $vehicle['veh_reg'];
+				//$vehicles_arr[$vehicle['id']] = $vehicle['veh_reg'];
 			}
 		}
 		
@@ -849,7 +1143,7 @@ class ServiceLogController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"servicedate", "content"=>"service date", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select","action"=>array("type"=>"onChange", "script"=>"getStartReading(this.value);"),  "options"=>array());
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"substitutevehicle", "content"=>"sub. vehicle", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
+		$form_field = array("name"=>"substitutevehicle", "content"=>"sub. vehicle", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onChange", "script"=>"getStartReadingSubstitute(this.value);"), "options"=>$vehicles_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"starttime", "content"=>"time", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$times_arr);
 		$form_fields[] = $form_field;
@@ -864,6 +1158,12 @@ class ServiceLogController extends \Controller {
 		$form_field = array("name"=>"driver1", "content"=>"driver1", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"driver2", "content"=>"driver2", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"driver3", "content"=>"driver3", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"driver4", "content"=>"driver4", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"driver5", "content"=>"driver5", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"helper", "content"=>"helper", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$helpers_arr);
 		$form_fields[] = $form_field;

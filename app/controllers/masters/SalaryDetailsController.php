@@ -71,7 +71,10 @@ class SalaryDetailsController extends \Controller {
 				$fields["arrearamount"] = 0;
 			}
 			$fields["previousSalary"] = $values["salary"];
-			$fields["salary"] = $values["salary"]+$values["increamentamount"];
+			$fields["salary"] = $values["salary"];
+			if(isset($values["increamentamount"])){
+				$fields["salary"] = $values["salary"]+$values["increamentamount"];
+			}
 			$db_functions_ctrl = new DBFunctionsController();
 			$table = "SalaryDetails";
 			$data = array("id"=>$values['id1']);
@@ -125,7 +128,7 @@ class SalaryDetailsController extends \Controller {
 						->leftjoin("employee","employee.id","=","empsalarydetails.empId")
 						->leftjoin("role","employee.roleId","=","role.id")
 						->leftjoin("officebranch", "employee.officeBranchId","=","officebranch.id")
-						->leftjoin("client", "employee.clientId","=","client.id")
+						->leftjoin("client", "employee.clientIds","=","client.id")
 						->leftjoin("user_roles_master", "empsalarydetails.title","=","user_roles_master.id")
 						->join("cities", "cities.id","=","employee.cityId")->select($select_args)->get();;
 			
@@ -200,7 +203,7 @@ class SalaryDetailsController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"effectivefrom", "value"=>$entity->fromDate, "content"=>"effectivefrom", "readonly"=>"",  "required"=>"required",   "type"=>"text", "class"=>"form-control date-picker");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields1(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
+			$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "value"=>$entity->paymentType, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields1(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 			$form_fields[] = $form_field;
 			if($entity->paymentType === "cheque_credit"){
 				//die();
@@ -238,6 +241,8 @@ class SalaryDetailsController extends \Controller {
 				$form_fields[] = $form_field;
 				$form_field = array("name"=>"accountnumber", "id"=>"accountnumber","value"=>$entity->accountNumber, "content"=>"account number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 				$form_fields[] = $form_field;
+// 				$form_field = array("name"=>"chequenumber","value"=>$entity->chequeNumber, "content"=>"transaction number", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
+// 				$form_fields[] = $form_field;
 			}
 			if($entity->paymentType === "credit_card"){
 				$cards =  \Cards::where("Status","=","ACTIVE")->where("cardType","=","CREDIT CARD")->get();

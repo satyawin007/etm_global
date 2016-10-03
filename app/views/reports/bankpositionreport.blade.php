@@ -99,10 +99,12 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['reporttype'])){ echo '"'.strtoupper($values['reporttype'])." REPORT".'"';} ?>				 
+						<!-- Results for  --><?php //if(isset($values['reporttype'])){ echo '"'.strtoupper($values['reporttype'])." REPORT".'"';} ?>				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
+					
+					<!-- 
 					<div>
 						<table id="dynamic-table1" class="table table-striped table-bordered table-hover">
 							<thead>
@@ -116,6 +118,8 @@
 							</tbody>
 						</table>								
 					</div>
+					-->
+					
 				</div>					
 			</div>
 			<div id="table2">
@@ -125,7 +129,8 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['reporttype'])){ echo '"'.strtoupper($values['reporttype'])." REPORT".'"';} ?>				 
+						<span>Results for <?php if(isset($values['reporttype'])){ echo '"'.strtoupper($values['reporttype'])." REPORT".'"';} ?></span>
+						<span style="float:right; font-size: 16px; font-weight: bold;">Total Debit : <span id="dbamt">0.00</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Total Credit : <span id="cramt">0.00</span>&nbsp;&nbsp;&nbsp;&nbsp;  Opening Balance : <span id="opamt">0.00</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Closing Balance : <span id="clamt">0.00</span> &nbsp;&nbsp;&nbsp;</span>				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -133,14 +138,17 @@
 						<table id="dynamic-table2" class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
+									<td>BRANCH</td>
+									<td>A/C No (BRANCH-BANK)</td>
 									<td>TYPE</td>
 									<td>PURPOSE</td>
-									<td>TRANSACTION DATE</td>
-									<td>CHEQUE</td>
 									<td>AMOUNT</td>
-									<td>OPENNIG BAL</td>
-									<td>CLOSING BALANCE</td>
-									<td>DESCRIPTION</td>
+									<td>TRANSACTION DATE</td>
+									<td>PAYMENT INFO</td>
+									<td>CREATED BY</td>
+<!-- 									<td>OPENNIG BAL</td> -->
+<!-- 									<td>CLOSING BALANCE</td> -->
+									<td>REMARKS</td>
 								</tr>
 							</thead>
 							<tbody id="tbody1">
@@ -231,6 +239,18 @@
 				}
 			}
 
+			function getBankAccounts(val){
+				$.ajax({
+			      url: "getbankaccounts?bankname="+val,
+			      success: function(data) {
+			    	  $("#bankaccount").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
+			   //myTable1.ajax.url("getservicelogsdatatabledata?name=servicelogs&clientid="+clientId+"&depotid="+depotId).load();
+			}
+
 			function paginate(page){
 				reporttype = $("#reportfor").val();
 				if(reporttype == ""){
@@ -247,16 +267,17 @@
 					alert("select daterange TO date");
 					return;
 				}
-				branch = $("#branch").val();
-				if(branch == ""){
-					alert("select branch");
-					return;
-				}
 				bank = $("#bank").val();
 				if(bank == ""){
 					alert("select bank");
 					return;
 				}
+				bankaccount = $("#bankaccount").val();
+				if(bankaccount == ""){
+					alert("select bankaccount");
+					return;
+				}
+				
 				dt = fdt+" - "+tdt;	
 				var form=$("#getreport");	
 
@@ -283,7 +304,26 @@
 							$("#table1").show();
 							$("#table2").hide();
 			        	}
-			        	if(reporttype ==  "transaction_details"){
+			        	if(reporttype == "transaction_details"){
+			        		$("#opening_balance").val("yes");
+			        		$.ajax({
+						        type:"POST",
+						        url:form.attr("action"),
+						        data:form.serialize(),
+						        success: function(response){
+							        var json = JSON.parse(response);
+							        op_bal =  json["opening_balance"];
+							        cl_bal =  json["closing_balance"];
+							        dbamt =  json["total_debit"];
+							        cramt =  json["total_credit"];
+							        $("#opamt").html(op_bal);
+							        $("#clamt").html(cl_bal);
+							        $("#dbamt").html(dbamt);
+							        $("#cramt").html(cramt);
+							        
+						        }
+			        		});
+			        		$("#opening_balance").val("no");
 							myTable2.clear().draw();
 							myTable2.rows.add(arr); // Add new data
 							myTable2.columns.adjust().draw(); // Redraw 
@@ -491,7 +531,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null, null, null
+						  null, null, null, null, null, null, null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",

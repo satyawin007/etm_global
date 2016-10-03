@@ -189,6 +189,7 @@
 				$.ajax({
 			      url: "getdepotsbyclientId?id="+val,
 			      success: function(data) {
+			    	  data = "<option value='0'> ALL </option>"+data;
 			    	  $("#depot").html(data);
 			    	  $('.chosen-select').trigger("chosen:updated");
 			      },

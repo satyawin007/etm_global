@@ -224,6 +224,27 @@ class ReportsController extends \Controller {
 		if(isset($values["reporttype"]) && $values["reporttype"] == "vehiclemileage_full"){
 			return $this->getVehicleMileageFullReport($values);
 		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "holidaysrunningreport"){
+			return $this->getHolidaysRunningReport($values);
+		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "extrakmsreport"){
+			return $this->getExtraKmsReport($values);
+		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "contractvehiclesreport"){
+			return $this->getContractVehiclesReport($values);
+		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "vendorpaymentsreport"){
+			return $this->getVendorPaymentsReport($values);
+		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "globalloansreport"){
+			return $this->getGlobalLoansReport($values);
+		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "vehiclerenewalsreport"){
+			return $this->getVehicleRenewalsReport($values);
+		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "cardspaymentreport"){
+			return $this->getCardsPaymentReport($values);
+		}
 	}
 	
 	private function getDailyTransactiosReport($values){
@@ -880,6 +901,10 @@ class ReportsController extends \Controller {
 			$toDt = date("Y-m-d", strtotime($values["todate"]));
 			$resp = array();
 			$select_args = array();
+			$select_args[] = "officebranch.name as branch";
+			$select_args[] = "bankdetails.bankName as bankName";
+			$select_args[] = "bankdetails.branchName as branchName";
+			$select_args[] = "bankdetails.accountNo as accountNo";
 			$select_args[] = "employee.fullName as empname";
 			$select_args[] = "empdueamount.amount as amount";
 			$select_args[] = "empdueamount.paymentDate as paymentDate";
@@ -888,29 +913,208 @@ class ReportsController extends \Controller {
 			$select_args[] = "empdueamount.id as id";
 			$totaladvances = 0;
 			$totalreturns  = 0;
-			
+			if($values["opening_balance"] == "yes"){
+				$init_amt = 0;
+				$banks_init_balance = \BankDetails::where("id","=",$values["bankaccount"])->get();
+				if(count($banks_init_balance)>0){
+					$banks_init_balance = $banks_init_balance[0];
+					$init_amt = $banks_init_balance->balanceAmount;
+				}
+				$frmDt1 = date("Y-m-d", strtotime("01-01-2016"));
+				DB::statement(DB::raw("CALL bankposition_report('".$frmDt1."', '".$toDt."');"));
+				$sql = "SELECT sum(amount) as amt FROM `temp_bankposition_transaction` where type='income' and bankAccountId=".$values["bankaccount"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_credit = $rec->amt;
+				
+				$sql = "SELECT sum(amount) as amt FROM `temp_bankposition_transaction` where  type!='income' and bankAccountId=".$values["bankaccount"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_debit = $rec->amt;				
+				$end_balance = $init_amt+($total_credit-$total_debit);
+				
+				$sql = "SELECT sum(amount) as amt FROM `temp_bankposition_transaction`where type='income' and date<'".$frmDt."' and bankAccountId=".$values["bankaccount"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_credit_todate = $rec->amt;
+				
+				$sql = "SELECT sum(amount) as amt FROM `temp_bankposition_transaction`where type!='income' and date<'".$frmDt."' and bankAccountId=".$values["bankaccount"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_debit_todate = $rec->amt;
+				$start_balance = $init_amt+($total_credit_todate-$total_debit_todate);
+				
+				$sql = "SELECT sum(amount) as amt FROM `temp_bankposition_transaction`where type='income' and date between'".$frmDt."' and '".$toDt."' and bankAccountId=".$values["bankaccount"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_credit_todate = $rec->amt;
+				
+				$sql = "SELECT sum(amount) as amt FROM `temp_bankposition_transaction`where type!='income' and date between'".$frmDt."' and '".$toDt."' and bankAccountId=".$values["bankaccount"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_debit_todate = $rec->amt;
+				echo json_encode(array("opening_balance"=>$start_balance,"closing_balance"=>$end_balance,"total_credit"=>$total_credit_todate,"total_debit"=>$total_debit_todate));
+				return;
+			}
 			DB::statement(DB::raw("CALL bankposition_report('".$frmDt."', '".$toDt."');"));
 			if($values["reportfor"] == "transaction_details"){
-				if($values["bank"] == "0" && $values["branch"] == "0"){
-					$recs = DB::select( DB::raw("SELECT * FROM temp_bankposition_transaction;"));
-					foreach ($recs as $rec){
-						$row = array();
-						$row["type"] = "DEBIT";
-						if($rec->type=="income" || $rec->type=="LOCAL"){
-							$row["type"] = "CREDIT";
+				$sql = "SELECT rowid as rowid, officebranch.name as branch,";
+				$sql = $sql." bankdetails.bankName as bankName, ";
+				$sql = $sql." bankdetails.branchName as branchName, ";
+				$sql = $sql." bankdetails.accountNo as accountNo, ";
+				$sql = $sql." temp_bankposition_transaction.name as name, ";
+				$sql = $sql." temp_bankposition_transaction.type as type, ";
+				$sql = $sql." temp_bankposition_transaction.workFlowStatus as wfstatus, ";
+				$sql = $sql." paymentType, date, chequeNumber, amount, lookupValueId, entity, bankAccountId, ";
+				$sql = $sql." entityValue, temp_bankposition_transaction.createdBy as createdBy, temp_bankposition_transaction.remarks as remarks ";
+				$sql = $sql." FROM temp_bankposition_transaction ";
+				$sql = $sql."left join officebranch on officebranch.id=temp_bankposition_transaction.branchId ";
+				$sql = $sql."left join 	lookuptypevalues on lookuptypevalues.id=temp_bankposition_transaction.lookupValueId ";
+				$sql = $sql."left join bankdetails on bankdetails.id=temp_bankposition_transaction.bankAccountId ";
+				$sql = $sql."where paymentType!='credit_card' and (paymentType='debit_card' or  bankAccountId=".$values["bankaccount"].") ";
+				
+				/*if($values["bank"] == "0" && $values["branch"] == "0"){
+					$sql = $sql."where paymentType!='credit_card' and paymentType!='debit_card' ";
+				}
+				else if($values["bank"] == "0" && $values["branch"] > 0){
+					$sql = $sql."where branchId=".$values["branch"]." and paymentType!='credit_card' and paymentType!='debit_card' ";
+				}
+				else if($values["bank"] != "0" && $values["branch"]== "0"){
+					$sql = $sql." where bankdetails.bankName='".$values["bank"]."' and paymentType!='credit_card' and paymentType!='debit_card' ";
+				}
+				else if($values["bank"] != "0" &&  $values["branch"] > 0){
+					$sql = $sql." where branchId=".$values["branch"]." and bankdetails.bankName='".$values["bank"]."' and paymentType!='credit_card' and paymentType!='debit_card' ";
+				}*/
+				$recs = DB::select( DB::raw($sql));
+				$ex_ref_nos = array();
+				foreach ($recs as $rec){
+					$row = array();
+// 					$select_args[] = "officebranch.name as branch";
+// 					$select_args[] = "bankdetails.bankName as bankName";
+// 					$select_args[] = "bankdetails.branchName as branchName";
+// 					$select_args[] = "bankdetails.accountNo as accountNo";
+					$row["branch"] = $rec->branch;
+					$row["bank"] = "";
+					if($rec->accountNo != ""){
+						$row["bank"] = $rec->accountNo." (".$rec->branchName."-".$rec->bankName.")";
+					}
+					if($rec->paymentType=="debit_card"){
+						$select_args = array();
+						$select_args[] = "bankdetails.accountNo as  accountNo";
+						$select_args[] = "bankdetails.branchName as  branchName";
+						$select_args[] = "bankdetails.bankName as  bankName";
+						$entities1 = \BankDetails::join("cards","cards.bankAccountId","=","bankdetails.id")
+										->where("bankdetails.id","=",$values["bankaccount"])
+										->where("cards.id","=",$rec->bankAccountId)
+										->get();
+						if(count($entities1)==0){
+							continue;
 						}
-						$row["purpose"] = strtoupper($rec->name);
+						else{
+							$entity1 = $entities1[0];
+							$row["bank"] = $entity1->accountNo." (".$entity1->branchName."-".$entity1->bankName.")";
+						}
+					}
+					$row["type"] = "DEBIT";
+					if($rec->type=="income" || $rec->type=="LOCAL"){
+						$row["type"] = "CREDIT";
+					}
+					$purpose_str = "";
+					$amt_str = "";
+					if(!in_array($rec->chequeNumber, $ex_ref_nos)){
+							
+						if($rec->chequeNumber != "" && !in_array($rec->chequeNumber, $ex_ref_nos)){
+							$ex_ref_nos[] = $rec->chequeNumber;
+							$sql1 = $sql." and chequeNumber='".$rec->chequeNumber."';";
+							$recs1 = DB::select( DB::raw($sql1));
+							foreach ($recs1 as $rec1){
+								$purpose_str = $purpose_str.strtoupper($rec1->name)."<br/>";
+								if($rec1->entity != ""){
+									$purpose_str = $purpose_str." (".strtoupper($rec1->entity)."-".strtoupper($rec1->entityValue).")<br/>";
+								}
+								if($rec1->name == "SALARY TRANSACTION"){
+									$purpose_str = $purpose_str.strtoupper($rec1->name)."<br/>Paid On ".date("d-m-Y", strtotime($rec1->entity))." TO ".strtoupper($rec1->entityValue)."<br/>";
+								}
+								if($rec1->lookupValueId==991|| $rec1->lookupValueId==996){
+									$purpose_str = $purpose_str.strtoupper($rec1->entity)."<br/>";
+								}
+								$amt_str = $amt_str.$rec1->amount."<br/>";
+							}
+						}
+						if($purpose_str != ""){
+							$row["purpose"] = $purpose_str;
+						}
+						else{
+							$row["purpose"] = strtoupper($rec->name);
+							if($rec->entity != ""){
+								$row["purpose"] = $row["purpose"]." (".strtoupper($rec->entity)."-".strtoupper($rec->entityValue).")";
+							}
+						}
+						if($rec->name == "SALARY TRANSACTION"){
+							$row["purpose"] = strtoupper($rec->name)."<br/>Paid On ".date("d-m-Y", strtotime($rec->entity))." TO ".strtoupper($rec->entityValue);
+						}
 						if($rec->lookupValueId==991|| $rec->lookupValueId==996){
 							$row["purpose"] = strtoupper($rec->entity);
 						}
-						$row["date"] = date("d-m-Y", strtotime($rec->date));
-						$row["chque"] = "";
-						if($rec->paymentType=="cheque_credit" || $rec->paymentType=="cheque_debit"){
-							$row["chque"] = $rec->chequeNumber;
+						if($rec->lookupValueId==251 || $rec->lookupValueId==161){
+							if($rec->lookupValueId==251){
+								$incharge = \ExpenseTransaction::leftjoin("employee","employee.id","=","expensetransactions.inchargeId")
+												->where("transactionId","=",$rec->rowid)
+												->select(array("employee.fullName"))->get();
+								if(count($incharge)>0){
+									$incharge = $incharge[0];
+									$row["purpose"] = $row["purpose"]." (".$incharge->fullName.")";
+								}
+							}
+							if($rec->lookupValueId==161){
+								$incharge = \IncomeTransaction::leftjoin("employee","employee.id","=","incometransactions.inchargeId")
+												->where("transactionId","=",$rec->rowid)
+												->select(array("employee.fullName"))->get();
+								if(count($incharge)>0){
+									$incharge = $incharge[0];
+									$row["purpose"] = $row["purpose"]." (".$incharge->fullName.")";
+								}
+							}
 						}
-						$row["amount"] = $rec->amount;
-						$row["obalance"] = "0.00";
-						$row["cbalance"] = "0.00";
+						if($rec->lookupValueId==997){
+							$fuelstation = \FuelStation::where("id","=",$rec->entityValue)->get();
+							if(count($fuelstation)>0){
+								$fuelstation = $fuelstation[0];
+								$row["purpose"] = "FUEL STATION PAYMENT (".$fuelstation->name.")";
+							}
+						}
+						if($rec->lookupValueId==998){
+							$creditSupplier = \CreditSupplier::where("id","=",$rec->entityValue)->get();
+							if(count($creditSupplier)>0){
+								$creditSupplier = $creditSupplier[0];
+								$row["purpose"] = "CREDIT SUPPLIER PAYMENT (".$creditSupplier->supplierName.")";
+							}
+						}
+						if($purpose_str != ""){
+							$row["amount"] = $amt_str;
+						}
+						else{
+							$row["amount"] = $rec->amount;
+						}
+						
+						$row["date"] = date("d-m-Y", strtotime($rec->date))." (".$rec->wfstatus.")";
+						$row["pmtinfo"] = "PAYMENT TYPE : ".strtoupper($rec->paymentType)."</br>";
+						if($rec->paymentType == "debit_card"){
+							$card = \Cards::where("id","=",$rec->bankAccountId)->get();
+							if(count($card)>0){
+								$card = $card[0];
+								$row["pmtinfo"] = $row["pmtinfo"]."CARD NO : ".$card->cardNumber."<br/>";
+							}
+						}
+						if($rec->chequeNumber!=""){
+							$row["pmtinfo"] = $row["pmtinfo"]."REF NUM : ".$rec->chequeNumber;
+						}
+						if($rec->paymentType=="cheque_credit" || $rec->paymentType=="cheque_debit"){
+							$row["pmtinfo"] = $row["pmtinfo"]."CHQUE NUM : ".$rec->chequeNumber;
+						}
+						$row["createdby"] = $rec->createdBy;
+						//$row["obalance"] = "0.00";
+						//$row["cbalance"] = "0.00";
 						$row["desc"] = $rec->remarks;
 						$resp[] = $row;
 					}
@@ -949,21 +1153,30 @@ class ReportsController extends \Controller {
 		foreach ($branches as $branch){
 			$branches_arr[$branch->id] = $branch->name;
 		}
-		$banks =  \BankDetails::ALL();
-		$banks_arr = array();
-		$banks_arr["0"] = "ALL BANKS";
-		foreach ($banks as $bank){
-			$banks_arr[$bank->id] = $bank->bankName;
+		$parentId = -1;
+		$parent = \LookupTypeValues::where("name","=","BANK NAME")->get();
+		if(count($parent)>0){
+			$parent = $parent[0];
+			$parentId = $parent->id;
 		}
-		$form_field = array("name"=>"reportfor", "content"=>"report for ", "readonly"=>"",  "required"=>"required","type"=>"select",  "options"=>array("bank_summary"=>"Bank Summary Report","transaction_details"=>"Transaction Details Report"), "class"=>"form-control chosen-select");
+		$banks =  \LookupTypeValues::where("parentId","=",$parentId)->where("status","=","ACTIVE")->get();
+		$banks_arr = array();
+		//$banks_arr["0"] = "ALL BANKS";
+		foreach ($banks as $bank){
+			$banks_arr [$bank->name] = $bank->name;
+		}
+		//"bank_summary"=>"Bank Summary Report",
+		$form_field = array("name"=>"reportfor", "content"=>"report for ", "readonly"=>"",  "required"=>"required","type"=>"select",  "options"=>array("transaction_details"=>"Transaction Details Report"), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"bank", "content"=>"bank ", "readonly"=>"",  "required"=>"required","type"=>"select",  "options"=>$banks_arr, "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"bank", "content"=>"bank ", "readonly"=>"",  "required"=>"required","type"=>"select",  "options"=>$banks_arr, "action"=>array("type"=>"onChange", "script"=>"getBankAccounts(this.value);"), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"branch", "content"=>"branch ", "readonly"=>"",  "required"=>"required","type"=>"select",  "options"=>$branches_arr, "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"bankaccount", "content"=>"bank account ", "readonly"=>"",  "required"=>"required", "type"=>"select",  "options"=>array(), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"opening_balance", "value"=>"no", "content"=>"", "readonly"=>"",  "required"=>"","type"=>"hidden");
 		$form_fields[] = $form_field;
 		$form_info["form_fields"] = $form_fields;
 		$values["form_info"] = $form_info;
@@ -987,7 +1200,7 @@ class ReportsController extends \Controller {
 			$totaladvances = 0;
 			$totalreturns  = 0;
 			$mons = array(1 => "JANUARY", 2 => "FEBRUARY", 3 => "MARCH", 4 => "APRIL", 5 => "MAY", 6 => "JUNE", 7 => "JULY", 8 => "AUGUST", 9 => "SEPTEMBER", 10 => "OCTOBER", 11 => "NOVEMBER", 12 => "DECEMBER");
-			if(true){
+			if($values["reportfor"] == "loan_payment"){
 				if($values["loan"] == "0"){
 					$sql = 'SELECT date, financecompanies.name, loans.vehicleId, loans.agmtDate, loans.installmentAmount, loans.totalInstallments, loans.paidInstallments, expensetransactions.paymentType, expensetransactions.amount, loans.bankAccountId, concat(bankdetails.bankName," - ",bankdetails.accountNo) as bankName,loans.loanNo, loans.id as loanId, expensetransactions.remarks as remarks FROM `expensetransactions` left join loans on loans.id=expensetransactions.entityValue left join financecompanies on financecompanies.id=loans.financeCompanyId left join bankdetails on bankdetails.id=loans.bankAccountId where entity="LOAN PAYMENT" and date between "'.$frmDt.'" and "'.$toDt.'" order by date;';
 				}
@@ -1032,24 +1245,44 @@ class ReportsController extends \Controller {
 					$resp[] = $row;
 				}
 			}
-			else if($values["employee"] > 0){
-				$salaryadvances =  \EmpDueAmount::where("empdueamount.empId","=",$values["employee"])
-				->where(function($query){$query->where("empdueamount.status","=","ACTIVE")->orWhere("empdueamount.deleted","=","No");})->join("employee","employee.id","=","empdueamount.empId")->leftjoin("officebranch","officebranch.id","=","empdueamount.branchId")->OrderBy("paymentDate")->select($select_args)->get();
-				foreach ($salaryadvances as $salaryadvance){
+			else if($values["reportfor"] == "interest_payment"){
+				if($values["loan"] == "0"){
+					$sql = 'SELECT date, financecompanies.name, loans.vehicleId, loans.agmtDate, loans.installmentAmount, loans.totalInstallments, loans.paidInstallments, expensetransactions.paymentType, expensetransactions.amount, loans.bankAccountId, concat(bankdetails.bankName," - ",bankdetails.accountNo) as bankName,loans.loanNo, loans.id as loanId, expensetransactions.remarks as remarks FROM `expensetransactions` left join loans on loans.id=expensetransactions.entityValue left join financecompanies on financecompanies.id=loans.financeCompanyId left join bankdetails on bankdetails.id=loans.bankAccountId where entity="LOAN INTEREST PAYMENT" and date between "'.$frmDt.'" and "'.$toDt.'" order by date;';
+				}
+				else if($values["loan"] > 0){
+					$sql = 'SELECT date, financecompanies.name, loans.vehicleId, loans.agmtDate, loans.installmentAmount, loans.totalInstallments, loans.paidInstallments, expensetransactions.paymentType, expensetransactions.amount, loans.bankAccountId, concat(bankdetails.bankName," - ",bankdetails.accountNo) as bankName,loans.loanNo, loans.id as loanId, expensetransactions.remarks as remarks FROM `expensetransactions` left join loans on loans.id=expensetransactions.entityValue left join financecompanies on financecompanies.id=loans.financeCompanyId left join bankdetails on bankdetails.id=loans.bankAccountId where loans.id='.$values["loan"].' and entity="LOAN INTEREST PAYMENT" and date between "'.$frmDt.'" and "'.$toDt.'" order by date;';
+				}
+				$recs = DB::select( DB::raw($sql));
+				foreach ($recs as $rec){
 					$row = array();
-					$row["empname"] = $salaryadvance->empname;
-					if($salaryadvance->amount>0){
-						$totaladvances = $totaladvances+$salaryadvance->amount;
-						$row["amount"] = "<span style='color:green'> ".$salaryadvance->amount."</span>";
+					$row["date"] = date("d-m-Y",strtotime($rec->date));
+					$row["fincompany"] = $rec->name;
+					
+					$veh_arr = explode(",", $rec->vehicleId);
+					$vehs = \Vehicle::whereIn("id",$veh_arr)->get();
+					$veh_arr = "";
+					foreach ($vehs as $veh){
+						$veh_arr = $veh_arr.$veh->veh_reg.", ";
 					}
-					else{
-						$totalreturns = $totaladvances+$totalreturns;
-						$row["amount"] = "<span style='color:red'> ".$salaryadvance->amount."</span>";
-					}
-					$row["paymentDate"] = date("d-m-Y",strtotime($salaryadvance->paymentDate));
-					$row["branch"] = $salaryadvance->branch;
-					$row["remarks"] = $salaryadvance->remarks;
-					$row["id"] = $salaryadvance->id;
+					$row["vehicles"] = $veh_arr;
+					
+					$agmtDate = $rec->agmtDate;
+					$month = date("m", strtotime($agmtDate));
+					$month_name = $mons[intval($month)];
+					$year = date("Y", strtotime($agmtDate));
+					$endDate = date('Y-m-d', strtotime("+$rec->totalInstallments months", strtotime($agmtDate)));						
+					$endmonth = date("m", strtotime($endDate));
+					$endmonth_name = $mons[intval($endmonth)];
+					$endyear = date("Y", strtotime($endDate));
+					$row["emiperiod"] = $month_name.", ".$year." - ".$endmonth_name.", ".$endyear;
+					$row["emiamt"] = "";
+					$row["amount"] = sprintf('%0.2f', $rec->amount);
+					$row["paidemis"] = "";
+					
+					$row["paymenttype"] = $rec->paymentType;
+					$row["bankdetails"] = $rec->bankName;
+					$row["loanno"] = $rec->loanNo;
+					$row["remarks"] = $rec->remarks;
 					$resp[] = $row;
 				}
 			}
@@ -1080,7 +1313,10 @@ class ReportsController extends \Controller {
 		$select_args[] = "fuelstationdetails.name as fname";
 		$select_args[] = "cities.name as cname";
 	
-		$loans =  \Loan::ALL();
+		$loans =  \Loan::leftJoin("financecompanies","financecompanies.id","=","loans.financeCompanyId")
+								->where("loans.status","=","ACTIVE")->select(array("loans.id","loans.loanNo","loans.vehicleId","financecompanies.name as finName"))->get();
+		$entity_arr = array();
+
 		$loans_arr = array();
 		$loans_arr["0"] = "ALL LOANS";
 		foreach ($loans as $loan){
@@ -1098,8 +1334,10 @@ class ReportsController extends \Controller {
 					}
 				}
 			}
-			$loans_arr[$loan->id] = $loan->loanNo." (".$vehs.")";
+			$loans_arr[$loan->id] = $loan->loanNo." - ".$loan->finName." (".$vehs.")";
 		}
+		$form_field = array("name"=>"reportfor", "content"=>"report for ", "readonly"=>"",  "required"=>"required","type"=>"select",  "options"=>array("loan_payment"=>"LOAN PAYMENT", "interest_payment"=>"INTEREST PAYMENT"), "class"=>"form-control");
+		$form_fields[] = $form_field;
 		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"loan", "content"=>"loan no", "readonly"=>"",  "required"=>"required","type"=>"select",  "options"=>$loans_arr, "class"=>"form-control chosen-select");
@@ -1309,6 +1547,33 @@ class ReportsController extends \Controller {
 							$fuelstation = $fuelstation->name;
 							$row["purpose"] = strtoupper($rec->entity);
 							$row["employee"] = $fuelstation;
+						}
+						else{
+							$row["purpose"] = strtoupper($rec->entity);
+							$row["employee"] = "";
+						}
+					}
+					
+					else if($rec->lookupValueId==996){
+						if($rec->entityValue>0){
+							$loan = \Loan::where("id","=",$rec->entityValue)->first();
+							$dfid = $loan->financeCompanyId;
+							$finanacecompany = \FinanceCompany::where("id","=",$dfid)->first();
+							$finanacecompany = $finanacecompany->name;
+							$row["purpose"] = strtoupper($rec->entity);
+							$row["employee"] = $loan->loanNo." (".$finanacecompany.")";
+						}
+						else{
+							$row["purpose"] = strtoupper($rec->entity);
+							$row["employee"] = "";
+						}
+					}
+					else if($rec->lookupValueId==283){
+						if($rec->entityValue>0){
+							$card = \Cards::where("id","=",$rec->entityValue)->first();
+							$lookupvalue = $card->cardNumber." (".$card->cardHolderName.")";
+							$row["purpose"] = strtoupper($rec->entity);
+							$row["employee"] = $lookupvalue;
 						}
 						else{
 							$row["purpose"] = strtoupper($rec->entity);
@@ -1655,7 +1920,46 @@ class ReportsController extends \Controller {
 			$frmDt = date("Y-m-d", strtotime($values["fromdate"]));
 			$toDt = date("Y-m-d", strtotime($values["todate"]));
 			$resp = array();
-			$resp2 = array();
+			$resp2 = array();			
+			if(isset($values["opening_balance"]) && $values["opening_balance"] == "yes"){
+				$init_amt = 0;
+				$frmDt1 = date("Y-m-d", strtotime("01-01-2016"));
+				DB::statement(DB::raw("CALL incharge_transaction_report('".$frmDt1."', '".$toDt."');"));
+				$sql = "SELECT sum(amount) as amt FROM `temp_incharge_transaction` where lookupValueId='251' and inchargeId=".$values["incharge"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_credit = $rec->amt;
+			
+				$sql = "SELECT sum(amount) as amt FROM `temp_incharge_transaction` where  (lookupValueId!='251' or lookupValueId is NULL) and inchargeId=".$values["incharge"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_debit = $rec->amt;
+				$end_balance = $init_amt+($total_credit-$total_debit);
+			
+				$sql = "SELECT sum(amount) as amt FROM `temp_incharge_transaction` where lookupValueId='251' and date<'".$frmDt."' and inchargeId=".$values["incharge"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_credit_todate = $rec->amt;
+			
+				$sql = "SELECT sum(amount) as amt FROM `temp_incharge_transaction` where (lookupValueId!='251' or lookupValueId is NULL) and date<'".$frmDt."' and inchargeId=".$values["incharge"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_debit_todate = $rec->amt;
+				$start_balance = $init_amt+($total_credit_todate-$total_debit_todate);
+			
+				$sql = "SELECT sum(amount) as amt FROM `temp_incharge_transaction` where lookupValueId='251' and date between'".$frmDt."' and '".$toDt."' and inchargeId=".$values["incharge"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_credit_todate = $rec->amt;
+			
+				$sql = "SELECT sum(amount) as amt FROM `temp_incharge_transaction` where (lookupValueId!='251' or lookupValueId is NULL) and date between'".$frmDt."' and '".$toDt."' and inchargeId=".$values["incharge"];
+				$rec = DB::select( DB::raw($sql));
+				$rec = $rec[0];
+				$total_debit_todate = $rec->amt;
+				echo json_encode(array("opening_balance"=>$start_balance,"closing_balance"=>$end_balance,"total_credit"=>$total_credit_todate,"total_debit"=>$total_debit_todate));
+				return;
+			}
+			
 			$totexpenses = 0;
 			$select_args = array();
 			$select_args[] = "officebranch.name as branch";
@@ -1669,7 +1973,14 @@ class ReportsController extends \Controller {
 				$select_args[] = "incometransactions.amount as amount";
 				$select_args[] = "incometransactions.date as date";
 				$select_args[] = "incometransactions.remarks as remarks";
-				$select_args[] = "employee.fullName as name";
+				$select_args[] = "incometransactions.paymentType as paymentType";
+				$select_args[] = "incometransactions.bankAccount as bankAccountId";
+				$select_args[] = "incometransactions.bankName as bankName";
+				$select_args[] = "incometransactions.accountNumber as accountNumber";
+				$select_args[] = "incometransactions.chequeNumber as chequeNumber";
+				$select_args[] = "incometransactions.issueDate as issueDate";
+				$select_args[] = "incometransactions.transactionDate as transactionDate";
+				
 				$inchargetransactions = \IncomeTransaction::leftjoin("officebranch","officebranch.id","=","incometransactions.branchId")
 							->leftjoin("employee","employee.id","=","incometransactions.createdBy")
 							->where("inchargeId","=",$values["incharge"])
@@ -1681,6 +1992,29 @@ class ReportsController extends \Controller {
 					$row["branch"] = $inchargetransaction->branch;
 					$row["type"] =  "<span style='color:green;'>Debited from Incharge Account</span>";
 					$row["amount"] = $inchargetransaction->amount;
+					if($inchargetransaction->paymentType != "cash"){
+						if($inchargetransaction->paymentType == "ecs" || $inchargetransaction->paymentType == "neft" || $inchargetransaction->paymentType == "rtgs" || $inchargetransaction->paymentType == "cheque_debit" || $inchargetransaction->paymentType == "cheque_credit"){
+							$inchargetransaction->paymentType = "Payment Type : ".$inchargetransaction->paymentType."<br/>";
+							$bank_dt = \BankDetails::where("id","=",$inchargetransaction->bankAccount)->first();
+							if(count($bank_dt)>0){
+								$inchargetransaction->paymentType = $inchargetransaction->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
+							}
+							$inchargetransaction->paymentType = $inchargetransaction->paymentType."Ref No : ".$row["chequeNumber"];
+						}
+						if($inchargetransaction->paymentType == "credit_card" || $inchargetransaction->paymentType == "debit_card"){
+							$inchargetransaction->paymentType = "Payment Type : ".$inchargetransaction->paymentType."<br/>";
+							$bank_dt = \Cards::where("id","=",$inchargetransaction->bankAccount)->first();
+							if(count($bank_dt)>0){
+								$inchargetransaction->paymentType = $inchargetransaction->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
+							}
+							$inchargetransaction->paymentType = $inchargetransaction->paymentType."Ref No : ".$inchargetransaction->chequeNumber;
+						}
+						if($inchargetransaction->paymentType == "dd"){
+							$inchargetransaction->paymentType = "Payment Type : ".$inchargetransaction->paymentType."<br/>";
+							$inchargetransaction->paymentType = $inchargetransaction->paymentType."Ref No : ".$inchargetransaction->chequeNumber;
+						}
+					}
+					$row["paymentType"] = $inchargetransaction->paymentType;					
 					$row["date"] = date("d-m-Y",strtotime($inchargetransaction->date));
 					$row["remarks"] = $inchargetransaction->remarks;
 					$row["name"] = $inchargetransaction->name;
@@ -1693,6 +2027,13 @@ class ReportsController extends \Controller {
 				$select_args[] = "expensetransactions.date as date";
 				$select_args[] = "expensetransactions.remarks as remarks";
 				$select_args[] = "employee.fullName as name";
+				$select_args[] = "expensetransactions.paymentType as paymentType";
+				$select_args[] = "expensetransactions.bankAccount as bankAccountId";
+				$select_args[] = "expensetransactions.bankName as bankName";
+				$select_args[] = "expensetransactions.accountNumber as accountNumber";
+				$select_args[] = "expensetransactions.chequeNumber as chequeNumber";
+				$select_args[] = "expensetransactions.issueDate as issueDate";
+				$select_args[] = "expensetransactions.transactionDate as transactionDate";
 				$inchargetransactions = \ExpenseTransaction::leftjoin("officebranch","officebranch.id","=","expensetransactions.branchId")
 										->leftjoin("employee","employee.id","=","expensetransactions.createdBy")
 										->where("inchargeId","=",$values["incharge"])
@@ -1704,201 +2045,41 @@ class ReportsController extends \Controller {
 					$row["branch"] = $inchargetransaction->branch;
 					$row["type"] =  "<span style='color:red;'>Credited into Incharge Account</span>";
 					$row["amount"] = $inchargetransaction->amount;
+					if($inchargetransaction->paymentType != "cash"){
+						if($inchargetransaction->paymentType == "ecs" || $inchargetransaction->paymentType == "neft" || $inchargetransaction->paymentType == "rtgs" || $inchargetransaction->paymentType == "cheque_debit" || $inchargetransaction->paymentType == "cheque_credit"){
+							$inchargetransaction->paymentType = "Payment Type : ".$inchargetransaction->paymentType."<br/>";
+							$bank_dt = \BankDetails::where("id","=",$inchargetransaction->bankAccount)->first();
+							if(count($bank_dt)>0){
+								$inchargetransaction->paymentType = $inchargetransaction->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
+							}
+							$inchargetransaction->paymentType = $inchargetransaction->paymentType."Ref No : ".$inchargetransaction->chequeNumber;
+						}
+						if($inchargetransaction->paymentType == "credit_card" || $inchargetransaction->paymentType == "debit_card"){
+							$inchargetransaction->paymentType = "Payment Type : ".$inchargetransaction->paymentType."<br/>";
+							$bank_dt = \Cards::where("id","=",$inchargetransaction->bankAccount)->first();
+							if(count($bank_dt)>0){
+								$inchargetransaction->paymentType = $inchargetransaction->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
+							}
+							$inchargetransaction->paymentType = $inchargetransaction->paymentType."Ref No : ".$inchargetransaction->chequeNumber;
+						}
+						if($inchargetransaction->paymentType == "dd"){
+							$inchargetransaction->paymentType = "Payment Type : ".$inchargetransaction->paymentType."<br/>";
+							$inchargetransaction->paymentType = $inchargetransaction->paymentType."Ref No : ".$inchargetransaction->chequeNumber;
+						}
+					}
+					$row["paymentinfo"] = $inchargetransaction->paymentType;
 					$row["date"] = date("d-m-Y",strtotime($inchargetransaction->date));
 					$row["remarks"] = $inchargetransaction->remarks;
 					$row["name"] = $inchargetransaction->name;
 					$resp[] = $row;
 				}
 				
-				/* $select_args = array();
-				$select_args[] = "officebranch.name as branch";
-				$select_args[] = "expensetransactions.amount as amount";
-				$select_args[] = "expensetransactions.date as date";
-				$select_args[] = "lookuptypevalues.name as lookupName";
-				$select_args[] = "expensetransactions.remarks as remarks";
-				$select_args[] = "employee.fullName as name";
-				$select_args[] = "clients.name as clientName";
-				$select_args[] = "depots.name as depotName";
-				$select_args[] = "expensetransactions.branchId as branchId";
-				$select_args[] = "expensetransactions.lookupValueId as lookupValueId";
-				$select_args[] = "expensetransactions.entity as entity";
-				$select_args[] = "expensetransactions.entityValue as entityValue";
-				
-				$inchargetransactions = \ExpenseTransaction::leftjoin("officebranch","officebranch.id","=","expensetransactions.branchId")
-								->leftjoin("employee","employee.id","=","expensetransactions.createdBy")
-								->leftjoin("lookuptypevalues","lookuptypevalues.id","=","expensetransactions.lookupValueId")
-								->leftjoin("contracts","contracts.id","=","expensetransactions.contractId")
-								->leftjoin("clients","contracts.clientId","=","clients.id")
-								->leftjoin("depots","contracts.depotId","=","depots.id")
-								->where("inchargeId","=",$values["incharge"])
-								->where("lookupValueId","!=",251)
-								->whereBetween("date",array($frmDt,$toDt))
-								->OrderBy("date")->select($select_args)->get() ;
-				foreach ($inchargetransactions as $inchargetransaction){
-					$row = array();
-					$row["branch"] = $inchargetransaction->branch;
-					if($inchargetransaction->branchId == 0){
-						$row["branch"] = $inchargetransaction->depotName."(".$inchargetransaction->clientName.")";
-					}
-					$row["date"] = date("d-m-Y",strtotime($inchargetransaction->date));
-					$row["amount"] = $inchargetransaction->amount;
-					$row["type"] =  "<span style='color:red;'>EXPENSE TRANSACTION</span>";
-					$row["purpose"] =  $inchargetransaction->lookupName;
-					
-					if($inchargetransaction->lookupValueId==999){
-						if($inchargetransaction->entityValue>0){
-							$prepaidName = \LookupTypeValues::where("id","=",$inchargetransaction->entityValue)->first();
-							$prepaidName = $prepaidName->name;
-							$row["purpose"] = strtoupper($inchargetransaction->entity)." - ".$prepaidName;
-						}
-						else{
-							$row["purpose"] = strtoupper($inchargetransaction->entity);
-						}
-					}
-					else if($inchargetransaction->lookupValueId==998){
-						if($inchargetransaction->entityValue>0){
-							$creditsupplier = \CreditSupplier::where("id","=",$inchargetransaction->entityValue)->first();
-							$creditsupplier = $creditsupplier->supplierName;
-							$row["purpose"] = strtoupper($inchargetransaction->entity)." - ".$creditsupplier;
-						}
-						else{
-							$row["purpose"] = strtoupper($inchargetransaction->entity);
-						}
-					}
-					else if($inchargetransaction->lookupValueId==997){
-						if($inchargetransaction->entityValue>0){
-							$fuelstation = \FuelStation::where("id","=",$inchargetransaction->entityValue)->first();
-							$fuelstation = $fuelstation->name;
-							$row["purpose"] = strtoupper($inchargetransaction->entity)." - ".$fuelstation;
-						}
-						else{
-							$row["purpose"] = strtoupper($inchargetransaction->entity);
-						}
-					}
-					else if($inchargetransaction->lookupValueId==991){
-						if($inchargetransaction->entityValue>0){
-							$dfid = \DailyFinance::where("id","=",$inchargetransaction->entityValue)->first();
-							$dfid = $dfid->financeCompanyId;
-							$finanacecompany = \FinanceCompany::where("id","=",$dfid)->first();
-							$finanacecompany = $finanacecompany->name;
-							$row["purpose"] = strtoupper($inchargetransaction->entity)." - ".$finanacecompany;
-						}
-						else{
-							$row["purpose"] = strtoupper($inchargetransaction->entity);
-						}
-					}
-					
-					$row["remarks"] = $inchargetransaction->remarks;
-					$row["name"] = $inchargetransaction->name;
-					$resp2[] = $row;
-					
-				}
-				
-				$select_args = array();
-				$select_args[] = "officebranch.name as branch";
-				$select_args[] = "fueltransactions.amount as amount";
-				$select_args[] = "fueltransactions.filledDate as date";
-				$select_args[] = "fuelstationdetails.name as stationName";
-				$select_args[] = "fueltransactions.remarks as remarks";
-				$select_args[] = "employee.fullName as name";
-				$select_args[] = "fueltransactions.branchId as branchId";
-				$select_args[] = "fueltransactions.contractId as contractId";
-				$select_args[] = "clients.name as clientName";
-				$select_args[] = "depots.name as depotName";
-				$select_args[] = "vehicle.veh_reg as veh_reg";
-				
-				$inchargetransactions = \FuelTransaction::leftjoin("officebranch","officebranch.id","=","fueltransactions.branchId")
-								->leftjoin("fuelstationdetails","fuelstationdetails.id","=","fueltransactions.fuelStationId")
-								->leftjoin("employee","employee.id","=","fueltransactions.createdBy")
-								->leftjoin("contracts","contracts.id","=","fueltransactions.contractId")
-								->leftjoin("clients","contracts.clientId","=","clients.id")
-								->leftjoin("depots","contracts.depotId","=","depots.id")
-								->leftjoin("vehicle","vehicle.id","=","fueltransactions.vehicleId")
-								->where("inchargeId","=",$values["incharge"])
-								->whereBetween("filledDate",array($frmDt,$toDt))
-								->OrderBy("filledDate")->select($select_args)->get() ;
-				foreach ($inchargetransactions as $inchargetransaction){
-					$row = array();
-					$row["branch"] = $inchargetransaction->branch;
-					if($inchargetransaction->branchId == 0){
-						$row["branch"] = $inchargetransaction->depotName."(".$inchargetransaction->clientName.")";
-					}
-					$row["date"] = date("d-m-Y",strtotime($inchargetransaction->date));
-					$row["amount"] = $inchargetransaction->amount;
-					$row["type"] =  "<span style='color:red;'>FUEL TRANSACTION &nbsp; (".$inchargetransaction->veh_reg.")</span>";
-					$row["purpose"] =  $inchargetransaction->stationName;
-					$row["remarks"] = $inchargetransaction->remarks;
-					$row["name"] = $inchargetransaction->name;
-					$resp2[] = $row;
-				}
-				
-				$select_args = array();
-				$select_args[] = "officebranch.name as branch";
-				$select_args[] = "creditsuppliertransactions.amount as amount";
-				$select_args[] = "creditsuppliertransactions.date as date";
-				$select_args[] = "creditsuppliers.supplierName as stationName";
-				$select_args[] = "creditsuppliertransactions.comments as comments";
-				$select_args[] = "employee.fullName as name";
-				$select_args[] = "creditsuppliertransactions.branchId as branchId";
-				$select_args[] = "creditsuppliertransactions.contractId as contractId";
-				$select_args[] = "clients.name as clientName";
-				$select_args[] = "depots.name as depotName";
-				
-				$inchargetransactions = \CreditSupplierTransactions::leftjoin("officebranch","officebranch.id","=","creditsuppliertransactions.branchId")
-								->leftjoin("creditsuppliers","creditsuppliers.id","=","creditsuppliertransactions.creditSupplierId")
-								->leftjoin("employee","employee.id","=","creditsuppliertransactions.createdBy")
-								->leftjoin("contracts","contracts.id","=","creditsuppliertransactions.contractId")
-								->leftjoin("clients","contracts.clientId","=","clients.id")
-								->leftjoin("depots","contracts.depotId","=","depots.id")
-								->where("inchargeId","=",$values["incharge"])
-								->whereBetween("date",array($frmDt,$toDt))
-								->OrderBy("date")->select($select_args)->get() ;
-				foreach ($inchargetransactions as $inchargetransaction){
-					$row = array();
-					$row["branch"] = $inchargetransaction->branch;
-					if($inchargetransaction->branchId == 0){
-						$row["branch"] = $inchargetransaction->depotName."(".$inchargetransaction->clientName.")";
-					}
-					$row["date"] = date("d-m-Y",strtotime($inchargetransaction->date));
-					$row["amount"] = $inchargetransaction->amount;
-					$row["type"] =  "<span style='color:red;'>REPAIR TRANSACTION</span>";
-					$row["purpose"] =  $inchargetransaction->stationName;
-					$row["remarks"] = $inchargetransaction->comments;
-					$row["name"] = $inchargetransaction->name;
-					$resp2[] = $row;
-				}
-				
-				$select_args = array();
-				$select_args[] = "officebranch.name as branch";
-				$select_args[] = "purchase_orders.totalAmount as amount";
-				$select_args[] = "purchase_orders.orderDate as date";
-				$select_args[] = "creditsuppliers.supplierName as stationName";
-				$select_args[] = "purchase_orders.comments as comments";
-				$select_args[] = "employee.fullName as name";
-				$select_args[] = "purchase_orders.type as type";
-				
-				$inchargetransactions = \PurchasedOrders::leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
-								->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
-								->leftjoin("employee","employee.id","=","purchase_orders.createdBy")
-								->where("inchargeId","=",$values["incharge"])
-								->whereIn("type",array("TO CREDIT SUPPLIER REPAIR", "PURCHASE ORDER"))
-								->whereBetween("orderDate",array($frmDt,$toDt))
-								->OrderBy("orderDate")->select($select_args)->get() ;
-				foreach ($inchargetransactions as $inchargetransaction){
-					$row = array();
-					$row["branch"] = $inchargetransaction->branch;
-					$row["date"] = date("d-m-Y",strtotime($inchargetransaction->date));
-					$row["amount"] = $inchargetransaction->amount;
-					$row["type"] =  "<span style='color:red;'>".$inchargetransaction->type."</span>";
-					$row["purpose"] =  $inchargetransaction->stationName;
-					$row["remarks"] = $inchargetransaction->comments;
-					$row["name"] = $inchargetransaction->name;
-					$resp2[] = $row;
-				} */
-				
  				DB::statement(DB::raw("CALL incharge_transaction_report('".$frmDt."', '".$toDt."');"));
 				$recs = DB::select( DB::raw("SELECT *,temp_incharge_transaction.entity as entity, temp_incharge_transaction.name as purpose, temp_incharge_transaction.createdBy as createdBy, officebranch.name as branchname FROM `temp_incharge_transaction` left join officebranch on officebranch.id=temp_incharge_transaction.branchId where inchargeId=".$values["incharge"]." order by date"));
 				foreach ($recs as $rec){
+					if($rec->lookupValueId==251 || $rec->lookupValueId==161){
+						continue;
+					}
 					$row = array();
 					$row["branch"] = $rec->branchname;
 					if($rec->branchname == ""){
@@ -1906,6 +2087,30 @@ class ReportsController extends \Controller {
 					}
 					$row["date"] = date("d-m-Y",strtotime($rec->date));
 					$row["amount"] =  $rec->amount;
+					if($rec->paymentType != "cash"){
+						if($rec->paymentType == "ecs" || $rec->paymentType == "neft" || $rec->paymentType == "rtgs" || $rec->paymentType == "cheque_debit" || $rec->paymentType == "cheque_credit"){
+							$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+							$bank_dt = \BankDetails::where("id","=",$rec->bankAccount)->first();
+							if(count($bank_dt)>0){
+								$rec->paymentType = $rec->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
+							}
+							$rec->paymentType = $rec->paymentType."Ref No : ".$row["chequeNumber"];
+						}
+						if($rec->paymentType == "credit_card" || $rec->paymentType == "debit_card"){
+							$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+							$bank_dt = \Cards::where("id","=",$rec->bankAccount)->first();
+							if(count($bank_dt)>0){
+								$rec->paymentType = $rec->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
+							}
+							$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
+						}
+						if($rec->paymentType == "dd"){
+							$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+							$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
+						}
+					}
+					$row["paymentType"] = $rec->paymentType;
+					
 					$totexpenses = $totexpenses+$rec->amount;
 					$row["type"] =  strtoupper($rec->type);
 					$row["purpose"] =  strtoupper($rec->purpose);
@@ -2054,6 +2259,8 @@ class ReportsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
 		$form_fields[] = $form_field;
+		$form_field = array("name"=>"opening_balance", "value"=>"no", "content"=>"", "readonly"=>"",  "required"=>"","type"=>"hidden");
+		$form_fields[] = $form_field;
 	
 		$form_info["form_fields"] = $form_fields;
 		$values["form_info"] = $form_info;
@@ -2128,14 +2335,39 @@ class ReportsController extends \Controller {
 			}
 			if(isset($values["employeetype"]) && $values["employeetype"]=="CLIENT BRANCH"){
 				if(true){
-					DB::statement(DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+					if(isset($values["depot"]) && $values["depot"]==0){
+						DB::statement(DB::raw("CALL contract_driver_helper_all('".$values["clientname"]."');"));
+					}
+					else{
+						DB::statement(DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+					}
 					$entities = DB::select( DB::raw("select * from temp_contract_drivers_helpers group by id"));
+					$select_args = array();
+					$select_args[] = "clients.name as cname";
+					$select_args[] = "depots.name as dname";
+					$select_args[] = "vehicle.veh_reg as veh_reg";
+					$select_args[] = "contract_vehicles.helperId as helperId";
 					foreach ($entities as $entity){
 						$row = array();
-						$depot = \Depot::where("id","=",$values["depot"])->first();
-						$clientname = \Client::where("id","=",$values["clientname"])->first();
-						$row["branch"] = $depot->name." (".$clientname->name.")";
+						$emp_contract = \ContractVehicle::leftjoin("contracts","contracts.id","=","contract_vehicles.contractId")
+											->leftjoin("clients","clients.id","=","contracts.clientId")
+											->leftjoin("depots","depots.id","=","contracts.depotId")
+											->leftjoin("vehicle","vehicle.id","=","contract_vehicles.vehicleId")
+											->where("contract_vehicles.status","=","ACTIVE")
+											->whereRaw("  (driver1Id=".$entity->id." or driver2Id=".$entity->id." or driver3Id=".$entity->id." or driver4Id=".$entity->id." or driver5Id=".$entity->id." or helperId=".$entity->id." ) ")
+											->select($select_args)->get();
+						$row["branch"] = "";
 						$row["employee"] = $entity->fullName." - ".$entity->empCode;
+						if(count($emp_contract)>0){
+							$emp_contract = $emp_contract[0];
+							$row["branch"] = $emp_contract->cname." (".$emp_contract->dname.")";
+							if($emp_contract->helperId == $entity->id){
+								$row["employee"] = $entity->fullName." - ".$entity->empCode." (".$emp_contract->veh_reg."-HELPER)";
+							}
+							else{
+								$row["employee"] = $entity->fullName." - ".$entity->empCode." (".$emp_contract->veh_reg."-DRIVER)";
+							}
+						}
 						$salary_amt = 0;
 						$salary = \SalaryDetails::where("empId","=",$entity->id)->get();
 						if(count($salary)>0){
@@ -2323,19 +2555,28 @@ class ReportsController extends \Controller {
 					$select_args[] = "attendence_log.day as day";
 					$select_args[] = "attendence_log.day as day";
 					$select_args[] = "employee.fullName as name";
+					$select_args[] = "clients.id as cid";
+					$select_args[] = "depots.id as did";
 					
 					
 					$employees_arr = array();
-					\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+					if($values["depot"]==0){
+						\DB::statement(\DB::raw("CALL contract_driver_helper_all('".$values["clientname"]."');"));
+					}
+					else{
+						\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+					}
 					$employees = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
 					$tot_emps = count($employees);
 					foreach($employees as $employee){
 						$employees_arr[$employee->id] = $employee->fullName." (".$employee->empCode.")";
 					}
 					if(true){
-						$entities = \AttendenceLog::where("attendence_log.clientId","=",$values["clientname"])
-										->where("attendence_log.depotId","=",$values["depot"])
-										->leftjoin("clients","clients.id","=","attendence_log.clientId")
+						$sql = \AttendenceLog::where("attendence_log.clientId","=",$values["clientname"]);
+								if($values["depot"]!=0){
+										$sql->where("attendence_log.depotId","=",$values["depot"]);
+								}
+						$entities = $sql->leftjoin("clients","clients.id","=","attendence_log.clientId")
 										->leftjoin("depots","depots.id","=","attendence_log.depotId")
 										->leftjoin("employee","employee.id","=","attendence_log.createdBy")
 										->whereBetween("date",array($fromDt,$toDt))
@@ -2349,6 +2590,39 @@ class ReportsController extends \Controller {
 							$row["session"] = $entity->session;
 							$row["day"] = $entity->day;
 							
+							$temp_emps = \ContractVehicle::join("contracts","contracts.id","=","contract_vehicles.contractId")
+															->where("contracts.clientId","=",$entity->cid)
+															->where("contracts.depotId","=",$entity->did)
+															->where("contract_vehicles.status","=","ACTIVE")->get();
+							$emp_cnt = 0;
+							$temp_emps_arr = array();
+							foreach ($temp_emps as $temp_emp){
+								if($temp_emp->driver1Id>0){
+									$emp_cnt++;
+									$temp_emps_arr[] = $temp_emp->driver1Id;
+								}
+								if($temp_emp->driver12d>0){
+									$emp_cnt++;
+									$temp_emps_arr[] = $temp_emp->driver12d;
+								}
+								if($temp_emp->driver3Id>0){
+									$emp_cnt++;
+									$temp_emps_arr[] = $temp_emp->driver3Id;
+								}
+								if($temp_emp->driver4Id>0){
+									$emp_cnt++;
+									$temp_emps_arr[] = $temp_emp->driver4Id;
+								}
+								if($temp_emp->driver5Id>0){
+									$emp_cnt++;
+									$temp_emps_arr[] = $temp_emp->driver5Id;
+								}
+								if($temp_emp->helperId>0){
+									$emp_cnt++;
+									$temp_emps_arr[] = $temp_emp->helperId;
+								}
+							}
+							
 							$absenties_str = "";
 							$cnt = 0;
 							$absenties = \Attendence::where("date","=",$entity->date)
@@ -2356,12 +2630,13 @@ class ReportsController extends \Controller {
 											->where("attendenceStatus","=","A")
 											->get();
 							foreach($absenties as $absentee){
-								 if(isset($employees_arr[$absentee->empId])){
+								 if(in_array($absentee->empId, $temp_emps_arr)){
 								 	$cnt++;
 								 	$absenties_str = $employees_arr[$absentee->empId].", ".$absenties_str;
 								 }
 							}
-							$row["cnt1"] = count($employees_arr)-$cnt;
+							
+							$row["cnt1"] = $emp_cnt-$cnt;
 							$row["cnt2"] = "Total Absentees : ".$cnt."<br/> ".$absenties_str;
 							$row["createdby"] = $entity->name;
 							$resp[] = $row;
@@ -2442,8 +2717,14 @@ class ReportsController extends \Controller {
 			
 			$entities = null;
 			if($values["employeetype"] == "CLIENT BRANCH"){
-				\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
-				$entities = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
+				if(isset($values["depot"]) &&  $values["depot"] == 0){
+					\DB::statement(\DB::raw("CALL contract_driver_helper_all('".$values["clientname"]."');"));
+					$entities = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
+				}
+				else{
+					\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+					$entities = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
+				}
 			}
 			else{
 				$entities = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")
@@ -2809,7 +3090,12 @@ class ReportsController extends \Controller {
 						$entities = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->get();
 					  }
 					  else if(isset($values["employeetype"]) && $values["employeetype"]=="CLIENT BRANCH"){
-					  	DB::statement(DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+					  	if($values["depot"]==0){
+					  		DB::statement(DB::raw("CALL contract_driver_helper_all('".$values["clientname"]."');"));
+					  	}
+					  	else{
+					  		DB::statement(DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+					  	}
 						$entities = DB::select( DB::raw("select * from temp_contract_drivers_helpers group by id"));
 					  }
 					  $i = 0;
@@ -3880,14 +4166,99 @@ class ReportsController extends \Controller {
 	}
 	
 	private function getVehicleStockHistoryReport($values){
+		if (\Request::isMethod('post'))
+		{
+			$frmDt = date("Y-m-d", strtotime($values["fromdate"]));
+			$toDt = date("Y-m-d", strtotime($values["todate"]));
+			$resp = array();
+			if($values["reporttype"] == "vehiclestockhistory"){
+				$select_args = array();
+				$select_args[] = "vehicle.veh_reg as veh_reg";
+				$select_args[] = "officebranch.name as officebranch";
+				$select_args[] = "items.name as item";
+				$select_args[] = "manufactures.name as manufacturer";
+				$select_args[] = "purchased_items.qty as qty";
+				$select_args[] = "purchased_items.qty as totalAmount";
+				$select_args[] = "inventory_transaction.date as transactiondate";
+				$select_args[] = "purchase_orders.orderDate as orderDate";
+				$select_args[] = "creditsuppliers.suppliername as creditSupplierId";
+				$select_args[] = "purchase_orders.billNumber as billNumber";
+				$select_args[] = "purchase_orders.status as paymentInfo";
+				$select_args[] = "inventory_transaction.remarks as comments";
+				$select_args[] = "purchase_orders.id as id";
+				$select_args[] = "purchase_orders.amountPaid as amountPaid";
+				$select_args[] = "purchase_orders.paymentType as paymentType";
+				$select_args[] = "employee.fullName as createdBy";
+				$select_args[] = "purchased_items.unitPrice as unitPrice";
+				$select_args[] = "purchase_orders.filePath as filePath";
+				$select_args[] = "depots.name as depotName";
+				$select_args[] = "officebranch.id as branchId";
+				$select_args[] = "purchase_orders.paymentType as paymentType";
+				$select_args[] = "purchase_orders.chequeNumber as chequeNumber";
+				$select_args[] = "purchase_orders.bankAccount as bankAccountId";
+				$select_args[] = "inventory_transaction.fromWareHouseId as fromWareHouseId";
+				if($values["vehicle"] != 0){
+					$recs = \InventoryTransactions::where("toVehicleId","=",$values["vehicle"])
+									->where("inventory_transaction.status","=","ACTIVE")
+									->whereBetween("inventory_transaction.date",array($frmDt,$toDt))
+									->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")
+									->leftjoin("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
+									->leftjoin("items","items.id","=","purchased_items.itemId")
+									->leftjoin("vehicle","vehicle.id","=","inventory_transaction.toVehicleId")
+									->leftjoin("manufactures","manufactures.id","=","purchased_items.manufacturerId")
+									->leftjoin("officebranch","officebranch.id","=","inventory_transaction.fromWareHouseId")
+									->leftjoin("depots","depots.id","=","inventory_transaction.fromWareHouseId")
+									->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+									->leftjoin("employee","employee.id","=","purchase_orders.createdBy")
+									->select($select_args)->orderBy("inventory_transaction.date","desc")->get();
+								
+					foreach ($recs as $rec){
+						$row = array();
+						$row["veh_reg"] = $rec->veh_reg;
+						$row["officebranch"] = $rec->officebranch;
+						if($rec->fromWareHouseId>999){
+							$row["officebranch"] = $rec->depotName;
+						}
+						$row["item"] = $rec->item;
+						$row["manufacturer"] = $rec->manufacturer;
+						$row["qty"] = $rec->qty;
+						$row["totalAmount"] = $rec->totalAmount;
+						$row["transactiondate"] = date("d-m-Y",strtotime($rec->transactiondate));
+						$row["orderDate"] = date("d-m-Y",strtotime($rec->orderDate));
+						$row["creditSupplierId"] = $rec->creditSupplierId;
+						$row["billNumber"] = $rec->billNumber;
+						$row["pmtinfo"] = "PAYMENT TYPE : ".strtoupper($rec->paymentType)."</br>";
+						if($rec->paymentType == "debit_card" || $rec->paymentType == "credit_card"){
+							$card = \Cards::where("id","=",$rec->bankAccountId)->get();
+							if(count($card)>0){
+								$card = $card[0];
+								$row["pmtinfo"] = $row["pmtinfo"]."CARD NO : ".$card->cardNumber."<br/>";
+							}
+						}
+						if($rec->chequeNumber!=""){
+							$row["pmtinfo"] = $row["pmtinfo"]."REF NUM : ".$rec->chequeNumber;
+						}
+						if($rec->paymentType=="cheque_credit" || $rec->paymentType=="cheque_debit"){
+							$row["pmtinfo"] = $row["pmtinfo"]."CHQUE NUM : ".$rec->chequeNumber;
+						}
+						$row["comments"] = $rec->comments;
+						$row["createdby"] = $rec->createdBy;
+						$resp[] = $row;
+					}
+				}
+			echo json_encode($resp);
+			return;
+			}
+		}
 		$values['bredcum'] = strtoupper($values["reporttype"]);
 		$values['home_url'] = 'masters';
 		$values['add_url'] = 'getreport';
 		$values['form_action'] = 'getreport';
 		$values['action_val'] = '';
-		$theads = array('vehicle', 'Warehouse','Item Name', "Manufacturer", "Quantity", "Amouont", "Transaction Date", "Purchased Date", "Purchased From", "BillNo", "payment info", "comments", "Created By");
+		$theads = array('Bank Name','Branch Name', "Account Name", "Account No", "Account Type");
 		$values["theads"] = $theads;
-	
+		
+		
 		$form_info = array();
 		$form_info["name"] = "getreport";
 		$form_info["action"] = "getreport";
@@ -3896,13 +4267,7 @@ class ReportsController extends \Controller {
 		$form_info["back_url"] = "bankdetails";
 		$form_info["bredcum"] = "add bank details";
 		$form_info["reporttype"] = $values["reporttype"];
-	
-		$form_fields = array();
-		$select_args = array();
-		$select_args[] = "creditsuppliers.id as id";
-		$select_args[] = "creditsuppliers.supplierName as fname";
-		$select_args[] = "cities.name as cname";
-	
+		
 		$vehicles = \Vehicle::All();
 		$vehicles_arr = array();
 		foreach ($vehicles as $vehicle){
@@ -3914,11 +4279,10 @@ class ReportsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
 		$form_fields[] = $form_field;
-	
 		$form_info["form_fields"] = $form_fields;
 		$values["form_info"] = $form_info;
-		$values["provider"] = "vehiclestockhistory";
-		return View::make('reports.reportsdatatable', array("values"=>$values));
+		$values["provider"] = "bankdetails";
+		return View::make('reports.vehiclestockhistoryreport', array("values"=>$values));
 	}
 	
 	private function getRepairStockReport($values){
@@ -4001,7 +4365,8 @@ class ReportsController extends \Controller {
 			if(isset($values["inventoryreporttype"])){
 				if($values["inventoryreporttype"] == "find_available_items" ){
 					$query = \PurchasedItems::where("purchased_items.status","=","ACTIVE")
-								->where("purchase_orders.type","=","PURCHASE ORDER");
+								->whereIn("purchase_orders.type",array("PURCHASE ORDER","TO WAREHOUSE"))
+								->where("purchase_orders.status","=","ACTIVE");
 					if($values["warehouse"]>0 && ($values["item"]==0 || $values["item"]=="")){
 						$query->where("purchase_orders.officeBranchId","=",$values["warehouse"]);
 					}
@@ -4012,19 +4377,19 @@ class ReportsController extends \Controller {
 					if($values["warehouse"]==0 && $values["item"]>0){
 						$query->where("items.id","=",$values["item"]);
 					}
-					$query->join("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
-						->join("items","items.id","=","purchased_items.itemId")
-						->join("manufactures","manufactures.id","=","purchased_items.manufacturerId")
+					$query->leftjoin("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
+						->leftjoin("items","items.id","=","purchased_items.itemId")
+						->leftjoin("manufactures","manufactures.id","=","purchased_items.manufacturerId")
 						->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
 						->leftjoin("depots","depots.id","=","purchase_orders.officeBranchId")
-						->join("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+						->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
 						->leftjoin("employee","employee.id","=","purchase_orders.createdBy")
 						->leftjoin("employee as employee1","employee1.id","=","purchase_orders.inchargeId");
 					$entities = $query->select($select_args)->orderBy("purchase_orders.orderDate","desc")->get();
 					foreach ($entities as $entity){
 						$row = array();
 						$row["officeBranchId"] = $entity->officeBranchId;
-						if($entity->officeBranchId == "" || $entity->officeBranchId == 0 || $entity->officeBranchId == "null"){
+						if($entity->officeBranchId == "" || $entity->officeBranchId == "0" || $entity->officeBranchId == "null"){
 							$row["officeBranchId"] = $entity->depotName;
 						}
 						$row["item"] = $entity->item;
@@ -4040,7 +4405,7 @@ class ReportsController extends \Controller {
 						$resp[] = $row;
 					}
 				}
-				if(isset($values["inventoryreporttype"])){
+				if(isset($values["inventoryreporttype"]) && $values["inventoryreporttype"] == "history"){
 					$select_args = array();
 					$select_args[] = "officebranch.name as officebranch";
 					$select_args[] = "items.name as item";
@@ -4072,9 +4437,13 @@ class ReportsController extends \Controller {
 						$fromdt = date("Y-m-d",strtotime($values['fromdate']));
 						$todt = date("Y-m-d",strtotime($values['todate']));
 						$query = \InventoryTransactions::where("inventory_transaction.status","=","ACTIVE")
-							->whereBetween("inventory_transaction.date",array($fromdt,$todt));
-						if($values["warehouse"]>0){
+										->where("purchase_orders.status","=","ACTIVE")
+										->whereBetween("inventory_transaction.date",array($fromdt,$todt));
+						if($values["warehouse"]>0 && $values["warehouse"]<999){
 							$query->where("officebranch.id","=",$values["warehouse"]);
+						}
+						if($values["warehouse"]>999){
+							$query->where("depots.id","=",$values["warehouse"]);
 						}
 						if($values["item"]>0){
 							$query->where("items.id","=",$values["item"]);
@@ -4158,19 +4527,30 @@ class ReportsController extends \Controller {
 		$select_args[] = "fuelstationdetails.name as fname";
 		$select_args[] = "cities.name as cname";
 	
-		$branches =  \OfficeBranch::where("isWarehouse","=","Yes")->get();
-		$branches_arr = array();
-		$branches_arr["0"] = "ALL WAREHOUSES";
-		foreach ($branches as $branch){
-			$branches_arr[$branch->id] = $branch->name;
+		$warehouse_arr_total = array();
+		$warehouse_arr = array();
+		$warehouses = \OfficeBranch::where("isWareHouse","=","Yes")->get();
+		foreach ($warehouses as $warehouse){
+			$warehouse_arr[$warehouse->id] = $warehouse->name;
 		}
+		$warehouse_arr_total["main warehouses"] = $warehouse_arr;
+		foreach ($warehouses as $warehouse){
+			$warehouse_arr = array();
+			$sub_warehouses = \Depot::where("status","=","ACTIVE")
+			->where("ParentWarehouse","=",$warehouse->id)->get();
+			foreach ($sub_warehouses as $sub_warehouse){
+				$warehouse_arr[$sub_warehouse->id] = $sub_warehouse->name."(".$sub_warehouse->code.")";
+			}
+			$warehouse_arr_total[$warehouse->name] = $warehouse_arr;
+		}
+		
 		$items = \Items::All();
 		$items_arr = array();
 		$items_arr[0] = "All";
 		foreach ($items as $item){
 			$items_arr[$item->id] = $item->name;
 		}
-		$form_field = array("name"=>"warehouse", "content"=>"warehouse ", "readonly"=>"",  "required"=>"required","type"=>"select",  "options"=>$branches_arr, "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"warehouse", "id"=>"warehouse", "content"=>"warehouse ", "readonly"=>"",  "required"=>"required","type"=>"selectgroup",  "options"=>$warehouse_arr_total, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"item", "content"=>"item ", "readonly"=>"",  "required"=>"","type"=>"select",  "options"=>$items_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
@@ -4400,21 +4780,32 @@ class ReportsController extends \Controller {
 			$todt = date("Y-m-d",strtotime($values["todate"]));
 			$resp = array();
 				
-			$entities = \Depot::whereBetween("filledDate",array($frmdt,$todt))
-						->where("depots.id",$values["depot"])
-						->leftjoin("contracts","contracts.depotId","=","depots.id")
-						->leftjoin("fueltransactions","fueltransactions.contractId","=","contracts.id")
+			$sql = \FuelTransaction::whereBetween("filledDate",array($frmdt,$todt));
+						if($values["depot"]!=0){
+							$sql->where("contracts.depotId",$values["depot"]);
+						}						
+						$sql->where("fullTank","YES")
+						->where("fueltransactions.deleted","No")
+						->where("fueltransactions.status","ACTIVE")
+						->where("contracts.clientId",$values["clientname"])
+						->join("contracts","contracts.id","=","fueltransactions.contractId")
 						->leftjoin("vehicle","vehicle.id","=","fueltransactions.vehicleId")
-						->leftjoin("lookuptypevalues","lookuptypevalues.id","=","vehicle.vehicle_type")
-						->select($select_args)->orderBy("filledDate","asc")->orderBy("fueltransactions.vehicleId","asc")->get();
-			$total = \Depot::whereBetween("filledDate",array($frmdt,$todt))
-						->where("depots.id",$values["depot"])
-						->leftjoin("contracts","contracts.depotId","=","depots.id")
-						->leftjoin("fueltransactions","fueltransactions.contractId","=","contracts.id")
+						->leftjoin("lookuptypevalues","lookuptypevalues.id","=","vehicle.vehicle_type");
+			$entities =	$sql->select($select_args)->orderBy("fueltransactions.vehicleId","asc")->orderBy("filledDate","asc")->get();
+			$total = \FuelTransaction::whereBetween("filledDate",array($frmdt,$todt))
+						->where("fullTank","YES")
+						->where("fueltransactions.deleted","No")
+						->where("fueltransactions.status","ACTIVE")
+						->where("contracts.depotId",$values["depot"])
+						->where("contracts.clientId",$values["clientname"])
+						->join("contracts","contracts.id","=","fueltransactions.contractId")
 						->count();
 			
 			$i=0;
-			$veh = $entities[0]->veh_reg;
+			$veh = "";
+			if(count($entities)>0){
+				$veh = $entities[0]->veh_reg;
+			}
 			for($i=0; $i<count($entities)-1; $i++){
 				$row = array();
 				if($veh == $entities[$i+1]->veh_reg){
@@ -4424,26 +4815,40 @@ class ReportsController extends \Controller {
 					$row["startDate"] = date("d-m-Y",strtotime($entities[$i]->startDate));
 					$row["endDate"] = date("d-m-Y",strtotime($entities[$i+1]->endDate));
 					$row["distance"] = $entities[$i+1]->startReading-$entities[$i]->startReading;
+					if($row["distance"]==0){
+						continue;
+					}
 					$row["litres"] = $entities[$i]->litres;
 					$row["mileage"] = round(($entities[$i+1]->startReading-$entities[$i]->startReading)/$entities[$i]->litres, 2);
 					$row["remarks"] = $entities[$i]->remarks." ";//.$entities[$i]->startReading;
 				}
 				else{
 					$veh = $entities[$i+1]->veh_reg;
-					$row["veh_reg"] = $entities[$i]->veh_reg;
-					$row["vehicle_type"] = $entities[$i]->vehicle_type;
-					$row["yearof_pur"] = date("d-m-Y",strtotime($entities[$i]->yearof_pur));
-					$row["startDate"] = date("d-m-Y",strtotime($entities[$i]->startDate));
-					$row["endDate"] = date("d-m-Y",strtotime($entities[$i]->endDate));
-					$row["distance"] = $entities[$i+1]->startReading-$entities[$i]->startReading;
-					$row["litres"] = $entities[$i]->litres;
-					$row["mileage"] = round(($entities[$i+1]->startReading-$entities[$i]->startReading)/$entities[$i]->litres, 2);
-					$row["remarks"] = $entities[$i]->remarks;//." ".$entities[$i]->startReading;
+					if(($entities[$i+1]->startReading-$entities[$i]->startReading) <0){
+						continue;
+					}
+					$i++;
+					if($entities[$i]->veh_reg != $entities[$i+1]->veh_reg){
+						continue;
+					}
+					else{
+						continue;
+						/*$row["veh_reg"] = $entities[$i]->veh_reg;
+						$row["vehicle_type"] = $entities[$i]->vehicle_type;
+						$row["yearof_pur"] = date("d-m-Y",strtotime($entities[$i]->yearof_pur));
+						$row["startDate"] = date("d-m-Y",strtotime($entities[$i]->startDate));
+						$row["endDate"] = date("d-m-Y",strtotime($entities[$i+1]->endDate));
+						$row["distance"] = $entities[$i+1]->startReading-$entities[$i]->startReading;
+						$row["litres"] = $entities[$i]->litres;
+						$row["mileage"] = round(($entities[$i+1]->startReading-$entities[$i]->startReading)/$entities[$i]->litres, 2);
+						$row["remarks"] = $entities[$i]->remarks;//." ".$entities[$i]->startReading;
+						*/
+					}
 				}
 				$resp[] = $row;
 			}
 			if(count($entities)>0){
-				$row["veh_reg"] = $entities[$i]->veh_reg;
+				/*$row["veh_reg"] = $entities[$i]->veh_reg;
 				$row["vehicle_type"] = $entities[$i]->vehicle_type;
 				$row["yearof_pur"] = date("d-m-Y",strtotime($entities[$i]->yearof_pur));
 				$row["startDate"] = date("d-m-Y",strtotime($entities[$i]->startDate));
@@ -4452,7 +4857,7 @@ class ReportsController extends \Controller {
 				$row["litres"] = $entities[$i]->litres;
 				$row["mileage"] = round(($entities[$i]->startReading-$entities[$i]->startReading)/$entities[$i]->litres, 2);
 				$row["remarks"] = $entities[$i]->remarks;//." ".$entities[$i]->startReading;
-				$resp[] = $row;
+				$resp[] = $row;*/
 			}
 			echo json_encode($resp);
 			return;
@@ -4524,6 +4929,7 @@ class ReportsController extends \Controller {
 			$select_args = array();
 			$select_args[] = "service_logs.serviceDate as serviceDate";
 			$select_args[] = "service_logs.contractVehicleId as contractVehicleId";
+			$select_args[] = "contract_vehicles.vehicleId as contractVehicleId";
 			$select_args[] = "service_logs.tripNumber as tripNumber";
 			$select_args[] = "service_logs.startTime as startTime";
 			$select_args[] = "service_logs.startReading as startReading";
@@ -4539,8 +4945,10 @@ class ReportsController extends \Controller {
 			$resp = array();
 	
 			$qry=  \ServiceLog::join("contracts","service_logs.contractId","=","contracts.id")
+								->join("contract_vehicles","contract_vehicles.id","=","service_logs.contractVehicleId")
 								->where("contracts.clientId","=",$values["clientname"])
-								->where("contracts.depotId","=",$values["depot"]);
+								->where("contracts.depotId","=",$values["depot"])
+								->where("service_logs.status","=","ACTIVE");
 								
 			
 			$recs = $qry->select($select_args)->orderBy("service_logs.serviceDate","desc")->get();
@@ -4597,7 +5005,10 @@ class ReportsController extends \Controller {
 				$row["distance"] = $rec->distance;
 				$row["driver1Id"] = $drivers_arr[$rec->driver1Id];
 				$row["driver2Id"] = $rec->driver2Id;
-				$row["helperId"] = $helpers_arr[$rec->helperId];
+				$row["helperId"] = "";
+				if($rec->helperId != "" || $rec->helperId != 0){
+					$row["helperId"] = $helpers_arr[$rec->helperId];
+				}
 				$row["remarks"] = $rec->remarks;
 				
 				$resp[] = $row;
@@ -4663,8 +5074,7 @@ class ReportsController extends \Controller {
 	{
 		if (\Request::isMethod('post'))
 		{
-			//$values["test"];
-				
+			//$values["test"];				
 			if(!isset($values["fromdate"]) || !isset($values["todate"])){
 				echo json_encode(array("total"=>0, "data"=>array()));
 				return ;
@@ -4676,7 +5086,7 @@ class ReportsController extends \Controller {
 				$select_args[] = "contracts.startDate as startDate";
 				$select_args[] = "contracts.endDate as endDate";
 				$select_args[] = "service_logs.serviceDate as serviceDate";
-				$select_args[] = "service_logs.contractVehicleId as contractVehicleId";
+				$select_args[] = "contract_vehicles.vehicleId as contractVehicleId";
 				$select_args[] = "service_logs.substituteVehicleId as substituteVehicleId";
 				$select_args[] = "service_logs.tripNumber as tripNumber";
 				$select_args[] = "service_logs.startTime as startTime";
@@ -4684,18 +5094,22 @@ class ReportsController extends \Controller {
 				$select_args[] = "service_logs.endReading as endReading";
 				$select_args[] = "service_logs.distance as distance";
 				$select_args[] = "service_logs.repairkms as repairkms";
-				$select_args[] = "service_logs.driver1Id as driver1Id";
-				$select_args[] = "service_logs.driver2Id as driver2Id";
-				$select_args[] = "service_logs.helperId as helperId";
+				$select_args[] = "contract_vehicles.driver1Id as driver1Id";
+				$select_args[] = "contract_vehicles.driver2Id as driver2Id";
+				$select_args[] = "contract_vehicles.helperId as helperId";
 				$select_args[] = "service_logs.remarks as remarks";
 				
 				$resp = array();
-				$qry=  \ServiceLog::join("contracts","service_logs.contractId","=","contracts.id")
-						->where("contracts.clientId","=",$values["clientname"])
-						->where("contracts.depotId","=",$values["depot"])
-						->whereBetween("service_logs.serviceDate",array($frmdt,$todt));
-		
-				$recs = $qry->select($select_args)->orderBy("service_logs.serviceDate","desc")->get();
+				$qry =  \ServiceLog::join("contracts","service_logs.contractId","=","contracts.id")
+								->join("contract_vehicles","contract_vehicles.id", "=", "service_logs.contractVehicleId")
+								->where("contracts.clientId","=",$values["clientname"]);
+							if($values["depot"]!=0){
+								$qry->where("contracts.depotId","=",$values["depot"]);
+							}
+								$qry->where("service_logs.status","=",'ACTIVE')
+								->whereBetween("service_logs.serviceDate",array($frmdt,$todt));
+				
+				$recs = $qry->select($select_args)->orderBy("service_logs.serviceDate","desc")->orderBy("service_logs.contractVehicleId","desc")->get();
 				$veh_arr = array();
 				$vehicles = \Vehicle::all();
 				foreach ($vehicles as $vehicle){
@@ -4718,15 +5132,16 @@ class ReportsController extends \Controller {
 				$prev_date = "";
 				$prev_veh_no = "";
 				$trip = 1;
-					
+				$totkms = 0;
+				$tot_rp_kms = 0;
 				foreach($recs as  $rec) {
+					$trip = 1;
 					if($rec->driver2Id > 0){
 						$rec->driver2Id = $drivers_arr[$rec->driver2Id];
 					}
 					else{
 						$rec->driver2Id = "";
 					}
-		
 					if ($prev_date == date("d-m-Y",strtotime($rec->serviceDate)) && $prev_veh_no == $veh_arr[$rec->contractVehicleId]){
 						$trip++;
 					}
@@ -4743,25 +5158,40 @@ class ReportsController extends \Controller {
 					$row["startDate"] = date("d-m-Y",strtotime($rec->startDate))." to ".date("d-m-Y",strtotime($rec->endDate));
 					$row["serviceDate"] = date("d-m-Y",strtotime($rec->serviceDate));
 					$prev_date = date("d-m-Y",strtotime($rec->serviceDate));
-					$row["contractVehicleId"] = $veh_arr[$rec->contractVehicleId];
-					$prev_veh_no = $veh_arr[$rec->contractVehicleId];
+					$row["contractVehicleId"] = "";
+					if(isset($veh_arr[$rec->contractVehicleId])){
+						$row["contractVehicleId"] = $veh_arr[$rec->contractVehicleId];
+					}
+					$prev_veh_no = "";
+					if(isset($veh_arr[$rec->contractVehicleId])){
+						$prev_veh_no = $veh_arr[$rec->contractVehicleId];
+					}
 					$row["substituteVehicleId"] = $rec->substituteVehicleId ;
 					$row["tripNumber"] = $trip;
 					$row["startTime"] = $rec->startTime;
 					$row["startReading"] = $rec->startReading;
 					$row["endReading"] = $rec->endReading;
-					$row["distance"] = $rec->distance;
+					$row["distance"] = (int)$rec->distance;
+					$totkms = $totkms+(int)$rec->distance;
 					$row["repairkms"] = $rec->repairkms;
-					$row["driver1Id"] = $drivers_arr[$rec->driver1Id];
-					$row["driver2Id"] = $rec->driver2Id;
+					$tot_rp_kms = $tot_rp_kms+$rec->repairkms;
+					$row["driver1Id"] = 0;
+					if(isset($drivers_arr[$rec->driver1Id])){
+						$row["driver1Id"] = $drivers_arr[$rec->driver1Id];
+					}
+					$row["driver2Id"] = 0;
+					if(isset($drivers_arr[$rec->driver2Id])){
+						$row["driver2Id"] = $drivers_arr[$rec->driver2Id];
+					}
 					$row["helperId"] = "";
 					if(isset($helpers_arr[$rec->helperId])){
 						$row["helperId"] = $helpers_arr[$rec->helperId];
 					}
 					$row["remarks"] = $rec->remarks;
-		
+					
 					$resp[] = $row;
 				}
+				$resp1 = array("data"=>$resp, "total_kms"=>$totkms, "total_rp_kms"=>$tot_rp_kms);
 			}
 			else if($values["reportfor"] == "vehiclesummary"){
 				$resp = array();
@@ -4784,13 +5214,18 @@ class ReportsController extends \Controller {
 						->groupBy("service_logs.contractVehicleId")->orderBy("service_logs.serviceDate","desc")->get();
 				*/
 				$sql = "select `contracts`.`startDate` as `startDate`, `contracts`.`endDate` as `endDate`," 
-							."`clients`.`name` as `client`, `depots`.`name` as `depots`, `service_logs`.`contractVehicleId` as `contractVehicleId`,"
+							."`clients`.`name` as `client`, `depots`.`name` as `depots`, `contract_vehicles`.`vehicleId` as `contractVehicleId`,  `contract_vehicles`.`id` as `contractVehicleId1`, "
 							."sum(service_logs.distance) as `distance`, sum(service_logs.repairkms) as `repairkms` from `service_logs`"
 							."inner join `contracts` on `service_logs`.`contractId` = `contracts`.`id`"
+							."inner join `contract_vehicles` on `service_logs`.`contractVehicleId` = `contract_vehicles`.`id`"
 							."inner join `clients` on `contracts`.`clientId` = `clients`.`id`"
 							."inner join `depots` on `contracts`.`depotId` = `depots`.`id`"
-							."where  `contracts`.`clientId` = ".$values["clientname"]." and `contracts`.`depotId` = ".$values["depot"] 
-							." and serviceDate between '".$frmdt."' and '".$todt."' group by `service_logs`.`contractVehicleId` order by `service_logs`.`serviceDate` desc";
+							."where  `service_logs`.`status` = 'ACTIVE' and "
+							." `contracts`.`clientId` = ".$values["clientname"];
+							if($values["depot"]!=0){
+								$sql = $sql." and `contracts`.`depotId` = ".$values["depot"];
+							}
+				$sql = 		$sql." and serviceDate between '".$frmdt."' and '".$todt."' group by `service_logs`.`contractVehicleId` order by `service_logs`.`serviceDate` desc";
 				$recs = \DB::select(\DB::raw($sql));
 				$veh_arr = array();
 				$vehicles = \Vehicle::all();
@@ -4805,11 +5240,20 @@ class ReportsController extends \Controller {
 					$row["client"] = $rec->client;
 					$row["depots"] = $rec->depots;
 					$row["contractVehicleId"] = $veh_arr[$rec->contractVehicleId];
-					$row["distance"] = $rec->distance;
+					
+					$trip2_kms = 0;
+					/*$sql = "select count(serviceDate) as cnt, distance from `service_logs` where `contractVehicleId` = ".$rec->contractVehicleId1." and `substituteVehicleId` = 0 and `status` = 'ACTIVE' and serviceDate BETWEEN '".$frmdt."' and '".$todt."' GROUP BY `serviceDate` HAVING cnt > 1";
+					$servlogs = \DB::select(\DB::raw($sql));
+					foreach ($servlogs as $servlog){
+						$trip2_kms = $trip2_kms+$servlog->distance;
+					}
+					*/
+					$row["distance"] = (int)$rec->distance+$trip2_kms;
 					$row["repairkms"] = $rec->repairkms;
 				
 					$resp[] = $row;
 				}
+				$resp1 = array("data"=>$resp);
 			}
 			else if($values["reportfor"] == "workingdaysvehiclesummary"){
 				$select_args = array();
@@ -4818,20 +5262,32 @@ class ReportsController extends \Controller {
 				$select_args[] = "contracts.avgKms as avgKms";
 				$select_args[] = "clients.name as client";
 				$select_args[] = "depots.name as depots";
-				$select_args[] = "service_logs.contractVehicleId as contractVehicleId";
+				$select_args[] = "contract_vehicles.vehicleId as contractVehicleId";
 				$select_args[] = "service_logs.distance as distance";
 				$select_args[] = "service_logs.repairkms as repairkms";
 			
 				$resp = array();
+				$totkms = 0;
+				$tot_rp_kms = 0;
+				$tot_tp1_kms = 0;
+				$tot_tp2_kms = 0;
+				$tot_hds_kms = 0;
+				$tot_ex_kms = 0;
 				// service_logs.substituteVehicleId=0 and
 				$sql = "select `contracts`.`startDate` as `startDate`, `contracts`.`endDate` as `endDate`, `contracts`.`avgKms` as `avgKms`," 
-							."`clients`.`name` as `client`, `depots`.`name` as `depots`, `service_logs`.`contractVehicleId` as `contractVehicleId`,"
+							."`clients`.`name` as `client`, `depots`.`name` as `depots`, `depots`.`id` as `depotId`, `contract_vehicles`.`id` as `contractVehicleId`, "
+							."`contract_vehicles`.`vehicleId` as `vehicleId`, `contract_vehicles`.vehicleStartDate, "
 							."sum(service_logs.distance) as `distance`, sum(service_logs.repairkms) as `repairkms` from `service_logs`"
 							."inner join `contracts` on `service_logs`.`contractId` = `contracts`.`id`"
+							."inner join `contract_vehicles` on `service_logs`.`contractVehicleId` = `contract_vehicles`.`id`"
 							."inner join `clients` on `contracts`.`clientId` = `clients`.`id`"
 							."inner join `depots` on `contracts`.`depotId` = `depots`.`id`"
-							."where `contracts`.`clientId` = ".$values["clientname"]." and `contracts`.`depotId` = ".$values["depot"] 
-							." and serviceDate between '".$frmdt."' and '".$todt."' group by `service_logs`.`contractVehicleId` order by `service_logs`.`serviceDate` desc";
+							."where  `service_logs`.`status` = 'ACTIVE' and "		
+							." `contracts`.`clientId` = ".$values["clientname"];
+							if($values["depot"]!=0){
+								$sql = 	$sql." and `contracts`.`depotId` = ".$values["depot"];
+							}
+				$sql = 		$sql." and serviceDate between '".$frmdt."' and '".$todt."' group by `service_logs`.`contractVehicleId` order by `service_logs`.`serviceDate` desc";
 				$recs = \DB::select(\DB::raw($sql));
 				$veh_arr = array();
 				$vehicles = \Vehicle::all();
@@ -4842,108 +5298,142 @@ class ReportsController extends \Controller {
 				$date1=date_create($frmdt);
 				$date2=date_create($todt);
 				$diff=date_diff($date1,$date2);
-				$working_days =  $diff->format("%a");
-				
-				$tot_holidays=0;
-				$contractid = \Contract::where("clientId","=",$values["clientname"])
-								->where("depotId","=",$values["depot"])
-								->where("status","=","ACTIVE")->first();
-				$contractid = $contractid->id;
-				$holidays = \ClientHolidays::where("contractId","=",$contractid)
-									->where("status","=","Open")->get();
-				$holidays_arr = array();
-				foreach($holidays as  $holiday) {
-					$date1 = strtotime($frmdt);
-					$date2 = strtotime($todt);
-					$date3 = strtotime(date("Y-m-d",strtotime($holiday->fromDate)));
-					$date4 = strtotime(date("Y-m-d",strtotime($holiday->toDate)));
-					if($date1<=$date3 && $date2>=$date4){
-						$dt1 = date_create(date("Y-m-d",strtotime($holiday->fromDate)));
-						$dt2 = date_create(date("Y-m-d",strtotime($holiday->toDate)));
-						$diff = date_diff($dt1,$dt2);
-						$tot_holidays =  $tot_holidays+$diff->format("%a");
-						$tot_holidays = $tot_holidays+1;
-						
-						$date = $dt1;
-						for($i=0; $i<$diff->format("%a"); $i++){
-							$date = date_add($date, date_interval_create_from_date_string('1 days'));
-							$holidays_arr[] =  date_format($date, 'Y-m-d');
-						}
-					}
-					else if($date1>=$date3 && $date2<=$date4){
-						$dt1 = date_create(date("Y-m-d",strtotime($frmdt)));
-						$dt2 = date_create(date("Y-m-d",strtotime($todt)));
-						$diff = date_diff($dt1,$dt2);
-						$tot_holidays =  $tot_holidays+$diff->format("%a");
-						$tot_holidays = $tot_holidays+1;
-						
-						$date = $dt1;
-						for($i=0; $i<$diff->format("%a"); $i++){
-							$date = date_add($date, date_interval_create_from_date_string('1 days'));
-							$holidays_arr[] =  date_format($date, 'Y-m-d');
-						}
-					}
-					else if($date1<=$date3 && $date2<=$date4 && $date3<=$date2){
-						$dt1 = date_create(date("Y-m-d",strtotime($holiday->fromDate)));
-						$dt2 = date_create(date("Y-m-d",strtotime($todt)));
-						$diff = date_diff($dt1,$dt2);
-						$tot_holidays =  $tot_holidays+$diff->format("%a");
-						$tot_holidays = $tot_holidays+1;
-						
-						$date = $dt1;
-						for($i=0; $i<$diff->format("%a"); $i++){
-							$date = date_add($date, date_interval_create_from_date_string('1 days'));
-							$holidays_arr[] =  date_format($date, 'Y-m-d');
-						}
-					}
-					else if($date1>=$date3 && $date2>=$date4 && $date1<=$date4){
-						$dt1 = date_create(date("Y-m-d",strtotime($frmdt)));
-						$dt2 = date_create(date("Y-m-d",strtotime($holiday->toDate)));
-						$diff = date_diff($dt1,$dt2);
-						$tot_holidays =  $tot_holidays+$diff->format("%a");
-						$tot_holidays = $tot_holidays+1;
-						
-						$date = $dt1;
-						for($i=0; $i<$diff->format("%a"); $i++){
-							$date = date_add($date, date_interval_create_from_date_string('1 days'));
-							$holidays_arr[] =  date_format($date, 'Y-m-d');
-						}
-					}
-				}
-				
+				$working_days =  $diff->format("%a")+1;				
+							
 				foreach($recs as  $rec) {
+					$tot_holidays=0;
+					$sql = \Contract::where("clientId","=",$values["clientname"])
+									->where("depotId","=",$rec->depotId);
+					$contracts = $sql->where("status","=","ACTIVE")->get();
+					$contractid_arr = array();
+					foreach($contracts as $contract){
+						$contractid_arr[] = $contract->id;
+					}
+					$holidays = \ClientHolidays::whereIn("contractId",$contractid_arr)
+									->where("status","=","Open")->get();
+					$holidays_arr = array();
+					foreach($holidays as  $holiday) {
+						$date1 = strtotime($frmdt);
+						$date2 = strtotime($todt);
+						$date3 = strtotime(date("Y-m-d",strtotime($holiday->fromDate)));
+						$date4 = strtotime(date("Y-m-d",strtotime($holiday->toDate)));
+						if($date1<=$date3 && $date2>=$date4){
+							$dt1 = date_create(date("Y-m-d",strtotime($holiday->fromDate)));
+							$dt2 = date_create(date("Y-m-d",strtotime($holiday->toDate)));
+							$diff = date_diff($dt1,$dt2);
+							$tot_holidays =  $tot_holidays+$diff->format("%a");
+							$tot_holidays = $tot_holidays+1;
+							//echo $holiday->fromDate." - ".$holiday->toDate." : ".$diff->format("%a")."=====";
+							$date = $dt1;
+							for($i=0; $i<$diff->format("%a")+1; $i++){
+								if(!in_array(date_format($date, 'Y-m-d'), $holidays_arr)){
+									$holidays_arr[] =  date_format($date, 'Y-m-d');
+								}
+								$date = date_add($date, date_interval_create_from_date_string('1 days'));
+							}
+						}
+						else if($date1>=$date3 && $date2<=$date4){
+							$dt1 = date_create(date("Y-m-d",strtotime($frmdt)));
+							$dt2 = date_create(date("Y-m-d",strtotime($todt)));
+							$diff = date_diff($dt1,$dt2);
+							$tot_holidays =  $tot_holidays+$diff->format("%a");
+							$tot_holidays = $tot_holidays+1;
+					
+							$date = $dt1;
+							for($i=0; $i<$diff->format("%a")+1; $i++){
+								if(!in_array(date_format($date, 'Y-m-d'), $holidays_arr)){
+									$holidays_arr[] =  date_format($date, 'Y-m-d');
+								}
+								$date = date_add($date, date_interval_create_from_date_string('1 days'));
+							}
+						}
+						else if($date1<=$date3 && $date2<=$date4 && $date3<=$date2){
+							$dt1 = date_create(date("Y-m-d",strtotime($holiday->fromDate)));
+							$dt2 = date_create(date("Y-m-d",strtotime($todt)));
+							$diff = date_diff($dt1,$dt2);
+							$tot_holidays =  $tot_holidays+$diff->format("%a");
+							$tot_holidays = $tot_holidays+1;
+					
+							$date = $dt1;
+							for($i=0; $i<$diff->format("%a")+1; $i++){
+								if(!in_array(date_format($date, 'Y-m-d'), $holidays_arr)){
+									$holidays_arr[] =  date_format($date, 'Y-m-d');
+								}
+								$date = date_add($date, date_interval_create_from_date_string('1 days'));
+							}
+						}
+						else if($date1>=$date3 && $date2>=$date4 && $date1<=$date4){
+							$dt1 = date_create(date("Y-m-d",strtotime($frmdt)));
+							$dt2 = date_create(date("Y-m-d",strtotime($holiday->toDate)));
+							$diff = date_diff($dt1,$dt2);
+							$tot_holidays =  $tot_holidays+$diff->format("%a");
+							$tot_holidays = $tot_holidays+1;
+					
+							$date = $dt1;
+							for($i=0; $i<$diff->format("%a")+1; $i++){
+								if(!in_array(date_format($date, 'Y-m-d'), $holidays_arr)){
+									$holidays_arr[] =  date_format($date, 'Y-m-d');
+								}
+								$date = date_add($date, date_interval_create_from_date_string('1 days'));
+							}
+						}
+					}
 					$row = array();
 					$row["startDate"] = date("d-m-Y",strtotime($rec->startDate))." to ".date("d-m-Y",strtotime($rec->endDate));
 					$row["client"] = $rec->client;
 					$row["depots"] = $rec->depots;
-					$row["contractVehicleId"] = $veh_arr[$rec->contractVehicleId];
+					$row["contractVehicleId"] = $veh_arr[$rec->vehicleId];
 					$row["avg kms"] =$rec->avgKms;
-					$row["working days"] = $working_days-$tot_holidays;
-					$row["total holiday days"] = $tot_holidays;
+					$ex_start_days = 0;
+					if($rec->vehicleStartDate!="0000-00-00" && $rec->vehicleStartDate!="1970-01-01"){
+						$dt1 = date_create(date("Y-m-d",strtotime($frmdt)));
+						$dt2 = date_create(date("Y-m-d",strtotime($rec->vehicleStartDate)));
+						$diff = date_diff($dt2,$dt1);
+						if($diff->format("%R%a")<0){
+							$ex_start_days = $diff->format("%R%a");
+						}
+					}
+					$row["working days"] = ($working_days+$ex_start_days)-count($holidays_arr);
+					$row["total holiday days"] = count($holidays_arr);
 					$start_reading = 0;
-					$servlogs = \ServiceLog::where("contractId","=",$contractid)
+					$servlogs = null;
+					if($ex_start_days<0){
+						$servlogs = \ServiceLog::whereIn("contractId",$contractid_arr)
 											->where("contractVehicleId","=",$rec->contractVehicleId)
-											->where("serviceDate","<",$frmdt)
+											->where("serviceDate",">=",$rec->vehicleStartDate)
 											->where("substituteVehicleId","=",0)
-											->where("status","=","ACTIVE")->orderBy("serviceDate","asc")->get();
-					if(count($servlogs)){
-						$servlog = $servlogs[count($servlogs)-1];
-						$start_reading = $servlog->endReading;
+											->where("status","=","ACTIVE")->orderBy("serviceDate","desc")->get();
+						if(count($servlogs)>0){
+							$servlog = $servlogs[count($servlogs)-1];
+							$start_reading = $servlog->startReading;
+						}
+					}
+					else{
+						$servlogs = \ServiceLog::whereIn("contractId",$contractid_arr)
+											->where("contractVehicleId","=",$rec->contractVehicleId)
+											->where("serviceDate",">=",$frmdt)
+											->where("substituteVehicleId","=",0)
+											->where("status","=","ACTIVE")->orderBy("serviceDate","desc")->get();
+						if(count($servlogs)>0){
+							$servlog = $servlogs[count($servlogs)-1];
+							$start_reading = $servlog->startReading;
+						}
 					}
 					
 					$end_reading = 0;
-					$servlogs = \ServiceLog::where("contractId","=",$contractid)
+					$servlogs = \ServiceLog::whereIn("contractId",$contractid_arr)
 											->where("contractVehicleId","=",$rec->contractVehicleId)
-											->where("serviceDate","<",$todt)
+											->where("serviceDate","<=",$todt)
 											->where("substituteVehicleId","=",0)
 											->where("status","=","ACTIVE")->orderBy("serviceDate","asc")->get();
-					if(count($servlogs)){
+					if(count($servlogs)>0){
 						$servlog = $servlogs[count($servlogs)-1];
 						$end_reading = $servlog->endReading;
 					}
 					
 					$holidays_kms = 0;
-					$servlogs = \ServiceLog::where("contractId","=",$contractid)
+					//print_r($holidays_arr); die();
+					$servlogs = \ServiceLog::whereIn("contractId",$contractid_arr)
 									->where("contractVehicleId","=",$rec->contractVehicleId)
 									->whereIn("serviceDate",$holidays_arr)
 									->where("substituteVehicleId","=",0)
@@ -4954,26 +5444,48 @@ class ReportsController extends \Controller {
 					
 					$trip1_kms = $rec->distance;
 					$trip2_kms = 0;
-					$sql = "select count(serviceDate) as cnt, distance from `service_logs` where `contractId` = ".$contractid." and `contractVehicleId` = ".$rec->contractVehicleId." and `substituteVehicleId` = 0 and `status` = 'ACTIVE' and serviceDate BETWEEN '".$frmdt."' and '".$todt."' GROUP BY `serviceDate` HAVING cnt > 1";
+					$contractid_str = "";
+					foreach($contractid_arr as $conid){
+						$contractid_str = $contractid_str.$conid.",";
+					}
+					$contractid_str= substr($contractid_str, 0, strlen($contractid_str)-1);
+					$sql = "select distance from `service_logs` where `contractId` in (".$contractid_str.") and `contractVehicleId` = ".$rec->contractVehicleId." and `substituteVehicleId` = 0 and `status` = 'ACTIVE' and serviceDate BETWEEN '".$frmdt."' and '".$todt."' GROUP BY `serviceDate`";
 					$servlogs = \DB::select(\DB::raw($sql));
 					foreach ($servlogs as $servlog){
 						$trip2_kms = $trip2_kms+$servlog->distance;
 					}
-					
+					$trip12_kms = 0;
+					/*
+					if($trip2_kms>0){
+						$sql = "select sum(distance) as distance from `service_logs` where `contractId` in (".$contractid_str.") and `contractVehicleId` = ".$rec->contractVehicleId." and `substituteVehicleId` = 0 and `status` = 'ACTIVE' and serviceDate BETWEEN '".$frmdt."' and '".$todt."'";
+						$servlogs = \DB::select(\DB::raw($sql));
+						foreach ($servlogs as $servlog){
+							$trip12_kms = $trip12_kms+$servlog->distance;
+						}
+						//$trip2_kms = $trip2_kms-($trip12_kms-($trip1_kms-($trip2_kms+$holidays_kms)));
+					}
+					*/
 					$row["start reading"] = $start_reading;
 					$row["end reading"] = $end_reading;
-					$row["trip1 kms"] = $trip1_kms-($trip2_kms+$holidays_kms);
+					$trip2_kms = $trip1_kms-$trip2_kms;
+					$trip1_kms = $trip1_kms-$trip2_kms;
+					$row["trip1 kms"] = ($trip1_kms-$holidays_kms);
+					$tot_tp1_kms = $tot_tp1_kms+$row["trip1 kms"];
 					$row["trip2 kms"] = $trip2_kms;
-					$row["holidays kms"] = $holidays_kms;
-					
+					$tot_tp2_kms = $tot_tp2_kms+$row["trip2 kms"];
+					$totkms = $totkms+($tot_tp1_kms+$tot_tp2_kms);
+					$row["holidays kms"] = (int)$holidays_kms;
+					$tot_hds_kms = $tot_hds_kms+(int)$holidays_kms;
 					$row["repair kms"] = $rec->repairkms;
-					$row["excess kms"] = ($trip1_kms+$trip2_kms)-($working_days*$rec->avgKms);
-					$row["final kms"] = ($trip1_kms+$trip2_kms);
+					$tot_rp_kms = $tot_rp_kms+$rec->repairkms;
+					$row["excess kms"] = (int)($trip1_kms+$trip2_kms)-($row["working days"]*$rec->avgKms);
+					$tot_ex_kms = $tot_ex_kms+$row["excess kms"];
+					$row["final kms"] = (int)($trip1_kms+$trip2_kms);
 					$resp[] = $row;
 				}
-					
+				$resp1 = array("data"=>$resp, "total_kms"=>($tot_tp1_kms+$tot_tp2_kms+$tot_hds_kms), "total_rp_kms"=>$tot_rp_kms, "total_tp1_kms"=>$tot_tp1_kms, "total_tp2_kms"=>$tot_tp2_kms, "total_hds_kms"=>$tot_hds_kms, "total_ex_kms"=>$tot_ex_kms);
 			}
-			echo json_encode($resp);
+			echo json_encode($resp1);
 			return;
 	
 		}
@@ -4986,6 +5498,7 @@ class ReportsController extends \Controller {
 		$values["theads1"] = $theads1;
 		$theads2 = array('contract year','client','client branch',"vehicle no", "distance", "Repair KMs");
 		$values["theads2"] = $theads2;
+		
 		$theads3 = array('contract year','client','client branch',"vehicle no", "Avg KMs(per day)", "Working Days",'Tot Holidays',"Start Reading", "End reading", "Tp1 KMs", "Tp2 KMs",'Holidays KMs',"Repair KMs", "Excess KMs", "Final KMs");
 		$values["theads3"] = $theads3;
 	
@@ -5051,7 +5564,7 @@ class ReportsController extends \Controller {
 					
 				$select_args = array();
 				$select_args[] = "service_logs.serviceDate as serviceDate";
-				$select_args[] = "service_logs.contractVehicleId as contractVehicleId";
+				$select_args[] = "contract_vehicles.vehicleId as contractVehicleId";
 				$select_args[] = "service_logs.startTime as startTime";
 				$select_args[] = "service_logs.startReading as startReading";
 				$select_args[] = "service_logs.endReading as endReading";
@@ -5061,8 +5574,9 @@ class ReportsController extends \Controller {
 				$resp = array();
 	
 				$qry=  \ServiceLog::join("contracts","service_logs.contractId","=","contracts.id")
+									->join("contract_vehicles","contract_vehicles.id","=","service_logs.contractVehicleId")
 									->join("servicelogrequests","servicelogrequests.contractId","=","service_logs.contractId")
-									->where("servicelogrequests.vehicleId","=","service_logs.contractVehicleId")
+									->where("servicelogrequests.vehicleId","=","contract_vehicles.vehicleId")
 									->where("servicelogrequests.customDate","=","service_logs.serviceDate")
 									->where("contracts.clientId","=",$values["clientname"])
 									->where("contracts.depotId","=",$values["depot"])
@@ -5098,29 +5612,26 @@ class ReportsController extends \Controller {
 				$select_args[] = "contracts.endDate as endDate";
 				$select_args[] = "clients.name as client";
 				$select_args[] = "depots.name as depots";
-				$select_args[] = "service_logs.contractVehicleId as contractVehicleId";
+				$select_args[] = "contract_vehicles.vehicleId as contractVehicleId";
 				$select_args[] = "service_logs.distance as distance";
 				$select_args[] = "service_logs.repairkms as repairkms";
 	
 				$resp = array();
 	
 				$qry=  \ServiceLog::join("contracts","service_logs.contractId","=","contracts.id")
-				->join("clients","contracts.clientId","=","clients.id")
-				->join("depots","contracts.depotId","=","depots.id")
-				->where("contracts.clientId","=",$values["clientname"])
-				->where("contracts.depotId","=",$values["depot"]);
-	
-					
+										->join("clients","contracts.clientId","=","clients.id")
+										->join("contract_vehicles","contract_vehicles.id","=","service_logs.contractVehicleId")
+										->join("depots","contracts.depotId","=","depots.id")
+										->where("contracts.clientId","=",$values["clientname"])
+										->where("contracts.depotId","=",$values["depot"]);
 				$recs = $qry->select($select_args)->orderBy("service_logs.serviceDate","desc")->get();
-					
-					
+				
 				$veh_arr = array();
 				$vehicles = \Vehicle::all();
 				foreach ($vehicles as $vehicle){
 					$veh_arr[$vehicle->id] = $vehicle->veh_reg;
 				}
-					
-					
+				
 				foreach($recs as  $rec) {
 					$row = array();
 					$row["startDate"] = date("d-m-Y",strtotime($rec->startDate))." to ".date("d-m-Y",strtotime($rec->endDate));
@@ -5193,6 +5704,933 @@ class ReportsController extends \Controller {
 		return View::make('reports.clientholidaysworkingreport', array("values"=>$values));
 	}
 	
+	private function getContractVehiclesReport($values)
+	{
+		if (\Request::isMethod('post'))
+		{
+			if ($values["reportfor"] == "getreport") {					
+				$select_args = array();
+				$select_args[] = "clients.name as clientname";
+				$select_args[] = "depots.name as depotname";
+				$select_args[] = "vehicle.veh_reg as veh_reg";
+				$select_args[] = "vehicle.eng_no as eng_no";
+				$select_args[] = "vehicle.chsno as chsno";
+				$select_args[] = "lookuptypevalues.name as vehicle_type";
+				$select_args[] = "vehicle.yearof_pur as yearof_pur";
+				$select_args[] = "vehicle.seat_cap as seat_cap";
+				$resp = array();
+	
+				$qry = \Contract::join("clients","clients.id","=","contracts.clientId")
+								->join("depots","depots.id","=","contracts.depotId")
+								->join("contract_vehicles","contract_vehicles.contractId","=","contracts.id")
+								->join("vehicle","vehicle.id","=","contract_vehicles.vehicleId")
+								->leftjoin("lookuptypevalues","lookuptypevalues.id","=","vehicle.vehicle_type")
+								->where("contract_vehicles.status","=","ACTIVE")
+								->where("contracts.status","=","ACTIVE");
+				if($values["clientname"] != 0 && $values["depot"] != 0){
+					$qry = $qry->where("contracts.clientId","=",$values["clientname"]);
+					$qry = $qry->where("contracts.depotId","=",$values["depot"]);
+				}
+				else if($values["clientname"] != 0 && $values["depot"] == 0){
+					$qry = $qry->where("contracts.clientId","=",$values["clientname"]);
+				}
+					
+				$recs = $qry->select($select_args)->orderBy("contracts.clientId")->orderBy("contracts.depotId")->get();
+				foreach($recs as  $rec) {
+					$row = array();
+					$row["client"] = $rec->clientname;
+					$row["branch"] = $rec->depotname;
+					$row["vehicle"] = $rec->veh_reg;
+					$row["engno"] = $rec->eng_no;
+					$row["chsno"] = $rec->chsno;
+					$row["vehtype"] = $rec->vehicle_type;
+					$row["yearofpur"] = date("Y",strtotime($rec->yearof_pur));
+					$row["seatingcap"] = $rec->seat_cap;
+						
+					$resp[] = $row;
+				}
+			}
+			echo json_encode($resp);
+			return;	
+		}
+		$values['bredcum'] = "CONTRACT VEHICLE REPORT";
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'loginlog';
+		$values['form_action'] = 'loginlog';
+		$values['action_val'] = '#';
+		$theads1 = array('CLIENT','BRANCH', "VEHICLE", "ENGINE NO", "CHASSIS NO", "veh type", "year of pur", "seating capacity");
+		$values["theads1"] = $theads1;
+		//$values["test"];
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "users";
+		$form_info["bredcum"] = "CLIENT HOLIDAYS WORKING REPORT";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+	
+		$emp_arr = array();
+		$emp_arr[0] = "All";
+		$emps = \Employee::where("status","=","ACTIVE")->orderby("fullName")->get();
+		foreach ($emps as $emp){
+			$emp_arr[$emp->id] = $emp->fullName;
+		}
+	
+		$clients =  AppSettingsController::getEmpClients();
+		$clients_arr = array();
+		$clients_arr[0] = "ALL";
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+	
+		$form_fields = array();
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reportfor", "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_info["form_fields"] = $form_fields;
+		$values['form_info'] = $form_info;
+	
+		$form_info["form_fields"] = array();
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
+		//$values['provider'] = "loginlog";
+	
+		return View::make('reports.contractvehiclesreport', array("values"=>$values));
+	}
+	
+	
+	private function getVendorPaymentsReport($values)
+	{
+		if (\Request::isMethod('post'))
+		{
+			if ($values["reportfor"] == "getreport") {
+				$frmDt= date("Y-m-d",strtotime($values["fromdate"]));
+				$toDt= date("Y-m-d",strtotime($values["todate"]));
+				$resp = array();
+				$totincomes = 0;
+				$totexpenses = 0;
+				for($i=0;$i<2; $i++){
+					$select_args = array();
+					$select_args[] = "lookuptypevalues1.name as vendorname";
+					$select_args[] = "officebranch.name as branchname";
+					$select_args[] = "date as date";
+					if($i==0){
+						$select_args[] = "expensetransactions.remarks as remarks";
+					}
+					else{
+						$select_args[] = "incometransactions.remarks as remarks";
+					}
+					$select_args[] = "amount as amount";
+					$select_args[] = "employee.fullName as empname";
+					$select_args[] = "workFlowStatus as wfstatus";
+					$select_args[] = "paymentType as paymentType";
+					$select_args[] = "chequeNumber as chequeNumber";
+					$select_args[] = "bankAccount as bankAccountId";
+					$recs = array();
+					if($i==0){		
+						$qry = \ExpenseTransaction::leftjoin("lookuptypevalues","lookuptypevalues.id","=","expensetransactions.lookupValueId")
+											->leftjoin("lookuptypevalues as lookuptypevalues1","lookuptypevalues1.id","=","expensetransactions.entityValue")
+											->leftjoin("employee","employee.id","=","expensetransactions.createdBy")
+											->leftjoin("officebranch","officebranch.id","=","expensetransactions.branchId")
+											->where("expensetransactions.status","=","ACTIVE")
+											->where("expensetransactions.lookupValueId","=",339)
+											->whereBetween("date",array($frmDt,$toDt));
+											if($values["vendor"] != 0){
+												$qry = $qry->where("entityValue","=",$values["vendor"]);
+											}					
+						$recs = $qry->select($select_args)->get();
+					}
+					else{
+						$qry = \IncomeTransaction::leftjoin("lookuptypevalues","lookuptypevalues.id","=","incometransactions.lookupValueId")
+											->leftjoin("lookuptypevalues as lookuptypevalues1","lookuptypevalues1.id","=","incometransactions.entityValue")
+											->leftjoin("employee","employee.id","=","incometransactions.createdBy")
+											->leftjoin("officebranch","officebranch.id","=","incometransactions.branchId")
+											->where("incometransactions.status","=","ACTIVE")
+											->whereBetween("date",array($frmDt,$toDt))
+											->where("incometransactions.lookupValueId","=",340);
+											if($values["vendor"] != 0){
+												$qry = $qry->where("entityValue","=",$values["vendor"]);
+											}
+						$recs = $qry->select($select_args)->get();
+					}
+					foreach($recs as  $rec) {
+						$row = array();
+						$row["vendor"] = $rec->vendorname;
+						$row["branch"] = $rec->branchname;
+						if($i==0){
+							$row["type"] = "EXPENSE";
+							$totexpenses = $totexpenses+$rec->amount;
+						}
+						else{
+							$row["type"] = "INCOME";
+							$totincomes = $totincomes+$rec->amount;
+						}
+						$row["amount"] = $rec->amount;
+						$row["date"] = date("d-m-Y",strtotime($rec->date));
+						if($rec->paymentType != "cash"){
+							if($rec->paymentType == "ecs" || $rec->paymentType == "neft" || $rec->paymentType == "rtgs" || $rec->paymentType == "cheque_debit" || $rec->paymentType == "cheque_credit"){
+								$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+								$bank_dt = \BankDetails::where("id","=",$rec->bankAccountId)->first();
+								if(count($bank_dt)>0){
+									$rec->paymentType = $rec->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
+								}
+								$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
+							}
+							if($rec->paymentType == "credit_card" || $rec->paymentType == "debit_card"){
+								$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+								$bank_dt = \Cards::where("id","=",$rec->bankAccountId)->first();
+								if(count($bank_dt)>0){
+									$rec->paymentType = $rec->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
+								}
+								$rec->paymentType = $rec->paymentType."<br/>Ref No : ".$rec->chequeNumber;
+							}
+							if($rec->paymentType == "dd"){
+								$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+								$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
+							}
+						}
+						$row["pmtinfo"] = $rec->paymentType;
+						$row["remarks"] = $rec->remarks;
+						$row["createdby"] = $rec->empname;
+						$row["wfstatus"] = $rec->wfstatus;
+						$resp[] = $row;
+					}
+				}
+			}
+			$resp_json = array("data"=>$resp,"total_expenses"=>$totexpenses,"total_incomes"=>$totincomes);
+			echo json_encode($resp_json);
+			return;
+		}
+		$values['bredcum'] = "VENDOR PAYMENTS REPORT";
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'loginlog';
+		$values['form_action'] = 'loginlog';
+		$values['action_val'] = '#';
+		$theads1 = array('VENDOR','BRANCH', "TYPE", "AMOUNT", "DATE", "PAYMENT INFO", "REMARKS",  "CREATED BY",  "WF STATUS");
+		$values["theads"] = $theads1;
+		//$values["test"];
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "users";
+		$form_info["bredcum"] = "VENDOR PAYMENTS REPORT";
+		$form_info["reporttype"] = $values["reporttype"];
+		
+		$parentId = \LookupTypeValues::where("name", "=", "VENDORS")->get();
+		$vendors_arr = array();
+		$vendors_arr[0] = "ALL"; 
+		$vendors = array();
+		if(count($parentId)>0){
+			$parentId = $parentId[0];
+			$parentId = $parentId->id;
+			$vendors =  \LookupTypeValues::where("parentId","=",$parentId)->get();
+				
+		}
+		foreach ($vendors as $vendor){
+			$vendors_arr[$vendor->id] = $vendor->name;
+		}
+	
+		$form_fields = array();
+		$form_field = array("name"=>"vendor", "content"=>"vendor", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vendors_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reportfor", "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_info["form_fields"] = $form_fields;
+		$values['form_info'] = $form_info;
+	
+		$form_info["form_fields"] = array();
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
+		//$values['provider'] = "loginlog";
+	
+		return View::make('reports.vendorpaymentsreport', array("values"=>$values));
+	}
+	
+private function getGlobalLoansReport($values)
+	{
+		if (\Request::isMethod('post'))
+		{
+			if ($values["reportfor"] == "getreport") {
+				$frmDt= date("Y-m-d",strtotime($values["fromdate"]));
+				$toDt= date("Y-m-d",strtotime($values["todate"]));
+				$resp = array();
+				$totincomes = 0;
+				$totexpenses = 0;
+				for($i=0;$i<2; $i++){
+					$select_args = array();
+					$select_args[] = "lookuptypevalues1.name as vendorname";
+					$select_args[] = "officebranch.name as branchname";
+					$select_args[] = "date as date";
+					if($i==0){
+						$select_args[] = "expensetransactions.remarks as remarks";
+					}
+					else{
+						$select_args[] = "incometransactions.remarks as remarks";
+					}
+					$select_args[] = "amount as amount";
+					$select_args[] = "employee.fullName as empname";
+					$select_args[] = "workFlowStatus as wfstatus";
+					$select_args[] = "paymentType as paymentType";
+					$select_args[] = "chequeNumber as chequeNumber";
+					$select_args[] = "bankAccount as bankAccountId";
+					$recs = array();
+					if($i==0){
+						$qry = \ExpenseTransaction::leftjoin("lookuptypevalues","lookuptypevalues.id","=","expensetransactions.lookupValueId")
+										->leftjoin("lookuptypevalues as lookuptypevalues1","lookuptypevalues1.id","=","expensetransactions.entityValue")
+										->leftjoin("employee","employee.id","=","expensetransactions.createdBy")
+										->leftjoin("officebranch","officebranch.id","=","expensetransactions.branchId")
+										->where("expensetransactions.status","=","ACTIVE")
+										->whereBetween("date",array($frmDt,$toDt))
+										->where("expensetransactions.lookupValueId","=",342);
+						if($values["globalloan"] != 0){
+							$qry = $qry->where("entityValue","=",$values["globalloan"]);
+						}
+						$recs = $qry->select($select_args)->get();
+					}
+					else{
+						$qry = \IncomeTransaction::leftjoin("lookuptypevalues","lookuptypevalues.id","=","incometransactions.lookupValueId")
+										->leftjoin("lookuptypevalues as lookuptypevalues1","lookuptypevalues1.id","=","incometransactions.entityValue")
+										->leftjoin("employee","employee.id","=","incometransactions.createdBy")
+										->leftjoin("officebranch","officebranch.id","=","incometransactions.branchId")
+										->where("incometransactions.status","=","ACTIVE")
+										->whereBetween("date",array($frmDt,$toDt))
+										->where("incometransactions.lookupValueId","=",343);
+										if($values["globalloan"] != 0){
+											$qry = $qry->where("entityValue","=",$values["globalloan"]);
+										}
+						$recs = $qry->select($select_args)->get();
+					}
+					foreach($recs as  $rec) {
+						$row = array();
+						$row["vendor"] = $rec->vendorname;
+						$row["branch"] = $rec->branchname;
+						if($i==0){
+							$row["type"] = "EXPENSE";
+							$totexpenses = $totexpenses+$rec->amount;
+						}
+						else{
+							$row["type"] = "INCOME";
+							$totincomes = $totincomes+$rec->amount;
+						}
+						$row["amount"] = $rec->amount;
+						$row["date"] = date("d-m-Y",strtotime($rec->date));
+						if($rec->paymentType != "cash"){
+							if($rec->paymentType == "ecs" || $rec->paymentType == "neft" || $rec->paymentType == "rtgs" || $rec->paymentType == "cheque_debit" || $rec->paymentType == "cheque_credit"){
+								$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+								$bank_dt = \BankDetails::where("id","=",$rec->bankAccountId)->first();
+								if(count($bank_dt)>0){
+									$rec->paymentType = $rec->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
+								}
+								$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
+							}
+							if($rec->paymentType == "credit_card" || $rec->paymentType == "debit_card"){
+								$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+								$bank_dt = \Cards::where("id","=",$rec->bankAccountId)->first();
+								if(count($bank_dt)>0){
+									$rec->paymentType = $rec->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
+								}
+								$rec->paymentType = $rec->paymentType."<br/>Ref No : ".$rec->chequeNumber;
+							}
+							if($rec->paymentType == "dd"){
+								$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+								$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
+							}
+						}
+						$row["pmtinfo"] = $rec->paymentType;
+						$row["remarks"] = $rec->remarks;
+						$row["createdby"] = $rec->empname;
+						$row["wfstatus"] = $rec->wfstatus;
+						$resp[] = $row;
+					}
+				}
+			}
+			$resp_json = array("data"=>$resp,"total_expenses"=>$totexpenses,"total_incomes"=>$totincomes);
+			echo json_encode($resp_json);
+			return;
+		}
+		$values['bredcum'] = "GLOBAL LOANS REPORT";
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'loginlog';
+		$values['form_action'] = 'loginlog';
+		$values['action_val'] = '#';
+		$theads1 = array('GLOBAL LOAN','BRANCH', "TYPE", "AMOUNT", "DATE", "PAYMENT INFO", "REMARKS",  "CREATED BY",  "WF STATUS");
+		$values["theads"] = $theads1;
+		//$values["test"];
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "users";
+		$form_info["bredcum"] = "GLOBAL LOANS REPORT";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+		$parentId = \LookupTypeValues::where("name", "=", "GLOBAL LOANS")->get();
+		$vendors_arr = array();
+		$vendors_arr[0] = "ALL";
+		$vendors = array();
+		if(count($parentId)>0){
+			$parentId = $parentId[0];
+			$parentId = $parentId->id;
+			$vendors =  \LookupTypeValues::where("parentId","=",$parentId)->get();
+	
+		}
+		foreach ($vendors as $vendor){
+			$vendors_arr[$vendor->id] = $vendor->name;
+		}
+	
+		$form_fields = array();
+		$form_field = array("name"=>"globalloan", "content"=>"global loan", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vendors_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reportfor", "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_info["form_fields"] = $form_fields;
+		$values['form_info'] = $form_info;
+	
+		$form_info["form_fields"] = array();
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
+		//$values['provider'] = "loginlog";
+	
+		return View::make('reports.globalloansreport', array("values"=>$values));
+	}
+	
+	private function getVehicleRenewalsReport($values)
+	{
+		if (\Request::isMethod('post'))
+		{
+			if ($values["reportfor"] == "getreport") {
+				$frmDt = date("Y-m-d",strtotime($values["fromdate"])); 
+				$toDt  = date("Y-m-d",strtotime($values["todate"])); 
+				$resp = array();
+				$totexpenses = 0;
+				$select_args = array();
+				$select_args[] = "vehicle.veh_reg as veh_reg";
+				$select_args[] = "officebranch.name as branchname";
+				$select_args[] = "lookuptypevalues.name as renewaltype";
+				$select_args[] = "lookuptypevalues1.name as entityValue";
+				$select_args[] = "date as date";
+				$select_args[] = "nextAlertDate as nextAlertDate";
+				$select_args[] = "amount as amount";
+				$select_args[] = "employee.fullName as empname";
+				$select_args[] = "workFlowStatus as wfstatus";
+				$select_args[] = "paymentType as paymentType";
+				$select_args[] = "chequeNumber as chequeNumber";
+				$select_args[] = "bankAccount as bankAccountId";
+				$recs = array();
+				$qry = \ExpenseTransaction::leftjoin("lookuptypevalues","lookuptypevalues.id","=","expensetransactions.lookupValueId")
+								->leftjoin("lookuptypevalues as lookuptypevalues1","lookuptypevalues1.id","=","expensetransactions.entityValue")
+								->leftjoin("employee","employee.id","=","expensetransactions.createdBy")
+								->leftjoin("officebranch","officebranch.id","=","expensetransactions.branchId")
+								->leftjoin("vehicle","vehicle.id","=","expensetransactions.vehicleIds")
+								->where("expensetransactions.status","=","ACTIVE");
+				if($values["renewaltype"] != 0){
+					$qry = $qry->where("expensetransactions.lookupValueId","=",$values["renewaltype"]);
+				}
+				else{
+					$lookup_arr = array(297,299,302,300,301);
+					$qry = $qry->whereIn("expensetransactions.lookupValueId",$lookup_arr);
+				}
+				
+				$recs = $qry->whereBetween("expensetransactions.date",array($frmDt,$toDt))->select($select_args)->get();
+				foreach($recs as  $rec) {
+					$row = array();
+					$row["vehicle"] = $rec->veh_reg;
+					$row["branch"] = $rec->branchname;
+					$row["renewaltype"] = $rec->renewaltype;
+					if($rec->renewaltype == "INSURANCE"){
+						$row["renewaltype"] = $row["renewaltype"]." (".$rec->entityValue.")";
+					}
+					$totexpenses = $totexpenses+$rec->amount;
+					$row["amount"] = $rec->amount;
+					$row["date"] = date("d-m-Y",strtotime($rec->date));
+					$row["nextAlertDate"] = date("d-m-Y",strtotime($rec->nextAlertDate));
+					if($rec->paymentType != "cash"){
+						if($rec->paymentType == "ecs" || $rec->paymentType == "neft" || $rec->paymentType == "rtgs" || $rec->paymentType == "cheque_debit" || $rec->paymentType == "cheque_credit"){
+							$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+							$bank_dt = \BankDetails::where("id","=",$rec->bankAccountId)->first();
+							if(count($bank_dt)>0){
+								$rec->paymentType = $rec->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
+							}
+							$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
+						}
+						if($rec->paymentType == "credit_card" || $rec->paymentType == "debit_card"){
+							$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+							$bank_dt = \Cards::where("id","=",$rec->bankAccountId)->first();
+							if(count($bank_dt)>0){
+								$rec->paymentType = $rec->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
+							}
+							$rec->paymentType = $rec->paymentType."<br/>Ref No : ".$rec->chequeNumber;
+						}
+						if($rec->paymentType == "dd"){
+							$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+							$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
+						}
+					}
+					$row["pmtinfo"] = $rec->paymentType;
+					$row["remarks"] = $rec->remarks;
+					$row["createdby"] = $rec->empname;
+					$row["wfstatus"] = $rec->wfstatus;
+					$resp[] = $row;
+				}
+			}
+			$resp_json = array("data"=>$resp,"total_expenses"=>$totexpenses);
+			echo json_encode($resp_json);
+			return;
+		}
+		$values['bredcum'] = "VEHICLE RENEWALS REPORT";
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'loginlog';
+		$values['form_action'] = 'loginlog';
+		$values['action_val'] = '#';
+		$theads1 = array('VEHICLE REG','BRANCH', "RENEWAL TYPE", "AMOUNT", "DATE", "NEXTALERTDATE", "PAYMENT INFO", "REMARKS",  "CREATED BY",  "WF STATUS");
+		$values["theads"] = $theads1;
+		//$values["test"];
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "users";
+		$form_info["bredcum"] = "VEHICLE RENEWALS REPORT";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+		$vendors_arr = array();
+		$vendors_arr[0] = "ALL";
+		$vendors_arr["insurance"] = "INSURANCE";
+		$vendors_arr["pollution"] = "POLLUTION";
+		$vendors_arr["permit"] = "PERMIT";
+		$vendors_arr["fitness"] = "FITNESS";
+		$vendors_arr["tax"] = "TAX";
+	
+		$form_fields = array();
+		$form_field = array("name"=>"renewaltype", "content"=>"renewal type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vendors_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reportfor", "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_info["form_fields"] = $form_fields;
+		$values['form_info'] = $form_info;
+	
+		$form_info["form_fields"] = array();
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
+		//$values['provider'] = "loginlog";
+	
+		return View::make('reports.vehiclerenewalsreport', array("values"=>$values));
+	}
+	
+	private function getCardsPaymentReport($values)
+	{
+		if (\Request::isMethod('post'))
+		{
+			if ($values["reportfor"] == "getreport") {
+				$frmDt = date("Y-m-d",strtotime($values["fromdate"]));
+				$toDt  = date("Y-m-d",strtotime($values["todate"]));
+				$resp = array();
+				$totexpenses = 0;
+				DB::statement(DB::raw("CALL bankposition_report('".$frmDt."', '".$toDt."');"));
+				$sql = "SELECT rowid as rowid, officebranch.name as branch,";
+				$sql = $sql." bankdetails.bankName as bankName, ";
+				$sql = $sql." bankdetails.branchName as branchName, ";
+				$sql = $sql." bankdetails.accountNo as accountNo, ";
+				$sql = $sql." temp_bankposition_transaction.name as name, ";
+				$sql = $sql." temp_bankposition_transaction.type as type, ";
+				$sql = $sql." lookuptypevalues1.name as entityValue1, ";
+				$sql = $sql." temp_bankposition_transaction.workFlowStatus as wfstatus, ";
+				$sql = $sql." paymentType, date, chequeNumber, amount, lookupValueId, entity, bankAccountId, ";
+				$sql = $sql." entityValue, temp_bankposition_transaction.createdBy as createdBy, temp_bankposition_transaction.remarks as remarks ";
+				$sql = $sql." FROM temp_bankposition_transaction ";
+				$sql = $sql."left join officebranch on officebranch.id=temp_bankposition_transaction.branchId ";
+				$sql = $sql."left join 	lookuptypevalues on lookuptypevalues.id=temp_bankposition_transaction.lookupValueId ";
+				$sql = $sql."left join 	lookuptypevalues as lookuptypevalues1 on lookuptypevalues1.id=temp_bankposition_transaction.entityValue ";
+				$sql = $sql."left join bankdetails on bankdetails.id=temp_bankposition_transaction.bankAccountId ";
+				$sql = $sql."where paymentType='credit_card' and  bankAccountId=".$values["card"]." ";
+				
+				/*if($values["bank"] == "0" && $values["branch"] == "0"){
+					$sql = $sql."where paymentType!='credit_card' and paymentType!='debit_card' ";
+				}
+				else if($values["bank"] == "0" && $values["branch"] > 0){
+					$sql = $sql."where branchId=".$values["branch"]." and paymentType!='credit_card' and paymentType!='debit_card' ";
+				}
+				else if($values["bank"] != "0" && $values["branch"]== "0"){
+					$sql = $sql." where bankdetails.bankName='".$values["bank"]."' and paymentType!='credit_card' and paymentType!='debit_card' ";
+				}
+				else if($values["bank"] != "0" &&  $values["branch"] > 0){
+					$sql = $sql." where branchId=".$values["branch"]." and bankdetails.bankName='".$values["bank"]."' and paymentType!='credit_card' and paymentType!='debit_card' ";
+				}*/
+				$recs = DB::select( DB::raw($sql));
+				$ex_ref_nos = array();
+				foreach ($recs as $rec){
+					$row = array();
+// 					$select_args[] = "officebranch.name as branch";
+// 					$select_args[] = "bankdetails.bankName as bankName";
+// 					$select_args[] = "bankdetails.branchName as branchName";
+// 					$select_args[] = "bankdetails.accountNo as accountNo";
+					$row["branch"] = $rec->branch;
+					
+					$purpose_str = "";
+					$amt_str = "";
+					$ref_status = false;
+					if(!in_array($rec->chequeNumber, $ex_ref_nos)){
+							
+						if($rec->chequeNumber != "" && !in_array($rec->chequeNumber, $ex_ref_nos)){
+							$ex_ref_nos[] = $rec->chequeNumber;
+							$sql1 = $sql." and chequeNumber='".$rec->chequeNumber."';";
+							$recs1 = DB::select( DB::raw($sql1));
+							foreach ($recs1 as $rec1){
+								$purpose_str = $purpose_str.strtoupper($rec1->name)."<br/>";
+								if($rec1->entity != ""){
+									$purpose_str = $purpose_str." (".strtoupper($rec1->entity)."-".strtoupper($rec1->entityValue1).")<br/>";
+								}
+								if($rec1->name == "SALARY TRANSACTION"){
+									$purpose_str = $purpose_str.strtoupper($rec1->name)."<br/>Paid On ".date("d-m-Y", strtotime($rec1->entity))." TO ".strtoupper($rec1->entityValue)."<br/>";
+								}
+								if($rec1->lookupValueId==991|| $rec1->lookupValueId==996){
+									$purpose_str = $purpose_str.strtoupper($rec1->entity)."<br/>";
+								}
+								$amt_str = $amt_str.$rec1->amount."<br/>";
+								$totexpenses = $totexpenses+$rec1->amount;
+								$ref_status = true;
+							}
+						}
+						if($purpose_str != ""){
+							$row["purpose"] = $purpose_str;
+						}
+						else{
+							$row["purpose"] = strtoupper($rec->name);
+							if($rec->entity != ""){
+								$row["purpose"] = $row["purpose"]." (".strtoupper($rec->entity)."-".strtoupper($rec->entityValue1).")";
+							}
+						}
+						if($rec->name == "SALARY TRANSACTION"){
+							$row["purpose"] = strtoupper($rec->name)."<br/>Paid On ".date("d-m-Y", strtotime($rec->entity))." TO ".strtoupper($rec->entityValue);
+						}
+						if($rec->lookupValueId==991|| $rec->lookupValueId==996){
+							$row["purpose"] = strtoupper($rec->entity);
+						}
+						if($rec->lookupValueId==251 || $rec->lookupValueId==161){
+							if($rec->lookupValueId==251){
+								$incharge = \ExpenseTransaction::leftjoin("employee","employee.id","=","expensetransactions.inchargeId")
+												->where("transactionId","=",$rec->rowid)
+												->select(array("employee.fullName"))->get();
+								if(count($incharge)>0){
+									$incharge = $incharge[0];
+									$row["purpose"] = $row["purpose"]." (".$incharge->fullName.")";
+								}
+							}
+							if($rec->lookupValueId==161){
+								$incharge = \IncomeTransaction::leftjoin("employee","employee.id","=","incometransactions.inchargeId")
+												->where("transactionId","=",$rec->rowid)
+												->select(array("employee.fullName"))->get();
+								if(count($incharge)>0){
+									$incharge = $incharge[0];
+									$row["purpose"] = $row["purpose"]." (".$incharge->fullName.")";
+								}
+							}
+						}
+						if($rec->lookupValueId==997){
+							$fuelstation = \FuelStation::where("id","=",$rec->entityValue)->get();
+							if(count($fuelstation)>0){
+								$fuelstation = $fuelstation[0];
+								$row["purpose"] = "FUEL STATION PAYMENT (".$fuelstation->name.")";
+							}
+						}
+						if($rec->lookupValueId==998){
+							$creditSupplier = \CreditSupplier::where("id","=",$rec->entityValue)->get();
+							if(count($creditSupplier)>0){
+								$creditSupplier = $creditSupplier[0];
+								$row["purpose"] = "CREDIT SUPPLIER PAYMENT (".$creditSupplier->supplierName.")";
+							}
+						}
+						if($purpose_str != ""){
+							$row["amount"] = $amt_str;
+						}
+						else{
+							$row["amount"] = $rec->amount;
+						}
+						if(!$ref_status){
+							$totexpenses = $totexpenses+$row["amount"];
+						}
+						$row["date"] = date("d-m-Y", strtotime($rec->date))." (".$rec->wfstatus.")";
+						$row["pmtinfo"] = "PAYMENT TYPE : ".strtoupper($rec->paymentType)."</br>";
+						if($rec->paymentType == "credit_card"){
+							$card = \Cards::where("id","=",$rec->bankAccountId)->get();
+							if(count($card)>0){
+								$card = $card[0];
+								$row["pmtinfo"] = $row["pmtinfo"]."CARD NO : ".$card->cardNumber."<br/>";
+							}
+						}
+						if($rec->chequeNumber!=""){
+							$row["pmtinfo"] = $row["pmtinfo"]."REF NUM : ".$rec->chequeNumber;
+						}
+						if($rec->paymentType=="cheque_credit" || $rec->paymentType=="cheque_debit"){
+							$row["pmtinfo"] = $row["pmtinfo"]."CHQUE NUM : ".$rec->chequeNumber;
+						}
+						//$row["obalance"] = "0.00";
+						//$row["cbalance"] = "0.00";
+						$row["desc"] = $rec->remarks;
+						$row["createdby"] = $rec->createdBy;
+						$row["wfstatus"] = $rec->wfstatus;
+						$resp[] = $row;
+					}
+				}
+			}
+			$resp_json = array("data"=>$resp,"total_expenses"=>$totexpenses);
+			echo json_encode($resp_json);
+			return;
+		}
+		$values['bredcum'] = "CARDS PAYMENT REPORT";
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'loginlog';
+		$values['form_action'] = 'loginlog';
+		$values['action_val'] = '#';
+		$theads1 = array('BRANCH', "PURPOSE", "AMOUNT", "DATE", "PAYMENT INFO", "REMARKS", "CREATED BY", "WF STATUS");
+		$values["theads"] = $theads1;
+		//$values["test"];
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "users";
+		$form_info["bredcum"] = "VEHICLE RENEWALS REPORT";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+		$cards_arr = array();
+		$cards = \Cards::where("cardType","=","CREDIT CARD")->get();
+		foreach ($cards as $card){
+			$cards_arr[$card->id] = $card->cardNumber." (".$card->cardHolderName.")";
+		}
+		$form_fields = array();
+		$form_field = array("name"=>"card", "content"=>"card", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$cards_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reportfor", "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_info["form_fields"] = $form_fields;
+		$values['form_info'] = $form_info;
+	
+		$form_info["form_fields"] = array();
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
+		//$values['provider'] = "loginlog";
+	
+		return View::make('reports.cardspaymentreport', array("values"=>$values));
+	}
+	
+	private function getExtraKmsReport($values)
+	{
+	if (\Request::isMethod('post'))
+		{
+			if(!isset($values["fromdate"])){
+				$values["fromdate"] = "10-10-2013";
+			}
+			if(!isset($values["todate"])){
+				$values["todate"] = date("d-m-Y");
+			}
+			$frmDt = date("Y-m-d", strtotime($values["fromdate"]));
+			$toDt = date("Y-m-d", strtotime($values["todate"]));
+			$resp = array();
+			if($values["reporttype"] == "extrakmsreport"){	
+				$select_args = array();
+				$select_args[] = "depots.name as depotsname";
+				$select_args[] = "vehicle.veh_reg as veh_reg";
+				$select_args[] = "service_logs.serviceDate as serviceDate";
+				$select_args[] = "service_logs.startReading as startReading";
+				$select_args[] = "service_logs.endReading as endReading";
+				$select_args[] = "service_logs.serviceDate as serviceDate";
+				$select_args[] = "contracts.avgKms as avgKms";
+				$contract = \Contract::where("clientId","=",$values["clientname"])->where("depotId","=",$values["depot"])->first();
+				$recs = \ServiceLog::leftjoin("contract_vehicles","contract_vehicles.id","=","service_logs.contractVehicleId")
+							->leftjoin("vehicle","contract_vehicles.vehicleId","=","vehicle.id")
+							->leftjoin("contracts","contracts.id","=","service_logs.contractId")
+							->leftjoin("depots","depots.id","=","contracts.depotId")
+							->where("service_logs.contractId","=",$contract->id)
+							->where("contract_vehicles.contractId","=",$contract->id)
+							->whereBetween("service_logs.serviceDate",array($frmDt,$toDt))->select($select_args)
+							->orderBy("contractVehicleId")->orderBy("serviceDate")->get();
+				$start_reading = 0;
+				$end_reading = 0;
+				$working_days = 1;
+				$prev_date = "";
+				$vehicle = "";
+				
+				$tot_holidaykms = 0;
+				$tot_lesser_kms = 0;
+				$tot_excess_kms = 0;
+				if(count($recs)>0){
+					$start_reading = $recs[0]->startReading;
+					$vehicle = $recs[0]->veh_reg;
+					$prev_date = $recs[0]->serviceDate;
+				}
+				$i = 0;
+				$sno = 1;
+				foreach ($recs as $rec) {
+					if($i+1<count($recs)){
+						if($recs[$i+1]->veh_reg != $vehicle){
+							$working_days++;
+							$row = array();
+							$row["sno"] = $sno;
+							$row["veh_reg"] = $rec->veh_reg;
+							$row["depotsname"] = $rec->depotsname;
+							$row["startReading"] = $start_reading;
+							$row["endReading"] = $rec->endReading;
+							$row["totalkms"] = $rec->endReading-$start_reading;
+							$row["holidaykms"] = 0;
+							$row["billingkms"] = ($rec->endReading-$start_reading)-$row["holidaykms"];
+							$row["workingdays"] = $working_days;
+							$row["conrunningdays"] = $rec->avgKms;
+							$row["kmspercon"] = $working_days*$rec->avgKms;
+							$row["usedkms"] = $row["billingkms"]-$row["kmspercon"];
+							$row["lesserkms"] = 0;
+							$row["excesskms"] = 0;
+							if($row["usedkms"]<0){
+								$row["lesserkms"] = $row["usedkms"];
+								$tot_lesser_kms = $tot_lesser_kms+$row["usedkms"];
+							}
+							else{
+								$row["excesskms"] = $row["usedkms"];
+								$tot_excess_kms = $tot_excess_kms+$row["usedkms"];
+							}
+							$row["excessbill"] = $row["usedkms"];
+							$resp[] = $row;
+							$start_reading = $recs[$i+1]->startReading;
+							$vehicle = $recs[$i+1]->veh_reg;
+							$working_days = 1;
+							$prev_date = $recs[$i+1]->serviceDate;
+							$sno++;
+						}
+					}
+					else if($i+1 == count($recs)){
+						$row = array();
+						$row["sno"] = $sno;
+						$row["veh_reg"] = $rec->veh_reg;
+						$row["depotsname"] = $rec->depotsname;
+						$row["startReading"] = $start_reading;
+						$row["endReading"] = $rec->endReading;
+						$row["totalkms"] = $rec->endReading-$start_reading;
+						$row["holidaykms"] = 0;
+						$row["billingkms"] = ($rec->endReading-$start_reading)-$row["holidaykms"];
+						$row["workingdays"] = $working_days;
+						$row["conrunningdays"] = $rec->avgKms;
+						$row["kmspercon"] = $working_days*$rec->avgKms;
+						$row["usedkms"] = $row["billingkms"]-$row["kmspercon"];
+						$row["lesserkms"] = 0;
+						$row["excesskms"] = 0;
+						if($row["usedkms"]<0){
+							$row["lesserkms"] = $row["usedkms"];
+							$tot_lesser_kms = $tot_lesser_kms+$row["usedkms"];
+						}
+						else{
+							$row["excesskms"] = $row["usedkms"];
+							$tot_excess_kms = $tot_excess_kms+$row["usedkms"];
+						}
+						$row["excessbill"] = $row["usedkms"];
+						$resp[] = $row;
+					}
+					if($prev_date != $rec->serviceDate){
+						$working_days++;
+					}
+					$i++;
+				}
+				if(count($recs)>0){
+					$row = array();
+					$row["sno"] = ""; $row["veh_reg"] = ""; $row["depotsname"] = ""; $row["startReading"] = "";
+					$row["endReading"] = ""; $row["totalkms"] = ""; 
+					$row["holidaykms"] = "<span style='font-weight: bold; font-size: 14px;'>".$tot_holidaykms."</span>";; 
+					$row["billingkms"] = ""; $row["workingdays"] = "";  $row["conrunningdays"] = "";  $row["kmspercon"] = ""; $row["usedkms"] = "";
+					$row["lesserkms"] = "<span style='font-weight: bold; font-size: 14px;'>".$tot_lesser_kms."</span>";
+					$row["excesskms"] = "<span style='font-weight: bold; font-size: 14px;'>".$tot_excess_kms."</span>";
+					$row["excessbill"] = "<span style='font-weight: bold; font-size: 14px;'>".($tot_excess_kms-$tot_lesser_kms)."</span>";
+					$resp[] = $row;
+				}
+			}
+			echo json_encode($resp);
+			return;
+		}
+		$values['bredcum'] = "EXTRA KMS REPORT";
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'loginlog';
+		$values['form_action'] = 'loginlog';
+		$values['action_val'] = '#';
+		$theads1 = array('s no', 'vehicle no','branch', "starting reading", "closing reading", "tot kms", "holiday kms", "billing kms", "working days", "con. running days", "con. kms", "used kms", "lesser kms", "excess kms", "extra bill kms ");
+		$values["theads1"] = $theads1;
+		//$values["test"];
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "users";
+		$form_info["bredcum"] = "EXTRA KMS REPORT";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+	
+		$emp_arr = array();
+		$emp_arr[0] = "All";
+		$emps = \Employee::where("status","=","ACTIVE")->orderby("fullName")->get();
+		foreach ($emps as $emp){
+			$emp_arr[$emp->id] = $emp->fullName;
+		}
+	
+		$clients =  AppSettingsController::getEmpClients();
+		$clients_arr = array();
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+	
+		$form_fields = array();
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reportfor", "value"=>"", "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_info["form_fields"] = $form_fields;
+		$values['form_info'] = $form_info;
+	
+		$form_info["form_fields"] = array();
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
+		//$values['provider'] = "loginlog";
+	
+		return View::make('reports.extrakmsreport', array("values"=>$values));
+	}
+	
 	private function getVehiclePerformance($values)
 	{
 		if (\Request::isMethod('post'))
@@ -5212,10 +6650,16 @@ class ReportsController extends \Controller {
 			DB::statement(DB::raw("CALL vehicle_performance_report('".$frmDt."', '".$toDt."');"));
 			$veh_arr = array();
 			if($values["vehicle"]==0){
-				$con_vehs = \Contract::where("contracts.depotId","=",$values["depot"])
-									->where("contract_vehicles.status","=","ACTIVE")
-									->join("contract_vehicles","contracts.id","=","contract_vehicles.contractId")
-									->select(array("contract_vehicles.vehicleId as vehicleId"))->get();
+				$sql = \Contract::where("contract_vehicles.status","=","ACTIVE");
+							if($values["depot"]!=0){
+								$sql->where("contracts.depotId",$values["depot"]);
+							}
+							else{
+								$sql->where("contracts.clientId",$values["clientname"]);
+							}
+							$sql->where("contracts.depotId","=",$values["depot"])
+								->join("contract_vehicles","contracts.id","=","contract_vehicles.contractId");
+				$con_vehs = $sql->select(array("contract_vehicles.vehicleId as vehicleId"))->get();
 				foreach ($con_vehs as $con_veh){
 					$veh_arr[] = $con_veh->vehicleId; 
 				}
@@ -5348,7 +6792,11 @@ class ReportsController extends \Controller {
 					}
 				}
 				$row = array();
-				$row["vehicle"] = $all_veh_arr[$veh_rec];
+				$row["vehicle"] = "";
+				if(isset($all_veh_arr[$veh_rec])){
+					$row["vehicle"] = $all_veh_arr[$veh_rec];
+				}
+				
 				$row["fuel"] = $fuel_sum;
 				$row["repair"] = $repair_sum;
 				$row["purchases"] = "0.0";
@@ -5450,12 +6898,13 @@ class ReportsController extends \Controller {
 								->whereBetween("fueltransactions.filledDate",array($frmDt,$toDt))->groupBy("vehicleId")->get();
 					foreach ($recs1 as $rec1) {
 						$recs = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-									->join("vehicle","fueltransactions.vehicleId","=","vehicle.id")
-									->where("fueltransactions.vehicleId","=",$rec1->vehicleId)
-									->whereBetween("fueltransactions.filledDate",array($frmDt,$toDt))
-									->select($select_args)->get();
+												->join("vehicle","fueltransactions.vehicleId","=","vehicle.id")
+												->where("fueltransactions.vehicleId","=",$rec1->vehicleId)
+												->where("fueltransactions.fullTank","=","YES")
+												->whereBetween("fueltransactions.filledDate",array($frmDt,$toDt))
+												->select($select_args)->get();
 						
-						$liters = \FuelTransaction::where("fueltransactions.vehicleId","=",$values["vehicle"])->whereBetween("fueltransactions.filledDate",array($frmDt,$toDt))
+						$liters = \FuelTransaction::where("fueltransactions.vehicleId","=",$rec1->vehicleId)->whereBetween("fueltransactions.filledDate",array($frmDt,$toDt))
 									->sum("fueltransactions.litres");
 						$row = array();
 						$len = count($recs);
@@ -5463,10 +6912,13 @@ class ReportsController extends \Controller {
 						if(count($recs)>1){
 							$distance = $recs[$len-1]->startReading-$recs[0]->startReading;
 						}
+						if($distance==0){
+							$distance = 1;
+						}
 						$row["veh_reg"] = $recs[0]->veh_reg;
 						$row["distance"] = $distance;
 						$row["liters"] = $liters;
-						$row["mileage"] = $distance/$liters;
+						$row["mileage"] = sprintf('%0.2f',$distance/$liters);
 						$resp[] = $row;
 					}
 					
@@ -5475,6 +6927,7 @@ class ReportsController extends \Controller {
 					$recs = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
 												->join("vehicle","fueltransactions.vehicleId","=","vehicle.id")
 												->where("fueltransactions.vehicleId","=",$values["vehicle"])
+												->where("fueltransactions.fullTank","=","YES")
 												->whereBetween("fueltransactions.filledDate",array($frmDt,$toDt))
 												->select($select_args)->get();
 		
@@ -5485,6 +6938,9 @@ class ReportsController extends \Controller {
 					$distance = 1;
 					if(count($recs)>1){
 						$distance = $recs[$len-1]->startReading-$recs[0]->startReading;
+					}
+					if($distance==0){
+						$distance = 1;
 					}
 					$row["veh_reg"] = $recs[0]->veh_reg;
 					$row["distance"] = $distance;	
@@ -5563,5 +7019,136 @@ class ReportsController extends \Controller {
 		$values["form_info"] = $form_info;
 		$values["provider"] = "bankdetails";
 		return View::make('reports.vehiclemileage_fullreport', array("values"=>$values));
+	}
+	
+	private function getHolidaysRunningReport($values){
+		if (\Request::isMethod('post'))
+		{
+			if(!isset($values["fromdate"])){
+				$values["fromdate"] = "10-10-2013";
+			}
+			if(!isset($values["todate"])){
+				$values["todate"] = date("d-m-Y");
+			}
+			$frmDt = date("Y-m-d", strtotime($values["fromdate"]));
+			$toDt = date("Y-m-d", strtotime($values["todate"]));
+			$resp = array();
+			if($values["reporttype"] == "holidaysrunningreport"){	
+				$select_args = array();
+				$select_args[] = "depots.name as depotsname";
+				$select_args[] = "vehicle.veh_reg as veh_reg";
+				$select_args[] = "service_logs.serviceDate as serviceDate";
+				$select_args[] = "service_logs.startReading as startReading";
+				$select_args[] = "service_logs.endReading as endReading";
+				$select_args[] = "service_logs.remarks as remarks";
+				if(true){ //$values["vehicle"]==0
+					$sql = \Contract::where("clientId","=",$values["clientname"]);
+								if(isset($values["depot"]) && $values["depot"]!=0){
+									$sql->where("depotId","=",$values["depot"]);
+								}
+					$contracts = $sql->get();
+					$contracts_arr = array();
+					foreach($contracts as $contract){
+						$contracts_arr[] = $contract->id;
+					}
+					$recs1 = \ClientHolidays::whereIn("clientholidays.contractId",$contracts_arr)
+								->where("clientholidays.status","=","Open")
+								->where("clientholidays.fromDate",">=",$frmDt)
+								->where("clientholidays.toDate","<=",$toDt)->get();
+					$serv_dts = array();
+					$serv_vehs = array();
+					foreach ($recs1 as $rec1) {
+						$sql = \ServiceLog::leftjoin("contract_vehicles","service_logs.contractVehicleId","=","contract_vehicles.id")
+									->leftjoin("vehicle","contract_vehicles.vehicleId","=","vehicle.id")
+									->leftjoin("contracts","contracts.id","=","service_logs.contractId")
+									->leftjoin("depots","depots.id","=","contracts.depotId");
+									if($values["vehicle"]>0){
+										$sql = $sql->where("service_logs.contractVehicleId","=",$values["vehicle"]);
+									}
+						$recs =  $sql->whereBetween("service_logs.serviceDate",array($rec1->fromDate,$rec1->toDate))
+									->whereBetween("service_logs.serviceDate",array($frmDt,$toDt))
+									->where("service_logs.contractId",$rec1->contractId)->select($select_args)->get();
+						foreach ($recs as $rec) {
+							if(!in_array($rec->serviceDate.",".$rec->veh_reg, $serv_dts)){
+								$row = array();
+								$row["depotsname"] = $rec->depotsname;
+								$row["veh_reg"] = $rec->veh_reg;
+								$row["serviceDate"] = date("d-m-Y",strtotime($rec->serviceDate));
+								$row["startReading"] = $rec->startReading;
+								$row["endReading"] = $rec->endReading;
+								$row["totalkms"] = $rec->endReading-$rec->startReading;
+								$row["remarks"] = $rec->remarks;
+								$resp[] = $row;
+								$serv_dts[] = $rec->serviceDate.",".$rec->veh_reg;
+							}
+						}
+					}
+				}				
+			}
+			echo json_encode($resp);
+			return;
+		}
+	
+		$values['bredcum'] = strtoupper($values["reporttype"]);
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'getreport';
+		$values['form_action'] = 'getreport';
+		$values['action_val'] = '';
+		$theads = array('Branch Name','Vehicle No', "Date", "Starting KMs", "Closing KMs","Total KMs","Remarks");
+		$values["theads"] = $theads;
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "bankdetails";
+		$form_info["bredcum"] = "add bank details";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+		$form_fields = array();
+	
+		$clients = \Client::where("status","=","ACTIVE")->get();
+		$clients_arr = array();
+		foreach ($clients as $client){
+			$clients_arr[$client->id] = $client->name;
+		}
+	
+		$supplier_rep_arr = array();
+		$supplier_rep_arr['balanceSheetNoDt'] = "Credit Supplier Balance Sheet";
+		$supplier_rep_arr['balanceSheet'] = "Credit Supplier Range Sheet";
+		$supplier_rep_arr['payment'] = "Credit Supplier Payments";
+		$supplier_rep_arr['repairs'] = "Repairs";
+		$supplier_rep_arr['purchase'] = "Purchases";
+		$supplier_rep_arr['vehicleReport'] = "Track By Vehicle";
+	
+		$form_fields = array();
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"vehicle", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("0"=>"ALL"));
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+	
+		$add_form_fields = array();
+		$vehs =  \Vehicle::All();
+		$vehs_arr = array();
+		foreach ($vehs as $veh){
+			$vehs_arr[$veh->id] = $veh->veh_reg;
+		}
+		$form_field = array("name"=>"creditsupplier", "content"=>"by supplier", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>array(), "class"=>"form-control chosen-select");
+		$add_form_fields[] = $form_field;
+		$form_field = array("name"=>"vehicle", "content"=>"by vehicle", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$vehs_arr, "class"=>"form-control chosen-select");
+		$add_form_fields[] = $form_field;
+	
+		$form_info["form_fields"] = $form_fields;
+		$form_info["add_form_fields"] = $add_form_fields;
+		$values["form_info"] = $form_info;
+		$values["provider"] = "bankdetails";
+		return View::make('reports.holidaysrunningreport', array("values"=>$values));
 	}
 }

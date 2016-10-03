@@ -116,7 +116,7 @@ use Illuminate\Support\Facades\Input;
 												<div style="margin-top: 10%;" class="form-group">
 													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Email ID</label>
 													<div class="col-xs-8">
-														<input type="text" id="emailid" name="emailid"  required="" class="form-control" value="{{$employee->emailId}}">
+														<input type="text" id="emailid" name="emailid"  class="form-control" value="{{$employee->emailId}}">
 													</div>
 												</div>
 												<div class="form-group">
@@ -139,6 +139,26 @@ use Illuminate\Support\Facades\Input;
 													</div>
 												</div>
 												<div class="form-group">
+													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Clients </label>
+													<div class="col-xs-8">
+														<select class="form-control chosen-select"   id="clients" name="clients[]" onchange="getClientBranches()" multiple="multiple">
+															<?php
+																$emp_clients = $employee->clientIds;
+																$emp_clients = explode(",", $emp_clients);
+																$roles = \Client::where("status","=","ACTIVE")->get();
+																foreach ($roles as $role){
+																	if(in_array($role->id, $emp_clients)){
+																		echo "<option selected value='".$role->id."'>".$role->name."</option>";
+																	}
+																	else{
+																		echo "<option value='".$role->id."'>".$role->name."</option>";
+																	}
+																}
+															?>
+														</select>												
+													</div>
+												</div>
+												<div class="form-group">
 													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Client Branches<span style="color:red;"></span> </label>
 													<div class="col-xs-8">
 														<select class="form-control chosen-select"   id="clientbranches" name="clientbranches[]"  multiple="multiple">
@@ -152,7 +172,7 @@ use Illuminate\Support\Facades\Input;
 																		echo "<option selected value='".$role->id."'>".$role->name."</option>";
 																	}
 																	else{
-																		echo "<option value='".$role->id."'>".$role->name."</option>";
+																		//echo "<option value='".$role->id."'>".$role->name."</option>";
 																	}
 																}
 															?>												
@@ -581,7 +601,22 @@ use Illuminate\Support\Facades\Input;
 		      },
 		      type: 'GET'
 		   });
-		}
+	   }
+
+	   function getClientBranches(){
+			var vals = ""; 
+			$('#clients :selected').each(function(i, selected){ 
+				vals = vals+$(selected).val()+","; 
+			});
+			$.ajax({
+		      url: "getclientbranches?clientids="+vals,
+		      success: function(data) {
+			      $("#clientbranches").append(data);
+		    	 $('.chosen-select').trigger("chosen:updated");	
+		      },
+		      type: 'GET'
+		   });
+	   }
 
 	   function validatepwd(val2){
 			val1 = $("#pass1").val();

@@ -73,25 +73,27 @@ use Illuminate\Support\Facades\Input;
 					<div class="widget-header">
 						<h5 class="widget-title bigger lighter"><a href="#" class="btn btn-block btn-inverse">BRANCH TRANSACTIONS REPORTS</a></h5>
 					</div>
-	
+					<?php $jobs = Session::get("jobs");?>
 					<div class="widget-body">
 						<div class="widget-main">
 							<ul class="list-unstyled spaced2">
+								
+								<?php if(in_array(601, $jobs)) {?>				
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=dailytransactions"> DAILY TRANSACTION </a>
 								</li>
-	
+								<?php } if(in_array(602, $jobs)) {?>	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=dailyfinance"> DAILY FINANCE REPORT </a>
 								</li>
-	
+								<?php } if(in_array(603, $jobs)) {?>	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=dailyfinancedetailed"> DAILY FINANCE DETAILS REPORT </a>
 								</li>
-								
+								<?php } ?>								
 								<li>
 									&nbsp;
 								</li>
@@ -121,30 +123,32 @@ use Illuminate\Support\Facades\Input;
 					<div class="widget-body">
 						<div class="widget-main">
 							<ul class="list-unstyled spaced2">
+								<?php if(in_array(604, $jobs)) {?>
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=fuel"> FUEL TRACKING REPORT </a>
 								</li>
-	
+								<?php } if(in_array(605, $jobs)) {?>	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=creditsupplier"> CREDIT SUPPLIER REPORT </a>
 								</li>
-	
+								<?php } if(in_array(606, $jobs)) {?>	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=vehiclemileage"> VEHICLE MILEAGE REPORT </a>
 								</li>
-								
+								<?php } if(in_array(607, $jobs)) {?>								
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=vehiclemileage_full"> VEHICLE MILEAGE REPORT (FULL) </a>
 								</li>
-								
+								<?php } if(in_array(608, $jobs)) {?>								
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=vehicleperformance"> VEHICLE PERFORMANCE REPORT  </a>
 								</li>
+								<?php }?>
 							</ul>
 						</div>
 						<div>
@@ -165,25 +169,32 @@ use Illuminate\Support\Facades\Input;
 					<div class="widget-body">
 						<div class="widget-main">
 							<ul class="list-unstyled spaced2">
+								<?php if(in_array(609, $jobs)) {?>
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=clientvehicletrips"> CLIENT VEHICLE TRIPS REPORT </a>
 								</li>
-	
-								<li>
-									<i class="ace-icon fa fa-check green"></i>
-									<a target="_blank" href="report?reporttype=creditsupplier"> CREDIT SUPPLIER REPORT </a>
-								</li>
-	
+								<?php } if(in_array(610, $jobs)) {?>								
+								<!-- 
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="dailyfinancereport"> VEHICLE VERIFICATION REPORT </a>
+								</li>	
+								 -->							
+								<?php } if(in_array(612, $jobs)) {?>								
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=extrakmsreport"> EXTRA KMS REPORT </a>
 								</li>
-								
+								<?php } if(in_array(612, $jobs)) {?>								
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=contractvehiclesreport">CONTRACT VEHICLES REPORT </a>
+								</li>
+								<?php } ?>
 								<li>
 									&nbsp;
 								</li>
-								
 								<li>
 									&nbsp;
 								</li>
@@ -206,30 +217,32 @@ use Illuminate\Support\Facades\Input;
 					<div class="widget-body">
 						<div class="widget-main">
 							<ul class="list-unstyled spaced2">
+								<?php if(in_array(613, $jobs)) {?>
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=salaryadvances"> SALARY ADVANCES </a>
 								</li>
-	
+								<?php } if(in_array(614, $jobs)) {?>	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=salary"> SALARY REPORT </a>
 								</li>
-	
+								<?php } if(in_array(615, $jobs)) {?>	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=estimatedsalary"> ESTIMATED SALARY REPORT </a>
 								</li>
-								
+								<?php } if(in_array(616, $jobs)) {?>								
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=attendence"> ATTENDENCE </a>
 								</li>
-								
+								<?php } if(in_array(617, $jobs)) {?>								
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=attendencedetailed"> ATTENDENCE DETAILED </a>
 								</li>
+								<?php } ?>
 							</ul>
 						</div>
 	
@@ -257,29 +270,75 @@ use Illuminate\Support\Facades\Input;
 					<div class="widget-body">
 						<div class="widget-main">
 							<ul class="list-unstyled spaced2">
+								<?php if(in_array(618, $jobs)) {?>
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=inchargetransactions"> INCHARGE TRANSACTIONS </a>
 								</li>
-	
+								<?php } if(in_array(619, $jobs)) {?>	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=loans"> LOANS REPORT </a>
 								</li>
-	
+								<?php } if(in_array(620, $jobs)) {?>	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=bankposition"> BANK POSITION </a>
 								</li>
-								
+								<?php } if(in_array(621, $jobs)) {?>								
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=loginlog"> LOGIN DETAILS </a>
 								</li>
-								
+								<?php } if(in_array(622, $jobs)) {?>								
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=employeemainloginlog"> EMPLOYEE MAIN LOGIN DETAILS </a>
+								</li>
+								<?php } ?>
+							</ul>
+						</div>
+	
+						<div>
+							<a href="#" class="btn btn-block btn-success">
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-xs-6 col-sm-3 pricing-box">
+				<div class="widget-box widget-color-green">
+					<div class="widget-header">
+						<h5 class="widget-title bigger lighter"><a href="#" class="btn btn-block btn-success">OTHER REPORTS</a></h5>
+					</div>
+	
+					<div class="widget-body">
+						<div class="widget-main">
+							<ul class="list-unstyled spaced2">
+								<?php if(in_array(618, $jobs)) {?>
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=vendorpaymentsreport"> VENDOR PAYMENTS </a>
+								</li>
+								<?php } if(in_array(619, $jobs)) {?>	
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=globalloansreport"> GLOBAL LOANS </a>
+								</li>
+								<?php } if(in_array(620, $jobs)) {?>	
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=vehiclerenewalsreport"> VEHICLE RENEWALS </a>
+								</li>
+								<?php } if(in_array(620, $jobs)) {?>	
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=cardspaymentreport"> CARDS PAYMENT INFO </a>
+								</li>
+								<?php } ?>
+								<li>
+									&nbsp;
 								</li>
 							</ul>
 						</div>
@@ -293,7 +352,6 @@ use Illuminate\Support\Facades\Input;
 			</div>
 			
 			
-			
 			<div class="col-xs-6 col-sm-3 pricing-box">
 				<div class="widget-box widget-color-orange">
 					<div class="widget-header">
@@ -304,31 +362,32 @@ use Illuminate\Support\Facades\Input;
 					<div class="widget-body">
 						<div class="widget-main">
 							<ul class="list-unstyled spaced2">
+								<?php if(in_array(623, $jobs)) {?>
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=stockpurchase"> STOCK PURCHASE REPORT </a>
 								</li>
-	
+								<?php } if(in_array(624, $jobs)) {?>	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=vehiclestockhistory"> VEHICLE-STOCK HISTORY REPORT </a>
 								</li>
-	
+								<?php } if(in_array(625, $jobs)) {?>	
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=inventory"> INVENTORY REPORT </a>
 								</li>
-								
+								<?php } if(in_array(626, $jobs)) {?>								
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=officeinventory"> OFFICE INVENTORY REPORT </a>
 								</li>
-								
-								
+								<?php } if(in_array(627, $jobs)) {?>
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=repairstock"> REPAIR STOCK REPORT </a>
 								</li>
+								<?php } ?>
 							</ul>
 						</div>
 						<div>
@@ -350,15 +409,17 @@ use Illuminate\Support\Facades\Input;
 					<div class="widget-body">
 						<div class="widget-main">
 							<ul class="list-unstyled spaced2">
+								<?php if(in_array(628, $jobs)) {?>
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=servicelog"> SERVICE LOG DETAILS </a>
 								</li>
-	
+								<?php } if(in_array(611, $jobs)) {?>								
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
-									<a target="_blank" href="report?reporttype=clientholidaysworking"> CLIENT HOLIDAYS WORKING REPORT </a>
+									<a target="_blank" href="report?reporttype=holidaysrunningreport"> HOLIDAYS RUNNING REPORT </a>
 								</li>
+								<?php } ?>
 	
 								<li>
 									&nbsp;

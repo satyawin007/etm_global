@@ -20,6 +20,10 @@
 			.chosen-container{
 			  width: 100% !important;
 			}
+			.driversarea{
+		     	position: absolute; 
+  				left: -999em;
+		    }
 		</style>
 	@stop
 	

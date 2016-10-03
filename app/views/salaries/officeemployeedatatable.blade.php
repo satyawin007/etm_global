@@ -67,8 +67,38 @@ use Illuminate\Support\Facades\Input;
 
 	@section('page_content')
 		<div class="col-xs-offset-4 col-xs-8 ccordion-style1 panel-group">
-			<a class="btn btn-sm btn-primary" href="payemployeesalary">DRIVERS/HELPERS SALARY</a> &nbsp;&nbsp;
-			<a class="btn btn-sm  btn-inverse" href="payofficeemployeesalary"> OFFICE EMPLOYEES SALARY </a> &nbsp;&nbsp;
+			<div class="col-xs-7 ">
+				<?php 
+					$jobs = Session::get("jobs");
+					if(in_array(338, $jobs)){
+				?>
+					<a class="btn btn-sm btn-primary" href="payemployeesalary?show=true">DRIVERS/HELPERS SALARY</a> &nbsp;&nbsp;
+				<?php 
+					}
+					if(in_array(339, $jobs)){
+				?>
+					<a class="btn btn-sm  btn-inverse" href="payofficeemployeesalary?show=true"> OFFICE EMPLOYEES SALARY </a> &nbsp;&nbsp;
+				<?php 
+					} 
+				?>
+			</div>
+			<div class="col-xs-5">
+				<div class="row">
+					<div class="col-xs-12 col-sm-12">						
+						<div class="input-group">
+							<span class="input-group-addon" id="transvalue">
+								AMOUNT
+							</span>
+							<input type="text" class="form-control search-query" id="transfield" placeholder="enter transactio no">
+							<span class="input-group-btn">
+								<button type="button" id="getbtn" class="btn btn-purple btn-sm">
+									GET
+								</button>
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 		
 		<div id="accordion1" class="col-xs-offset-0 col-xs-12 accordion-style1 panel-group" style="width: 98%; margin-left: 10px;">			
@@ -83,8 +113,12 @@ use Illuminate\Support\Facades\Input;
 				</div>
 				<div class="panel-collapse collapse in" id="TEST">
 					<div class="panel-body" style="padding: 0px">
-						<?php $form_info = $values["form_info"]; ?>
-						@include("salaries.addlookupform",$form_info)						
+						<?php 
+							$form_info = $values["form_info"]; 
+							if(isset($values["show"]) && $values["show"]=="true"){
+						?>
+							@include("salaries.addlookupform",$form_info)	
+						<?php }?>							
 					</div>
 				</div>
 			</div>
@@ -111,11 +145,23 @@ use Illuminate\Support\Facades\Input;
 						if(isset($values["month"]) && isset($values["paymentdate"])){
 							$url = $url."?month=".$values["month"]."&paymentdate=".$values["paymentdate"];
 						}
+						if(isset($values["show"])){
+							$url = $url."&show=".$values["show"];
+						}
 						if(isset($values["branch"])){
 							$url = $url."&branch=".$values["branch"];
 						}
+						if(isset($values["incharge"])){
+							$url = $url."&incharge=".$values["incharge"];
+						}
 						if(isset($values["paymenttype"])){
 							$url = $url."&paymenttype=".$values["paymenttype"];
+						}
+						if(isset($values["clientname"])){
+							$url = $url."&clientname=".$values["clientname"];
+						}
+						if(isset($values["depot"])){
+							$url = $url."&depot=".$values["depot"];
 						}
 						if(isset($values["fromdate"])){
 							$url = $url."&fromdate=".$values["fromdate"];
@@ -123,13 +169,15 @@ use Illuminate\Support\Facades\Input;
 						if(isset($values["todate"])){
 							$url = $url."&todate=".$values["todate"];
 						}
+						if(isset($values["casualleaves"])){
+							$url = $url."&casualleaves=".$values["casualleaves"];
+						}
 						if(isset($values["bankaccount"])){ $url = $url."&bankaccount=".$values["bankaccount"];}
 						if(isset($values["chequenumber"])){ $url = $url."&chequenumber=".$values["chequenumber"];}
 						if(isset($values["bankname"])){ $url = $url."&bankname=".$values["bankname"];}
 						if(isset($values["accountnumber"])){ $url = $url."&accountnumber=".$values["accountnumber"];}
 						if(isset($values["issuedate"])){ $url = $url."&issuedate=".$values["issuedate"];}
 						if(isset($values["transactiondate"])){ $url = $url."&transactiondate=".$values["transactiondate"];}
-						
 					?>
 					<form name="tripsform" action="{{$url}}" method="post" onsubmit="return validateData();">
 					<table id="dynamic-table" class="table table-striped table-bordered table-hover">
@@ -189,7 +237,7 @@ use Illuminate\Support\Facades\Input;
 							<tr>
 								<td class="center" style="font-weight: bold; vertical-align: middle">
 									<label class="pos-rel">
-										<input type="checkbox" class="ace" name="ids[]" id="ids_{{$i}}" value="{{$i}}"/>
+										<input type="checkbox" onclick="this.checked=!this.checked;" class="ace" name="ids[]" id="ids_{{$i}}" value="{{$i}}"/>
 										<span class="lbl"></span>
 									</label>
 									<input type="hidden" name="id[]" id="id_{{$i}}" value="{{$entity->id}}" />
@@ -294,31 +342,31 @@ use Illuminate\Support\Facades\Input;
 								</td>
 								<td style="font-weight: bold; vertical-align: middle; min-width:120px;"><span id="{{$i}}_editbtn"><a class="btn btn-minier btn-success" onclick="return editRecord({{$i}},{{$entity->id}},'{{$entity->roleId}}');">Edit</a></span> &nbsp;&nbsp; <span id="{{$i}}_detailsbtn"><a role="button" data-toggle="modal" onclick="return viewDetails('{{$details_data}}')"  class="btn btn-minier btn-info">Details</a></span></td>
 								<td style="font-weight: bold; vertical-align: middle">Due Amt : {{$due_amt}}</td>
-								<td >
+								<td style="vertical-align: middle">
 									<input type="text" style="max-width:70px;" name="leaves[]" id="{{$i}}_leaves" readonly="readonly" value="{{$leaves}}"/>	
 								</td>
-								<td>
+								<td style="vertical-align: middle">
 									<input type="text" style="max-width:70px;"  name="casual_leaves[]" id="{{$i}}_casual_leaves" readonly="readonly" value="{{$values['casualleaves']}}"/>	
 								</td>
-								<td>
+								<td style="vertical-align: middle">
 									<input type="text" style="max-width:70px;"  name="due_deductions[]" id="{{$i}}_due_deductions"readonly="readonly" onchange="calcSalary(this.id)" value="{{$rec->dueDeductions}}"/>	
 								</td>
-								<td>
+								<td style="vertical-align: middle">
 									<input type="text" style="max-width:70px;" name="leave_deductions[]" id="{{$i}}_leave_deductions" readonly="readonly" onchange="calcSalary(this.id)" value="{{$rec->leaveDeductions}}"/>	
 								</td>
-								<td>
+								<td style="vertical-align: middle">
 									<select name="pfopted[]" id="pfopted_{{$i}}" class="form-control" >
 										<option value="Yes">Yes</option>
 										<option selected value="No">No</option>
 									</select>
 								</td>
-								<td>
+								<td style="vertical-align: middle">
 									<input type="text" style="min-width:70px;" name="other_amt[]" id="{{$i}}_other_amt" readonly="readonly" onchange="calcSalary(this.id)" value="{{$rec->otherAmount}}"/>	
 								</td>
 								<td style="font-weight: bold; vertical-align: middle" id="{{$i}}_netsalary">{{$rec->salaryPaid}}</td>
 								<td style="font-weight: bold; vertical-align: middle">{{$rec->actualSalary}}</td>
 								<td style="font-weight: bold; vertical-align: middle; min-width:150px;">{{$entity->cardNumber}}</td>
-								<td>
+								<td style="vertical-align: middle">
 									<input type="text" style="min-width:270px;" name="comments[]" readonly="readonly" id="{{$i}}_comments" value="{{$rec->comments}}"/>	
 								</td>
 							</tr>
@@ -438,31 +486,31 @@ use Illuminate\Support\Facades\Input;
 								
 								<td style="font-weight: bold; vertical-align: middle">Due Amt : {{$due_amt}}</td>
 								
-								<td >
+								<td style="vertical-align: middle">
 									<input type="text" style="max-width:70px;" name="leaves[]" id="{{$i}}_leaves" readonly="readonly" value="{{$leaves}}"/>	
 								</td>
-								<td>
+								<td style="vertical-align: middle">
 									<input type="text" style="max-width:70px;"  name="casual_leaves[]" id="{{$i}}_casual_leaves"  value="{{$values['casualleaves']}}"/>	
 								</td>
-								<td>
+								<td style="vertical-align: middle">
 									<input type="text" style="max-width:70px;"  name="due_deductions[]" id="{{$i}}_due_deductions" onchange="calcSalary(this.id)" value="{{$due_amt}}"/>	
 								</td>
-								<td>
+								<td style="vertical-align: middle">
 									<input type="text" style="max-width:70px;" name="leave_deductions[]" id="{{$i}}_leave_deductions" onchange="calcSalary(this.id)" value="{{$leaves_amt}}"/>	
 								</td>
-								<td>
+								<td style="vertical-align: middle">
 									<select name="pfopted[]" id="pfopted_{{$i}}" class="form-control" >
 										<option value="Yes">Yes</option>
 										<option selected value="No">No</option>
 									</select>
 								</td>
-								<td>
+								<td style="vertical-align: middle">
 									<input type="text" style="min-width:70px;" name="other_amt[]" id="{{$i}}_other_amt" onchange="calcSalary(this.id)" value="0.00"/>	
 								</td>
 								<td style="font-weight: bold; vertical-align: middle" id="{{$i}}_netsalary">{{$net_salary}}</td>
 								<td style="font-weight: bold; vertical-align: middle">{{$salary_amt}}</td>
 								<td style="font-weight: bold; vertical-align: middle; min-width:150px;">{{$entity->cardNumber}}</td>
-								<td>
+								<td style="vertical-align: middle">
 									<input type="text" style="min-width:270px;" name="comments[]" id="{{$i}}_comments" value=""/>	
 								</td>
 							</tr>
@@ -560,7 +608,10 @@ use Illuminate\Support\Facades\Input;
 	@section('inline_js')
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
-
+				$("#incharge").attr("disabled",true);
+				<?php if(isset($values["enableincharge"]) && $values["enableincharge"]=="YES"){?>
+					$("#incharge").attr("disabled",false);
+				<?php } ?>
 			function changeDate(val){
 				if(document.getElementById("trip_"+val).checked){
 					var today = new Date();
@@ -609,6 +660,27 @@ use Illuminate\Support\Facades\Input;
 					alert("please select branch");
 					return;
 				}
+			}
+
+			function enableIncharge(val){
+				if(val == "YES"){
+					$("#incharge").attr("disabled",false);
+					$('.chosen-select').trigger('chosen:updated');
+				}
+				else{
+					$("#incharge").attr("disabled",true);
+					$('.chosen-select').trigger('chosen:updated');
+				}
+			}
+
+			function getInchargeBalance(val){
+				$.ajax({
+			      url: "getinchargebalance?id="+val,
+			      success: function(data) {
+			    	  $("#inchargebalance").val(data);
+			      },
+			      type: 'GET'
+			   });
 			}
 
 			function verifyDate(){
@@ -740,9 +812,14 @@ use Illuminate\Support\Facades\Input;
 			});
 
 			function validateData(){
+				tot_salary_amt =  0;
+				ret_val =  true;
 				var ids = document.forms['tripsform'].elements[ 'ids[]' ];
 				for(i=0; i<ids.length;i++){
 					if(ids[i].checked){
+						if($("#"+i+"_netsalary").text()!="0"){
+							tot_salary_amt = tot_salary_amt+parseInt($("#"+i+"_netsalary").text());
+						}
 						if($("#"+i+"_daily_trips_salary").val()==""){
 							alert("enter complete information for employee : "+$("#"+i+"_employeename").val());
 							return false;
@@ -763,9 +840,30 @@ use Illuminate\Support\Facades\Input;
 							alert("enter complete information for employee : "+$("#"+i+"_employeename").val());
 							return false;
 						}
-					}
-				    
+					}				    
 				}
+				if($("#paymenttype").val() == "neft" || $("#paymenttype").val() == "rtgs" || $("#paymenttype").val() == "ecs" ){
+					if($("#chequenumber").val() == ""){
+						alert("enter transaction number");
+						return false;
+					}
+					val = $("#chequenumber").val();
+					url = "gettransactionamount?transid="+val;
+					$.ajax({
+				      url: url,
+				      async: false,
+				      success: function(data) {
+					      data = data.substring(9);
+					      avail_amt = parseInt(data);
+					      if(tot_salary_amt>avail_amt){						      
+					      	alert("Transaction can not be done due to insufficient funds.\navailable amount is : "+avail_amt+" and trans amount : "+tot_salary_amt);
+					      	ret_val = false;
+					      }
+				      },
+				      type: 'GET'
+				    });
+				}				
+			    return ret_val;
 			};
 
 			$("#provider").on("change",function(){
@@ -850,6 +948,18 @@ use Illuminate\Support\Facades\Input;
 			}
 
 			jQuery(function($) {
+				$("#getbtn").on("click", function(){
+					val = $("#transfield").val();
+					url = "gettransactionamount?transid="+val;
+					$.ajax({
+				      url: url,
+				      success: function(data) {
+				    	  $("#transvalue").html(data);
+				      },
+				      type: 'GET'
+				    });
+				});
+				
 				//initiate dataTables plugin
 				var myTable = 
 				$('#dynamic-table')

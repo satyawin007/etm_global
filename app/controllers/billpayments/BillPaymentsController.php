@@ -214,7 +214,7 @@ class BillPaymentsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"billdate", "content"=>"bill date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paiddate", "content"=>"paid date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
+		$form_field = array("name"=>"paiddate", "content"=>"paid date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"totalamount", "content"=>"total amount", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -248,7 +248,7 @@ class BillPaymentsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"billdate1", "content"=>"bill date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paiddate1", "content"=>"paid date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
+		$form_field = array("name"=>"paiddate1", "content"=>"paid date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"totalamount1", "content"=>"total amount", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;

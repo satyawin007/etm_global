@@ -284,16 +284,14 @@ class AppSettingsController extends \Controller {
 	
 	public static function getEmpClients(){
 		$entities = null;
-		$emp_contracts = \Auth::user()->contractIds;
+		$emp_contracts = \Auth::user()->clientIds;
 		if($emp_contracts=="" || $emp_contracts==0){
 			$entities = \Client::where("status","=","ACTIVE")->get();
 		}
 		else{
 			$emp_contracts = explode(",", $emp_contracts);
-			 $entities = \Client::whereIn("depots.id",$emp_contracts)
+			 $entities = \Client::whereIn("id",$emp_contracts)
 			 		->where("clients.status","=","ACTIVE")
-					->join("contracts", "clients.id", "=","contracts.clientId")
-					->join("depots", "depots.id", "=","contracts.depotId")
 			 		->select(array("clients.id as id","clients.name as name"))->groupBy("clients.id")->get();
 		}
 		 return $entities->toArray();

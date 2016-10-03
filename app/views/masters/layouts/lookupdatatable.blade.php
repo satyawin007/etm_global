@@ -57,7 +57,8 @@
 						($form_info['action']=="adddailyfinance" && in_array(239, $jobs)) or
 						($form_info['action']=="addserviceprovider" && in_array(241, $jobs)) or
 						($form_info['action']=="adddistrict" && in_array(208, $jobs)) or
-						($form_info['action']=="addrole" && in_array(243, $jobs))
+						($form_info['action']=="addrole" && in_array(243, $jobs))||
+						($form_info['action']=="addupload" && in_array(243, $jobs))
 					  ){ ?>
 					@include("masters.layouts.addlookupform",$form_info)
 				<?php } ?>
@@ -158,7 +159,8 @@
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
-
+			$("#cardbankaccount").attr("disabled",true);
+			
 			function paginate(page){
 				var myin = document.createElement("input"); 
 				myin.type='hidden'; 
@@ -172,6 +174,14 @@
 				document.getElementById('paginate').appendChild(myin); 
 				$("#page").val(page);
 				$("#paginate").submit();				
+			}
+
+			function enableBankAccount(value){
+				$("#cardbankaccount").attr("disabled",true);
+				if(value=="DEBIT CARD"){
+					$("#cardbankaccount").attr("disabled",false);
+				}
+				$('.chosen-select').trigger("chosen:updated");	
 			}
 
 			function showPaymentFields(val){
@@ -393,9 +403,11 @@
 				$('.chosen-select').trigger("chosen:updated");	
 			}
 
-			function modalEditCard(id, cardNumber, cardType, cardHolderName, bank, creditLimit, expireDate, status){
+			function modalEditCard(id, cardNumber, cardType, cardHolderName, bank, acctId, creditLimit, expireDate, status){
+				
 				$("#cardtype1 option").each(function() {this.selected = (this.text == cardType); });
 				$("#bank1 option").each(function() { this.selected = (this.text == bank); });
+				$("#cardbankaccount1 option").each(function() { this.selected = (this.text == (bank+"-"+acctId)); });
 				$("#cardnumber1").val(cardNumber);
 				$("#cardholdername1").val(cardHolderName);
 				$("#creditlimit1").val(creditLimit);
@@ -413,6 +425,35 @@
 				$("#active1 option").each(function() { this.selected = (this.text == status); });
 				$("#servicestatus1 option").each(function() { this.selected = (this.text == servstatus); });
 				$("#id1").val(id);		
+				$('.chosen-select').trigger("chosen:updated");	
+			}
+
+			function modalEditUpload(id, type, refId, lookupvalue, filePath, status){
+				$("#uploadfor1").attr("disabled",true);
+				if(type == "EMPLOYEE"){
+					$("#employee1 option").each(function() {this.selected = (this.text == refId); });
+					$("#vehicle1").attr("disabled",true);
+				}
+				else{
+					$("#vehicle1 option").each(function() {this.selected = (this.text == refId); });
+					$("#employee1").attr("disabled",true);
+				}
+				$("#uploadfor1 option").each(function() {this.selected = (this.text == type); });
+				$("#documenttype1 option").each(function() { this.selected = (this.text == lookupvalue); });
+				$("#status1 option").each(function() { this.selected = (this.text == status); });
+				$("#id1").val(id);		
+				$('.chosen-select').trigger("chosen:updated");	
+			}
+
+			function enableUploadFields(val){
+				if(val=="EMPLOYEE"){
+					$("#vehicle").attr("disabled",true);
+					$("#employee").attr("disabled",false);
+				}
+				else{
+					$("#employee").attr("disabled",true);
+					$("#vehicle").attr("disabled",false);
+				}
 				$('.chosen-select').trigger("chosen:updated");	
 			}
 			
@@ -523,6 +564,35 @@
 					alert("Please select loanpurpose");
 					return false;
 				}
+
+				var uploadfor = $("#uploadfor").val();
+				if(uploadfor != undefined && uploadfor ==""){
+					alert("Please select uploadfor");
+					return false;
+				}
+
+				var documenttype = $("#documenttype").val();
+				if(documenttype != undefined && documenttype ==""){
+					alert("Please select documenttype");
+					return false;
+				}
+
+				if($("#uploadfor").val() == "EMPLOYEE"){
+					var employee = $("#employee").val();
+					if(employee != undefined && employee ==""){
+						alert("Please select employee");
+						return false;
+					}
+				}
+				
+				if($("#uploadfor").val() == "VEHICLE"){
+					var vehicle = $("#vehicle").val();
+					if(vehicle != undefined && vehicle ==""){
+						alert("Please select vehicle");
+						return false;
+					}
+				}
+				
 				$("#{{$form_info['name']}}").submit();
 			});
 
@@ -605,6 +675,20 @@
 			$('.number').keydown(function(e) {
 				this.value = this.value.replace(/[^0-9.]/g, ''); 
 				this.value = this.value.replace(/(\..*)\./g, '$1');
+			});
+
+
+			$('.file').ace_file_input({
+				no_file:'No File ...',
+				btn_choose:'Choose',
+				btn_change:'Change',
+				droppable:false,
+				onchange:null,
+				thumbnail:false //| true | large
+				//whitelist:'gif|png|jpg|jpeg'
+				//blacklist:'exe|php'
+				//onchange:''
+				//
 			});
 		
 			//datepicker plugin

@@ -20,6 +20,15 @@
 			.chosen-container{
 			  width: 100% !important;
 			}
+			.form-control {
+			    display: block;
+			    width: 100%;
+			    height: 34px;
+		    }
+		    .driversarea{
+		     	position: absolute; 
+  				left: -999em;
+		    }
 		</style>
 	@stop
 	
@@ -40,7 +49,7 @@
 
 	@section('page_content')
 		<div class="row ">
-			<div class="col-xs-offset-1 col-xs-10">
+			<div class="col-xs-offset-0 col-xs-12">
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
 				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) or 
@@ -48,7 +57,7 @@
 						($form_info['action']=="editcontract" && in_array(402, $jobs)) or
 						($form_info['action']=="editestimatepurchaseorder" && in_array(402, $jobs))
 					  ){ ?>
-					@include("contracts.tablerowform",$form_info)
+					@include("contracts.edittablerowform",$form_info)
 				<?php } ?>
 			</div>
 		</div>
@@ -115,15 +124,41 @@
 					$con_vehs_str = "[";
 					$con_vehs_text_str = "[";
 					foreach ($con_vehs as $veh){
+						$drv1 = "";
 						$drv2 = "";
+						$drv3 = "";
+						$drv4 = "";
+						$drv5 = "";
 						$helper = "";
+						if($veh->driver1Id != 0){
+							if(isset($drivers_arr[$veh->driver1Id])){
+								$drv1 = $drivers_arr[$veh->driver1Id];
+							}
+						}
 						if($veh->driver2Id != 0){
 							if(isset($drivers_arr[$veh->driver2Id])){
-								$veh_type = $drivers_arr[$veh->driver2Id];
+								$drv2 = $drivers_arr[$veh->driver2Id];
+							}
+						}
+						if($veh->driver3Id != 0){
+							if(isset($drivers_arr[$veh->driver3Id])){
+								$drv3 = $drivers_arr[$veh->driver3Id];
+							}
+						}
+						if($veh->driver4Id != 0){
+							if(isset($drivers_arr[$veh->driver4Id])){
+								$drv4 = $drivers_arr[$veh->driver4Id];
+							}
+						}
+						if($veh->driver5Id != 0){
+							if(isset($drivers_arr[$veh->driver5Id])){
+								$drv5 = $drivers_arr[$veh->driver5Id];
 							}
 						}
 						if($veh->helperId != 0){
-							$helper = $helpers_arr[$veh->helperId];
+							if(isset($helpers_arr[$veh->helperId])){
+								$helper = $helpers_arr[$veh->helperId];
+							}
 						}
 						if($veh->inActiveDate != "0000-00-00" && $veh->inActiveDate != "" && $veh->inActiveDate != "1970-01-01"){
 							$veh->inActiveDate = date("d-m-Y",strtotime($veh->inActiveDate));
@@ -135,28 +170,137 @@
 						if(isset($vehtypes_arr[$veh->vehicleTypeId])){
 							$veh_type = $vehtypes_arr[$veh->vehicleTypeId];
 						}
-						$con_vehs_text_str = $con_vehs_text_str."{ 'vehicle':'".$vehicles_arr[$veh->vehicleId]."', 'vehicletype':'".$veh_type."', 'driver1':'".$drivers_arr[$veh->driver1Id]."', 'driver2':'".$drv2."', 'helper':'".$helper."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))."', 'status':'".$veh->status."', 'id':'".$veh->id."'},";
-						$con_vehs_str = $con_vehs_str."{ 'vehicle':'".$veh->vehicleId."', 'vehicletype':'".$veh->vehicleTypeId."', 'driver1':'".$veh->driver1Id."', 'driver2':'".$veh->driver2Id."', 'helper':'".$veh->helperId."', 'status':'".$veh->status."', 'date':'".$veh->inActiveDate."', 'remarks':'".$veh->remarks."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))."', 'id':'".$veh->id."'},";
+						$veh_reg1 = "";
+						if(isset($vehicles_arr[$veh->vehicleId])){
+							$veh_reg1 = $vehicles_arr[$veh->vehicleId];
+						}
+						$con_vehs_text_str = $con_vehs_text_str."{ 'vehicle':'".$veh_reg1
+																."', 'vehicletype':'".$veh_type
+																."', 'driver1':'".$drv1
+																."', 'driver2':'".$drv2
+																."', 'driver3':'".$drv3
+																."', 'driver4':'".$drv4
+																."', 'driver5':'".$drv5
+																."', 'helper':'".$helper
+																."', 'drv1dt':'".date("d-m-Y",strtotime($veh->driver1startDate))
+																."', 'drv2dt':'".date("d-m-Y",strtotime($veh->driver2startDate))
+																."', 'drv3dt':'".date("d-m-Y",strtotime($veh->driver3startDate))
+																."', 'drv4dt':'".date("d-m-Y",strtotime($veh->driver4startDate))
+																."', 'drv5dt':'".date("d-m-Y",strtotime($veh->driver5startDate))
+																."', 'helperdt':'".date("d-m-Y",strtotime($veh->helperstartDate))
+																."', 'drv1edt':'".date("d-m-Y",strtotime($veh->driver1endDate))
+																."', 'drv2edt':'".date("d-m-Y",strtotime($veh->driver2endDate))
+																."', 'drv3edt':'".date("d-m-Y",strtotime($veh->driver3endDate))
+																."', 'drv4edt':'".date("d-m-Y",strtotime($veh->driver4endDate))
+																."', 'drv5edt':'".date("d-m-Y",strtotime($veh->driver5endDate))
+																."', 'helperedt':'".date("d-m-Y",strtotime($veh->helperendDate))
+																."', 'date':'".date("d-m-Y",strtotime($veh->inActiveDate))
+																."', 'floorrate':'".$veh->floorRate
+																."', 'routes':'', 'remarks':'".$veh->remarks
+																."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))
+																."', 'status':'".$veh->status
+																."', 'id':'".$veh->id."'},";
+						
+						$con_vehs_str = $con_vehs_str."{ 'vehicle':'".$veh->vehicleId
+																."', 'vehicletype':'".$veh->vehicleTypeId
+																."', 'driver1':'".$veh->driver1Id
+																."', 'driver2':'".$veh->driver2Id
+																."', 'driver3':'".$veh->driver3Id
+																."', 'driver4':'".$veh->driver4Id
+																."', 'driver5':'".$veh->driver5Id
+																."', 'helper':'".$veh->helperId
+																."', 'drv1dt':'".date("d-m-Y",strtotime($veh->driver1startDate))
+																."', 'drv2dt':'".date("d-m-Y",strtotime($veh->driver2startDate))
+																."', 'drv3dt':'".date("d-m-Y",strtotime($veh->driver3startDate))
+																."', 'drv4dt':'".date("d-m-Y",strtotime($veh->driver4startDate))
+																."', 'drv5dt':'".date("d-m-Y",strtotime($veh->driver5startDate))
+																."', 'helperdt':'".date("d-m-Y",strtotime($veh->helperstartDate))
+																."', 'drv1edt':'".date("d-m-Y",strtotime($veh->driver1endDate))
+																."', 'drv2edt':'".date("d-m-Y",strtotime($veh->driver2endDate))
+																."', 'drv3edt':'".date("d-m-Y",strtotime($veh->driver3endDate))
+																."', 'drv4edt':'".date("d-m-Y",strtotime($veh->driver4endDate))
+																."', 'drv5edt':'".date("d-m-Y",strtotime($veh->driver5endDate))
+																."', 'helperedt':'".date("d-m-Y",strtotime($veh->helperendDate))
+																
+																."', 'floorrate':'".$veh->floorRate
+																."', 'routes':'', 'status':'".$veh->status
+																."', 'date':'".date("d-m-Y",strtotime($veh->inActiveDate))
+																."', 'remarks':'".$veh->remarks
+																."', 'startdt':'".date("d-m-Y",strtotime($veh->vehicleStartDate))
+																."', 'id':'".$veh->id."'},";
 					}
 					$con_vehs_str = $con_vehs_str."]";
 					$con_vehs_text_str = $con_vehs_text_str."]";
 				?>
 				$("#updaterowbtn").hide();
 				$scope.vehicles = <?php echo $con_vehs_str; ?>;
-				$scope.ids = ['vehicle','vehicletype','driver1','driver2','helper','status'];
+				$scope.ids = ['vehicle','vehicletype','driver1','driver2','driver3','driver4','driver5','helper','status','routes'];
 				$scope.vehicles_text = <?php echo $con_vehs_text_str; ?>;
 				$scope.addRow = function(){
-					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" || $scope.driver1 === "" || $scope.vehicle === "") {
+					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" || $scope.driver1 === "" || $scope.vehicle === "" || 
+							$scope.driver1 == $scope.driver2 || $scope.driver1 == $scope.driver3 || $scope.driver1 == $scope.driver4 || $scope.driver1 == $scope.driver5
+						    /*$scope.driver2 == $scope.driver1 || $scope.driver2 == $scope.driver3 || $scope.driver2 == $scope.driver4 || $scope.driver2 == $scope.driver5 || 
+					  	    $scope.driver3 == $scope.driver1 || $scope.driver3 == $scope.driver2 || $scope.driver3 == $scope.driver4 || $scope.driver3 == $scope.driver5 || 
+					  	    $scope.driver4 == $scope.driver1 || $scope.driver4 == $scope.driver3 || $scope.driver4 == $scope.driver2 || $scope.driver4 == $scope.driver5 || 
+					  	    $scope.driver5 == $scope.driver1 || $scope.driver5 == $scope.driver3 || $scope.driver5 == $scope.driver2 || $scope.driver5 == $scope.driver4*/
+					  ) 
+					{
+						alert("Duplicate or Wrong Value");
 						return;
 					}	
-					$scope.vehicles.push({ 'vehicle':$scope.vehicle, 'vehicletype':$scope.vehicletype, 'driver1': $scope.driver1, 'driver2':$scope.driver2 , 'helper':$scope.helper, 'date':$scope.date, 'status':'ACTIVE', 'id':'-1' });
+					$scope.vehicles.push(
+								{ 'vehicle':$scope.vehicle, 
+								  'vehicletype':$scope.vehicletype, 
+								  'driver1': $scope.driver1, 
+								  'driver2':$scope.driver2, 
+								  'driver3':$scope.driver3, 
+								  'driver4':$scope.driver4, 
+								  'driver5':$scope.driver5, 
+								  'helper':$scope.helper, 
+								  'drv1dt': $scope.drv1dt,
+								  'drv2dt': $scope.drv2dt,
+								  'drv3dt': $scope.drv3dt,
+								  'drv4dt': $scope.drv4dt,
+								  'drv5dt': $scope.drv5dt,
+								  'helperdt': $scope.helperdt,
+								  'drv1edt': $scope.drv1edt,
+								  'drv2edt': $scope.drv2edt,
+								  'drv3edt': $scope.drv3edt,
+								  'drv4edt': $scope.drv4edt,
+								  'drv5edt': $scope.drv5edt,
+								  'helperedt': $scope.helperedt,
+								  'date':$scope.date, 
+								  'startdt':$scope.startdt,   
+								  'floorrate':$scope.floorrate,  
+								  'routes':$scope.routes, 
+								  'status':'ACTIVE', 
+								  'id':'-1' 
+								});
 					$scope.vehicle='';
 					$scope.vehicletype='';
 					$scope.driver1='';
 					$scope.driver2='';
+					$scope.driver3='';
+					$scope.driver4='';
+					$scope.driver5='';
 					$scope.helper='';
+					$scope.drv1dt='';
+					$scope.drv2dt='';
+					$scope.drv3dt='';
+					$scope.drv4dt='';
+					$scope.drv5dt='';
+					$scope.helperdt='';
+					$scope.drv1edt='';
+					$scope.drv2edt='';
+					$scope.drv3edt='';
+					$scope.drv4edt='';
+					$scope.drv5edt='';
+					$scope.helperedt='';
+					$scope.routes='';
+					$scope.floorrate='';
 					$scope.status='';
 					$scope.date='';
+					$scope.startdt='';
 					$scope.remarks='';
 					$scope.id='';
 
@@ -167,6 +311,20 @@
 						text_arr[entry] = text;
 					});
 					text_arr['date']=$("#date").val();
+					text_arr['startdt']=$("#startdt").val();
+					text_arr['drv1dt']=$("#drv1dt").val();
+					text_arr['drv2dt']=$("#drv2dt").val();
+					text_arr['drv3dt']=$("#drv3dt").val();
+					text_arr['drv4dt']=$("#drv4dt").val();
+					text_arr['drv5dt']=$("#drv5dt").val();
+					text_arr['helperdt']=$("#helperdt").val();
+					text_arr['drv1edt']=$("#drv1edt").val();
+					text_arr['drv2edt']=$("#drv2edt").val();
+					text_arr['drv3edt']=$("#drv3edt").val();
+					text_arr['drv4edt']=$("#drv4edt").val();
+					text_arr['drv5edt']=$("#drv5edt").val();
+					text_arr['helperedt']=$("#helperedt").val();
+					text_arr['floorrate']=$("#floorrate").val();
 					text_arr['remarks']=$("#remarks").val();
 					$scope.vehicles_text.push(text_arr);
 					$('.chosen-select').trigger("chosen:updated");
@@ -191,11 +349,25 @@
 						return;
 					}
 					$scope.ids.forEach(function(entry) {
-						$("#"+entry+" option").each(function() { this.selected =(this.text == comArr[i][entry])});
+						$("#"+entry+" option").each(function() { if(this.selected==false) this.selected =(this.text == comArr[i][entry]);});
 						$("#"+entry).find('option:selected').attr("selected", "selected"); 
 						$scope[entry]=comArr1[i][entry];
 					});	
 					$scope['date']=comArr1[i]['date'];
+					$scope['startdt']=comArr1[i]['startdt'];
+					$scope['drv1dt']=comArr1[i]['drv1dt'];
+					$scope['drv2dt']=comArr1[i]['drv2dt'];
+					$scope['drv3dt']=comArr1[i]['drv3dt'];
+					$scope['drv4dt']=comArr1[i]['drv4dt'];
+					$scope['drv5dt']=comArr1[i]['drv5dt'];
+					$scope['helperdt']=comArr1[i]['helperdt'];
+					$scope['drv1edt']=comArr1[i]['drv1edt'];
+					$scope['drv2edt']=comArr1[i]['drv2edt'];
+					$scope['drv3edt']=comArr1[i]['drv3edt'];
+					$scope['drv4edt']=comArr1[i]['drv4edt'];
+					$scope['drv5edt']=comArr1[i]['drv5edt'];
+					$scope['helperedt']=comArr1[i]['helperedt'];
+					$scope['floorrate']=comArr1[i]['floorrate'];
 					$scope['remarks']=comArr1[i]['remarks'];
 					$('.chosen-select').trigger("chosen:updated");	
 				};
@@ -214,10 +386,28 @@
 							$scope.vehicles[i]['driver1']=$scope.driver1;
 							$scope.vehicles[i]['vehicletype']=$scope.vehicletype;
 							$scope.vehicles[i]['driver2']=$scope.driver2;
+							$scope.vehicles[i]['driver3']=$scope.driver3;
+							$scope.vehicles[i]['driver4']=$scope.driver4;
+							$scope.vehicles[i]['driver5']=$scope.driver5;
 							$scope.vehicles[i]['helper']=$scope.helper;
+							$scope.vehicles[i]['drv1dt']=$scope.drv1dt;
+							$scope.vehicles[i]['drv2dt']=$scope.drv2dt;
+							$scope.vehicles[i]['drv3dt']=$scope.drv3dt;
+							$scope.vehicles[i]['drv4dt']=$scope.drv4dt;
+							$scope.vehicles[i]['drv5dt']=$scope.drv5dt;
+							$scope.vehicles[i]['helperdt']=$scope.helperdt;
+							$scope.vehicles[i]['drv1edt']=$scope.drv1edt;
+							$scope.vehicles[i]['drv2edt']=$scope.drv2edt;
+							$scope.vehicles[i]['drv3edt']=$scope.drv3edt;
+							$scope.vehicles[i]['drv4edt']=$scope.drv4edt;
+							$scope.vehicles[i]['drv5edt']=$scope.drv5edt;
+							$scope.vehicles[i]['helperedt']=$scope.helperedt;
 							$scope.vehicles[i]['status']=$scope.status;
 							$scope.vehicles[i]['date']=$scope.date;
+							$scope.vehicles[i]['startdt']=$scope.startdt;
 							$scope.vehicles[i]['remarks']=$scope.remarks;
+							$scope.vehicles[i]['floorrate']=$scope.floorrate;
+							$scope.vehicles[i]['routes']=$scope.routes;
 
 							$scope.ids.forEach(function(entry) {
 								text = $("#"+entry+" option:selected").text();
@@ -227,7 +417,21 @@
 								$("#"+entry).find('option:selected').removeAttr("selected");
 							});
 							$scope.vehicles_text[i]['date']=$scope.date;
+							$scope.vehicles_text[i]['startdt']=$scope.startdt;
+							$scope.vehicles_text[i]['drv1dt']=$scope.drv1dt;
+							$scope.vehicles_text[i]['drv2dt']=$scope.drv2dt;
+							$scope.vehicles_text[i]['drv3dt']=$scope.drv3dt;
+							$scope.vehicles_text[i]['drv4dt']=$scope.drv4dt;
+							$scope.vehicles_text[i]['drv5dt']=$scope.drv5dt;
+							$scope.vehicles_text[i]['helperdt']=$scope.helperdt;
+							$scope.vehicles_text[i]['drv1edt']=$scope.drv1edt;
+							$scope.vehicles_text[i]['drv2edt']=$scope.drv2edt;
+							$scope.vehicles_text[i]['drv3edt']=$scope.drv3edt;
+							$scope.vehicles_text[i]['drv4edt']=$scope.drv4edt;
+							$scope.vehicles_text[i]['drv5edt']=$scope.drv5edt;
+							$scope.vehicles_text[i]['helperedt']=$scope.helperedt;
 							$scope.vehicles_text[i]['remarks']=$scope.remarks;
+							$scope.vehicles_text[i]['floorrate']=$scope.floorrate;
 							break;
 						}
 					}
@@ -239,10 +443,28 @@
 					$scope.driver1='';
 					$scope.vehicletype='';
 					$scope.driver2='';
+					$scope.driver3='';
+					$scope.driver4='';
+					$scope.driver5='';
 					$scope.helper='';
+					$scope.drv1dt='';
+					$scope.drv2dt='';
+					$scope.drv3dt='';
+					$scope.drv4dt='';
+					$scope.drv5dt='';
+					$scope.helperdt='';
+					$scope.drv1edt='';
+					$scope.drv2edt='';
+					$scope.drv3edt='';
+					$scope.drv4edt='';
+					$scope.drv5edt='';
+					$scope.helperedt='';
 					$scope.status='';
 					$scope.date='';
+					$scope.startdt='';
 					$scope.remarks='';
+					$scope.floorrate='';
+					$scope.routes='';
 					alert("updated successfully");
 					$('.chosen-select').trigger("chosen:updated");
 					$("#addrowbtn").show();
@@ -406,6 +628,18 @@
 			      type: 'GET'
 			   });
 			}
+
+			$('#otherdrivers').on('change', function() { 
+			    if (this.checked) {
+			    	$(".driversarea").css('position','relative');
+			    	$(".driversarea").css('left','0em');
+			    	
+			    }
+			    else{
+			    	 $(".driversarea").css('position','absolute');
+			    	 $(".driversarea").css('left','-999em');
+			    }
+			});
 
 			function verifyActiveStatus(val){
 				id = $("#vehicle").val();

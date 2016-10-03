@@ -110,8 +110,8 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
-			$values['clientid']="";
-			$values['depotid']="";
+			//$values['clientid']="";
+			//$values['depotid']="";
 		}
 		if(!isset($values['clientid']) || !isset($values['depotid'])){
 			return array("total"=>$total, "data"=>$data);
@@ -150,29 +150,42 @@ class DataTableController extends \Controller {
 			foreach ($vehs as  $veh){
 				$vehs_arr[] = $veh->id;
 			}
-			$entities = \ServiceLog::where("service_logs.status", "!=", "DELETED")->whereIn("contractVehicleId",$vehs_arr)
+			$entities = \ServiceLog::where("service_logs.status", "=", "ACTIVE")
 						->where("contracts.clientId","=",$values["clientid"])
-						->where("depotId","=",$values["depotid"])
+						->where("contracts.depotId","=",$values["depotid"])
+						->whereIn("contract_vehicles.vehicleId",$vehs_arr)
 						->join("contracts","contracts.id", "=", "service_logs.contractId")
-						->join("vehicle","vehicle.id", "=", "service_logs.contractVehicleId")
-						->leftjoin("employee as employee1","employee1.id", "=", "service_logs.driver1Id")
-						->leftjoin("employee as employee2","employee2.id", "=", "service_logs.helperId")
-						->select($select_args)->orderby("serviceDate","asc")->limit($length)->offset($start)->get();
-			$total = \ServiceLog::where("service_logs.status", "!=", "DELETED")->whereIn("contractVehicleId",$vehs_arr)->count();
-		}
-		else{
-			$entities = \ServiceLog::where("service_logs.status", "!=", "DELETED")
-						->where("contracts.clientId","=",$values["clientid"])
-						->where("depotId","=",$values["depotid"])
-						->join("contracts","contracts.id", "=", "service_logs.contractId")
-						->join("vehicle","vehicle.id", "=", "service_logs.contractVehicleId")
+						->join("contract_vehicles","contract_vehicles.id", "=", "service_logs.contractVehicleId")
+						->join("vehicle","vehicle.id", "=", "contract_vehicles.vehicleId")
 						->leftjoin("vehicle as vehicle1","vehicle1.id", "=", "service_logs.substituteVehicleId")
 						->leftjoin("employee as employee1","employee1.id", "=", "service_logs.driver1Id")
 						->leftjoin("employee as employee2","employee2.id", "=", "service_logs.helperId")
 						->select($select_args)->orderby("serviceDate","asc")->limit($length)->offset($start)->get();
-			$total = \ServiceLog::where("service_logs.status", "!=","DELETED")
+			$total = \ServiceLog::where("service_logs.status", "=", "ACTIVE")
+						->where("contracts.clientId","=",$values["clientid"])
+						->where("contracts.depotId","=",$values["depotid"])
+						->whereIn("contract_vehicles.vehicleId",$vehs_arr)
+						->join("contracts","contracts.id", "=", "service_logs.contractId")
+						->join("contract_vehicles","contract_vehicles.id", "=", "service_logs.contractVehicleId")
+						->join("vehicle","vehicle.id", "=", "contract_vehicles.vehicleId")->count();
+		}
+		else{
+			$entities = \ServiceLog::where("service_logs.status", "=", "ACTIVE")
+						->where("contracts.clientId","=",$values["clientid"])
+						->where("contracts.depotId","=",$values["depotid"])
+						//->where("contract_vehicles.status","=","ACTIVE")
+						->join("contracts","contracts.id", "=", "service_logs.contractId")
+						->join("contract_vehicles","contract_vehicles.id", "=", "service_logs.contractVehicleId")
+						->join("vehicle","vehicle.id", "=", "contract_vehicles.vehicleId")
+						->leftjoin("vehicle as vehicle1","vehicle1.id", "=", "service_logs.substituteVehicleId")
+						->leftjoin("employee as employee1","employee1.id", "=", "service_logs.driver1Id")
+						->leftjoin("employee as employee2","employee2.id", "=", "service_logs.helperId")
+						->select($select_args)->orderby("serviceDate","asc")->limit($length)->offset($start)->get();
+			$total = \ServiceLog::where("service_logs.status", "=","ACTIVE")
 						->where("clientId","=",$values["clientid"])
 						->where("depotId","=",$values["depotid"])
+						//->where("contract_vehicles.status","=","ACTIVE")
+						->join("contract_vehicles","contract_vehicles.id", "=", "service_logs.contractVehicleId")
 						->join("contracts","contracts.id", "=", "service_logs.contractId")->count();
 		}
 		$tripno = 1;
@@ -266,12 +279,13 @@ class DataTableController extends \Controller {
 		$search = $search['value'];
 		if($search != ""){
 			$contract_arr =  array();
-			$con_vehs = \DB::select(\DB::raw("select id from vehicle where veh_reg like '%$search%'"));
+			$con_vehs = \DB::select(\DB::raw("select id from depots where name like '%$search%' and status='ACTIVE'"));
 			foreach ($con_vehs as  $con_veh){
 				$contract_arr[] = $con_veh->id;
 			}
-			$entities = \ServiceLogRequest::wherein("servicelogrequests.vehicleId",$contract_arr)
+			$entities = \ServiceLogRequest::wherein("contracts.depotId",$contract_arr)
 					->where("servicelogrequests.deleted", "=", "No")
+					->join("contract_vehicles","contract_vehicles.id", "=", "servicelogrequests.vehicleId")
 					->join("contracts","contracts.id", "=", "servicelogrequests.contractId")
 					->join("clients","clients.id", "=", "contracts.clientId")
 					->join("depots","depots.id", "=", "contracts.depotId")
@@ -279,7 +293,8 @@ class DataTableController extends \Controller {
 					->join("employee","employee.id", "=", "servicelogrequests.createdBy")
 					->leftjoin("employee as employee1","employee1.id", "=", "servicelogrequests.openedBy")
 					->select($select_args)->limit($length)->offset($start)->get();
-			$total = \ServiceLogRequest::wherein("servicelogrequests.vehicleId",$contract_arr)
+			$total = \ServiceLogRequest::wherein("contracts.depotId",$contract_arr)
+					->join("contracts","contracts.id", "=", "servicelogrequests.contractId")
 					->where("servicelogrequests.deleted", "=", "No")->count();
 		}
 		else{
@@ -303,7 +318,8 @@ class DataTableController extends \Controller {
 						->leftjoin("contracts","contracts.id", "=", "servicelogrequests.contractId")
 						->leftjoin("clients","clients.id", "=", "contracts.clientId")
 						->leftjoin("depots","depots.id", "=", "contracts.depotId")
-						->leftjoin("vehicle","vehicle.id", "=", "servicelogrequests.vehicleId")
+						->leftjoin("contract_vehicles","contract_vehicles.id", "=", "servicelogrequests.vehicleId")
+						->leftjoin("vehicle","vehicle.id", "=", "contract_vehicles.vehicleId")
 						->leftjoin("employee","employee.id", "=", "servicelogrequests.createdBy")
 						->leftjoin("employee as employee1","employee1.id", "=", "servicelogrequests.openedBy")
 						->select($select_args)->limit($length)->offset($start)->get();
@@ -312,7 +328,7 @@ class DataTableController extends \Controller {
 						->whereIn("servicelogrequests.status",$logstatus_arr)->count();
 			}
 			else{
-				$entities = \ServiceLogRequest::where("servicelogrequests.deleted", "=", "no recotds")->get();
+				$entities = \ServiceLogRequest::where("servicelogrequests.deleted", "=", "no records")->get();
 			}
 			/* else{
 				$entities = \ServiceLogRequest::where("servicelogrequests.deleted", "=", "No")
@@ -373,7 +389,13 @@ class DataTableController extends \Controller {
 				}
 			}
 			$data_values[10] = $action_data;
-			$data_values[11] = $action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$entity['id'].'"> <span class="lbl">&nbsp;</span></label>';
+			
+			if(in_array(417, $this->jobs)){
+				$data_values[11] = $action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$entity['id'].'"> <span class="lbl">&nbsp;</span></label>';
+			}
+			else{
+				$data_values[11] = " ";
+			}
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

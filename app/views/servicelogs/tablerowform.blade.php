@@ -276,7 +276,7 @@
 									<td>@{{vehicle.vehicle}}</td>
 									<td>@{{vehicle.servicedate}}</td>
 									<td>@{{vehicle.startreading}} - @{{vehicle.endreading}} = @{{vehicle.endreading-vehicle.startreading}}</td>
-									<td>@{{vehicle.driver1}}<br/> @{{vehicle.driver2}}</td>
+									<td>@{{vehicle.driver1}}<br/>@{{vehicle.driver2}}<br/>@{{vehicle.driver3}}<br/>@{{vehicle.driver4}}<br/>@{{vehicle.driver5}}</td>
 									<td>@{{vehicle.helper}}</td>
 									<td>@{{vehicle.remarks}}</td>
 									<td>@{{vehicle.status}}</td>

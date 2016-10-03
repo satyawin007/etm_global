@@ -45,6 +45,24 @@ class DBFunctionsController extends \Controller {
 	 *
 	 * @return Response
 	 */
+	public function insertNew($table, $fields)
+	{
+		$entity = new $table();
+		$allValues = "";
+		foreach($fields as $key=>$value){
+			$entity[$key] = $value;
+			$allValues = $allValues.$value.", ";
+		}
+		$entity["createdBy"] = \Auth::user()->id;
+		$ret_val = $entity->save();	
+		return $entity->id;
+	}
+	
+	/**
+	 * add a record to a table.
+	 *
+	 * @return Response
+	 */
 	public function insertRetId($table, $fields)
 	{
 		$entity = new $table();

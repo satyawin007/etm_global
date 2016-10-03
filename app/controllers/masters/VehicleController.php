@@ -18,7 +18,9 @@ class VehicleController extends \Controller {
 								 "chassisno"=>"chsno", "vehicletype"=>"vehicle_type", "yearofpur"=>"yearof_pur", "seatingcapacity"=>"seat_cap", "remarks"=>"remarks", 
 								 "depreciationvalue"=>"dep_val", "purchaseamount"=>"purchase_amount", "actualcost"=>"actual_cost", "monthlyemi"=>"emi", 
 								 "taxlastpaid_ts"=>"tax_last_paid_ts","taxlastpaid_ap"=>"tax_last_paid_ap","taxlastpaid_kta"=>"tax_last_paid_kta","taxlastpaid_tn"=>"tax_last_paid_tn", "insurancelastpaid"=>"insurance_last_paid", "fitnesslastpaid"=>"fit_last_paid", 
-								 "polutionlastcheck"=>"pol_last_paid", "permitlastpaid"=>"permit_last_paid");
+								 "polutionlastcheck"=>"pol_last_paid", "permitlastpaid"=>"permit_last_paid",
+								 "emi_amount"=>"emi", "total_emis"=>"total_emis", "paid_emis"=>"paid_emis"
+								);
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
@@ -103,7 +105,13 @@ class VehicleController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"actualcost", "content"=>"actual cost", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"taxlastpaid_ts", "content"=>"tax last paid date ts", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date");
+		$form_field = array("name"=>"emi_amount", "content"=>"emi amount", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"total_emis", "content"=>"total emis", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"paid_emis", "content"=>"paid emis", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		/*$form_field = array("name"=>"taxlastpaid_ts", "content"=>"tax last paid date ts", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"taxlastpaid_ap", "content"=>"tax last paid date ap", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date");
 		$form_fields[] = $form_field;
@@ -118,7 +126,7 @@ class VehicleController extends \Controller {
 		$form_field = array("name"=>"polutionlastcheck", "content"=>"last polution check date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"permitlastpaid", "content"=>"permit last paid date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date");
-		$form_fields[] = $form_field;
+		$form_fields[] = $form_field;*/
 		$tab = array();
 		$tab['form_fields'] = $form_fields;
 		$tab['href'] = "tabtwo";
@@ -142,7 +150,9 @@ class VehicleController extends \Controller {
 								 "chassisno"=>"chsno", "vehicletype"=>"vehicle_type", "yearofpur"=>"yearof_pur", "seatingcapacity"=>"seat_cap", "remarks"=>"remarks", 
 								 "depreciationvalue"=>"dep_val", "purchaseamount"=>"purchase_amount", "actualcost"=>"actual_cost", "monthlyemi"=>"emi", 
 								 "taxlastpaid_ts"=>"tax_last_paid_ts","taxlastpaid_ap"=>"tax_last_paid_ap","taxlastpaid_kta"=>"tax_last_paid_kta","taxlastpaid_tn"=>"tax_last_paid_tn", "insurancelastpaid"=>"insurance_last_paid", "fitnesslastpaid"=>"fit_last_paid", 
-								 "polutionlastcheck"=>"pol_last_paid", "permitlastpaid"=>"permit_last_paid", "status"=>"status");
+								 "polutionlastcheck"=>"pol_last_paid", "permitlastpaid"=>"permit_last_paid", "status"=>"status",
+								 "emi_amount"=>"emi", "total_emis"=>"total_emis", "paid_emis"=>"paid_emis"
+								);
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
@@ -198,11 +208,17 @@ class VehicleController extends \Controller {
 		$entity = \Vehicle::where("id", "=", $values['id'])->get();
 		$entity = $entity[0];
 		
+		$cities =  \City::Where("status","=","ACTIVE")->Where("stateId","=",$entity->state_id)->get();
+		$cities_arr = array();
+		foreach ($cities as $city){
+			$cities_arr[$city['id']] = $city->name;
+		}
+		
 		$tabs = array();
 		$form_fields = array();
 		$form_field = array("name"=>"statename", "value"=>$entity->state_id, "content"=>"state name", "readonly"=>"",  "required"=>"required", "action"=>array("type"=>"onChange", "script"=>"changeState(this.value);"),  "type"=>"select", "class"=>"form-control", "options"=>$state_arr);
 		$form_fields[] = $form_field;		
-		$form_field = array("name"=>"cityname", "value"=>$entity->city_id,  "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>array(), "class"=>"form-control");
+		$form_field = array("name"=>"cityname", "value"=>$entity->city_id,  "content"=>"city name", "readonly"=>"",  "required"=>"required","type"=>"select", "options"=>$cities_arr, "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"vehicleregno", "value"=>$entity->veh_reg,  "content"=>"Vehicle Regd No ", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -252,7 +268,13 @@ class VehicleController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"actualcost", "value"=>$entity->actual_cost,  "content"=>"actual cost", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"taxlastpaid_ts", "value"=>$tax_last_paid_ts,  "content"=>"tax last paid date ts", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date");
+		$form_field = array("name"=>"emi_amount", "value"=>$entity->emi,  "content"=>"emi amount", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"total_emis", "value"=>$entity->total_emis,  "content"=>"total emis", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"paid_emis", "value"=>$entity->paid_emis,  "content"=>"paid emis", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		/*$form_field = array("name"=>"taxlastpaid_ts", "value"=>$tax_last_paid_ts,  "content"=>"tax last paid date ts", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"taxlastpaid_ap", "value"=>$tax_last_paid_ap, "content"=>"tax last paid date ap", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date");
 		$form_fields[] = $form_field;
@@ -267,7 +289,7 @@ class VehicleController extends \Controller {
 		$form_field = array("name"=>"polutionlastcheck", "value"=>date("d-m-Y",strtotime($entity->pol_last_paid)),  "content"=>"last polution check date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"permitlastpaid", "value"=>date("d-m-Y",strtotime($entity->permit_last_paid)),  "content"=>"permit last paid date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date");
-		$form_fields[] = $form_field;
+		$form_fields[] = $form_field;*/
 		$tab = array();
 		$tab['form_fields'] = $form_fields;
 		$tab['href'] = "tabtwo";
@@ -329,7 +351,7 @@ class VehicleController extends \Controller {
 		$values['action_val'] = $action_val;
 		$values['links'] = $links;
 				
-		$theads = array('Vehicle Reg No','Vehicle Type', "Year of purchase", "Seating Capacity", "status", "Actions");
+		$theads = array('Vehicle Reg No','Vehicle Type', "Year of purchase", "Seating Capacity", "Attachments", "Renewals (Expires On)", "status", "Actions");
 		$values["theads"] = $theads;
 			
 		$tds = array('veh_reg','veh_type', "yearof_pur", "seat_cap");

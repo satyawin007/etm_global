@@ -138,10 +138,15 @@ use settings\AppSettingsController;
 				<div class="col-xs-offset-4 col-xs-7">
 					<div class="col-xs-4">
 						<select name="updatelogstatus" id="updatelogstatus" class="formcontrol chosen-select">
-							<option value="Send for Approval">Send for Approval</option>
 							<option value="Requested">Requested</option>
+							<?php 
+								$jobs = \Session::get("jobs"); 
+								if(in_array(416, $jobs)){
+							?>
+							<option value="Send for Approval">Send for Approval</option>
 							<option value="Open">Open</option>
 							<option value="Closed">Closed</option>
+							<?php }?>
 						</select>
 					</div>
 					<div class="col-xs-3">

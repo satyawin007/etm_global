@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
+use settings\AppSettingsController;
 
 class LeavesController extends \Controller {
 
@@ -29,7 +30,7 @@ class LeavesController extends \Controller {
 				$leaves = $leaves+0.5;
 			}
 			$values["leaves"] = $leaves;
-			$field_names = array("employeename"=>"empId","fromdate"=>"fromDate","todate"=>"toDate","frommngreve"=>"fromMrngEve","tomngreve"=>"toMrngEve","substitute"=>"substituteId","leaves"=>"noOfLeaves","remarks"=>"remarks");
+			$field_names = array("employeename"=>"empId","fromdate"=>"fromDate", "branch"=>"branchId", "todate"=>"toDate", "frommngreve"=>"fromMrngEve","tomngreve"=>"toMrngEve","substitute"=>"substituteId","leaves"=>"noOfLeaves","leavesTaken"=>"leavesTaken","remarks"=>"remarks");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key]) && ($key=="fromdate" || $key=="todate")){
@@ -76,7 +77,7 @@ class LeavesController extends \Controller {
 				$leaves = $leaves+0.5;
 			}
 			$values["leaves"] = $leaves;
-			$field_names = array("employeename"=>"empId","fromdate"=>"fromDate","todate"=>"toDate","frommngreve"=>"fromMrngEve","tomngreve"=>"toMrngEve","substitute"=>"substituteId","leaves"=>"noOfLeaves","remarks"=>"remarks");
+			$field_names = array("employeename"=>"empId","fromdate"=>"fromDate","todate"=>"toDate","frommngreve"=>"fromMrngEve","tomngreve"=>"toMrngEve","substitute"=>"substituteId","leaves"=>"noOfLeaves","leavesTaken"=>"leavesTaken","remarks"=>"remarks");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key]) && ($key=="fromdate" || $key=="todate")){
@@ -109,13 +110,17 @@ class LeavesController extends \Controller {
 		$entity = \Leaves::where("id","=",$values['id'])->get();
 		if(count($entity)){
 			$entity = $entity[0];
-			$emps = \Employee::all();
+			$emps = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) ")->get();
 			$emp_arr = array();
 			foreach ($emps as $emp){
 				$emp_arr[$emp->id] = $emp->fullName." - ".$emp->empCode;
 			}
 			$form_fields = array();	
-			$form_field = array("name"=>"employeename", "id"=>"employeename", "value"=>$entity->empId, "content"=>"employee name", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+			$empid = "";
+			if(isset($emp_arr[$entity->empId])){
+				$empid = $emp_arr[$entity->empId];
+			}
+			$form_field = array("name"=>"employeename1", "id"=>"employeename1", "value"=>$empid, "content"=>"employee name", "readonly"=>"readonly", "required"=>"required","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"fromdate", "id"=>"fromdate", "value"=>date("d-m-Y",strtotime($entity->fromDate)), "content"=>"from Date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
 			$form_fields[] = $form_field;
@@ -125,13 +130,17 @@ class LeavesController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"tomngreve", "id"=>"tomngreve", "value"=>$entity->toMrngEve, "content"=>"to Mor/Eve", "readonly"=>"",  "required"=>"required","type"=>"radio", "options"=>array("Morning"=>"Morning","Afternoon"=>"Afternoon"), "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"substitute", "id"=>"substitute", "value"=>$entity->substituteId, "content"=>"substitute employee", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+// 			$form_field = array("name"=>"substitute", "id"=>"substitute", "value"=>$entity->substituteId, "content"=>"substitute employee", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+// 			$form_fields[] = $form_field;
+			$form_field = array("name"=>"remarks", "id"=>"remarks", "value"=>$entity->remarks, "content"=>"remarks", "readonly"=>"", "required"=>"","type"=>"textarea", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"remarks", "id"=>"remarks", "value"=>$entity->remarks, "content"=>"remarks", "readonly"=>"", "required"=>"required","type"=>"textarea", "class"=>"form-control");
+			$form_field = array("name"=>"leavesTaken", "value"=>$entity->leavesTaken, "content"=>"LEAVES ALREADY AVAILED THIS MONTH", "readonly"=>"", "required"=>"required", "type"=>"text",  "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"employeename", "id"=>"employeename", "value"=>$entity->empId, "content"=>"", "readonly"=>"readonly", "required"=>"required", "type"=>"hidden", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"id", "value"=>$values["id"], "content"=>"", "readonly"=>"", "required"=>"","type"=>"hidden", "class"=>"form-control");
 			$form_fields[] = $form_field;
-		
+			$form_info['form_payment_fields'] = array();
 			$form_info["form_fields"] = $form_fields;
 			return View::make("transactions.edit2colmodalform",array("form_info"=>$form_info));
 		}
@@ -152,7 +161,7 @@ class LeavesController extends \Controller {
 		$values['add_url'] = 'addleave';
 		$values['form_action'] = 'leaves';
 		$values['action_val'] = '#';
-		$theads = array('Emp Id','Emp Name', "branch", "From", "Mor/Eve", "To", "Mor/Eve", "Leaves", "status", "Actions");
+		$theads = array('Emp Id','Emp Name', "branch", "From", "Mor/Eve", "To", "Mor/Eve", "Leaves", "Leaves Taken", "status", "remarks", "Actions");
 		$values["theads"] = $theads;
 			
 		$actions = array();
@@ -168,26 +177,35 @@ class LeavesController extends \Controller {
 		$form_info["back_url"] = "leaves";
 		$form_info["bredcum"] = "add leave";
 		
-		$emps = \Employee::all();
+		$emps = AppSettingsController::getEmpBranches();
 		$emp_arr = array();
 		foreach ($emps as $emp){
-			$emp_arr[$emp->id] = $emp->fullName." - ".$emp->empCode;
+			$emp_arr[$emp["id"]] = $emp["name"];
 		}
-		
-		$form_fields = array();		
-		$form_field = array("name"=>"employeename", "content"=>"employee name", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+		$empcode = \Auth::user()->empCode;
+		$empname = \Auth::user()->fullName." (".$empcode.")";
+		$form_fields = array();
+		$form_field = array("name"=>"datetime", "content"=>"date & time", "readonly"=>"readonly", "required"=>"required","type"=>"text",  "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"branch", "content"=>"branch", "readonly"=>"", "required"=>"required", "type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"employeename1", "value"=>$empname, "content"=>"employee name", "readonly"=>"readonly", "required"=>"required","type"=>"text",  "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"fromdate", "content"=>"from Date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"frommngreve", "content"=>"from Mor/Eve", "readonly"=>"",  "required"=>"required","type"=>"radio", "options"=>array("Morning"=>"Morning","Afternoon"=>"Afternoon"), "class"=>"form-control");
-		$form_fields[] = $form_field;
 		$form_field = array("name"=>"todate", "content"=>"to Date", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control date-picker");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"frommngreve", "content"=>"from Mor/Eve", "readonly"=>"",  "required"=>"required","type"=>"radio", "options"=>array("Morning"=>"Morning","Afternoon"=>"Afternoon"), "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"tomngreve", "content"=>"to Mor/Eve", "readonly"=>"",  "required"=>"required","type"=>"radio", "options"=>array("Morning"=>"Morning","Afternoon"=>"Afternoon"), "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"substitute", "content"=>"substitute employee", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+		//$form_field = array("name"=>"substitute", "content"=>"substitute employee", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$emp_arr, "class"=>"form-control chosen-select");
+		//$form_fields[] = $form_field;
+		$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"", "required"=>"required", "type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"", "required"=>"","type"=>"textarea", "class"=>"form-control");
+		$form_field = array("name"=>"leavesTaken", "content"=>"LEAVES ALREADY AVAILED THIS MONTH", "readonly"=>"", "required"=>"required", "type"=>"text",  "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"employeename", "id"=>"employeename", "value"=>\Auth::user()->id, "content"=>"", "readonly"=>"readonly", "required"=>"", "type"=>"hidden", "class"=>"form-control");
 		$form_fields[] = $form_field;
 				
 		$form_info["form_fields"] = $form_fields;
@@ -224,6 +242,32 @@ class LeavesController extends \Controller {
 			return;
 		}
 		echo "fail";
+	}
+	
+	public function getEmployeesByOffice(){
+		$values = Input::all();
+		$entities = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["branch"]."',employee.officeBranchIds)")->get();
+		$options_str = "<option value=''>--select employee--</option>";
+		foreach ($entities as $entity){
+			$options_str = $options_str."<option value='".$entity->id."'>".$entity->fullName."(".$entity->empCode.")</option>";
+		}
+		echo $options_str;
+	}
+	
+	public function getEmployeesByDepot(){
+		$values = Input::all();
+		if($values["depot"]=="0"){
+			DB::statement(DB::raw("CALL contract_driver_helper_all('".$values["clientname"]."');"));
+		}
+		else {
+			DB::statement(DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+		}			
+		$entities = DB::select( DB::raw("select * from temp_contract_drivers_helpers group by id"));
+		$options_str = "<option value=''>--select employee--</option>";
+		foreach ($entities as $entity){
+			$options_str = $options_str."<option value='".$entity->id."'>".$entity->fullName."(".$entity->empCode.")</option>";
+		}
+		echo $options_str;
 	}
 	
 	public function leaveDetails(){

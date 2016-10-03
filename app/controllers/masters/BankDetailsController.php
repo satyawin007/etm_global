@@ -136,7 +136,7 @@ class BankDetailsController extends \Controller {
 			$banks =  \LookupTypeValues::where("parentId","=",$parentId)->where("status","=","ACTIVE")->get();
 			$bank_arr = array();
 			foreach ($banks as $bank){
-				$bank_arr [$bank['id']] = $bank->name;
+				$bank_arr [$bank->name] = $bank->name;
 			}
 			
 			$parentId = -1;
@@ -209,13 +209,13 @@ class BankDetailsController extends \Controller {
 	 *
 	 * @return Response
 	 */
-	public function getBranchbyCityId()
+	public function getBankAccounts()
 	{
 		$values = Input::all();
-		$entities = \OfficeBranch::where("Id","=",$values['id'])->get();
+		$entities = \BankDetails::where("bankName","=",$values['bankname'])->get();
 		$response = "";
 		foreach ($entities as $entity){
-			$response = $response."<option value='".$entity->id."'>".$entity->name."</option>";
+			$response = $response."<option value='".$entity->id."'>".$entity->accountNo." (".$entity->accountName.") </option>";
 		}
 		echo $response;
 	}

@@ -42,34 +42,68 @@ class ContractController extends \Controller {
 			$db_functions_ctrl = new DBFunctionsController();
 			$table = "Contract";
 			$recid = "";
-			$recid = $db_functions_ctrl->insertRetId($table, $fields);
-			if($recid>0){
-				$db_functions_ctrl = new DBFunctionsController();
-				$table = "ContractVehicle";
-				$jsonitems = json_decode($values["contractvehicles"]);
-				foreach ($jsonitems as $jsonitem){
-					$fields = array();
-					$fields["contractId"] = $recid;
-					$fields["vehicleId"] = $jsonitem->vehicle;
-					$fields["vehicleTypeId"] = $jsonitem->vehicletype;
-					$fields["driver1Id"] = $jsonitem->driver1;
-					if(isset($jsonitem->driver2)){
-						$fields["driver2Id"] = $jsonitem->driver2;
+			\DB::beginTransaction();
+			try{
+				$recid = $db_functions_ctrl->insertRetId($table, $fields);
+				if($recid>0){
+					$db_functions_ctrl = new DBFunctionsController();
+					$table = "ContractVehicle";
+					$jsonitems = json_decode($values["contractvehicles"]);
+					foreach ($jsonitems as $jsonitem){
+						$fields = array();
+						$fields["contractId"] = $recid;
+						$fields["vehicleId"] = $jsonitem->vehicle;
+						$fields["vehicleTypeId"] = $jsonitem->vehicletype;
+						$fields["driver1Id"] = $jsonitem->driver1;
+						$fields["driver1startDate"] = date("Y-m-d",strtotime($jsonitem->drv1dt));
+						if(isset($jsonitem->driver2)){
+							$fields["driver2Id"] = $jsonitem->driver2;
+							$fields["driver2startDate"] = date("Y-m-d",strtotime($jsonitem->drv2dt));
+						}
+						if(isset($jsonitem->driver3)){
+							$fields["driver3Id"] = $jsonitem->driver3;
+							$fields["driver3startDate"] = date("Y-m-d",strtotime($jsonitem->drv3dt));
+						}
+						if(isset($jsonitem->driver4)){
+							$fields["driver4Id"] = $jsonitem->driver4;
+							$fields["driver4startDate"] = date("Y-m-d",strtotime($jsonitem->drv4dt));
+						}
+						if(isset($jsonitem->driver5)){
+							$fields["driver5Id"] = $jsonitem->driver5;
+							$fields["driver5startDate"] = date("Y-m-d",strtotime($jsonitem->drv5dt));
+						}
+						if(isset($jsonitem->helper)){
+							$fields["helperId"] = $jsonitem->helper;
+							$fields["helperstartDate"] = date("Y-m-d",strtotime($jsonitem->helperdt));
+						}
+						if(isset($jsonitem->startdt)){
+							$fields["vehicleStartDate"] = date("Y-m-d",strtotime($jsonitem->startdt));
+						}
+						if(isset($jsonitem->floorrate)){
+							$fields["floorRate"] = $jsonitem->floorrate;
+						}
+						if(isset($jsonitem->routes)){
+							$routes = "";
+							//$rts = explode(",",$jsonitem->routes);
+							foreach($jsonitem->routes as $rt){
+								$routes = $routes.",".$rt;
+							}
+							if(strlen($routes)>0){
+								$routes = substr($routes, 1);
+							}
+							$fields["routes"] = $routes;
+						}
+						$db_functions_ctrl->insert($table, $fields);
 					}
-					if(isset($jsonitem->helper)){
-						$fields["helperId"] = $jsonitem->helper;
-					}
-					if(isset($jsonitem->startdt)){
-						$fields["vehicleStartDate"] = date("Y-m-d",strtotime($jsonitem->startdt));
-					}
-					$db_functions_ctrl->insert($table, $fields);
 				}
-				
-				return json_encode(['status' => 'success', 'message' => 'Operation completed Successfully']);
 			}
-			else{
+			catch(\Exception $ex){
+				\DB::rollback();
+				//print_r($ex->getMessage());
 				return json_encode(['status' => 'fail', 'message' => 'Operation Could not be completed, Try Again!']);
 			}
+			\DB::commit();
+			return json_encode(['status' => 'success', 'message' => 'Operation completed Successfully']);
 		}
 		
 		$form_info = array();
@@ -110,7 +144,7 @@ class ContractController extends \Controller {
 		{
 			//$values['DSFasdf'];
 			$field_names = array(
-							"statename"=>"stateId", "districtname"=>"districtId", "cityname"=>"cityId",
+							"statename"=>"stateId", "districtname"=>"districtId", "cityname"=>"cityId", "depot"=>"depotId",
 							"route"=>"routeId", "vehicletype"=>"vehicleTypeId", "distance"=>"distance","contracttype"=>"contractType",
 							"avgkms"=>"avgKms", "fuelcharges"=>"fuelCharges","repaircharges"=>"repairCharges","fromdate"=>"startDate","todate"=>"endDate",
 							"noofvehicles"=>"noofVehicles", "floorrate"=>"floorRate", "noofdrivers"=>"noofDrivers", "noofhelpers"=>"noofHelpers"
@@ -135,11 +169,16 @@ class ContractController extends \Controller {
 				$table = "ContractVehicle";
 				$jsonitems = json_decode($values["contractvehicles"]);
 				//$val["SDF"];
+				//print_r($jsonitems);
 				foreach ($jsonitems as $jsonitem){
 					if($jsonitem->id != "-1"){
 						$entity = $db_functions_ctrl->get($table, array("id"=>$jsonitem->id));
 						$entity = $entity[0];
-						if($entity->driver1Id != $jsonitem->driver1 || $entity->driver2Id != $jsonitem->driver2 || $entity->helperId != $jsonitem->helper ){
+						if( $entity->driver1Id != $jsonitem->driver1 || $entity->driver2Id != $jsonitem->driver2 || 
+							$entity->driver3Id != $jsonitem->driver3 || $entity->driver4Id != $jsonitem->driver4 ||
+							$entity->driver5Id != $jsonitem->driver5 || $entity->helperId != $jsonitem->helper 
+						   )
+						{
 							$db_functions_ctrl->update($table, array("status"=>"INACTIVE"), array("id"=>$jsonitem->id));
 							
 							$drivers =  \Employee::where("roleId","=",19)->get();
@@ -155,30 +194,112 @@ class ContractController extends \Controller {
 							
 							$update_data = "";
 							if($entity->driver1Id != $jsonitem->driver1){
-								$update_data = $update_data."Driver 1 - ".$drivers_arr[$entity->driver1Id].", ";
+								$update_data = $update_data."Driver 1 - , ";
+								if(isset($drivers_arr[$entity->driver1Id])){
+									$update_data = $update_data."Driver 1 - ".$drivers_arr[$entity->driver1Id].", ";
+								}
+								
 							}
 							if($entity->driver2Id != $jsonitem->driver2 && $entity->driver2Id != 0){
 								$update_data = $update_data."Driver 2 - ".$drivers_arr[$entity->driver2Id].", ";
 							}
+							if($entity->driver3Id != $jsonitem->driver3 && $entity->driver3Id != 0){
+								$update_data = $update_data."Driver 3 - ".$drivers_arr[$entity->driver3Id].", ";
+							}
+							if($entity->driver4Id != $jsonitem->driver4 && $entity->driver4Id != 0){
+								$update_data = $update_data."Driver 4 - ".$drivers_arr[$entity->driver4Id].", ";
+							}
+							if($entity->driver5Id != $jsonitem->driver5 && $entity->driver5Id != 0){
+								$update_data = $update_data."Driver 5 - ".$drivers_arr[$entity->driver5Id].", ";
+							}
 							if($entity->helperId != $jsonitem->helper && $entity->helperId !=0){
 								$update_data = $update_data."Helper - ".$helpers_arr[$entity->helperId].", ";
+							}
+							
+							if(isset($jsonitem->floorrate)){
+								$fields["floorRate"] = $jsonitem->floorrate;
+							}
+							if(isset($jsonitem->routes) && $jsonitem->routes!="" && count($jsonitem->routes)>0){
+								$routes = "";
+								//$rts = explode(",",$jsonitem->routes);
+								foreach($jsonitem->routes as $rt){
+									$routes = $routes.",".$rt;
+								}
+								if(strlen($routes)>0){
+									$routes = substr($routes, 1);
+								}
+								$fields["routes"] = $routes;
 							}
 							$fields = array();
 							$fields["contractId"] = $entity->contractId;
 							$fields["vehicleId"] = $jsonitem->vehicle;
 							$fields["vehicleTypeId"] = $jsonitem->vehicletype;
+							$fields["routes"] = $entity->routes;
+							$fields["floorRate"] = $entity->floorRate;
 							$fields["driver1Id"] = $jsonitem->driver1;
 							$fields["driver2Id"] = $jsonitem->driver2;
-							$fields["helperId"] = $jsonitem->helper;
+							$fields["driver3Id"] = $jsonitem->driver3;
+							$fields["driver4Id"] = $jsonitem->driver4;
+							$fields["driver5Id"] = $jsonitem->driver5;
+							$fields["helperId"] = $jsonitem->helper;							
+							$fields["driver1startDate"] = date("Y-m-d",strtotime($jsonitem->drv1dt));
+							$fields["driver1endDate"] = date("Y-m-d",strtotime($jsonitem->drv1edt));								
+							$fields["driver2startDate"] = date("Y-m-d",strtotime($jsonitem->drv2dt));
+							$fields["driver2endDate"] = date("Y-m-d",strtotime($jsonitem->drv2edt));
+							$fields["driver3startDate"] = date("Y-m-d",strtotime($jsonitem->drv3dt));
+							$fields["driver3endDate"] = date("Y-m-d",strtotime($jsonitem->drv3edt));
+							$fields["driver4startDate"] = date("Y-m-d",strtotime($jsonitem->drv4dt));
+							$fields["driver4endDate"] = date("Y-m-d",strtotime($jsonitem->drv4edt));
+							$fields["driver5startDate"] = date("Y-m-d",strtotime($jsonitem->drv5dt));
+							$fields["driver5endDate"] = date("Y-m-d",strtotime($jsonitem->drv5edt));
+							$fields["helperstartDate"] = date("Y-m-d",strtotime($jsonitem->helperdt));
+							$fields["helperendDate"] = date("Y-m-d",strtotime($jsonitem->helperedt));
+							
+							if(isset($jsonitem->vehicletype)){
+								$fields["vehicleTypeId"] = $jsonitem->vehicletype;
+							}
+							if(isset($jsonitem->helperId)){
+								$fields["helperId"] = $jsonitem->helper;
+							}
+							
 							$fields["vehicleStartDate"] = $entity->vehicleStartDate;
-							$fields["remarks"] = $update_data." Updated";
-							$db_functions_ctrl->insert($table, $fields);
+							$fields["remarks"] = $update_data." Updated"." on ".date("d-m-Y");
+							$id = $db_functions_ctrl->insertNew($table, $fields);
+							//echo $id;
+							$db_functions_ctrl->update($table, array("id"=>0), array("id"=>$jsonitem->id));
+							$db_functions_ctrl->update($table, array("id"=>$jsonitem->id), array("id"=>$id));
+							$db_functions_ctrl->update($table, array("id"=>$id), array("id"=>0));
+								
+							
 						}
-						else{
+						else if(isset($jsonitem->status) && $jsonitem->status=="ACTIVE" &&  ((isset($jsonitem->date) && $jsonitem->date!="") || (isset($jsonitem->routes) && $jsonitem->routes!="" && count($jsonitem->routes)>0)) || (isset($jsonitem->floorrate) && $jsonitem->floorrate!="")){
 							$fields = array();
 							$fields["driver1Id"] = $jsonitem->driver1;
+							$fields["driver1startDate"] = date("Y-m-d",strtotime($jsonitem->drv1dt));
+							$fields["driver1endDate"] = date("Y-m-d",strtotime($jsonitem->drv1edt));
+							
+							$fields["driver2startDate"] = date("Y-m-d",strtotime($jsonitem->drv2dt));
+							$fields["driver2endDate"] = date("Y-m-d",strtotime($jsonitem->drv2edt));
+							$fields["driver3startDate"] = date("Y-m-d",strtotime($jsonitem->drv3dt));
+							$fields["driver3endDate"] = date("Y-m-d",strtotime($jsonitem->drv3edt));
+							$fields["driver4startDate"] = date("Y-m-d",strtotime($jsonitem->drv4dt));
+							$fields["driver4endDate"] = date("Y-m-d",strtotime($jsonitem->drv4edt));
+							$fields["driver5startDate"] = date("Y-m-d",strtotime($jsonitem->drv5dt));
+							$fields["driver5endDate"] = date("Y-m-d",strtotime($jsonitem->drv5edt));
+							$fields["helperstartDate"] = date("Y-m-d",strtotime($jsonitem->helperdt));
+							$fields["helperendDate"] = date("Y-m-d",strtotime($jsonitem->helperedt));
+							
 							if(isset($jsonitem->driver2)){
 								$fields["driver2Id"] = $jsonitem->driver2;
+							}
+							if(isset($jsonitem->driver3)){
+								$fields["driver3Id"] = $jsonitem->driver3;
+							}
+							if(isset($jsonitem->driver4)){
+								$fields["driver4Id"] = $jsonitem->driver4;
+							}
+							if(isset($jsonitem->driver5)){
+								$fields["driver5Id"] = $jsonitem->driver5;
 							}
 							if(isset($jsonitem->vehicletype)){
 								$fields["vehicleTypeId"] = $jsonitem->vehicletype;
@@ -186,11 +307,90 @@ class ContractController extends \Controller {
 							if(isset($jsonitem->helperId)){
 								$fields["helperId"] = $jsonitem->helper;
 							}
+							if(isset($jsonitem->startdt) && $jsonitem->startdt != "" && $jsonitem->startdt != "00-00-0000"){
+								$fields["vehicleStartDate"] = date("Y-m-d",strtotime($jsonitem->startdt));
+							}
 							if(isset($jsonitem->date)){
 								$fields["inActiveDate"] = date("Y-m-d",strtotime($jsonitem->date));
 							}
 							if(isset($jsonitem->remarks)){
 								$fields["remarks"] = $jsonitem->remarks;
+							}
+							if(isset($jsonitem->floorrate)){
+								$fields["floorRate"] = $jsonitem->floorrate;
+							}
+							if(isset($jsonitem->routes) && $jsonitem->routes!="" && count($jsonitem->routes)>0){
+								$routes = "";
+								//$rts = explode(",",$jsonitem->routes);
+								foreach($jsonitem->routes as $rt){
+									$routes = $routes.",".$rt;
+								}
+								if(strlen($routes)>0){
+									$routes = substr($routes, 1);
+								}
+								$fields["routes"] = $routes;
+							}
+							$fields["status"] = $jsonitem->status;
+							$db_functions_ctrl->update($table, $fields, array("id"=>$jsonitem->id));
+						}
+						else if(isset($jsonitem->status) && $jsonitem->status=="INACTIVE")
+						{
+							$fields = array();
+							$fields["driver1Id"] = $jsonitem->driver1;
+							$fields["driver1startDate"] = date("Y-m-d",strtotime($jsonitem->drv1dt));
+							$fields["driver1endDate"] = date("Y-m-d",strtotime($jsonitem->drv1edt));
+							
+							$fields["driver2startDate"] = date("Y-m-d",strtotime($jsonitem->drv2dt));
+							$fields["driver2endDate"] = date("Y-m-d",strtotime($jsonitem->drv2edt));
+							$fields["driver3startDate"] = date("Y-m-d",strtotime($jsonitem->drv3dt));
+							$fields["driver3endDate"] = date("Y-m-d",strtotime($jsonitem->drv3edt));
+							$fields["driver4startDate"] = date("Y-m-d",strtotime($jsonitem->drv4dt));
+							$fields["driver4endDate"] = date("Y-m-d",strtotime($jsonitem->drv4edt));
+							$fields["driver5startDate"] = date("Y-m-d",strtotime($jsonitem->drv5dt));
+							$fields["driver5endDate"] = date("Y-m-d",strtotime($jsonitem->drv5edt));
+							$fields["helperstartDate"] = date("Y-m-d",strtotime($jsonitem->helperdt));
+							$fields["helperendDate"] = date("Y-m-d",strtotime($jsonitem->helperedt));
+							
+							if(isset($jsonitem->driver2)){
+								$fields["driver2Id"] = $jsonitem->driver2;
+							}
+							if(isset($jsonitem->driver3)){
+								$fields["driver3Id"] = $jsonitem->driver3;
+							}
+							if(isset($jsonitem->driver4)){
+								$fields["driver4Id"] = $jsonitem->driver4;
+							}
+							if(isset($jsonitem->driver5)){
+								$fields["driver5Id"] = $jsonitem->driver5;
+							}
+							if(isset($jsonitem->vehicletype)){
+								$fields["vehicleTypeId"] = $jsonitem->vehicletype;
+							}
+							if(isset($jsonitem->helperId)){
+								$fields["helperId"] = $jsonitem->helper;
+							}
+							if(isset($jsonitem->startdt) && $jsonitem->startdt != "" && $jsonitem->startdt != "00-00-0000"){
+								$fields["vehicleStartDate"] = date("Y-m-d",strtotime($jsonitem->startdt));
+							}
+							if(isset($jsonitem->date)){
+								$fields["inActiveDate"] = date("Y-m-d",strtotime($jsonitem->date));
+							}
+							if(isset($jsonitem->remarks)){
+								$fields["remarks"] = $jsonitem->remarks;
+							}
+							if(isset($jsonitem->floorrate)){
+								$fields["floorRate"] = $jsonitem->floorrate;
+							}
+							if(isset($jsonitem->routes) && $jsonitem->routes!="" && count($jsonitem->routes)>0){
+								$routes = "";
+								//$rts = explode(",",$jsonitem->routes);
+								foreach($jsonitem->routes as $rt){
+									$routes = $routes.",".$rt;
+								}
+								if(strlen($routes)>0){
+									$routes = substr($routes, 1);
+								}
+								$fields["routes"] = $routes;
 							}
 							$fields["status"] = $jsonitem->status;
 							$db_functions_ctrl->update($table, $fields, array("id"=>$jsonitem->id));
@@ -201,8 +401,44 @@ class ContractController extends \Controller {
 						$fields["contractId"] = $values["id1"];
 						$fields["vehicleId"] = $jsonitem->vehicle;
 						$fields["driver1Id"] = $jsonitem->driver1;
+						
+						if(!isset($jsonitem->drv1dt)){$jsonitem->drv1dt="";}
+						if(!isset($jsonitem->drv2dt)){$jsonitem->drv2dt="";}
+						if(!isset($jsonitem->drv3dt)){$jsonitem->drv3dt="";}
+						if(!isset($jsonitem->drv4dt)){$jsonitem->drv4dt="";}
+						if(!isset($jsonitem->drv5dt)){$jsonitem->drv5dt="";}
+						if(!isset($jsonitem->helperdt)){$jsonitem->helperdt="";}
+						if(!isset($jsonitem->drv1edt)){$jsonitem->drv1edt="";}
+						if(!isset($jsonitem->drv2edt)){$jsonitem->drv2edt="";}
+						if(!isset($jsonitem->drv3edt)){$jsonitem->drv3edt="";}
+						if(!isset($jsonitem->drv4edt)){$jsonitem->drv4edt="";}
+						if(!isset($jsonitem->drv5edt)){$jsonitem->drv5edt="";}
+						if(!isset($jsonitem->helperedt)){$jsonitem->helperedt="";}
+						
+						$fields["driver1startDate"] = date("Y-m-d",strtotime($jsonitem->drv1dt));
+						$fields["driver1endDate"] = date("Y-m-d",strtotime($jsonitem->drv1edt));						
+						$fields["driver2startDate"] = date("Y-m-d",strtotime($jsonitem->drv2dt));
+						$fields["driver2endDate"] = date("Y-m-d",strtotime($jsonitem->drv2edt));
+						$fields["driver3startDate"] = date("Y-m-d",strtotime($jsonitem->drv3dt));
+						$fields["driver3endDate"] = date("Y-m-d",strtotime($jsonitem->drv3edt));
+						$fields["driver4startDate"] = date("Y-m-d",strtotime($jsonitem->drv4dt));
+						$fields["driver4endDate"] = date("Y-m-d",strtotime($jsonitem->drv4edt));
+						$fields["driver5startDate"] = date("Y-m-d",strtotime($jsonitem->drv5dt));
+						$fields["driver5endDate"] = date("Y-m-d",strtotime($jsonitem->drv5edt));
+						$fields["helperstartDate"] = date("Y-m-d",strtotime($jsonitem->helperdt));
+						$fields["helperendDate"] = date("Y-m-d",strtotime($jsonitem->helperedt));
+						
 						if(isset($jsonitem->driver2)){
 							$fields["driver2Id"] = $jsonitem->driver2;
+						}
+						if(isset($jsonitem->driver3)){
+							$fields["driver3Id"] = $jsonitem->driver3;
+						}
+						if(isset($jsonitem->driver4)){
+							$fields["driver4Id"] = $jsonitem->driver4;
+						}
+						if(isset($jsonitem->driver5)){
+							$fields["driver5Id"] = $jsonitem->driver5;
 						}
 						if(isset($jsonitem->vehicletype)){
 							$fields["vehicleTypeId"] = $jsonitem->vehicletype;
@@ -211,7 +447,21 @@ class ContractController extends \Controller {
 							$fields["helperId"] = $jsonitem->helper;
 						}
 						if(isset($jsonitem->date)){
-							$fields["vehicleStartDate"] = date("Y-m-d",strtotime($jsonitem->date));
+							$fields["vehicleStartDate"] = date("Y-m-d",strtotime($jsonitem->startdt));
+						}
+						if(isset($jsonitem->floorrate)){
+							$fields["floorRate"] = $jsonitem->floorrate;
+						}
+						if(isset($jsonitem->routes) && count($jsonitem->routes)>0 && $jsonitem->routes!=""){
+							$routes = "";
+							//$rts = explode(",",$jsonitem->routes);
+							foreach($jsonitem->routes as $rt){
+								$routes = $routes.",".$rt;
+							}
+							if(strlen($routes)>0){
+								$routes = substr($routes, 1);
+							}
+							$fields["routes"] = $routes;
 						}
 						$db_functions_ctrl->insert($table, $fields);
 					}
@@ -283,7 +533,7 @@ class ContractController extends \Controller {
 				$depot_arr[$depot['id']] = $depot['name'];
 			}
 			
-			$services =  \DB::select(\DB::raw("select servicedetails.id as id, city1.name as name1, city2.name as name2, servicedetails.description from servicedetails join cities as city1 on city1.id=servicedetails.sourceCity join cities as city2 on servicedetails.destinationCity=city2.id"));
+			$services =  \DB::select(\DB::raw("select servicedetails.id as id, city1.name as name1, city2.name as name2, servicedetails.description, servicedetails.serviceNo from servicedetails join cities as city1 on city1.id=servicedetails.sourceCity join cities as city2 on servicedetails.destinationCity=city2.id"));
 			$services_arr = array();
 			foreach ($services as $service){
 				$desc = "";
@@ -291,6 +541,9 @@ class ContractController extends \Controller {
 					$desc = " ".$service->description;
 				}
 				$services_arr[$service->id] = $service->name1."-".$service->name2.$desc;
+				if($service->serviceNo != ""){
+					$services_arr[$service->id] = $services_arr[$service->id]." (".$service->serviceNo.")";
+				}
 			}
 			
 			$parentId = \LookupTypeValues::where("name", "=", "VEHICLE TYPE")->get();
@@ -316,8 +569,6 @@ class ContractController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"depot", "value"=>$entity->depotId, "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$depot_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"route", "value"=>$entity->routeId, "content"=>"route", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$services_arr);
-			$form_fields[] = $form_field;
 			$form_field = array("name"=>"avgkms", "value"=>$entity->avgKms, "content"=>"average kms", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"distance", "value"=>$entity->distance, "content"=>"distance", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
@@ -333,8 +584,6 @@ class ContractController extends \Controller {
 			$form_field = array("name"=>"contractyear", "value"=>array($entity->startDate,$entity->endDate), "content"=>"contract year", "readonly"=>"",  "required"=>"","type"=>"daterange", "class"=>"form-control date-range-picker");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"noofvehicles", "value"=>$entity->noofVehicles, "content"=>"no of vehicles", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"floorrate", "value"=>$entity->floorRate, "content"=>"floor rate", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"noofdrivers", "value"=>$entity->noofDrivers, "content"=>"no of drivers", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -387,17 +636,55 @@ class ContractController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"vehicletype", "content"=>"vehicle type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehtypes_arr);
 			$form_fields[] = $form_field;
+			$form_field = array("name"=>"routes", "content"=>"routes", "readonly"=>"",  "required"=>"required", "type"=>"select", "multiple"=>"multiple", "class"=>"form-control chosen-select", "options"=>$services_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"floorrate",  "content"=>"floor rate", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
 			$form_field = array("name"=>"driver1", "content"=>"driver1", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"driver2", "content"=>"driver2", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
+			$form_field = array("name"=>"drv1dt", "content"=>"driver1 st dt", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"drv1edt", "content"=>"driver1 end dt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"driver2", "content"=>"driver2", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select driversarea", "options"=>$drivers_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"drv2dt", "content"=>"driver2 st dt", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker driversarea");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"drv2edt", "content"=>"driver2 end dt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker driversarea");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"driver3", "content"=>"driver3", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select driversarea", "options"=>$drivers_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"drv3dt", "content"=>"driver3  st dt", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker driversarea");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"drv3edt", "content"=>"driver3 end dt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker driversarea");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"driver4", "content"=>"driver4", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select driversarea", "options"=>$drivers_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"drv4dt", "content"=>"driver4  st dt", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker driversarea");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"drv4edt", "content"=>"driver4 end dt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker driversarea");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"driver5", "content"=>"driver5", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select driversarea", "options"=>$drivers_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"drv5dt", "content"=>"driver5  st dt", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker driversarea");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"drv5edt", "content"=>"driver5 end dt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker driversarea");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"helper", "content"=>"helper", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$helpers_arr);
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"date", "content"=>"date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+			$form_field = array("name"=>"helperdt", "content"=>"helper st dt", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"helperedt", "content"=>"helper end dt", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"startdt", "content"=>"veh st dt", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"date", "content"=>"veh inact dt", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"status", "content"=>"status", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onChange", "script"=>"verifyActiveStatus(this.value);"), "options"=>array("ACTIVE"=>"ACTIVE","INACTIVE"=>"INACTIVE"));
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"action", "content"=>"show ", "readonly"=>"",  "required"=>"", "type"=>"checkbox", "options"=>array("otherdrivers"=>"other drivers"),  "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_info["add_form_fields"] = $form_fields;
 			$values['form_info'] = $form_info;
@@ -561,8 +848,6 @@ class ContractController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"route", "content"=>"route", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$services_arr);
-		$form_fields[] = $form_field;
 		$form_field = array("name"=>"avgkms", "content"=>"average kms", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"distance", "content"=>"distance", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
@@ -573,11 +858,9 @@ class ContractController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"repaircharges", "content"=>"repair charges", "readonly"=>"", "required"=>"", "type"=>"select", "class"=>"form-control", "options"=>array("Included"=>"Included","Not Included"=>"Not Included"));
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"contractyear", "content"=>"contract year", "readonly"=>"",  "required"=>"","type"=>"daterange", "class"=>"form-control date-range-picker");
-		$form_fields[] = $form_field;
 		$form_field = array("name"=>"noofvehicles", "content"=>"no of vehicles", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"floorrate", "content"=>"floor rate", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"contractyear", "content"=>"contract year", "readonly"=>"",  "required"=>"","type"=>"daterange", "class"=>"form-control date-range-picker");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"noofdrivers", "content"=>"no of drivers", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -627,15 +910,39 @@ class ContractController extends \Controller {
 		$form_fields =  array();
 		$form_field = array("name"=>"vehicle", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehicles_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"vehicletype", "content"=>"vehicle type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehtypes_arr);
+		$form_field = array("name"=>"vehicletype", "content"=>"veh type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$vehtypes_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"routes", "content"=>"route", "readonly"=>"",  "required"=>"required", "type"=>"select", "multiple"=>"multiple", "class"=>"form-control chosen-select", "options"=>$services_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"floorrate", "content"=>"floor rate", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"driver1", "content"=>"driver1", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"driver2", "content"=>"driver2", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$drivers_arr);
+		$form_field = array("name"=>"drv1dt", "content"=>"driver1 date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"driver2", "content"=>"driver2", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select driversarea", "options"=>$drivers_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"drv2dt", "content"=>"driver2 date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker driversarea");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"driver3", "content"=>"driver3", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select driversarea", "options"=>$drivers_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"drv3dt", "content"=>"driver3 date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker driversarea");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"driver4", "content"=>"driver4", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select driversarea", "options"=>$drivers_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"drv4dt", "content"=>"driver4 date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker driversarea");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"driver5", "content"=>"driver5", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select driversarea", "options"=>$drivers_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"drv5dt", "content"=>"driver5 date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker driversarea");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"helper", "content"=>"helper", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$helpers_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"startdt", "content"=>"start date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+		$form_field = array("name"=>"helperdt", "content"=>"helper date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"startdt", "content"=>"veh st date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"action", "content"=>"show ", "readonly"=>"",  "required"=>"", "type"=>"checkbox", "options"=>array("otherdrivers"=>"other drivers"),  "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_info["add_form_fields"] = $form_fields;
 		$values['form_info'] = $form_info;

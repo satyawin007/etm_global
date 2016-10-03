@@ -164,7 +164,7 @@ class AttendenceController extends \Controller {
 		if($diff>0){
 			return json_encode(['status' => 'fail', 'message' => 'Attendence for PREVIOUS DATES is not allowed']);
 		}
-		$time = date('H:i:s',strtotime("12 PM"));
+		$time = date('H:i:s',strtotime("6 PM"));
 		if( $values["session"]=="MORNING" && date('H:i:s') > $time){
 			return json_encode(['status' => 'fail', 'message' => 'Attendence for MORNING SESSION is closed']);
 		}
@@ -283,6 +283,8 @@ class AttendenceController extends \Controller {
 		
 		$clients =  AppSettingsController::getEmpClients();
 		$clients_arr = array();
+		$depots_arr = array();
+		$depots_arr["0"] = "ALL";
 		foreach ($clients as $client){
 			$clients_arr[$client['id']] = $client['name'];
 		}
@@ -302,6 +304,12 @@ class AttendenceController extends \Controller {
 		}
 		if(isset($values["client"])){
 			$clientid = $values["client"];
+			$depots = \Contract::where("clientId","=",$values["client"])
+								->leftjoin("depots","depots.id","=","contracts.depotId")
+								->where("contracts.status","=","ACTIVE")->get();
+			foreach ($depots as $depot){
+				$depots_arr[$depot['id']] = $depot['name'];
+			}
 		}
 		if(isset($values["depot"])){
 			$depotid = $values["depot"];
@@ -326,7 +334,7 @@ class AttendenceController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"officebranch", "value"=>$office_branch, "content"=>"office branch", "readonly"=>"","required"=>"", "type"=>"select", "options"=>$branch_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"depot", "value"=>$depotid, "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+		$form_field = array("name"=>"depot", "value"=>$depotid, "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$depots_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"session", "value"=>$session, "content"=>"session", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("MORNING"=>"MORNING","AFTERNOON"=>"AFTERNOON"), "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -366,6 +374,9 @@ class AttendenceController extends \Controller {
 		$values['provider'] = "items";
 		if(isset($values['employeetype']) && isset($values['officebranch']) && isset($values['client']) && isset($values['depot']) && isset($values['date'])){
 			$url = "&name=getattendence";
+			if(isset($values['name'])){
+				$url = "&name=".$values['name'];
+			}
 			$url = $url."&employeetype=".$values["employeetype"];
 			$url = $url."&officebranch=".$values["officebranch"];
 			$url = $url."&client=".$values["client"];
@@ -386,7 +397,12 @@ class AttendenceController extends \Controller {
 		$select_args = array("employee.id", "employee.fullName", "employee.empCode");
 		
 		if($values["employeetype"] == "CLIENT BRANCH"){
-			\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+			if($values["depot"]=="0"){
+				\DB::statement(\DB::raw("CALL contract_driver_helper_all('".$values["clientname"]."');"));
+			}
+			else {
+				\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+			}
 			$entities = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
 		}
 		else{

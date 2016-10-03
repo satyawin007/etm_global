@@ -209,6 +209,11 @@
 			}
 
 			function paginate(page){
+				reportfor = $("#reportfor").val();
+				if(reportfor == ""){
+					alert("select report for");
+					return;
+				}
 				reporttype = $("#loan").val();
 				if(reporttype == ""){
 					alert("select loan");

@@ -57,9 +57,22 @@ class SalariesController extends \Controller {
 		$month_arr[date('Y')."-11-01"] = 'Nov '.date('Y');
 		$month_arr[date('Y')."-12-01"] = 'Dec '.date('Y');
 		
-		$branch_val = ""; $month_val = ""; $pmtdate_val = ""; $pmttype_val = "";
+		$branch_val = "";     $month_val = "";   $pmtdate_val = "";      $pmttype_val = "cash";
+		$clientname_val = ""; $depot_val = "";   $bankaccount_val = "";  $chequenumber_val = ""; 
+		$fromdate_val = "";   $todate_val = "";  $incharage_val = "0";   $show_val = "false";
+		$enableincharge_val = "NO";
+		
+		if(isset($values["show"])){
+			$show_val = $values["show"];
+		}
 		if(isset($values["branch"])){
 			$branch_val = $values["branch"];
+		}
+		if(isset($values["clientname"])){
+			$clientname_val = $values["clientname"];
+		}
+		if(isset($values["depot"])){
+			$depot_val = $values["depot"];
 		}
 		if(isset($values["month"])){
 			$month_val = $values["month"];
@@ -70,11 +83,23 @@ class SalariesController extends \Controller {
 		if(isset($values["paymenttype"])){
 			$pmttype_val = $values["paymenttype"];
 		}
-		if(isset($values["paymenttype"])){
-			$pmttype_val = $values["paymenttype"];
+		if(isset($values["bankaccount"])){
+			$bankaccount_val = $values["bankaccount"];
 		}
-		if(isset($values["paymenttype"])){
-			$pmttype_val = $values["paymenttype"];
+		if(isset($values["chequenumber"])){
+			$chequenumber_val = $values["chequenumber"];
+		}
+		if(isset($values["fromdate"])){
+			$fromdate_val = $values["fromdate"];
+		}
+		if(isset($values["todate"])){
+			$todate_val = $values["todate"];
+		}
+		if(isset($values["incharge"])){
+			$incharage_val = $values["incharge"];
+		}
+		if(isset($values["enableincharge"])){
+			$enableincharge_val = $values["enableincharge"];
 		}
 		$casual_leaves = 2;
 		if(isset($values["casualleaves"])){
@@ -86,21 +111,64 @@ class SalariesController extends \Controller {
 			$clients_arr[$client['id']] = $client['name'];
 		}
 		
-		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$depots_arr = array();
+		if(isset($values["clientname"])){
+			$emp_contracts = \Auth::user()->contractIds;
+			if($emp_contracts == ""){
+				$entities = \Depot::where("clientId","=",$values["clientname"])
+								->where("depots.status","=","ACTIVE")
+								->join("contracts", "depots.id", "=","contracts.depotId")
+								->join("clients", "clients.id", "=","contracts.clientId")
+								->select(array("depots.id as id","depots.name as name"))->get();
+			}
+			else{
+				$emp_contracts = explode(",", $emp_contracts);
+				$entities = \Depot::whereIn("depots.id",$emp_contracts)
+								->where("clientId","=",$values["clientname"])
+								->where("depots.status","=","ACTIVE")
+								->join("contracts", "depots.id", "=","contracts.depotId")
+								->join("clients", "clients.id", "=","contracts.clientId")
+								->select(array("depots.id as id","depots.name as name"))->get();
+			}
+			foreach ($entities as $entity){
+				$depots_arr[$entity->id] = $entity->name;
+			}
+		}
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+								->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+		$incharges_arr = array();
+		foreach ($incharges as $incharge){
+			$incharges_arr[$incharge->id] = $incharge->name;
+		}
+		$form_field = array("name"=>"clientname", "value"=>$clientname_val, "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
+		$form_field = array("name"=>"depot", "value"=>$depot_val, "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>$depots_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"month", "value"=>$month_val, "content"=>"salary month", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$month_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymentdate", "content"=>"payment date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+		$form_field = array("name"=>"paymentdate", "value"=>$pmtdate_val, "content"=>"payment date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"branch", "content"=>"payment branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr);
+		$form_field = array("name"=>"branch", "value"=>$branch_val, "content"=>"payment branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"salarydates", "content"=>"salary dates", "readonly"=>"",  "required"=>"required", "type"=>"daterange", "class"=>"form-control");
+		$form_field = array("name"=>"salarydates", "value"=>$fromdate_val.",".$todate_val, "content"=>"salary dates", "readonly"=>"",  "required"=>"required", "type"=>"daterange", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"casualleaves", "value"=>$casual_leaves, "content"=>"casual leaves", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"updateCasualLeaves(this.value)"), "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "content"=>"", "readonly"=>"",  "required"=>"", "type"=>"hidden", "value"=>"", "class"=>"form-control");
+		$form_field = array("name"=>"enableincharge", "value"=>$enableincharge_val, "content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"incharge", "value"=>$incharage_val, "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange", "script"=>"getInchargeBalance(this.value)"), "options"=>$incharges_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"inchargebalance", "content"=>"Incharge balance", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
+		$form_fields[] = $form_field;
+		
+		if(isset($values["chequenumber"])){
+			$chequenumber_val = $values["chequenumber"];
+			$form_field = array("name"=>"chequenumber", "value"=>$chequenumber_val, "content"=>"", "readonly"=>"", "type"=>"hidden");
+			$form_fields[] = $form_field;
+		}
+		$form_field = array("name"=>"show", "value"=>$show_val, "content"=>"", "readonly"=>"", "type"=>"hidden");
 		$form_fields[] = $form_field;
 		
 		$form_info["form_fields"] = $form_fields;
@@ -159,9 +227,22 @@ class SalariesController extends \Controller {
 		$month_arr[date('Y')."-11-01"] = 'Nov '.date('Y');
 		$month_arr[date('Y')."-12-01"] = 'Dec '.date('Y');
 		
-		$branch_val = ""; $month_val = ""; $pmtdate_val = ""; $pmttype_val = "";
+		$branch_val = "";     $month_val = "";   $pmtdate_val = "";      $pmttype_val = "cash";
+		$clientname_val = ""; $depot_val = "";   $bankaccount_val = "";  $chequenumber_val = ""; 
+		$fromdate_val = "";   $todate_val = "";  $incharage_val = ""; $show_val = "false";
+		$enableincharge_val = "NO";
+		
+		if(isset($values["show"])){
+			$show_val = $values["show"];
+		}
 		if(isset($values["branch"])){
 			$branch_val = $values["branch"];
+		}
+		if(isset($values["clientname"])){
+			$clientname_val = $values["clientname"];
+		}
+		if(isset($values["depot"])){
+			$depot_val = $values["depot"];
 		}
 		if(isset($values["month"])){
 			$month_val = $values["month"];
@@ -172,9 +253,33 @@ class SalariesController extends \Controller {
 		if(isset($values["paymenttype"])){
 			$pmttype_val = $values["paymenttype"];
 		}
+		if(isset($values["bankaccount"])){
+			$bankaccount_val = $values["bankaccount"];
+		}
+		if(isset($values["chequenumber"])){
+			$chequenumber_val = $values["chequenumber"];
+		}
+		if(isset($values["fromdate"])){
+			$fromdate_val = $values["fromdate"];
+		}
+		if(isset($values["todate"])){
+			$todate_val = $values["todate"];
+		}
+		if(isset($values["incharge"])){
+			$incharage_val = $values["incharge"];
+		}
+		if(isset($values["enableincharge"])){
+			$enableincharge_val = $values["enableincharge"];
+		}
 		$casual_leaves = 2;
 		if(isset($values["casualleaves"])){
 			$casual_leaves = $values["casualleaves"];
+		}
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+							->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+		$incharges_arr = array();
+		foreach ($incharges as $incharge){
+			$incharges_arr[$incharge->id] = $incharge->name;
 		}
 		$form_field = array("name"=>"branch", "value"=>$branch_val, "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr);
 		$form_fields[] = $form_field;
@@ -182,11 +287,24 @@ class SalariesController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymentdate", "value"=>$pmtdate_val, "content"=>"payment date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"salarydates", "content"=>"salary dates", "readonly"=>"",  "required"=>"required", "type"=>"daterange", "class"=>"form-control");
+		$form_field = array("name"=>"salarydates", "value"=>$fromdate_val.",".$todate_val, "content"=>"salary dates", "readonly"=>"",  "required"=>"required", "type"=>"daterange", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"casualleaves", "value"=>$casual_leaves, "content"=>"casual leaves", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"updateCasualLeaves(this.value)"), "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"hidden", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
+		$form_field = array("name"=>"enableincharge", "value"=>$enableincharge_val, "content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"incharge", "value"=>$incharage_val, "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange", "script"=>"getInchargeBalance(this.value)"), "options"=>$incharges_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"inchargebalance", "content"=>"Incharge balance", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
+		$form_fields[] = $form_field;
+		if(isset($values["chequenumber"])){
+			$chequenumber_val = $values["chequenumber"];
+			$form_field = array("name"=>"chequenumber", "value"=>$chequenumber_val, "content"=>"", "readonly"=>"", "type"=>"hidden");
+			$form_fields[] = $form_field;
+		}
+		$form_field = array("name"=>"show", "value"=>$show_val, "content"=>"", "readonly"=>"", "type"=>"hidden");
 		$form_fields[] = $form_field;
 		
 		
@@ -220,24 +338,28 @@ class SalariesController extends \Controller {
 			}
 			$message = "The following employees salary added successfully : <br/><b>";
 			$url = "payemployeesalary?paymenttype=".$values["paymenttype"]."&branch=".$values["branch"]."&month=".$values["month"]."&paymentdate=".$values["paymentdate"];
+			if(isset($values["clientname"]) && isset($values["depot"])){
+				$url = $url;
+			}
+			else{
+				$url = "payofficeemployeesalary?paymenttype=".$values["paymenttype"]."&branch=".$values["branch"]."&month=".$values["month"]."&paymentdate=".$values["paymentdate"];
+			}
+			if(isset($values["clientname"])){ $url = $url."&clientname=".$values["clientname"];}
+			if(isset($values["show"])){ $url = $url."&show=".$values["show"];}
+			if(isset($values["depot"])){ $url = $url."&depot=".$values["depot"];}
+			if(isset($values["fromdate"])){ $url = $url."&fromdate=".$values["fromdate"];}
+			if(isset($values["todate"])){ $url = $url."&todate=".$values["todate"];}
+			if(isset($values["casualleaves"])){ $url = $url."&casualleaves=".$values["casualleaves"];}
+			if(isset($values["bankaccount"])){ $url = $url."&bankaccount=".$values["bankaccount"];}
+			if(isset($values["chequenumber"])){ $url = $url."&chequenumber=".$values["chequenumber"];}
+			if(isset($values["bankname"])){ $url = $url."&bankname=".$values["bankname"];}
+			if(isset($values["accountnumber"])){ $url = $url."&accountnumber=".$values["accountnumber"];}
+			if(isset($values["issuedate"])){ $url = $url."&issuedate=".$values["issuedate"];}
+			if(isset($values["transactiondate"])){ $url = $url."&transactiondate=".$values["transactiondate"];}
 			foreach ($ids as $id){
 				$id = $id%$values["dynamic-table_length"];
 				$actualSalary = 0;
-				if(isset($values["clientname"]) && isset($values["depot"])){
-					$actualSalary = $values["emp_salary"][$id];
-					$url = $url;
-				}
-				else{
-					$actualSalary = $values["emp_salary"][$id];
-					$url = "payofficeemployeesalary?paymenttype=".$values["paymenttype"]."&branch=".$values["branch"]."&month=".$values["month"]."&paymentdate=".$values["paymentdate"];
-				}
-				
-				if(isset($values["bankaccount"])){ $url = $url."&bankaccount=".$values["bankaccount"];}
-				if(isset($values["chequenumber"])){ $url = $url."&chequenumber=".$values["chequenumber"];}
-				if(isset($values["bankname"])){ $url = $url."&bankname=".$values["bankname"];}
-				if(isset($values["accountnumber"])){ $url = $url."&accountnumber=".$values["accountnumber"];}
-				if(isset($values["issuedate"])){ $url = $url."&issuedate=".$values["issuedate"];}
-				if(isset($values["transactiondate"])){ $url = $url."&transactiondate=".$values["transactiondate"];}
+				$actualSalary = $values["emp_salary"][$id];
 				
 				$dueDeductions = $values['due_deductions'][$id];
 				$dailyTripsAllowance = 0;
@@ -283,7 +405,7 @@ class SalariesController extends \Controller {
 						$fields[$val] = $values[$key][$id];
 					}
 				}
-				$field_names = array("month"=>"salaryMonth","branch"=>"branchId","paymentdate"=>"paymentDate","paymenttype"=>"paymentType","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","bankname"=>"bankName","accountnumber"=>"accountNumber","issuedate"=>"issueDate","transactiondate"=>"transactionDate");
+				$field_names = array("month"=>"salaryMonth","branch"=>"branchId","paymentdate"=>"paymentDate","paymenttype"=>"paymentType","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","bankname"=>"bankName","accountnumber"=>"accountNumber","issuedate"=>"issueDate","transactiondate"=>"transactionDate","incharge"=>"inchargeId");
 				foreach ($field_names as $key=>$val){
 					if(isset($values[$key])){
 						if($key == "paymentdate" || $key == "issuedate" || $key == "transactiondate"){
@@ -315,7 +437,7 @@ class SalariesController extends \Controller {
 					$values["sourceentityid"][$id]= $recid;
 					$values["due_deductions"][$id] = -1*$values["due_deductions"][$id];
 					$fields = array();
-					$field_names = array("id"=>"empId","duetype"=>"dueType","deductions"=>"amount","sourceentity"=>"sourceEntity","sourceentityid"=>"sourceEntityId");
+					$field_names = array("id"=>"empId","duetype"=>"dueType","due_deductions"=>"amount","sourceentity"=>"sourceEntity","sourceentityid"=>"sourceEntityId");
 					foreach ($field_names as $key=>$val){
 						if(isset($values[$key]) && $key == "paymentdate"){
 							$fields[$val] = date("Y-m-d",strtotime($values[$key]));
@@ -333,7 +455,9 @@ class SalariesController extends \Controller {
 							$fields[$val] = $values[$key];
 						}
 					}
-					$db_functions_ctrl->insert($table, $fields);
+					if(isset($fields["amount"]) && $fields["amount"]>0){
+						$db_functions_ctrl->insert($table, $fields);
+					}
 				}
 				catch(\Exception $ex){
 					\Session::put("message","Add Due amout : Operation Could not be completed, Try Again!");
@@ -377,6 +501,9 @@ class SalariesController extends \Controller {
 				$leave_deductions = $values["leave_deductions"];
 			}
 			$pfOpted = $values['pfopted'];
+			if($pfOpted=="undefined"){
+				$values['pfopted'] = "No";
+			}
 			$pf = 0;
 			$esi = 0;
 			$proftax = 0;
@@ -422,9 +549,11 @@ class SalariesController extends \Controller {
 					$table = "EmpDueAmount";
 					$data = array("id"=>$recid->id);
 					$fields = array("amount"=>(-1*$values["deductions"]));
-					if($db_functions_ctrl->updateEmpDueAmout($table, $fields, $data)){
-					    echo "success";
-						return;
+					if(isset($fields["amount"]) && $fields["amount"]>0){
+						if($db_functions_ctrl->updateEmpDueAmout($table, $fields, $data)){
+						    echo "success";
+							return;
+						}
 					}
 				}
 			}
@@ -591,6 +720,25 @@ class SalariesController extends \Controller {
 		$jsondata['leaves'] = $leaves;
 		$jsondata['leaveamt'] = $leaveamt;
 		echo json_encode($jsondata);
+	}
+	
+	public function getTransactionAmount(){
+		$values = Input::ALL();
+		$depo_amt = 0;
+		if($values["transid"]==""){
+			$values["transid"] = "zzzz";
+		}
+		$recs = \ExpenseTransaction::where("chequeNumber","=",$values["transid"])->get();
+		foreach($recs as $rec){
+			$depo_amt = $depo_amt+$rec->amount;
+		}
+		$tot_amt = 0;
+		$recs = \SalaryTransactions::where("chequeNumber","=",$values["transid"])->get();
+		foreach($recs as $rec){
+			$tot_amt = $tot_amt+$rec->salaryPaid;
+		}
+		$tot_amt = $depo_amt-$tot_amt;
+		echo "BAL AMT : ".$tot_amt;
 	}
 	
 }

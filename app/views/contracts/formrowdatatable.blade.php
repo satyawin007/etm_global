@@ -23,6 +23,15 @@ use settings\AppSettingsController;
 			.chosen-container{
 			  width: 100% !important;
 			}
+			.form-control {
+			    display: block;
+			    width: 100%;
+			    height: 34px;
+		    }
+		    .driversarea{
+		     	position: absolute; 
+  				left: -999em;
+		    }
 		</style>
 	@stop
 	
@@ -43,7 +52,7 @@ use settings\AppSettingsController;
 
 	@section('page_content')
 		<div class="row ">
-			<div class="col-xs-offset-1 col-xs-10">
+			<div class="col-xs-offset-0 col-xs-12">
 				<?php $form_info = $values["form_info"];?>
 				<?php $jobs = Session::get("jobs");?>
 				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) || 
@@ -55,7 +64,7 @@ use settings\AppSettingsController;
 		</div>
 				
 		<div class="row ">
-		<div class="col-xs-offset-1 col-xs-10">
+		<div class="col-xs-offset-0 col-xs-12">
 			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 10px;">MANAGE {{$values["bredcum"]}}</h3>		
 			<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
 			<div class="clearfix">
@@ -146,7 +155,7 @@ use settings\AppSettingsController;
 		<?php }} ?>
 		
 		<div id="edit" class="modal" tabindex="-1">
-			<div class="modal-dialog" style="width: 90%">
+			<div class="modal-dialog" style="width: 98%">
 				<div class="modal-content">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -194,17 +203,28 @@ use settings\AppSettingsController;
 			var app = angular.module('myApp', []);
 			app.controller('myCtrl', function($scope, $http) {
 				$scope.vehicles = [];
-				$scope.ids = ['vehicle','vehicletype','driver1','driver2','helper'];
+				$scope.ids = ['vehicle','vehicletype','driver1','driver2','driver3','driver4','driver5','helper','routes'];
 				$scope.vehicles_text = [];
 				$scope.addRow = function(){
-					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" || $scope.driver1 === "" || $scope.vehicle === "" || $scope.driver1 == $scope.driver2) {
+					if(typeof $scope.vehicle === "undefined" || typeof $scope.driver1 === "undefined" || $scope.driver1 === "" || $scope.vehicle === "" || 
+							$scope.driver1 == $scope.driver2 || $scope.driver1 == $scope.driver3 || $scope.driver1 == $scope.driver4 || $scope.driver1 == $scope.driver5 
+					  )
+					{
 						alert("Duplicate or Wrong Value");
 						return;
 					}
 					index =  -1;	
 					var comArr = eval( $scope.vehicles );
 					for( var i = 0; i < comArr.length; i++ ) {
-						if( comArr[i].vehicle === $scope.vehicle ||  comArr[i].driver1 === $scope.driver1 || (comArr[i].driver2 === $scope.driver2 && $scope.driver2!="") || (comArr[i].helper === $scope.helper  && $scope.helper!="")) {
+						if( comArr[i].vehicle === $scope.vehicle ||  
+							comArr[i].driver1 === $scope.driver1 || 
+							(comArr[i].driver2 === $scope.driver2 && $scope.driver2!="") || 
+							(comArr[i].driver3 === $scope.driver3 && $scope.driver3!="") || 
+							(comArr[i].driver4 === $scope.driver4 && $scope.driver4!="") || 
+							(comArr[i].driver5 === $scope.driver5 && $scope.driver5!="") || 
+							(comArr[i].helper === $scope.helper  && $scope.helper!="")
+						   ) 
+						{
 							index = i;
 							break;
 						}
@@ -213,7 +233,54 @@ use settings\AppSettingsController;
 						alert( "duplicate value" );
 						return;
 					}
-					$scope.vehicles.unshift({ 'vehicle':$scope.vehicle, 'vehicletype':$scope.vehicletype, 'driver1': $scope.driver1, 'driver2':$scope.driver2 , 'helper':$scope.helper, 'startdt':$scope.startdt });
+					if($scope.driver1!="" && ($scope.drv1dt=="" || typeof $scope.drv1dt === "undefined")){
+						alert("Enter driver1 start date");
+						return;
+					}
+					if($scope.driver2!="" && typeof $scope.driver2 !== "undefined" && ($scope.drv2dt=="" || typeof $scope.drv2dt === "undefined")){
+						alert("Enter driver2 start date");
+						return;
+					}
+					if($scope.driver3!="" && typeof $scope.driver3 !== "undefined" && ($scope.drv3dt=="" || typeof $scope.drv3dt === "undefined")){
+						alert("Enter driver3 start date");
+						return;
+					}
+					if($scope.driver4!="" && typeof $scope.driver4 !== "undefined" && ($scope.drv4dt=="" || typeof $scope.drv4dt === "undefined")){
+						alert("Enter driver4 start date");
+						return;
+					}
+					if($scope.driver5!="" && typeof $scope.driver5 !== "undefined" && ($scope.drv5dt=="" || typeof $scope.drv5dt === "undefined")){
+						alert("Enter driver5 start date");
+						return;
+					}
+					if($scope.helper!="" && typeof $scope.helper !== "undefined"  && ($scope.helperdt=="" || typeof $scope.helperdt === "undefined")){
+						alert("Enter helper start date");
+						return;
+					}
+
+					if(($scope.startdt=="" || typeof $scope.startdt === "undefined")){
+						alert("Enter start date");
+						return;
+					}
+					$scope.vehicles.unshift({ 
+						'vehicle':$scope.vehicle, 
+						'vehicletype':$scope.vehicletype, 
+						'driver1': $scope.driver1, 
+						'drv1dt':$scope.drv1dt,
+						'driver2':$scope.driver2, 
+						'drv2dt':$scope.drv2dt,
+						'driver3':$scope.driver3,
+						'drv3dt':$scope.drv3dt, 
+						'driver4':$scope.driver4,
+						'drv4dt':$scope.drv4dt, 
+						'driver5':$scope.driver5,
+						'drv5dt':$scope.drv5dt, 
+						'helper':$scope.helper,
+						'helperdt':$scope.helperdt, 
+						'startdt':$scope.startdt, 
+						'routes':$scope.routes, 
+						'floorrate':$scope.floorrate 
+					});
 
 					text_arr = [];
 					$scope.ids.forEach(function(entry) {
@@ -222,14 +289,32 @@ use settings\AppSettingsController;
 						text_arr[entry] = text;
 					});
 					text_arr['startdt'] = $scope.startdt;
+					text_arr['drv1dt'] = $scope.drv1dt;
+					text_arr['drv2dt'] = $scope.drv2dt;
+					text_arr['drv3dt'] = $scope.drv3dt;
+					text_arr['drv4dt'] = $scope.drv4dt;
+					text_arr['drv5dt'] = $scope.drv5dt;
+					text_arr['helperdt'] = $scope.helperdt;
+					text_arr['floorrate'] = $scope.floorrate;
 					$scope.vehicles_text.unshift(text_arr);
 					$('.chosen-select').trigger("chosen:updated");
 					$scope.vehicle='';
 					$scope.vehicletype='';
 					$scope.driver1='';
 					$scope.driver2='';
+					$scope.driver3='';
+					$scope.driver4='';
+					$scope.driver5='';
 					$scope.helper='';
+					$scope.drv1dt='';
+					$scope.drv2dt='';
+					$scope.drv3dt='';
+					$scope.drv4dt='';
+					$scope.drv5dt='';
+					$scope.helperdt='';
 					$scope.startdt='';
+					$scope.floorrate='';
+					$scope.routes='';
 				};
 
 				$scope.editRow = function(vehicle){	
@@ -253,6 +338,12 @@ use settings\AppSettingsController;
 						$scope[entry]=comArr1[i][entry];
 					});	
 					$scope['startdt']=comArr[i]['startdt'];
+					$scope['drv1dt']=comArr[i]['drv1dt'];
+					$scope['drv2dt']=comArr[i]['drv2dt'];
+					$scope['drv3dt']=comArr[i]['drv3dt'];
+					$scope['drv4dt']=comArr[i]['drv4dt'];
+					$scope['drv5dt']=comArr[i]['drv5dt'];
+					$scope['helperdt']=comArr[i]['helperdt'];
 					//$("#startdt").val(comArr1[i]['startdt']);
 					$('.chosen-select').trigger("chosen:updated");
 					$("#addrowbtn").hide();
@@ -270,6 +361,9 @@ use settings\AppSettingsController;
 							index = i;
 							$scope.vehicles[i]['driver1']=$scope.driver1;
 							$scope.vehicles[i]['driver2']=$scope.driver2;
+							$scope.vehicles[i]['driver3']=$scope.driver3;
+							$scope.vehicles[i]['driver4']=$scope.driver4;
+							$scope.vehicles[i]['driver5']=$scope.driver5;
 							$scope.vehicles[i]['helper']=$scope.helper;
 
 							$scope.ids.forEach(function(entry) {
@@ -280,6 +374,12 @@ use settings\AppSettingsController;
 								}
 							});
 							$scope.vehicles_text[index]['startdt'] = $scope.startdt;
+							$scope.vehicles_text[index]['drv1dt']=$scope.drv1dt;
+							$scope.vehicles_text[index]['drv2dt']=$scope.drv2dt;
+							$scope.vehicles_text[index]['drv3dt']=$scope.drv3dt;
+							$scope.vehicles_text[index]['drv4dt']=$scope.drv4dt;
+							$scope.vehicles_text[index]['drv5dt']=$scope.drv5dt;
+							$scope.vehicles_text[index]['helperdt']=$scope.helperdt;
 							break;
 						}
 					}
@@ -291,8 +391,19 @@ use settings\AppSettingsController;
 					$scope.vehicletype='';
 					$scope.driver1='';
 					$scope.driver2='';
+					$scope.driver3='';
+					$scope.driver4='';
+					$scope.driver5='';
 					$scope.helper='';
+					$scope.drv1dt='';
+					$scope.drv2dt='';
+					$scope.drv3dt='';
+					$scope.drv4dt='';
+					$scope.drv5dt='';
+					$scope.helperdt='';
 					$scope.startdt='';
+					$scope.routes='';
+					$scope.floorate='';
 					alert("updated successfully");
 					$('.chosen-select').trigger("chosen:updated");
 					$("#addrowbtn").show();
@@ -422,6 +533,18 @@ use settings\AppSettingsController;
 			})
 			$("#reset").on("click",function(){
 				$("#{{$form_info['name']}}").reset();
+			});
+
+			$('#otherdrivers').on('change', function() { 
+			    if (this.checked) {
+			    	$(".driversarea").css('position','relative');
+			    	$(".driversarea").css('left','0em');
+			    	
+			    }
+			    else{
+			    	 $(".driversarea").css('position','absolute');
+			    	 $(".driversarea").css('left','-999em');
+			    }
 			});
 
 			$("#submit").on("click",function(){

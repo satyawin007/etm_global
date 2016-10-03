@@ -11,9 +11,242 @@
 |
 */
 
+Route::get('/mysqltest', function()
+{
+	$username="root";
+	$password="";
+	$database="globaletm";
+	//$con=mysqli_connect("localhost","root","","globaletm");	
+	$con = new mysqli("localhost","root","","etm_global_new");	
+	// Check connection
+	if (mysqli_connect_errno())
+	{
+	  echo "Failed to connect to MySQL: " . mysqli_connect_error();
+	}	
+	$file = fopen("veh_slogs_9582.csv","r");
+	$i=0;
+	while(!feof($file))
+	{
+		$line =  fgets($file);
+		if($line=="")
+			continue;
+			$fields = explode(",", $line);
+			//print_r($fields);
+			//continue;
+			$vehid = 0;
+			if(count($fields)>0){
+				if(true){
+					$query = "SELECT vehicle1.veh_reg FROM vehicle1 join contract_vehicles1 on contract_vehicles1.vehicleId=vehicle1.veh_id where contract_vehicles1.id=".$fields[3];
+					$veh_reg = "";
+					if ($result=mysqli_query($con,$query))
+					{
+						$row=mysqli_fetch_row($result);
+						mysqli_free_result($result);
+						$query1 = "SELECT contract_vehicles.id, contractId, contract_vehicles.driver1Id, contract_vehicles.driver2Id, contract_vehicles.helperId FROM contract_vehicles join vehicle on contract_vehicles.vehicleId=vehicle.id where vehicle.veh_reg='".$row[0]."'";
+						if ($result1 = mysqli_query($con,$query1))
+						{
+							//if($i==4000) break;
+							$row1 = mysqli_fetch_row($result1);	
+							//print_r($row1);
+							//echo "<br/>";
+							
+							
+							$serviceDate = date("Y-m-d",strtotime($fields[5]));
+							$sql = "select count(*) from service_logs where serviceDate='$serviceDate' and startReading=$fields[7] and endReading=$fields[8] and contractVehicleId=$row1[0]";
+							//echo $sql."<br/>";
+							if ($result2 = mysqli_query($con,$sql))
+							{
+								//echo $row1[0]." - ".$row1[1]." - ".$row[0]."<br/>";
+								$row2 = mysqli_fetch_row($result2);
+								if($row2[0] == 0){
+									$status = 'ACTIVE';
+									if($fields[15]== "Yes"){
+										$status = 'DELETED';
+									}
+									$created_at = date("Y-m-d",strtotime($fields[16]));
+									$updated_at = date("Y-m-d",strtotime($fields[18]));
+									$sql = "INSERT INTO service_logs (oldId, tripNumber, contractId, contractVehicleId, serviceDate, startTime, startReading, endReading, numberOfTrips, distance, repairkms, driver2Id, remarks, driver1Id, helperId, status, created_at, updated_at)
+									VALUES ($fields[0],$fields[1],$row1[1],$row1[0],'$serviceDate','$fields[6]',$fields[7],$fields[8],0,".($fields[8]-$fields[7]).",$fields[11],$row1[3],'$fields[12]',$row1[2],$row1[4],'$status','$created_at','$updated_at')";
+									echo $sql."<br/>";
+									mysqli_query($con,$sql);
+								}
+								$i++;								
+							}							
+						}
+					}
+				}				
+			}
+	}
+	mysqli_close($con);
+});
+
+
+Route::get('/mysqfueltrans', function()
+{
+	$username="root";
+	$password="";
+	$database="globaletm";
+	//$con=mysqli_connect("localhost","root","","globaletm");
+	$con = new mysqli("localhost","root","","etm_global_new");
+	// Check connection
+	if (mysqli_connect_errno())
+	{
+		echo "Failed to connect to MySQL: " . mysqli_connect_error();
+	}
+
+	$file = fopen("fueltransactions2.csv","r");
+	$i=0;
+	while(!feof($file))
+	{
+		$line =  fgets($file);
+		if($line=="")
+			continue;
+		$fields = explode(",", $line);
+		//print_r($fields);
+		//continue;
+		$vehid = 0;
+		if(count($fields)>0){
+			if(true){
+				$query = "SELECT vehicle1.veh_reg FROM vehicle1 where veh_id=".$fields[5];
+				$veh_reg = "";
+				if ($result=mysqli_query($con,$query))
+				{
+					$row=mysqli_fetch_row($result);
+					mysqli_free_result($result);
+					$query1 = "SELECT contractId, vehicle.id FROM contract_vehicles join vehicle on contract_vehicles.vehicleId=vehicle.id where vehicle.veh_reg='".$row[0]."'";
+					if ($result1 = mysqli_query($con,$query1))
+					{
+						//if($i==4000) break;
+						$row1 = mysqli_fetch_row($result1);
+						//print_r($row1);
+						//echo "<br/>";
+							
+							
+						$filledDate = date("Y-m-d",strtotime($fields[10]));
+						$sql = "select count(*) from fueltransactions where filledDate='$filledDate' and startReading=$fields[6] and vehicleId=$row1[1]";
+						if ($result2 = mysqli_query($con,$sql))
+						{
+							$row2 = mysqli_fetch_row($result2);
+							if(true){  //$row2[0] == 0
+								$status = 'ACTIVE';
+								if($fields[15]== "Yes"){
+									$status = 'DELETED';
+								}
+								$inchargeId = 0;
+								if(intval($fields[29])){
+									$inchargeId = $fields[29];
+								}
+								$created_at = date("Y-m-d",strtotime($fields[26]));
+								$updated_at = date("Y-m-d",strtotime($fields[27]));
+								echo $row1[0]." - ".$row1[1]." - ".$row[0]."<br/>";
+								$sql = "INSERT INTO fueltransactions(tripId, fuelStationId, branchId, clientId, contractId, vehicleId, inchargeId, startReading, litres, amount,   filledDate,    billNo,     filePath,      fullTank,    remarks,      deleted, created_at, updated_at)
+								                          VALUES ($fields[0],$fields[2],$fields[3],$fields[4],$row1[0],$row1[1],$inchargeId,$fields[6],$fields[7],$fields[9],'$filledDate','$fields[15]','$fields[14]','$fields[8]','$fields[19]','$fields[22]','$created_at','$updated_at')";
+								//echo $sql."<br/>";
+								mysqli_query($con,$sql);
+							}
+							$i++;
+
+						}
+							
+					}
+				}
+			}
+		}
+	}
+	mysqli_close($con);
+});
+
 Route::get('/', function()
 {
 	return View::make('masters');
+});
+
+Route::get('/insertvehicle', function()
+{
+	$file = fopen("apsrtc_vehicles.csv","r");
+	while(! feof($file))
+	{
+	  $line =  fgets($file);
+	  if($line=="")
+	  	continue;
+	  $fields = explode(",", $line);
+	  //print_r($fields);
+	  //continue;
+	  if(count($fields)>0){
+		  $stateid = 0;
+		  //$state = State::where("name","like","%".$fields[0]."%")->first();
+		  $state = State::where("name","=",$fields[0])->first();
+		  if(count($state)>0){
+		  	$stateid = $state->id;
+		  }
+		  $cityid = 0;
+		  $city = City::where("name","=",$fields[1])->first();
+		  if(count($city)>0){
+		  	$cityid = $city->id;
+		  }
+		  $vehicletypeid = 0;
+		  $lookupvalues = LookupTypeValues::where("name","=",$fields[5])->first();
+		  if(count($lookupvalues)>0){
+		  	$vehicletypeid = $lookupvalues->id;
+		  }
+		  //echo $stateid.", ".$cityid.", ".$fields[2].", ".$fields[3].", ".$fields[4].", ".$vehicletypeid.", ".$fields[6].", ".$fields[7].", ".$fields[8].", ".$fields[9].", ".$fields[10].", ".$fields[11].", ".$fields[12].", ".$fields[13].", ".$fields[14]."<br/>";
+		  $vehicle = new Vehicle();
+		  $vehicle->vehicle_type = $vehicletypeid;
+		  $vehicle->veh_reg = $fields[2];
+		  $vehicle->eng_no = $fields[3];
+		  $vehicle->chsno = $fields[4];
+		  $vehicle->yearof_pur = $fields[6]."-01-01";
+		  $vehicle->seat_cap = $fields[7];
+		  $vehicle->purchase_amount = $fields[10];
+		  $vehicle->dep_val = $fields[9];
+		  $vehicle->actual_cost = $fields[11];
+		  $vehicle->emi = $fields[14];		 
+		  $vehicle->total_emis = $fields[12];
+		  $vehicle->paid_emis = $fields[13];
+		  $vehicle->remarks = $fields[8];
+		  $vehicle->state_id = $stateid;
+		  $vehicle->city_id = $cityid;
+		  $vehicle->save();
+		  $i=0;
+		  $l = 15;
+		  for($i=0; $i<5; $i++){
+		  	$transid =  strtoupper(uniqid().mt_rand(100,999));
+		  	$chars = array("a"=>"1","b"=>"2","c"=>"3","d"=>"4","e"=>"5","f"=>"6");
+		  	foreach($chars as $k=>$v){
+		  		$transid = str_replace($k, $v, $transid);
+		  	}
+		  	$expense = new ExpenseTransaction();
+		  	$expense->transactionId = $transid;
+		  	$expense->branchId = 1;
+		  	if($l==15){
+		  		$expense->lookupValueId = 299;
+		  	}
+		  	if($l==16){
+		  		$expense->lookupValueId = 297;
+		  	}
+		  	if($l==17){
+		  		$expense->lookupValueId = 300;
+		  	}
+		  	if($l==18){
+		  		$expense->lookupValueId = 301;
+		  	}
+		  	if($l==19){
+		  		$expense->lookupValueId = 302;
+		  	}		  	
+		  	$expense->name = "expense";
+		  	$expense->date = date("Y-m-d");
+		  	$expense->amount = 0;
+		  	$expense->nextAlertDate = date("Y-m-d",strtotime($fields[$l]));
+		  	$expense->vehicleId = $vehicle->id;
+		  	$expense->vehicleIds = $vehicle->id;
+		  	$expense->workFlowStatus = "Approved";
+		  	//echo $expense->name.", ".$expense->date.", ".$expense->nextAlertDate.", ".$expense->vehicleId.", ".$expense->vehicleIds."<br/>";
+		  	$expense->save();
+		  	$l++;
+		  }
+	  }
+	}
+	fclose($file);
 });
 
 Route::get('/logout', function()
@@ -22,7 +255,7 @@ Route::get('/logout', function()
 	LoginLog::where("id","=",$rec->id)->update(array("logouttime"=>date('H:i:s', time())));
 	Auth::logout();
 	Session::flush();
-	return Redirect::to('/');
+	return Redirect::to('/index');
 });
 
 Route::get('/mailtest', function()
@@ -159,6 +392,8 @@ Route::get('/addemployee', function()
 
 Route::get('/verifyemailid',"masters\EmployeeController@verifyEmailId");
 
+Route::get('/getclientbranches',"masters\EmployeeController@getClientBranches");
+
 Route::get('/getempid',"masters\EmployeeController@getEmpId");
 
 Route::post('/addemployee',"masters\EmployeeController@addEmployee");
@@ -237,6 +472,8 @@ Route::any('/addbankdetails', "masters\BankDetailsController@addBankDetails");
 
 Route::any('/editbankdetails', "masters\BankDetailsController@editBankDetails");
 
+Route::any('/getbankaccounts', "masters\BankDetailsController@getBankAccounts");
+
 Route::get('/cards', "masters\CardsController@manageCards");
 
 Route::any('/addcard', "masters\CardsController@addCard");
@@ -291,9 +528,21 @@ Route::any('/addserviceprovider', "masters\ServiceProviderController@addServiceP
 
 Route::any('/editserviceprovider', "masters\ServiceProviderController@editServiceProvider");
 
+Route::get('/uploads', "masters\UploadsController@manageUploads");
+
+Route::any('/addupload', "masters\UploadsController@addUpload");
+
+Route::any('/editupload', "masters\UploadsController@editUpload");
+
 Route::any('/postfile', "transactions\TransactionController@postFile");
 
 Route::get('/transactions', "transactions\TransactionController@manageTransactions");
+
+Route::any('/clientincometransactions', "transactions\ClientIncomeController@manageClientIncome");
+
+Route::any('/addclientincome', "transactions\ClientIncomeController@addClientIncome");
+
+Route::get('/editclientincome', "transactions\ClientIncomeController@editClientIncome");
 
 Route::get('/incometransactions', "transactions\TransactionController@manageIncomeTransactions");
 
@@ -409,11 +658,17 @@ Route::any('/addemployeesalary', "salaries\SalariesController@addEmployeeSalary"
 
 Route::any('/editsalarytransaction', "salaries\SalariesController@editSalaryTransaction");
 
+Route::any('/gettransactionamount', "salaries\SalariesController@getTransactionAmount");
+
 Route::any('/leaves', "salaries\LeavesController@manageLeaves");
 
 Route::any('/addleave', "salaries\LeavesController@addLeave");
 
 Route::any('/editleave', "salaries\LeavesController@editLeave");
+
+Route::any('/getemployeesbyoffice', "salaries\LeavesController@getEmployeesByOffice");
+
+Route::any('/getemployeesbydepot', "salaries\LeavesController@getEmployeesByDepot");
 
 Route::any('/approveleave', "salaries\LeavesController@approveLeave");
 
@@ -464,6 +719,8 @@ Route::any('/deletepurchaseorderitem', "inventory\purchaseOrderItemController@de
 Route::get('/getmanufacturers', "inventory\PurchaseOrderController@getManufacturers");
 
 Route::get('/getcreditsuppliersbystate', "inventory\PurchaseOrderController@getCreditSuppliersByState");
+
+Route::get('/verifybillno', "inventory\PurchaseOrderController@verifyBillNo");
 
 Route::any('/manufacturers', "inventory\ManufacturesController@manageManufacturers");
 
@@ -608,6 +865,8 @@ Route::get('/getdriverhelper', "servicelogs\ServiceLogController@getDriverHelper
 
 Route::get('/getstartreading', "servicelogs\ServiceLogController@getStartReading");
 
+Route::get('/getstartreadingsubstitute', "servicelogs\ServiceLogController@getStartReadingSubstitute");
+
 Route::get('/getpendingservicelogs', "servicelogs\ServiceLogController@getPendingServiceLogs");
 
 Route::any('/viewpendingservicelogs', "servicelogs\ServiceLogController@viewPendingServiceLogs");
@@ -629,6 +888,10 @@ Route::any('/addclientholidays', "contracts\ClientHolidaysController@addclientho
 Route::any('/editclientholidays', "contracts\ClientHolidaysController@editclientholidays");
 
 Route::any('/updateclientholidaysrequeststatus', "contracts\ClientHolidaysController@updateClientHolidaysRequestStatus");
+
+Route::any('/loanpayments',"transactions\LoanPaymentsController@manageLoanPayments");
+
+Route::any('/addloanpayment',"transactions\LoanPaymentsController@addLoanPayment");
 
 Route::any('/billpayments',"billpayments\BillPaymentsController@manageBillPayments");
 

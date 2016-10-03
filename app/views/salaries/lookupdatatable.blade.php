@@ -43,8 +43,12 @@
 			<div class="col-xs-offset-1 col-xs-10">
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
-				<?php if(($form_info['action']=="addstate" && in_array(206, $jobs)) or true){ ?>
-					@include("masters.layouts.addlookupform",$form_info)
+				<?php 
+					if($form_info['action']=="addsalaryadvance" && in_array(340, $jobs) ||
+				       $form_info['action']=="addleave" && in_array(342, $jobs)
+					){ 
+				?>
+					@include("salaries.addlookupform",$form_info)
 				<?php } ?>
 			</div>
 		</div>
@@ -164,19 +168,70 @@
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
+			$("#clientname").attr("disabled",true);
+			$("#depot").attr("disabled",true);
+			$("#officebranch").attr("disabled",true);
 
 			$('.chosen-select').focus(function(e){
 			    e.preventDefault();
 			});
 
-			function modalEditSalaryAdvance(id, empId, empname, amount, branchId, paymentDate, comments, status){
-				$("#date1").val(paymentDate);	
+			<?php
+				echo "date_time = '".date("d-m-Y h:i A")."';";
+			?>
+			$("#datetime").val(date_time);
+
+
+			function enableClientDepot(val){
+				if(val == "OFFICE"){
+					$("#clientname").attr("disabled",true);
+					$("#depot").attr("disabled",true);
+					$("#officebranch").attr("disabled",false);
+					$('.chosen-select').trigger("chosen:updated");
+				}
+				else if(val == "CLIENT BRANCH"){
+					$("#clientname").attr("disabled",false);
+					$("#depot").attr("disabled",false);
+					$("#officebranch").attr("disabled",true);
+					$('.chosen-select').trigger("chosen:updated");
+				}
+			}
+
+			function changeDepot(val){
+				$.ajax({
+			      url: "getdepotsbyclientId?id="+val,
+			      success: function(data) {
+			    	  //data = "<option value='0'>ALL</option>"+data;
+			    	  $("#depot").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			    });
+
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+			}
+
+			function modalEditSalaryAdvance(id){
+				/*$("#date1").val(paymentDate);	
 				$("#amount1").val(amount);	
 				$("#remarks1").html(comments);
 				$("#status1 option").each(function() { this.selected = (this.text == status); });
 				$("#employeename1 option").each(function() { this.selected = (this.value == empId); });
 				$("#id1").val(id);	
 				$('.chosen-select').trigger('chosen:updated');
+				*/
+				//$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
+				url = "editsalaryadvance?&id="+id;
+				var ifr=$('<iframe />', {
+		            id:'MainPopupIframe',
+		            src:url,
+		            style:'seamless="seamless" scrolling="no" display:none;width:100%;height:423px; border:0px solid',
+		            load:function(){
+		                $(this).show();
+		            }
+		        });
+	    	    $("#modal_body").html(ifr);
 			}
 
 			function deleteSalryAdvance(id) {
@@ -199,6 +254,29 @@
 				});
 			};
 
+			function getEmployeesByOffice(id){
+				$.ajax({
+			      url: "getemployeesbyoffice?branch="+id,
+			      success: function(data) {
+				     $("#employeename").html(data);
+				     $('.chosen-select').trigger('chosen:updated');
+			      },
+			      type: 'GET'
+			   });	
+			}
+
+			function getEmployeesByDepot(id){
+				clientname = $("#clientname").val();
+				$.ajax({
+			      url: "getemployeesbydepot?depot="+id+"&clientname="+clientname,
+			      success: function(data) {
+				     $("#employeename").html(data);
+				     $('.chosen-select').trigger('chosen:updated');
+			      },
+			      type: 'GET'
+			   });	
+			}
+
 			function modalEditLeave(id){
 				//$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
 				url = "editleave?id="+id;
@@ -219,6 +297,42 @@
 			      success: function(data) {
 			    	  if(data=="success"){
 			    		  bootbox.confirm("operation completed successfully!", function(result) {});
+			    		  location.reload();
+				   	  }
+			    	  if(data=="fail"){
+			    		  bootbox.confirm("operation could not be completed successfully!", function(result) {});
+				   	  }
+			      },
+			      type: 'GET'
+			    });
+			}
+
+			function showPaymentFields(val){
+				$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
+				url = 'getpaymentfields?paymenttype=';
+				url = url+val;
+				$.ajax({
+				      url: url,
+				      success: function(data) {
+				    	  $("#addfields").html(data);
+				    	  $('.date-picker').datepicker({
+							autoclose: true,
+							todayHighlight: true
+						  });
+				    	  $("#addfields").show();
+				      },
+				      type: 'GET'
+				   });
+				
+			}
+
+			function approve(rid){
+				$.ajax({
+			      url: "approveleave?id="+rid,
+			      success: function(data) {
+			    	  if(data=="success"){
+			    		  bootbox.confirm("operation completed successfully!", function(result) {});
+			    		  location.reload();
 				   	  }
 			    	  if(data=="fail"){
 			    		  bootbox.confirm("operation could not be completed successfully!", function(result) {});

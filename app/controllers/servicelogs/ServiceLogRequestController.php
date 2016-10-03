@@ -30,6 +30,7 @@ class ServiceLogRequestController extends \Controller {
 				);
 				$fields = array();
 				$recs = \ServiceLogRequest::where("contractId","=",$contract->id)
+							->where("deleted","=","No")
 							->where("vehicleId","=",$values["vehicle"])
 							->get();
 				foreach ($field_names as $key=>$val){

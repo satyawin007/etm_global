@@ -241,7 +241,7 @@
 			        url:form.attr("action"),
 			        data:form.serialize(),
 			        success: function(response){
-			           alert(response);  
+			           //alert(response);  
 			           var json = JSON.parse(response);
 			           var arr = [];
 			           for(var i = 0; i < json.length; i++) {

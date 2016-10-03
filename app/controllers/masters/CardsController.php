@@ -14,7 +14,7 @@ class CardsController extends \Controller {
 		if (\Request::isMethod('post'))
 		{
 			$values = Input::all();
-			$field_names = array("cardnumber"=>"cardNumber","cardtype"=>"cardType","cardholdername"=>"cardHolderName","bank"=>"lookupValueId","creditlimit"=>"creditLimit","expiredate"=>"expireDate");
+			$field_names = array("cardnumber"=>"cardNumber","cardtype"=>"cardType","cardholdername"=>"cardHolderName","bank"=>"lookupValueId","creditlimit"=>"creditLimit","expiredate"=>"expireDate", "cardbankaccount"=>"bankAccountId");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key]) && $key=="expiredate"){
@@ -82,7 +82,7 @@ class CardsController extends \Controller {
 		$values = Input::all();
 		if (\Request::isMethod('post'))
 		{
-			$field_names = array("cardnumber1"=>"cardNumber","cardtype1"=>"cardType","cardholdername1"=>"cardHolderName","bank1"=>"lookupValueId","creditlimit1"=>"creditLimit","expiredate1"=>"expireDate","status1"=>"status");
+			$field_names = array("cardnumber1"=>"cardNumber","cardtype1"=>"cardType","cardholdername1"=>"cardHolderName","bank1"=>"lookupValueId","creditlimit1"=>"creditLimit","expiredate1"=>"expireDate", "cardbankaccount1"=>"bankAccountId", "status1"=>"status");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key]) && $key=="expiredate1"){
@@ -144,7 +144,7 @@ class CardsController extends \Controller {
 		$values['add_url'] = 'addcard';
 		$values['form_action'] = 'cards';
 		$values['action_val'] = '#';
-		$theads = array('Card number','card type', "card holder", "bank name", "credit limit", "expire date", "status", "Actions");
+		$theads = array('Card number','card type', "card holder", "bank name", "account no", "credit limit", "expire date", "status", "Actions");
 		$values["theads"] = $theads;
 			
 		$actions = array();
@@ -172,14 +172,22 @@ class CardsController extends \Controller {
 			$bank_arr [$bank->id] = $bank->name;
 		}
 		
+		$bankacts =  \BankDetails::where("Status","=","ACTIVE")->get();
+		$bankacts_arr = array();
+		foreach ($bankacts as $bankact){
+			$bankacts_arr[$bankact->id] = $bankact->bankName."-".$bankact->accountNo;
+		}
+		
 		$form_fields = array();		
 		$form_field = array("name"=>"cardnumber", "content"=>"card number", "readonly"=>"","action"=>array("type"=>"onchange","script"=>"validateCard(this.value)"), "required"=>"required", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"cardtype", "content"=>"card type", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>array("DEBIT CARD"=>"DEBIT CARD", "CREDIT CARD"=>"CREDIT CARD"), "class"=>"form-control");
+		$form_field = array("name"=>"cardtype", "content"=>"card type", "readonly"=>"",  "required"=>"required", "type"=>"select","action"=>array("type"=>"onchange","script"=>"enableBankAccount(this.value)"), "options"=>array("DEBIT CARD"=>"DEBIT CARD", "CREDIT CARD"=>"CREDIT CARD"), "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"cardholdername", "content"=>"card holder name", "readonly"=>"", "required"=>"required", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"bank", "content"=>"bank name", "readonly"=>"", "required"=>"required", "type"=>"select", "options"=>$bank_arr, "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"cardbankaccount", "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"creditlimit", "content"=>"credit limit", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
@@ -207,6 +215,8 @@ class CardsController extends \Controller {
 		$form_field = array("name"=>"cardholdername1", "content"=>"card holder name", "readonly"=>"", "required"=>"required", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"bank1", "content"=>"bank name", "readonly"=>"", "required"=>"required", "type"=>"select", "options"=>$bank_arr, "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"cardbankaccount1", "content"=>"bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$bankacts_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"creditlimit1", "content"=>"credit limit", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;

@@ -683,9 +683,9 @@
 					alert("select action");
 					return;
 				}
-				if(action=="itemtovehicles"){
+				if(action=="itemtovehicles" || action=="itemtowarehouse"){
 					ids = ["item", "itemnumbers", "itemactions", "vehicle"];
-					vars = ["qty", "alertdate", "remarks"];
+					vars = ["meeterreading", "qty", "alertdate", "remarks"];
 					hide_fields_text = ["itemactions"];
 					entities_text = [];
 					entities = [];
@@ -768,8 +768,9 @@
 					alert("select warehouse");
 					return;
 				}
+				stocktype = $("#stocktype").val();
 				$.ajax({
-			      url: "getitemsbyaction?action="+action+"&warehouseid="+warehouse,
+			      url: "getitemsbyaction?action="+action+"&warehouseid="+warehouse+"&stocktype="+stocktype,
 			      success: function(data) {
 			    	  $("#addfields").html(data);
 			    	  $("#div_itemnumbers").hide();
@@ -908,7 +909,8 @@
 					return;
 				}
 				//$("#paginate").submit();	
-				var url = "getinventorydatatabledata?name=usedstock";
+				stocktype = $("#stocktype").val();
+				var url = "getinventorydatatabledata?name=usedstock&stocktype="+stocktype;
 				url = url+"&warehouse="+branch;
 				url = url+"&fromdate="+fdt;
 				url = url+"&todate="+tdt;

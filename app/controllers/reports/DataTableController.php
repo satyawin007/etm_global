@@ -93,6 +93,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "employee.fullName as receivedBy";
 		$select_args[] = "purchased_items.unitPrice as unitPrice";
 		$select_args[] = "purchase_orders.filePath as filePath";
+		$select_args[] = "item_types.name as itemtype";
 		$actions = array();
 		$jobs = \Session::get("jobs");
 		if(in_array(331, $jobs)){
@@ -114,18 +115,19 @@ class DataTableController extends \Controller {
 			$entities = \PurchasedItems::where("purchased_items.status","=","ACTIVE")
 						->where("purchase_orders.type","=","PURCHASE ORDER")
 						->whereIn("items.id",$item_arr)
-						->join("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
-						->join("items","items.id","=","purchased_items.itemId")
-						->join("manufactures","manufactures.id","=","purchased_items.manufacturerId")
-						->join("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
-						->join("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
-						->join("employee","employee.id","=","purchase_orders.createdBy")
+						->leftjoin("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
+						->leftjoin("items","items.id","=","purchased_items.itemId")
+						->leftjoin("item_types","item_types.id","=","items.itemTypeId")
+						->leftjoin("manufactures","manufactures.id","=","purchased_items.manufacturerId")
+						->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
+						->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+						->leftjoin("employee","employee.id","=","purchase_orders.createdBy")
 						->leftjoin("employee as employee1","employee1.id","=","purchase_orders.inchargeId")
 						->select($select_args)->orderBy("purchase_orders.orderDate","desc")->limit($length)->offset($start)->get();
 			$total = \PurchasedItems::where("purchased_items.status","=","ACTIVE")
 						->where("purchase_orders.type","=","PURCHASE ORDER")
-						->join("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
-						->join("items","items.id","=","purchased_items.itemId")
+						->leftjoin("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
+						->leftjoin("items","items.id","=","purchased_items.itemId")
 						->whereIn("items.id",$item_arr)->count();
 		}
 		else{
@@ -135,30 +137,36 @@ class DataTableController extends \Controller {
 						->where("purchase_orders.type","=","PURCHASE ORDER")
 						->where("purchase_orders.officeBranchId", "=", $values["warehouse"])
 						->whereBetween("purchase_orders.orderDate",array($fromdt,$todt))
-						->join("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
-						->join("items","items.id","=","purchased_items.itemId")
-						->join("manufactures","manufactures.id","=","purchased_items.manufacturerId")
-						->join("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
-						->join("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
-						->join("employee","employee.id","=","purchase_orders.createdBy")
+						->leftjoin("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
+						->leftjoin("items","items.id","=","purchased_items.itemId")
+						->leftjoin("item_types","item_types.id","=","items.itemTypeId")
+						->leftjoin("manufactures","manufactures.id","=","purchased_items.manufacturerId")
+						->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
+						->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+						->leftjoin("employee","employee.id","=","purchase_orders.createdBy")
 						->leftjoin("employee as employee1","employee1.id","=","purchase_orders.inchargeId")
 						->select($select_args)->orderBy("purchase_orders.orderDate","desc")->limit($length)->offset($start)->get();
 			$total = \PurchasedItems::where("purchased_items.status","=","ACTIVE")
 						->where("purchase_orders.type","=","PURCHASE ORDER")
-						->join("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
+						->leftjoin("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
 						->where("purchase_orders.officeBranchId", "=", $values["warehouse"])
 						->whereBetween("purchase_orders.orderDate",array($fromdt,$todt))->count();
 		}
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
-			$entity["orderDate"] = date("d-m-Y",strtotime($entity["orderDate"]));
+			$entity["item"] = $entity["item"]."(".$entity["itemtype"].")";
 			$entity["paymentInfo"] = "Amount Paid : ".$entity["amountPaid"]."<br/>"."Payment Type : ".$entity["paymentType"];
 			$entity["totalAmount"] = sprintf('%0.2f',$entity["qty"]*$entity["unitPrice"]);
 			if($entity["filePath"] != ""){
-				$entity["billNumber"] = "<a target='_blank' href='../app/storage/uploads/".$entity["filePath"]."'>".$entity["billNumber"]."</a>";
+				if($entity["filePath"]==""){
+					$entity["billNumber"] = "<span style='color:red; font-weight:bold;'>".$entity["billNumber"]."</span>";
+				}
+				else{
+					$entity["billNumber"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNumber"]."</a>";
+				}
 			}
-			
+			$entity["orderDate"] = date("d-m-Y",strtotime($entity["orderDate"]));
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
 			$action_data = "";
@@ -282,7 +290,12 @@ class DataTableController extends \Controller {
 			$entity["paymentInfo"] = "Amount Paid : ".$entity["amountPaid"]."<br/>"."Payment Type : ".$entity["paymentType"];
 			$entity["totalAmount"] = sprintf('%0.2f',$entity["qty"]*$entity["unitPrice"]);
 			if($entity["filePath"] != ""){
-				$entity["billNumber"] = "<a target='_blank' href='../app/storage/uploads/".$entity["filePath"]."'>".$entity["billNumber"]."</a>";
+				if($entity["filePath"]==""){
+					$entity["billNumber"] = "<span style='color:red; font-weight:bold;'>".$entity["billNumber"]."</span>";
+				}
+				else{
+					$entity["billNumber"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNumber"]."</a>";
+				}
 			}
 			if($entity["branchId"] == "" || $entity["branchId"] == 0){
 				$entity["officebranch"] = $entity["depotName"];
@@ -440,7 +453,12 @@ class DataTableController extends \Controller {
 			$entity["paymentInfo"] = "Amount Paid : ".$entity["amountPaid"]."<br/>"."Payment Type : ".$entity["paymentType"];
 			$entity["totalAmount"] = sprintf('%0.2f',$entity["totalAmount"]);
 			if($entity["filePath"] != ""){
-				$entity["billNumber"] = "<a target='_blank' href='../app/storage/uploads/".$entity["filePath"]."'>".$entity["billNumber"]."</a>";
+				if($entity["filePath"]==""){
+					$entity["billNumber"] = "<span style='color:red; font-weight:bold;'>".$entity["billNumber"]."</span>";
+				}
+				else{
+					$entity["billNumber"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNumber"]."</a>";
+				}
 			}
 			if($entity["branchId"] == "" || $entity["branchId"] == 0){
 				$entity["officeBranchId"] = $entity["depotName"];

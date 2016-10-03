@@ -129,7 +129,7 @@ class CityController extends \Controller {
 	public function getCitiesbyStateId()
 	{
 		$values = Input::all();
-		$entities = \City::where("stateId","=",$values['id'])->get();
+		$entities = \City::where("stateId","=",$values['id'])->where("status","=","ACTIVE")->get();
 		$response = "<option value=''> --select city-- </option>";
 		foreach ($entities as $entity){
 			$response = $response."<option value='".$entity->id."'>".$entity->name."</option>";			
@@ -145,7 +145,7 @@ class CityController extends \Controller {
 	public function getDepotsbyCityId()
 	{
 		$values = Input::all();
-		$entities = \Depot::where("cityId","=",$values['id'])->get();
+		$entities = \Depot::where("cityId","=",$values['id'])->where("status","=","ACTIVE")->get();
 		$response = "<option value=''> --select depot-- </option>";
 		foreach ($entities as $entity){
 			$response = $response."<option value='".$entity->id."'>".$entity->name."</option>";
@@ -164,6 +164,7 @@ class CityController extends \Controller {
 		$emp_contracts = \Auth::user()->contractIds;
 		if($emp_contracts == ""){
 			$entities = \Depot::where("clientId","=",$values['id'])
+						->where("depots.status","=","ACTIVE")
 						->join("contracts", "depots.id", "=","contracts.depotId")
 						->join("clients", "clients.id", "=","contracts.clientId")
 						->select(array("depots.id as id","depots.name as name"))->get();
@@ -172,6 +173,7 @@ class CityController extends \Controller {
 			$emp_contracts = explode(",", $emp_contracts);
 			$entities = \Depot::whereIn("depots.id",$emp_contracts)
 						->where("clientId","=",$values['id'])
+						->where("depots.status","=","ACTIVE")
 						->join("contracts", "depots.id", "=","contracts.depotId")
 						->join("clients", "clients.id", "=","contracts.clientId")
 						->select(array("depots.id as id","depots.name as name"))->get();
@@ -192,7 +194,7 @@ class CityController extends \Controller {
 	public function getfinanceCompanybyCityId()
 	{
 		$values = Input::all();
-		$entities = \FinanceCompany::where("cityId","=",$values['id'])->get();
+		$entities = \FinanceCompany::where("cityId","=",$values['id'])->where("status","=","ACTIVE")->get();
 		$response = "<option> --select finance company-- </option>";
 		foreach ($entities as $entity){
 			$response = $response."<option value='".$entity->id."'>".$entity->name."</option>";
@@ -208,7 +210,7 @@ class CityController extends \Controller {
 	public function getBranchbyCityId()
 	{
 		$values = Input::all();
-		$entities = \OfficeBranch::where("Id","=",$values['id'])->get();
+		$entities = \OfficeBranch::where("Id","=",$values['id'])->where("status","=","ACTIVE")->get();
 		$response = "";
 		foreach ($entities as $entity){
 			$response = $response."<option value='".$entity->id."'>".$entity->name."</option>";

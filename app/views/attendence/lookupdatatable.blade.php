@@ -42,7 +42,7 @@
 			<div class="col-xs-offset-0 col-xs-12">
 				<?php $form_info = $values["form_info"]; ?>
 				<?php $jobs = Session::get("jobs");?>
-				<?php if(($form_info['action']=="addattendence" && in_array(206, $jobs)) or 
+				<?php if(($form_info['action']=="addattendence" && in_array(336, $jobs)) or 
 						($form_info['action']=="addclient" && in_array(403, $jobs))
 					  ){ ?>
 					@include("attendence.addlookupform",$form_info)
@@ -282,7 +282,7 @@
 				if(isset($values["client"]) && $values["client"]!=0 ){
 					echo '$("#clientname").attr("disabled",false); ';
 				}
-				if(isset($values["depot"]) && $values["officebranch"]!=0 ){
+				if(isset($values["depot"])){
 					echo '$("#depot").attr("disabled",false); ';
 				}
 			?>
@@ -603,11 +603,25 @@
 	                });
 				}, 2000);
 			}
+			getdaytotatt();
+			function getdaytotatt(){ 
+				$.ajax({
+                    url: "getdaytotalattendence",
+                    data: $("#attendence").serialize(),
+                    type: "post",
+                    success: function(response) {
+                    	response = jQuery.parseJSON(response);	
+                    	$("#noofpresents").val(response.noofpresents);
+                    	$("#noofabsents").val(response.noofabsents);
+                    }
+                });
+			};
 
 			function changeDepot(val){
 				$.ajax({
 			      url: "getdepotsbyclientId?id="+val,
 			      success: function(data) {
+			    	  data = "<option value='0'>ALL</option>"+data;
 			    	  $("#depot").html(data);
 			    	  $('.chosen-select').trigger("chosen:updated");
 			      },
@@ -678,6 +692,15 @@
 					return;
 				}
 				url = url+"&day="+day;
+				dt1 = new Date();
+				dt1 = dt1.getMonth()+1;
+				dt2 = date.split("-");
+				dt2 = parseInt(dt2[1]);
+				if(dt2<dt1){
+					url = url.replace('getattendencedatatabledata?name=getattendencetoupdate','attendence?name=getattendencetoupdate');
+					window.location.href = url;
+					return;
+				}
 
 				$("#get").show();
 				$("#modify").show();

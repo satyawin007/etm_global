@@ -176,6 +176,13 @@
 				&nbsp; MANAGE SERVICE PROVIDERS &nbsp; 
 			</button>	
 			</a>
+			<?php } if(in_array(168, $jobs)){?>
+			<a href="uploads">			
+			<button style="PADDING-TOP: 16px;">
+				<i class="ace-icon fa fa-upload bigger-240"></i><BR/>
+				&nbsp; UPLOADS &nbsp; 
+			</button>	
+			</a>
 			<?php }?>				
 		</div>
 		</div>

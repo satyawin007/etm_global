@@ -68,19 +68,20 @@ class UserSettingsController extends \Controller {
 					"idproofnumber"=>"idCardNumber","presentaddress"=>"presentAddress","joiningdate"=>"joiningDate",
 					"aadhdaarnumber"=>"aadharNumber","rationcardnumber"=>"rationCardNumber", "drivinglicence"=>"drivingLicence",
 					"drivingliceneexpiredate"=>"drvLicenceExpDate","accountnumber"=>"accountNumber", "bankname"=>"bankName",
-					"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchIds", 
+					"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchIds", "clients"=>"clientIds", 
 					"empbranches"=>"officeBranchIds", "clientbranches"=>"contractIds", "roleprevilage"=>"rolePrevilegeId",
 					"emailid"=>"emailId","salarycardno"=>"salaryCardNo"
 			);
 			$fields = array();
 			$fields["officeBranchIds"] = "";
 			$fields["contractIds"] = "";
+			$fields["clientIds"] = "";
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
 					if($val == "dob" || $val == "drvLicenceExpDate" || $val == "joiningDate"){
 						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 					}
-					else if($key == "clientbranches" || $key == "empcontracts" || $key == "officebranch"){
+					else if($key == "clientbranches" || $key == "empcontracts" || $key == "officebranch" || $key == "clients"){
 						$field_val = "";
 						$i = 0;
 						for($i=0; $i<count($values[$key]); $i++){
@@ -124,7 +125,7 @@ class UserSettingsController extends \Controller {
 					$fields = array("empid"=>$empid->id,"status"=>"Active");
 					$db_functions_ctrl->insert($table, $fields);
 				}
-				\Session::put("jobs",$privileges_arr);
+				//\Session::put("jobs",$privileges_arr);
 				
 				return \Redirect::to("employeeprofile?id=".$values["id"]);
 			}

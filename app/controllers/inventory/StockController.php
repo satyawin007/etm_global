@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
+use settings\AppSettingsController;
 
 class StockController extends \Controller {
 
@@ -18,7 +19,7 @@ class StockController extends \Controller {
 			$values = Input::all();
 			$url = "useitems";
 			//$values['asdf'];
-			if(isset($values["action"]) && $values["action"]=="itemtovehicles"){
+			if(isset($values["action"]) && ($values["action"]=="itemtovehicles" || $values["action"]=="itemtowarehouse")){
 				$field_names = array("action"=>"action","date"=>"date","warehouse"=>"fromWareHouseId");
 				$fields = array();
 				foreach ($field_names as $key=>$val){
@@ -41,6 +42,7 @@ class StockController extends \Controller {
 						$table = "InventoryTransactions";
 						$fields["toVehicleId"] = $json_obj->vehicle;
 						$fields["stockItemId"] = $json_obj->item;
+						$fields["meeterReading"] = $json_obj->meeterreading;
 						$fields["qty"] = $json_obj->qty;
 						$fields["remarks"] = $json_obj->remarks;
 						if(isset($json_obj->alertdate) && $json_obj->alertdate != ""){
@@ -155,6 +157,7 @@ class StockController extends \Controller {
 						$purchasedOrdernew->totalAmount = $purchasedOrder->totalAmount;
 						$purchasedOrdernew->comments = $purchasedOrder->comments;
 						$purchasedOrdernew->createdBy = \Auth::user()->fullName;
+						$purchasedOrdernew->workFlowStatus = "Approved";
 						$insertId = $purchasedOrdernew->save();
 						$insertId = $purchasedOrdernew->id;
 						
@@ -367,7 +370,9 @@ class StockController extends \Controller {
 						$fields = array();
 						$fields["purchasedOrderId"] = $recid;
 						$fields["itemId"] = $json_obj->item;
-						$fields["manufacturerId"] = $json_obj->manufacturer;
+						if (isset($json_obj->manufacturer) && $json_obj->manufacturer != "" ){
+							$fields["manufacturerId"] = $json_obj->manufacturer;
+						}
 						$fields["vehicleId"] = $json_obj->vehicle;
 						$fields["qty"] = $json_obj->qty;
 						$fields["purchasedQty"] = $json_obj->qty;
@@ -703,7 +708,7 @@ class StockController extends \Controller {
 		$values['add_url'] = 'additem';
 		$values['form_action'] = 'useitems';
 		$values['action_val'] = '#';
-		$theads = array('Item', 'date', "qty", "from warehouse", "to warehouse", "from vehicle", "to vehicle", "from action", "to action", "itemnumbers", "remarks", "status", "Actions");
+		$theads = array('Item', 'date', "qty (bill no)", "from warehouse", "to warehouse", "from vehicle", "to vehicle", "from action", "to action", "itemnumbers", "remarks", "status", "Actions");
 		$values["theads"] = $theads;
 			
 		$actions = array();
@@ -721,31 +726,72 @@ class StockController extends \Controller {
 		
 		$warehouse_arr_total = array();
 		$warehouse_arr = array();
-		$warehouses = \OfficeBranch::where("isWareHouse","=","Yes")->get();
+		
+		$ass_branches = AppSettingsController::getEmpBranches();
+		$ass_branches_arr = array();
+		foreach ($ass_branches as $ass_branch){
+			$ass_branches_arr[] = $ass_branch["id"];
+		}
+		
+		$warehouses = \OfficeBranch::whereIn("id",$ass_branches_arr)->where("isWareHouse","=","Yes")->get();
 		foreach ($warehouses as $warehouse){
 			$warehouse_arr[$warehouse->id] = $warehouse->name;
 		}
 		$warehouse_arr_total["main warehouses"] = $warehouse_arr;
-		foreach ($warehouses as $warehouse){
-			$warehouse_arr = array();
-			$sub_warehouses = \Depot::where("status","=","ACTIVE")
-								->where("ParentWarehouse","=",$warehouse->id)->get();
-			foreach ($sub_warehouses as $sub_warehouse){
-				$warehouse_arr[$sub_warehouse->id] = $sub_warehouse->name."(".$sub_warehouse->code.")";
+		
+		$emp_contracts = \Auth::user()->contractIds;
+		$depots = null;
+		if($emp_contracts=="" || $emp_contracts==0){
+			$depots = \Depot::where("status","=","ACTIVE")->get();
+		}
+		else{
+			$emp_contracts = explode(",", $emp_contracts);
+			$depots = \Depot::whereIn("id",$emp_contracts)
+							->where("depots.status","=","ACTIVE")
+							->select(array("depots.id as id","depots.name as name"))->groupBy("depots.id")->get();
+		}
+		$depot_arr = array();
+		foreach ($depots as $depot){
+			$depot_arr[] = $depot->id;
+		}
+		
+		if(!isset($values["stocktype"])){
+			foreach ($warehouses as $warehouse){
+				$warehouse_arr = array();
+				$sub_warehouses = \Depot::where("status","=","ACTIVE")
+									->whereIn("id",$depot_arr)
+									->where("ParentWarehouse","=",$warehouse->id)->get();
+				foreach ($sub_warehouses as $sub_warehouse){
+					$warehouse_arr[$sub_warehouse->id] = $sub_warehouse->name."(".$sub_warehouse->code.")";
+				}
+				$warehouse_arr_total[$warehouse->name] = $warehouse_arr;
 			}
-			$warehouse_arr_total[$warehouse->name] = $warehouse_arr;
 		}
 				
 		
-		$form_fields = array();		
-		$form_field = array("name"=>"action", "id"=>"action",  "content"=>"select action", "readonly"=>"", "required"=>"required", "type"=>"select", "action"=>array("type"=>"onchange","script"=>"getItems(this.value)"), "options"=>array("itemtovehicles"=>"item","warehousetowarehouse"=>"warehouse","vehicletovehicle"=>"vehicle to vehicle","vehicletowarehouse"=>"repairs","creditsuppliertowarehouse"=>"repairs return"), "class"=>"form-control chosen-select");
-		$form_fields[] = $form_field;
+		$form_fields = array();	
+		if(isset($values["stocktype"]) && $values["stocktype"] == "office"){
+			$form_field = array("name"=>"action", "id"=>"action",  "content"=>"select action", "readonly"=>"", "required"=>"required", "type"=>"select", "action"=>array("type"=>"onchange","script"=>"getItems(this.value)"), "options"=>array("itemtowarehouse"=>"item","warehousetowarehouse"=>"warehouse"), "class"=>"form-control chosen-select");
+			$form_fields[] = $form_field;
+		}
+		else{
+			$form_field = array("name"=>"action", "id"=>"action",  "content"=>"select action", "readonly"=>"", "required"=>"required", "type"=>"select", "action"=>array("type"=>"onchange","script"=>"getItems(this.value)"), "options"=>array("itemtovehicles"=>"item","warehousetowarehouse"=>"warehouse","vehicletovehicle"=>"vehicle to vehicle","vehicletowarehouse"=>"repairs","creditsuppliertowarehouse"=>"repairs return"), "class"=>"form-control chosen-select");
+			$form_fields[] = $form_field;
+		}
 		$form_field = array("name"=>"date", "id"=>"date",  "content"=>"date", "readonly"=>"", "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"warehouse", "id"=>"warehouse",  "content"=>"warehouse", "readonly"=>"", "action"=>array("type"=>"onchange","script"=>"getItems(this.value)"), "required"=>"required", "type"=>"selectgroup", "options"=>$warehouse_arr_total, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"jsondata", "id"=>"jsondata", "value"=>"",  "content"=>"", "readonly"=>"", "required"=>"", "type"=>"hidden", "class"=>"form-control");
 		$form_fields[] = $form_field;
+		if(isset($values["stocktype"])&& $values["stocktype"] == "office"){
+			$form_field = array("name"=>"stocktype", "id"=>"stocktype", "value"=>$values["stocktype"],  "content"=>"", "readonly"=>"", "required"=>"", "type"=>"hidden", "class"=>"form-control");
+			$form_fields[] = $form_field;
+		}
+		else{
+			$form_field = array("name"=>"stocktype", "id"=>"stocktype", "value"=>"nonoffice",  "content"=>"", "readonly"=>"", "required"=>"", "type"=>"hidden", "class"=>"form-control");
+			$form_fields[] = $form_field;
+		}
 // 		$form_field = array("name"=>"remarks", "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 // 		$form_fields[] = $form_field;
 				
@@ -791,7 +837,6 @@ class StockController extends \Controller {
 		$values = Input::All();
 		$form_fields = array();
 		$form_info = array();
-	
 		$branches =  \OfficeBranch::where("isWareHouse","=","Yes")->get();
 		$branches_arr = array();
 		foreach ($branches as $branch){
@@ -837,6 +882,9 @@ class StockController extends \Controller {
 			$stockitems_arr[$stockitem['id']] = $stockitem->name." - qty(".$stockitem->qty.") - Price for unit : ".$stockitem->unitPrice."";
 		}
 		//"itemtovehicles"=>"same item to multiple vehicles","itemstovehicle"=>"different items to same vehicle","vehicletowarehouse"=>"items moved to warehouse from vehicle","warehousetowarehouse"=>"items moved from warehouse to warehouse"
+		if($values["action"] == "itemtowarehouse"){
+			return view::make("inventory.usestockfields",array("values"=>$values));
+		}
 		if($values["action"] == "itemtovehicles"){
 			return view::make("inventory.usestockfields",array("values"=>$values));
 		}
@@ -954,8 +1002,8 @@ class StockController extends \Controller {
 		
 		$select_args = array("inventorylookupvalues.name as unitsOfMeasure");
 		$item = \PurchasedItems::where("purchased_items.id","=",$itemid)
-					->join("items","items.id","=","purchased_items.itemId")
-					->join("inventorylookupvalues","inventorylookupvalues.id","=","items.unitsOfMeasure")
+					->leftjoin("items","items.id","=","purchased_items.itemId")
+					->leftjoin("inventorylookupvalues","inventorylookupvalues.id","=","items.unitsOfMeasure")
 					->select($select_args)->first();
 		$jsondata["units"] = $item->unitsOfMeasure;
 		echo json_encode($jsondata);

@@ -207,18 +207,25 @@
 										</div>
 									</div>
 									 -->
+									 <div class="form-group">
+										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Clients </label>
+										<div class="col-xs-8">
+											<select class="form-control chosen-select"   id="clients" name="clients[]" onchange="getClientBranches()" multiple="multiple">
+												<?php 
+													$roles = \Client::where("status","=","ACTIVE")->get();
+													foreach ($roles as $role){
+														echo "<option value='".$role->id."'>".$role->name."</option>";
+													}
+												?>
+											</select>												
+										</div>
+									</div>
+									
 									<div class="form-group">
 										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Client Branches<span style="color:red;"></span> </label>
 										<div class="col-xs-8">
 											<select class="form-control chosen-select"   id="clientbranches" name="clientbranches[]"  multiple="multiple">
 												<option value="">ALL</option>
-												<?php 
-													$select_args = array();
-													$roles = \Depot::All();
-													foreach ($roles as $role){
-														echo "<option value='".$role->id."'>".$role->name."</option>";
-													}
-												?>												
 											</select>
 										</div>
 									</div>
@@ -718,7 +725,7 @@
 			}
 
 			function changeCity(val){
-				$.ajax({
+			   $.ajax({
 			      url: "getbranchbycityid?id="+val,
 			      success: function(data) {
 			    	  $("#branch").html(data);
@@ -729,6 +736,21 @@
 			}
 
 			$('.input-mask-card').mask('9999-9999-9999-9999');
+
+			function getClientBranches(){
+				var vals = ""; 
+				$('#clients :selected').each(function(i, selected){ 
+					vals = vals+$(selected).val()+","; 
+				});
+				$.ajax({
+			      url: "getclientbranches?clientids="+vals,
+			      success: function(data) {
+				      $("#clientbranches").html(data);
+			    	 $('.chosen-select').trigger("chosen:updated");	
+			      },
+			      type: 'GET'
+			   });
+			}
 
 			$("#family_add").on("click",function(){
 				ele = $('#family_fields:first-child').clone();

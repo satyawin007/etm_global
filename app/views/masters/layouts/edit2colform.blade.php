@@ -203,6 +203,7 @@
 						todayHighlight: true
 					  });
 			    	  $("#addfields").show();
+			    	  $('.chosen-select').trigger("chosen:updated");	
 			      },
 			      type: 'GET'
 			   });
@@ -227,6 +228,7 @@
 			      url: "getcitiesbystateid?id="+val,
 			      success: function(data) {
 			    	  $("#cityname").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");	
 			      },
 			      type: 'GET'
 			   });
@@ -237,6 +239,7 @@
 			      url: "getfinancecompanybycityid?id="+val,
 			      success: function(data) {
 			    	  $("#financecompany").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");	
 			      },
 			      type: 'GET'
 			   });

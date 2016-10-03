@@ -168,7 +168,7 @@
 						<?php foreach ($form_fields as $form_field) {?>
 							<div class="col-xs-12">
 							<?php if($form_field['type'] === "text" || $form_field['type'] === "email" ||$form_field['type'] === "number" || $form_field['type'] === "password"){ ?>
-							<div class="form-group" >
+							<div <?php if(strpos($form_field['class'], 'driversarea') !== false) echo 'class="form-group driversarea"'; else echo 'class="form-group"'; ?> >
 								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 								<div class="col-xs-8">
 									<input {{$form_field['readonly']}} ng-model="{{$form_field['name']}}"  type="{{$form_field['type']}}" id="{{$form_field['name']}}" {{$form_field['required']}} name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
@@ -213,7 +213,7 @@
 							</div>
 							<?php } ?>
 							<?php if($form_field['type'] === "select"){ ?>
-							<div class="form-group">
+							<div <?php if(strpos($form_field['class'], 'driversarea') !== false) echo 'class="form-group driversarea"'; else echo 'class="form-group"'; ?> >
 								<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 								<div class="col-xs-8">
 									<select class="{{$form_field['class']}}" ng-model="{{$form_field['name']}}" <?php if(isset($form_field['id'])) { echo 'id="'.$form_field['id'].'"'; } else { echo 'id="'.$form_field['name'].'"'; }?>  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>  <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
@@ -242,7 +242,7 @@
 										?>
 										<div class="checkbox inline">
 											<label>
-												<input name="{{$key}}" ng-model="{{$form_field['name']}}" value="YES" type="checkbox" class="ace">
+												<input name="{{$key}}" id="{{$key}}" ng-model="{{$form_field['name']}}" value="YES" type="checkbox" class="ace">
 												<span class="lbl">&nbsp;{{$key}} &nbsp;&nbsp;</span>
 											</label>
 										</div>
@@ -258,16 +258,17 @@
 							<div class="col-xs-2"><input class="btn btn-xs" type="button" id="updaterowbtn" ng-click="updateRow()" value="  UPDATE  "/></div>
 						</div>
 						</div>
-						<div class="col-xs-8">
+						<div class="col-xs-8" style="min-height:600px;  max-height: 600px; overflow:scroll;">
 							<table class="table table-striped table-bordered table-hover">
 								<thead>
 									<tr>
 										<th>VEHICLE</th>
 										<th>TYPE</th>
-										<th>DRIVER1</th>
-										<th>DRIVER2</th>
+										<th>DRIVERS</th>
 										<th>HELPER</th>
 										<th>START DT</th>
+										<th>FLOOR RATE</th>
+										<th>ROUTES</th>
 										<th>STATUS</th>
 										<th>REMARKS</th>
 										<th>ACTIONS</th>
@@ -276,10 +277,11 @@
 								<tr ng-repeat="vehicle in vehicles_text">
 									<td>@{{vehicle.vehicle}}</td>
 									<td>@{{vehicle.vehicletype}}</td>
-									<td>@{{vehicle.driver1}}</td>
-									<td>@{{vehicle.driver2}}</td>
-									<td>@{{vehicle.helper}}</td>
+									<td>@{{vehicle.driver1}}(@{{vehicle.drv1dt}}), @{{vehicle.driver2}}(@{{vehicle.drv2dt}}), @{{vehicle.driver3}}(@{{vehicle.drv3dt}}), @{{vehicle.driver4}}(@{{vehicle.drv4dt}}), @{{vehicle.driver5}}(@{{vehicle.drv5dt}})</td>
+									<td>@{{vehicle.helper}}(@{{vehicle.helperdt}})</td>
 									<td>@{{vehicle.startdt}}</td>
+									<td>@{{vehicle.floorrate}}</td>
+									<td>@{{vehicle.routes}}</td>
 									<td>@{{vehicle.status}} @{{vehicle['date'] ? "("+vehicle['date']+")" : ''}}</td>
 									<td>@{{vehicle.remarks}}</td>
 									<?php 

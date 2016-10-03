@@ -25,11 +25,35 @@
 		$warehouse_arr_total[$warehouse->name] = $warehouse_arr;
 	}
 	
-	$vehicles =  \Vehicle::all();
 	$vehicles_arr = array();
-	foreach ($vehicles as $vehicle){
-		$vehicles_arr[$vehicle['id']] = $vehicle->veh_reg;
+	if(isset($values["warehouseid"]) && $values["warehouseid"]>1000){
+		$emp_contracts = \Auth::user()->clientIds;
+		$depots = null;
+		if($emp_contracts=="" || $emp_contracts==0){
+			$depots = \Client::where("status","=","ACTIVE")->get();
+		}
+		else{
+			$emp_contracts = explode(",", $emp_contracts);
+			$depots = \Client::whereIn("id",$emp_contracts)
+						->where("clients.status","=","ACTIVE")
+						->select(array("clients.id as id","clients.name as name"))->groupBy("clients.id")->get();
+		}
+		$clients_arr = array();
+		foreach ($depots as $depot){
+			$clients_arr[] = $depot->id;
+		}
+		$vehicles = ContractVehicle::leftjoin("contracts","contracts.id","=","contract_vehicles.contractId")
+						->leftjoin("clients","clients.id","=","contracts.clientId")
+						->leftjoin("depots","depots.id","=","contracts.depotId")
+						->leftjoin("vehicle","vehicle.id","=","contract_vehicles.vehicleId")
+						->where("contracts.depotId","=", $values["warehouseid"])
+						->whereIn("contracts.clientId",$clients_arr)
+						->select(array("vehicle.id as id", "vehicle.veh_reg as veh_reg"))->get();
+			foreach ($vehicles as $vehicle){
+				$vehicles_arr[$vehicle['id']] = $vehicle->veh_reg;
+			}
 	}
+	
 	
 	$items_arr = array();
 	$items =  \Items::where("status","=","ACTIVE")->get();
@@ -46,28 +70,38 @@
 	
 	$select_fields = array();
 	$select_fields[] = "items.name as name";
+	$select_fields[] = "item_types.name as typename";
 	$select_fields[] = "purchased_items.qty as qty";
 	$select_fields[] = "purchased_items.unitPrice as unitPrice";
 	$select_fields[] = "creditsuppliers.supplierName as creditSupplier";
 	$select_fields[] = "purchase_orders.billNumber as billNo";
 	$select_fields[] = "purchased_items.id as id";
 	
-	$stockitems =  \PurchasedItems::where("purchase_orders.officeBranchId","=",$values["warehouseid"])
+	$sql =  \PurchasedItems::where("purchase_orders.officeBranchId","=",$values["warehouseid"])
 					->where("purchased_items.status","=","ACTIVE")
 					->where("purchased_items.qty",">",0)
 					->where("purchase_orders.status","=","ACTIVE")
-					->join("purchase_orders","purchased_items.purchasedOrderId","=","purchase_orders.id")
-					->join("items","purchased_items.itemId","=","items.id")
-					->join("creditsuppliers","purchase_orders.creditSupplierId","=","creditsuppliers.id")
-					->select($select_fields)->get();
+					//->where("purchase_orders.type","=","PURCHASE ORDER")
+					->where("purchase_orders.workFlowStatus","=","Approved");
+					if(isset($values["stocktype"]) && $values["stocktype"]=="office"){
+						$sql->where("purchase_orders.type","=","OFFICE PURCHASE ORDER");
+					}
+					else{
+						$sql->where("purchase_orders.type","!=","OFFICE PURCHASE ORDER");
+					}
+					$sql->leftjoin("purchase_orders","purchased_items.purchasedOrderId","=","purchase_orders.id")
+					->leftjoin("items","purchased_items.itemId","=","items.id")
+					->leftjoin("item_types","purchased_items.itemTypeId","=","item_types.id")
+					->leftjoin("creditsuppliers","purchase_orders.creditSupplierId","=","creditsuppliers.id");
+	$stockitems =   $sql->select($select_fields)->get();
 	$stockitems_arr = array();
 	foreach ($stockitems as $stockitem){
-		$stockitems_arr[$stockitem['id']] = $stockitem->name." - qty(".$stockitem->qty.") - ".$stockitem->creditSupplier."(".$stockitem->billNo.")";
+		$stockitems_arr[$stockitem['id']] = $stockitem->name."(".$stockitem->typename.") - qty(".$stockitem->qty.") - ".$stockitem->creditSupplier."(".$stockitem->billNo.")";
 	}
 	//print_r($values); die();
 ?>
 
-<?php if($values["action"] == "itemtovehicles" || $values["action"] == "itemstovehicle" || $values["action"] == "vehicletowarehouse"){
+<?php if($values["action"] == "itemtovehicles" || $values["action"] == "itemtowarehouse" || $values["action"] == "itemstovehicle" || $values["action"] == "vehicletowarehouse"){
 	$form_fields = array();
 	$form_field = array("name"=>"item", "id"=>"item",  "content"=>"item", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange","script"=>"getItemInfo(this.value)"),   "options"=>$stockitems_arr);
 	$form_fields[] = $form_field;
@@ -82,6 +116,8 @@
 	$form_field = array("name"=>"qty", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"vehicle", "id"=>"vehicle",  "content"=>"vehicle", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
+	$form_fields[] = $form_field;
+	$form_field = array("name"=>"meeterreading", "id"=>"meeterreading",  "content"=>"meeter reading", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"remarks", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 	$form_fields[] = $form_field;
@@ -269,7 +305,7 @@
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"enableincharge", "content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "content"=>"payment type", "readonly"=>"", "required"=>"required","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","neft"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"), "class"=>"form-control");
+		$form_field = array("name"=>"paymenttype", "content"=>"payment type", "readonly"=>"", "required"=>"required","type"=>"select", "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"), "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incharges_arr);
 		$form_fields[] = $form_field;

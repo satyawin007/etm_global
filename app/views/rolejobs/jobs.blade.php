@@ -260,8 +260,8 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr = array();
                                             		$menu_arr[] = "create EMPLOYEE ";
                                             		$menu_arr[] = "salary add/edit of EMPLOYEE";
-                                            		$menu_arr[] = "edit  EMPLOYEE";
-                                            		$menu_arr[] = "terminate  EMPLOYEE";
+                                            		$menu_arr[] = "edit OFFICE EMPLOYEE";
+                                            		$menu_arr[] = "edit NON OFFICE EMPLOYEE";
                                             		$menu_arr[] = "block  EMPLOYEE";
                                             		$menu_arr[] = "create STATE";
                                             		$menu_arr[] = "edit STATE";
@@ -473,10 +473,16 @@ use Illuminate\Support\Facades\Input;
                                             		
                                             		$menu_arr[] = "add ATTENDENCE";
                                             		$menu_arr[] = "manage ATTENDENCE";
+                                            		$menu_arr[] = "pay DRIVERS/HELPERS SALARY";
+                                            		$menu_arr[] = "pay OFFICE EMPLOYEES SALARY ";
+                                            		$menu_arr[] = "create SALARY ADVANCES";
+                                            		$menu_arr[] = "manage SALARY ADVANCES";
+                                            		$menu_arr[] = "create EMPLOYEE LEAVES";
+                                            		$menu_arr[] = "manage EMPLOYEE LEAVES";
                                             		$i=301;
                                             		foreach ($menu_arr as $menu_item){
                                             			$chk = "";
-                                            			if(in_array($i, $jobs_arr)){
+                                            			if(in_array($i, $jobs_arr)){       
                                             				$chk = " checked ";
                                             			}
                                             	?>
@@ -512,9 +518,74 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "workflow of REPAIR TRANSACTION";
                                             		$menu_arr[] = "workflow of PURCHASE TRANSACTION";
                                             		$menu_arr[] = "workflow of INCHARGE TRANSACTION";
+                                            		$menu_arr[] = "workflow of EXPENSE TRANSACTION";
                                             		$menu_arr[] = "workflow of AUTHORIZATION";
                                             		
                                             		$i=501;
+                                            		foreach ($menu_arr as $menu_item){
+                                            			$chk = "";
+                                            			if(in_array($i, $jobs_arr)){
+                                            				$chk = " checked ";
+                                            			}
+                                            	?>
+                                                <div class="col-sm-6 ng-scope" ng-repeat="subPrivlge in privlage[$index].sub_priv">
+                                                    <div class="checkbox" style="margin-bottom: 0px; margin-top: 2px;">
+                                                        <label class="ng-binding">
+                                                        	<input type="checkbox" name="ids[]" value="{{$i}}"  id="{{$i}}" onclick="changeVal(this.value)"  {{$chk}} class="ng-pristine ng-untouched ng-valid">
+                                                            {{$menu_item}}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <?php $i++; }?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-repeat="categry in categoty" class="ng-scope">
+                                    <div class="col-sm-12" style="padding-left: 0px; padding-right: 0px; ">
+                                        <div style="margin-top: 10px; background-color:#666666; color: #ffffff; margin-bottom: 0px; margin-left: -1px; margin-right: -1px;">
+                                            <div class="checkbox" style=" margin-bottom: 0px;padding-left: 40px;">
+                                                <label class="ng-binding">
+                                                    <input type="checkbox" id="tab9" class="ng-pristine ng-untouched ng-valid">
+                                                    Reports Operations
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 ng-scope" ng-repeat="privlge in privlage">
+                                            <div ng-if="categry.id===privlge.id" class="col-sm-12 ng-scope">
+                                                 <?php 
+                                            		$menu_arr = array();
+                                            		$menu_arr[] = "DAILY TRANSACTION";
+                                            		$menu_arr[] = "DAILY FINANCE REPORT";
+                                            		$menu_arr[] = "DAILY FINANCE DETAILS REPORT";
+                                            		$menu_arr[] = "FUEL TRACKING REPORT";
+                                            		$menu_arr[] = "CREDIT SUPPLIER REPORT";
+                                            		$menu_arr[] = "VEHICLE MILEAGE REPORT";
+                                            		$menu_arr[] = "VEHICLE MILEAGE REPORT (FULL)";
+                                            		$menu_arr[] = "VEHICLE PERFORMANCE REPORT";
+                                            		$menu_arr[] = "CLIENT VEHICLE TRIPS REPORT";
+                                            		$menu_arr[] = "VEHICLE VERIFICATION REPORT";
+                                            		$menu_arr[] = "HOLIDAYS RUNNING REPORT";
+                                            		$menu_arr[] = "EXTRA KMS REPORT";
+                                            		$menu_arr[] = "SALARY ADVANCES";
+                                            		$menu_arr[] = "SALARY REPORT";
+                                            		$menu_arr[] = "ESTIMATED SALARY REPORT";
+                                            		$menu_arr[] = "ATTENDENCE";
+                                            		$menu_arr[] = "ATTENDENCE DETAILED";
+                                            		$menu_arr[] = "INCHARGE TRANSACTIONS";
+                                            		$menu_arr[] = "LOANS REPORT";
+                                            		$menu_arr[] = "BANK POSITION REPORT";
+                                            		$menu_arr[] = "LOGIN DETAILS";
+                                            		$menu_arr[] = "EMPLOYEE MAIN LOGIN DETAILS";
+                                            		$menu_arr[] = "STOCK PURCHASE REPORT";
+                                            		$menu_arr[] = "VEHICLE-STOCK HISTORY REPORT";
+                                            		$menu_arr[] = "INVENTORY REPORT";
+                                            		$menu_arr[] = "OFFICE INVENTORY REPORT";
+                                            		$menu_arr[] = "REPAIR STOCK REPORT";
+                                            		$menu_arr[] = "SERVICE LOG DETAILS";
+                                            		$menu_arr[] = "CLIENT HOLIDAYS WORKING REPORT";
+                                            		
+                                            		$i=601;
                                             		foreach ($menu_arr as $menu_item){
                                             			$chk = "";
                                             			if(in_array($i, $jobs_arr)){
@@ -699,6 +770,20 @@ use Illuminate\Support\Facades\Input;
 				   }
 				   else{
 					   for(i=501;i<550; i++){
+						 $("#"+i).prop("checked",false);
+					   }
+				   }
+				});
+				
+			   $("#tab9").on("click",function(){
+				   val = $("#tab9").prop("checked");
+				   if(val){
+					 for(i=601;i<650; i++){
+						 $("#"+i).prop("checked",true);
+					 }
+				   }
+				   else{
+					   for(i=601;i<650; i++){
 						 $("#"+i).prop("checked",false);
 					   }
 				   }

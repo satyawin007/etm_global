@@ -13,15 +13,16 @@ class ItemsController extends \Controller {
 	{
 		if (\Request::isMethod('post'))
 		{
+			//$values["dsaf"];
 			$values = Input::all();
-			$field_names = array("name"=>"name","number"=>"number","shortname"=>"shortName",
+			$field_names = array("name"=>"name","number"=>"number","shortname"=>"shortName","stocktype"=>"stockType",
 						"description"=>"description","units"=>"unitsOfMeasure","tags"=>"tags",
 						"model"=>"itemModel","itemtype"=>"itemTypeId","manufacturer"=>"manufactures",
 						"itemactions"=>"itemActions","stockable"=>"stockable","expirable"=>"expirable",
 						"needalert"=>"needAlert", "itemnumber"=>"itemNumber");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
-				if((isset($values[$key]) && $key == "manufacturer") || (isset($values[$key]) && $key == "itemactions")){
+				if((isset($values[$key]) && $key == "manufacturer") || (isset($values[$key]) && $key == "itemactions") || (isset($values[$key]) && $key == "itemtype")){
 					$mans = "";
 					foreach ($values[$key] as $i){
 						$mans = $mans.$i.",";
@@ -58,12 +59,12 @@ class ItemsController extends \Controller {
 		{
 			$values = Input::all();
 			$field_names = array("name"=>"name","number"=>"number","shortname"=>"shortName","description"=>"description",
-								"units"=>"unitsOfMeasure","tags"=>"tags","model"=>"itemModel",
+								"units"=>"unitsOfMeasure","tags"=>"tags","model"=>"itemModel","status"=>"status","stocktype"=>"stockType",
 								"itemtype"=>"itemTypeId","manufacturer"=>"manufactures","itemactions"=>"itemActions",
 								"stockable"=>"stockable","expirable"=>"expirable","needalert"=>"needAlert", "itemnumber"=>"itemNumber");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
-				if((isset($values[$key]) && $key == "manufacturer") || (isset($values[$key]) && $key == "itemactions")){
+				if((isset($values[$key]) && $key == "manufacturer") || (isset($values[$key]) && $key == "itemactions") || (isset($values[$key]) && $key == "itemtype")){
 					$mans = "";
 					foreach ($values[$key] as $i){
 						$mans = $mans.$i.",";
@@ -142,17 +143,19 @@ class ItemsController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"description", "value"=>$entity->description,  "content"=>"description", "readonly"=>"",  "required"=>"","type"=>"textarea", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"units", "id"=>"units", "value"=>$entity->unitsOfMeasure,  "content"=>"units of measure", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$units_arr, "class"=>"form-control");
+			$form_field = array("name"=>"units", "id"=>"units", "value"=>$entity->unitsOfMeasure,  "content"=>"units of measure", "readonly"=>"",  "required"=>"", "type"=>"select", "options"=>$units_arr, "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"tags", "value"=>$entity->tags,  "content"=>"tags", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"itemtype", "id"=>"itemtype", "value"=>$entity->itemTypeId,  "content"=>"item type", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$itemtypes_arr, "class"=>"form-control chosen-select");
+			$form_field = array("name"=>"itemtype[]", "id"=>"itemtype", "value"=>explode(",", $entity->itemTypeId),  "content"=>"item type", "readonly"=>"",  "required"=>"", "type"=>"select", "multiple"=>"multiple", "options"=>$itemtypes_arr, "class"=>"form-control chosen-select");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"model", "value"=>$entity->itemModel,  "content"=>"item model", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"manufacturer[]", "id"=>"manufacturer", "value"=>explode(",", $entity->manufactures),  "content"=>"manufacturer", "readonly"=>"",  "required"=>"required", "multiple"=>"multiple", "type"=>"select", "options"=>$manufacturers_arr, "class"=>"form-control chosen-select");
+			$form_field = array("name"=>"manufacturer[]", "id"=>"manufacturer", "value"=>explode(",", $entity->manufactures),  "content"=>"manufacturer", "readonly"=>"",  "required"=>"", "multiple"=>"multiple", "type"=>"select", "options"=>$manufacturers_arr, "class"=>"form-control chosen-select");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"itemactions[]", "id"=>"itemactions", "value"=>explode(",", $entity->itemActions),  "content"=>"item actions", "readonly"=>"",  "required"=>"", "multiple"=>"multiple", "type"=>"select", "options"=>$itemactions_arr, "class"=>"form-control chosen-select");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"stocktype", "value"=>$entity->stockType,  "content"=>"stock type", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("OFFICE"=>"OFFICE","NON OFFICE"=>"NON OFFICE"), "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"needalert", "value"=>$entity->needAlert,  "content"=>"need alert", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -161,6 +164,8 @@ class ItemsController extends \Controller {
 			$form_field = array("name"=>"expirable", "value"=>$entity->expirable,  "content"=>"expirable", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"itemnumber", "content"=>"item number", "value"=>$entity->itemNumber, "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"status", "id"=>"status", "value"=>$entity->status,  "content"=>"status", "readonly"=>"",  "required"=>"", "type"=>"select", "options"=>array("ACTIVE"=>"ACTIVE","INACTIVE"=>"INACTIVE"), "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"id", "value"=>$entity->id,  "content"=>"", "readonly"=>"",  "required"=>"", "type"=>"hidden", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -248,13 +253,15 @@ class ItemsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"tags", "content"=>"tags", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"itemtype", "content"=>"item type", "readonly"=>"",  "required"=>"required", "type"=>"select", "options"=>$itemtypes_arr, "class"=>"form-control chosen-select");
+		$form_field = array("name"=>"itemtype[]", "content"=>"item type", "readonly"=>"",  "required"=>"required", "type"=>"select", "multiple"=>"multiple", "options"=>$itemtypes_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"model", "content"=>"item model", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"manufacturer[]", "content"=>"manufacturer", "readonly"=>"",  "required"=>"required", "multiple"=>"multiple", "type"=>"select", "options"=>$manufacturers_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"itemactions[]", "content"=>"item actions", "readonly"=>"",  "required"=>"", "multiple"=>"multiple", "type"=>"select", "options"=>$itemactions_arr, "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"stocktype", "content"=>"stock type", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("OFFICE"=>"OFFICE","NON OFFICE"=>"NON OFFICE"), "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"needalert", "content"=>"need alert", "readonly"=>"",  "required"=>"", "type"=>"radio", "options"=>array("Yes"=>"Yes","No"=>"No"), "class"=>"form-control");
 		$form_fields[] = $form_field;

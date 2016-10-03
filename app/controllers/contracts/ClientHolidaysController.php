@@ -29,8 +29,17 @@ class ClientHolidaysController extends \Controller {
 			}
 			$contract = \Contract::where("clientId","=",$values["clientname"])->where("depotId","=",$values["depot"])->first();
 			if($contract != null){
+				$fdt = date("Y-m-d",strtotime($fields["fromDate"]));
+				$tdt = date("Y-m-d",strtotime($fields["toDate"]));
+				$ex_recs = \ClientHolidays::whereRaw("contractId=$contract->id and ((fromDate between '$fdt' and '$tdt') or  (toDate between '$fdt' and '$tdt'))")
+							->get();
+				if(count($ex_recs)>0){
+					\Session::put("message","From Date or To Date is already Existed");
+					return \Redirect::to("clientholidays");
+				}
 				$fields["contractId"] = $contract->id;
 				$fields["deleted"] = "No";
+				$fields["opened_at"] = date("Y-m-d h:i");
 				$db_functions_ctrl = new DBFunctionsController();
 				$table = "ClientHolidays";
 				if($db_functions_ctrl->insert($table, $fields)){
@@ -215,7 +224,7 @@ class ClientHolidaysController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"comments", "content"=>"comments", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"status", "content"=>"status", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control", "options"=>array("Open"=>"Open","Pending"=>"Pending","Requested"=>"Requested","Closed"=>"Closed"));
+		$form_field = array("name"=>"status", "content"=>"status", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control", "options"=>array("Requested"=>"Requested","Closed"=>"Closed"));
 		$form_fields[] = $form_field;
 		
 		$form_info["form_fields"] = $form_fields;

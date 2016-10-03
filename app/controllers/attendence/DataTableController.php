@@ -60,7 +60,7 @@ class DataTableController extends \Controller {
 		//$values["DSF"];
 		$total = 0;
 		$data = array();
-		$select_args = array("employee.id", "employee.fullName", "employee.empCode", "employee.joiningDate", "employee.terminationDate");
+		$select_args = array("employee.id", "employee.fullName", "employee.empCode", "employee.joiningDate", "employee.terminationDate", "employee.status");
 	
 		$actions = array();
 		$values["actions"] = $actions;
@@ -81,21 +81,54 @@ class DataTableController extends \Controller {
 		}
 		else{
 			if($values["employeetype"] == "CLIENT BRANCH"){
-				\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["client"]."');"));
-				$entities = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
-				$total = count($entities);
+				//$length = 25; //$values["length"];
+				//$start = $values["start"];
+				if($values["depot"]=="0"){
+					\DB::statement(\DB::raw("CALL contract_driver_helper_all('".$values["client"]."');"));
+				}
+				else {
+					\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["client"]."');"));
+				}
+				$entities = $users = \DB::table('temp_contract_drivers_helpers')->skip($start)->take($length)->get(); //\DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id limit $length,0"));
+				$total = $users = \DB::table('temp_contract_drivers_helpers')->count();
 			}
 			else{
-				$entities = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")
-							->select($select_args)->limit($length)->offset($start)->get();
-				$total = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->count();
+				$entities = \Employee::whereRaw(" (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")
+										->select($select_args)->limit($length)->offset($start)->get();
+				$total = \Employee::whereRaw(" (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->count();
 			}
 		}
 	
 		//$entities = $entities->toArray();
 		foreach($entities as $entity){
+			$date1 = strtotime(date("Y-m-d",strtotime($entity->terminationDate)));
+			$month = date("m",strtotime($values["date"]));
+			$year = date("Y",strtotime($values["date"]));
+			$dt = (date("d-m-Y",strtotime("01"."-".$month."-".$year)));
+			$date2 = strtotime(date("Y-m-d",strtotime($dt)));
+			if($entity->terminationDate!="" && $entity->terminationDate!="0000-00-00" && $date1 != "1970-01-01" && $date1<$date2){
+				continue;
+			}
 			$data_values = array();
-			$data_values[] = $entity->fullName."(".$entity->empCode.")";
+			$branch = "";
+			if($values["employeetype"] == "CLIENT BRANCH"){
+				$emp = \ContractVehicle::whereRaw(" contract_vehicles.status='ACTIVE' and (driver1Id=".$entity->id." or driver2Id=".$entity->id." or driver3Id=".$entity->id." or driver4Id=".$entity->id." or driver5Id=".$entity->id." or helperId=".$entity->id.")")
+										->leftjoin("contracts","contracts.id","=","contract_vehicles.contractId")
+										->leftjoin("depots","depots.id","=","contracts.depotId")
+										->select(array("depots.name as dname"))->get();
+				if(count($emp)>0){
+					$emp = $emp[0];
+					$branch = "-".$emp->dname;
+				}
+			}
+			else{
+				/*$emp = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and  empCode=".$entity->empCode." and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->get();
+				if(count($emp)>0){
+					$emp = $emp[0];					
+				}
+				*/
+			}
+			$data_values[] = $entity->fullName."(".$entity->empCode.")".$branch;
 			$month = date("m",strtotime($values["date"]));
 			$year = date("Y",strtotime($values["date"]));
 			$date = date_create(date("d-m-Y",strtotime("01"."-".$month."-".$year)));
@@ -215,7 +248,7 @@ class DataTableController extends \Controller {
 		//$values["DSF"];
 		$total = 0;
 		$data = array();
-		$select_args = array("employee.id", "employee.fullName", "employee.empCode");
+		$select_args = array("employee.id", "employee.fullName", "employee.empCode", "employee.joiningDate", "employee.terminationDate");
 	
 		$actions = array();
 		$values["actions"] = $actions;
@@ -236,21 +269,54 @@ class DataTableController extends \Controller {
 		}
 		else{
 			if($values["employeetype"] == "CLIENT BRANCH"){
-				\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["client"]."');"));
-				$entities = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id"));
-				$total = count($entities);
+				if(isset($values["depot"]) && $values["depot"]==0){
+					\DB::statement(\DB::raw("CALL contract_driver_helper_all('".$values["client"]."');"));
+				}
+				else{
+					\DB::statement(\DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["client"]."');"));
+				}
+				$entities = \DB::select( \DB::raw("select * from temp_contract_drivers_helpers group by id limit $start,$length"));
+				$total = \DB::select( \DB::raw("select count(*) as cnt from temp_contract_drivers_helpers group by id"));
+				$total = count($total);
+				
 			}
 			else{
-				$entities = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")
+				$entities = \Employee::whereRaw(" (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")
 							->select($select_args)->limit($length)->offset($start)->get();
-				$total = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->count();
+				$total = \Employee::whereRaw(" (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->count();
 			}
 		}
 	
 		//$entities = $entities->toArray();
 		foreach($entities as $entity){
+			$date1 = strtotime(date("Y-m-d",strtotime($entity->terminationDate)));
+			$month = date("m",strtotime($values["date"]));
+			$year = date("Y",strtotime($values["date"]));
+			$dt = (date("d-m-Y",strtotime("01"."-".$month."-".$year)));
+			$date2 = strtotime(date("Y-m-d",strtotime($dt)));
+			if($entity->terminationDate!="" && $entity->terminationDate!="0000-00-00" && $date1 != "1970-01-01" && $date1<$date2){
+				continue;
+			}
 			$data_values = array();
-			$data_values[] = $entity->fullName."(".$entity->empCode.")";
+			$branch = "";
+			if($values["employeetype"] == "CLIENT BRANCH"){
+				$emp = \ContractVehicle::whereRaw(" contract_vehicles.status='ACTIVE' and (driver1Id=".$entity->id." or driver2Id=".$entity->id." or driver3Id=".$entity->id." or driver4Id=".$entity->id." or driver5Id=".$entity->id." or helperId=".$entity->id.")")
+				->leftjoin("contracts","contracts.id","=","contract_vehicles.contractId")
+				->leftjoin("depots","depots.id","=","contracts.depotId")
+				->select(array("depots.name as dname"))->get();
+				if(count($emp)>0){
+					$emp = $emp[0];
+					$branch = "-".$emp->dname;
+				}
+			}
+			else{
+				/*$emp = \Employee::whereRaw(" status='ACTIVE' and (roleId!=20 and roleId!=19) and  empCode=".$entity->empCode." and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)")->get();
+				 if(count($emp)>0){
+				 $emp = $emp[0];
+				 }
+				 */
+			}
+			$data_values[] = $entity->fullName."(".$entity->empCode.")".$branch;
 			$month = date("m",strtotime($values["date"]));
 			$year = date("Y",strtotime($values["date"]));
 			$date = date_create(date("d-m-Y",strtotime("01"."-".$month."-".$year)));
@@ -269,6 +335,23 @@ class DataTableController extends \Controller {
 			}
 				
 			for($i=0; $i<=$diff; $i++){
+				$date1 = strtotime(date("Y-m-d",strtotime($entity->joiningDate)));
+				$date2 = strtotime(date("Y-m-d",strtotime(date_format($date, 'Y-m-d'))));
+				$date3 = strtotime(date('Y-m-01'));
+				
+				if($date1>$date2){
+					$date = date_add($date, date_interval_create_from_date_string('1 days'));
+					$data_values[] = "";
+					continue;
+				}
+				$date1 = strtotime(date("Y-m-d",strtotime($entity->terminationDate)));
+				$date2 = strtotime(date("Y-m-d",strtotime(date_format($date, 'Y-m-d'))));
+				
+				if($entity->terminationDate!="" && $entity->terminationDate!="0000-00-00" && $date1 != "1970-01-01" && $date1<$date2){
+					$date = date_add($date, date_interval_create_from_date_string('1 days'));
+					$data_values[] = "";
+					continue;
+				}
 				$isHoliday = false;
 				$qry = \AttendenceLog::where("date","=",date_format($date, 'Y-m-d'));
 						if($values["employeetype"] == "CLIENT BRANCH"){
@@ -311,7 +394,10 @@ class DataTableController extends \Controller {
 						$emp = $emp[0];
 						if($emp->substituteId>0){
 							$substitute = \Employee::where("id","=",$emp->substituteId)->first();
-							$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
+							$emp->substituteId = "";
+							if(count($substitute)>0){
+								$emp->substituteId = $substitute->fullName."(".$substitute->empCode.")";
+							}
 						}
 						if(($emp->day=="HOLIDAY" && $emp->session==$values["session"]) || $isHoliday){
 							$data_values[] =  "<span style='font-weight:bold; color:red'>".$emp["attendenceStatus"]."</span>&nbsp;&nbsp;<span style='font-weight:bold; color:red' id='".$entity->id."_".$i."' onclick='showData(\"".$emp["substituteId"]."\", \"".$emp["comments"]."\")'><img style='posistion:absolute; margin-right:-20px; margin-bottom:-15px;' src='../assets/img/corner.png'/></span>";

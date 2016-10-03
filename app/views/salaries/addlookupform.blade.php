@@ -77,7 +77,7 @@
 						<div class="form-group">
 							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 							<div class="col-xs-7">
-								<textarea {{$form_field['readonly']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"></textarea>
+								<textarea {{$form_field['readonly']}}  {{$form_field['required']}}  id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"></textarea>
 							</div>			
 						</div>
 						<?php } ?>
@@ -119,12 +119,21 @@
 						<div class="form-group">
 							<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 							<div class="col-xs-7 ">
+								<?php 
+									$fdt = "";
+									$tdt = "";
+									if(isset($form_field['value'])){
+										$arr = explode(",",$form_field['value']);
+										$fdt = $arr[0];
+										$tdt = $arr[1];
+									}									
+								?>
 								<div class="input-daterange input-group">
-										<input type="text" id="fromdate"  style="padding-top: 15px;padding-bottom: 18px;" required="required" name="fromdate" <?php if(isset($form_field['value']))  ?> class="input-sm form-control"/>
+										<input type="text" id="fromdate"  style="padding-top: 15px;padding-bottom: 18px;" required="required" name="fromdate" <?php echo ' value="'.$fdt.'" ';  ?> class="input-sm form-control"/>
 										<span class="input-group-addon">
 											<i class="fa fa-exchange"></i>
 										</span>
-										<input type="text" class="input-sm form-control"  style="padding-top: 15px;padding-bottom: 18px;" id="todate" required="required" <?php if(isset($form_field['value']))?>  name="todate"/>
+										<input type="text" class="input-sm form-control"  style="padding-top: 15px;padding-bottom: 18px;" id="todate" required="required" <?php echo ' value="'.$tdt.'" ';  ?>  name="todate"/>
 									</div>
 							</div>	
 									
@@ -148,8 +157,7 @@
 								</div>
 							</div>
 						<?php } ?>						
-					</div>							
-					
+					</div>
 					<?php } ?>
 					<div id="addfields"></div>
 					<div class="clearfix">
@@ -157,7 +165,7 @@
 							<div class="col-md-offset-5 col-md-5">
 							<button id="reset" class="btn primary" type="submit" onclick="validateForm()" id="submit">
 								<i class="ace-icon fa fa-cross bigger-110"></i>
-								&nbsp;&nbsp;&nbsp;GET&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+								&nbsp;&nbsp;&nbsp;SUBMIT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 							</button>
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 							<button id="reset" class="btn primary" type="reset" >

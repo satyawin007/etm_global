@@ -26,6 +26,7 @@ class VehicleMeeterController extends \Controller {
 					}
 				}
 			}
+			$fields["endReading"] = $fields["startReading"];
 			$db_functions_ctrl = new DBFunctionsController();
 			$table = "\VehicleMeeter"; 
 			$values = array();
@@ -50,13 +51,13 @@ class VehicleMeeterController extends \Controller {
 		$values = Input::all();
 		if (\Request::isMethod('post'))
 		{
-			$field_names = array("meeterno1"=>"meterNo","startdate1"=>"startDate","enddate1"=>"startDate",
+			$field_names = array("meeterno1"=>"meterNo","startdate1"=>"startDate","endtdate1"=>"endDate",
 							"startreading1"=>"startReading","endreading1"=>"endReading","status1"=>"status"
 							);
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
-					if($key == "startdate1" || $key == "enddate1"){
+					if($key == "startdate1" || $key == "endtdate1"){
 						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 					}
 					else {
@@ -201,9 +202,9 @@ class VehicleMeeterController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"endtdate1", "content"=>"end date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"startreading1", "content"=>"start reading", "readonly"=>"readonly",  "required"=>"required","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"startreading1", "content"=>"start reading", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"endreading1", "content"=>"end reading", "readonly"=>"readonly",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_field = array("name"=>"endreading1", "content"=>"end reading", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"status1", "value"=>"", "content"=>"status", "readonly"=>"", "value"=>"", "required"=>"", "type"=>"select", "options"=>array("ACTIVE"=>"ACTIVE","INACTIVE"=>"INACTIVE"), "class"=>"form-control");
 		$form_fields[] = $form_field;

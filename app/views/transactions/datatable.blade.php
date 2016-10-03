@@ -139,7 +139,143 @@ use settings\AppSettingsController;
 		<div class="row" >
 			<div>
 				<div class="row col-xs-12" style="padding-left:2%; padding-top: 2%">
-					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
+					<?php if(($values['bredcum'] == "CONTRACT EXPENSE TRANSACTIONS" || $values['bredcum'] == "EXPENSES TRANSACTIONS") && in_array(305, $jobs)){ ?>
+					<div class="clearfix">
+						<div class="col-xs-12 input-group">
+							<form action="{{$values['form_action']}}" name="paginate" id="paginate">
+							<div class="col-xs-4">
+								<div class="form-group">
+									<label class="col-xs-4 control-label no-padding-right" for="form-field-1">DATE RANGE<span style="color:red;">*</span></label>
+									<div class="col-xs-8">
+										<div class="input-daterange input-group">
+											<input type="text" id="fromdate"  style="padding-top: 15px;padding-bottom: 18px;" required="required" name="fromdate" <?php if(isset($values["fromdate"])) echo " value=".$values["fromdate"]." "; ?> class="input-sm form-control"/>
+											<span class="input-group-addon">
+												<i class="fa fa-exchange"></i>
+											</span>
+											<input type="text" class="input-sm form-control"  style="padding-top: 15px;padding-bottom: 18px;" id="todate" required="required" <?php if(isset($values["fromdate"])) echo " value=".$values["todate"]." "; ?>  name="todate"/>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-xs-4">
+								<?php if(($values['bredcum'] == "CONTRACT FUEL TRANSACTIONS" && in_array(305, $jobs) || 
+										$values['bredcum'] == "CONTRACT EXPENSE TRANSACTIONS" && in_array(305, $jobs) ||
+										$values['bredcum'] == "CONTRACT INCOME TRANSACTIONS" && in_array(305, $jobs))){ ?>
+									<div class="form-group">
+										<div class="col-xs-6">
+											<?php 
+												$form_field = array("name"=>"clientname1", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot1(this.value);"), "class"=>"form-control chosen-select");
+											?>
+											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+												<option value="">-- {{$form_field['name']}} --</option>
+												<?php 
+													$clients =  AppSettingsController::getEmpClients();
+													foreach ($clients as $client){
+														echo '<option value="'.$client['id'].'">'.$client['name'].'</option>'; 
+													}
+												?>
+											</select>
+										</div>
+										<div class="col-xs-6">
+											<?php 
+												$form_field = array("name"=>"depot1", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+											?>
+											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+												<option value="">-- {{$form_field['name']}} --</option>
+											</select>
+										</div>
+									</div>	
+								<?php } else {?>
+									<div class="form-group">
+									<?php 
+										$branches =  AppSettingsController::getEmpBranches();
+										$branches_arr = array();
+										foreach ($branches as $branch){
+											$branches_arr[$branch["id"]] = $branch["name"];
+										}
+										if(!isset($values['branch1'])){
+											$values["branch1"] = 0;
+										}
+									?>
+									<?php $form_field = array("name"=>"branch1", "value"=>$values["branch1"], "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>
+									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+									<div class="col-xs-8">
+										<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+											<option value="">-- {{$form_field['name']}} --</option>
+											<?php 
+												foreach($form_field["options"] as $key => $value){
+													if(isset($form_field['value']) && $form_field['value']==$key) { 
+														echo "<option selected='selected' value='$key'>$value</option>";
+													}
+													else{
+														echo "<option value='$key'>$value</option>";
+													}
+												}
+											?>
+										</select>
+									</div>			
+								</div>
+								<?php } ?>
+							</div>
+							<div class="col-xs-3">
+								<div class="form-group">
+									<?php 
+										$branches = LookupTypeValues::where("parentId","=",22)->get();
+										$branches_arr = array();
+										$branches_arr[0] = "ALL";
+										foreach ($branches as $branch){
+											$branches_arr[$branch["id"]] = $branch["name"];
+										}
+										if(!isset($values['branch1'])){
+											$values["branch1"] = 0;
+										}
+										if(!isset($values['type1'])){
+											$values["expensestype1"] = 0;
+										}
+									?>
+									<?php $form_field = array("name"=>"expensestype1", "value"=>$values["expensestype1"], "content"=>"type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>
+									<label class="col-xs-2 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+									<div class="col-xs-10">
+										<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+											<option value="">-- {{$form_field['name']}} --</option>
+											<?php 
+												foreach($form_field["options"] as $key => $value){
+													if(isset($form_field['value']) && $form_field['value']==$key) { 
+														echo "<option selected='selected' value='$key'>$value</option>";
+													}
+													else{
+														echo "<option value='$key'>$value</option>";
+													}
+												}
+											?>
+										</select>
+									</div>			
+								</div>
+							</div>
+							<input type="hidden" name="transtype_h" id="transtype_h" value="{{$values['transtype']}}"/>
+							<div class="col-xs-1" style="margin-top: 0px; margin-left:-20px; margin-bottom: -10px">
+								<div class="form-group">
+									<label class="col-xs-0 control-label no-padding-right" for="form-field-1"> </label>
+									<div class="col-xs-5">
+										<input class="btn btn-sm btn-primary" type="button" value="GET" onclick="test()"/>
+									</div>			
+								</div>
+							</div>
+							<input type="hidden" name="page" id="page" /> 
+							<?php 
+							if(isset($values['links'])){
+								$links = $values['links'];
+								foreach($links as $link){
+									echo "<a class='btn btn-white btn-success' href=".$link['url'].">".$link['name']."</a> &nbsp; &nbsp; &nbsp";
+								}
+							}
+							?>
+							<?php echo "<input type='hidden' name='action' value='".$values['action_val']."'/>"; ?>					
+							</form>
+						</div>
+						<div class="pull-right tableTools-container"></div>
+					</div>
+					<?php } else {?>
 					<div class="clearfix">
 						<div class="col-xs-12 input-group">
 							<form action="{{$values['form_action']}}" name="paginate" id="paginate">
@@ -240,6 +376,7 @@ use settings\AppSettingsController;
 						</div>
 						<div class="pull-right tableTools-container"></div>
 					</div>
+					<?php }?>
 					<div class="table-header" style="margin-top: 10px;">
 						Results for <?php if(isset($values['transtype'])){ echo '"'.strtoupper($values['transtype'])." TRANCTIONS".'"';} ?>				 
 						<div style="float:right;padding-right: 15px;padding-top: 6px;"><a style="color: white;" href="{{$values['home_url']}}"><i class="ace-icon fa fa-home bigger-200"></i></a> &nbsp; &nbsp; &nbsp; <a style="color: white;"  href="{{$values['add_url']}}"><i class="ace-icon fa fa-plus-circle bigger-200"></i></a></div>				
@@ -428,6 +565,11 @@ use settings\AppSettingsController;
 				if(branch != undefined && branch != ""){
 					url = url+'&branch1='+branch; 
 				}
+
+				expensestype1 = $("#expensestype1").val();
+				if(expensestype1 != undefined && expensestype1 != ""){
+					url = url+'&expensestype1='+expensestype1; 
+				}
 				
 				client1 = $("#clientname1").val();
 				if(client1 != undefined && client1 != ""){
@@ -529,9 +671,13 @@ use settings\AppSettingsController;
 					$('#expensebody').hide();
 					$('#incomebody').hide();
 					$("#formbody").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
-					$("#formbody").show();					
+					$("#formbody").show();	
+					vehiclestatus =  $("input[name=vehiclestatus]:checked").val();
+					if(vehiclestatus == undefined){
+						vehiclestatus = "ACTIVE";
+					}				
 					$.ajax({
-				      url: "getfueltransactionfields?client="+client+"&clientbranch="+clientbranch,
+				      url: "getfueltransactionfields?client="+client+"&clientbranch="+clientbranch+"&vehiclestatus="+vehiclestatus,
 				      success: function(data) {
 				    	  $("#formbody").html(data);
 				    	  $('.date-picker').datepicker({
@@ -619,8 +765,13 @@ use settings\AppSettingsController;
 			function getContractVehicles(val){
 				clientId =  $("#clientname").val();
 				depotId = $("#depot").val();
+				vehiclestatus =  $("input[name=vehiclestatus]:checked").val();
+				if(vehiclestatus == undefined){
+					vehiclestatus = "ACTIVE";
+				}
+				//alert(vehiclestatus);
 				$.ajax({
-			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
+			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&vehiclestatus="+vehiclestatus,
 			      success: function(data) {
 			    	  $("#vehicleno").html(data);
 			    	  $('.chosen-select').trigger("chosen:updated");
@@ -1052,6 +1203,21 @@ use settings\AppSettingsController;
 					alert("enter amount");
 					return false;
 				}
+				bankAccount = $("#bankaccount").val();
+				if(bankAccount != undefined && bankAccount == ""){
+					alert("select Bank Account");
+					return false;
+				}
+				bankid = $("#bankId").val();
+				if(bankid != undefined && bankid == ""){
+					alert("select Bank Account");
+					return false;
+				}
+				chequeNumber = $("#chequenumber").val();
+				if(chequeNumber != undefined && chequeNumber == ""){
+					alert("enter transaction number");
+					return false;
+				}
 				//alert("submit");
 				var myin = document.createElement("input"); 
 				myin.type='hidden'; 
@@ -1059,48 +1225,95 @@ use settings\AppSettingsController;
 				myin.value=$("#transtype_h").val(); 
 				document.getElementById('transactionform').appendChild(myin);
 
-				$.ajax({
-                    url: "{{$form_info['action']}}",
-                    type: "post",
-                    data: $("#{{$form_info['name']}}").serialize(),
-                    success: function(response) {
-                        //alert(response);
-                    	response = jQuery.parseJSON(response);	
-                        if(response.status=="success"){
-                        	var formData = new FormData();
-                        	formData.append('id', response.id);
-                        	formData.append('table', response.table);
-                        	var fileName = $("#billfile").val();
-                        	if(fileName != ""){
-	                        	formData.append('billfile', document.getElementById("billfile").files[0]);
+				if($("#type").val()=="351"){ 
+					temp = $("#bankId").val();
+					temp1 = $("#bankaccount").val();
+					$("#bankaccount").val(temp);
+					$("#bankId").val(temp1);
+					$.ajax({
+	                    url: "{{$form_info['action']}}",
+	                    type: "post",
+	                    data: $("#{{$form_info['name']}}").serialize(),
+	                    success: function(response) {
+	                        //alert(response);
+	                    	response = jQuery.parseJSON(response);	
+	                        if(response.status=="success"){
+	                        	//temp = $("#bankId").val();
+								//temp1 = $("#bankaccount").val();
+								$("#bankaccount").val(temp1);
+								$("#bankId").val(temp);
+	                        	var myin = document.createElement("input"); 
+	            				myin.type='hidden'; 
+	            				myin.name='transtype'; 
+	            				myin.value="income"; 
+	            				document.getElementById('transactionform').appendChild(myin);
 	                        	$.ajax({
-	                        	    type: "POST",
-	                        	    url: "postfile",
-	                        	    data: formData,
-	                        	    processData: false,
-	                        	    contentType: false,
-	                        	    success: function(response1) {
-	                        	    	bootbox.alert(response.message);
-	                        	    	window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
-	                        	    },
-	                        	    error: function(errResponse) {
-	                        	        console.log(errResponse);
-	                        	    }
-	                        	});
-                        	}
-                        	else{
-                        		bootbox.alert(response.message);
-                        		window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
-                        	}
-                            
-                        	
-                        	resetForm("{{$form_info['name']}}");
-                        }
-                        if(response.status=="fail"){
-                        	bootbox.alert(response.message);
-                        }
-                    }
-                });
+	        	                    url: "{{$form_info['action']}}",
+	        	                    type: "post",
+	        	                    data: $("#{{$form_info['name']}}").serialize(),
+	        	                    success: function(response) {
+	        	                        //alert(response);
+	        	                    	response = jQuery.parseJSON(response);	
+	        	                        if(response.status=="success"){
+	        	                            bootbox.alert(response.message);
+	                                		window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
+	        	                        	resetForm("{{$form_info['name']}}");
+	        	                        }
+	        	                        if(response.status=="fail"){
+	        	                        	bootbox.alert(response.message);
+	        	                        }
+	        						}
+	        	                });
+	                        }
+	                        if(response.status=="fail"){
+	                        	bootbox.alert(response.message);
+	                        }
+						}
+	                });
+					
+				}
+				else{
+					$.ajax({
+	                    url: "{{$form_info['action']}}",
+	                    type: "post",
+	                    data: $("#{{$form_info['name']}}").serialize(),
+	                    success: function(response) {
+	                        //alert(response);
+	                    	response = jQuery.parseJSON(response);	
+	                        if(response.status=="success"){
+	                            var formData = new FormData();
+	                        	formData.append('id', response.id);
+	                        	formData.append('table', response.table);
+	                        	var fileName = $("#billfile").val();
+	                        	if(fileName != ""){
+		                        	formData.append('billfile', document.getElementById("billfile").files[0]);
+		                        	$.ajax({
+		                        	    type: "POST",
+		                        	    url: "postfile",
+		                        	    data: formData,
+		                        	    processData: false,
+		                        	    contentType: false,
+		                        	    success: function(response1) {
+	                            			bootbox.alert(response1.message);
+	                            			window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
+		                        	    },
+		                        	    error: function(errResponse) {
+		                        	        console.log(errResponse);
+		                        	    }
+		                        	});
+	                        	}
+	                        	else{
+                        			bootbox.alert(response.message);
+                        			window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
+	                        	}
+	                        	resetForm("{{$form_info['name']}}");
+	                        }
+	                        if(response.status=="fail"){
+	                        	bootbox.alert(response.message);
+	                        }
+						}
+	                });
+				}
 				return false;
 				//$("#{{$form_info['name']}}").submit();
 			});

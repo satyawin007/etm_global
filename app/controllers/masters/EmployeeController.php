@@ -25,7 +25,7 @@ class EmployeeController extends \Controller {
 		}
 		else {
 			if(!isset($values['action'])){
-				$values['action'] = "all";
+				$values['action'] = "none";
 			}
 			$jobs = \Session::get("jobs");
 			$values['bredcum'] = "EMPLOYEES";
@@ -41,9 +41,22 @@ class EmployeeController extends \Controller {
 			
 			$branches = \OfficeBranch::all();
 			$branch_arr = array();
-			$branch_arr[""] = "ALL";
-			foreach ($branches as $branch){
-				$branch_arr[$branch->id] = $branch->name; 
+			//$branch_arr[""] = "ALL";
+			$branch_arr[] = "";
+			$emp_branches_arr = array();
+			$emp_branches = \Employee::where("id","=",\Auth::user()->id)->first();
+			if($emp_branches->officeBranchIds!=""){
+				$emp_branches_arr = explode(",", $emp_branches->officeBranchIds);
+				foreach ($branches as $branch){
+					if(in_array($branch->id, $emp_branches_arr)){
+						$branch_arr[$branch->id] = $branch->name;
+					}
+				}
+			}
+			else if($emp_branches->officeBranchIds==""){
+				foreach ($branches as $branch){
+					$branch_arr[$branch->id] = $branch->name;
+				}
 			}
 			$select['options'] = $branch_arr;
 			$selects = array();
@@ -59,27 +72,36 @@ class EmployeeController extends \Controller {
 			$action_val = ""; 
 			$links = array();
 			if(isset($values['action']) && $values['action']=="driver_helpers") {
-				$url = "employees?action=driver_helpers";
-				$url = $url."&page=".$values['page'];
-				$link = array("url"=>$url, "name"=>"Load Drivers/Helpers");
-				$action_val = "driver_helpers";
-				$links[] = $link;
+				if(in_array(204, $jobs)){
+					$url = "employees?action=driver_helpers";
+					$url = $url."&page=".$values['page'];
+					$link = array("url"=>$url, "name"=>"Load Drivers/Helpers");
+					$action_val = "driver_helpers";
+					$links[] = $link;
+				}
+				
 			}
 			else{
-				$link = array("url"=>"employees?action=driver_helpers", "name"=>"Load Drivers/Helpers");
-				$links[] = $link;
+				if(in_array(204, $jobs)){
+					$link = array("url"=>"employees?action=driver_helpers", "name"=>"Load Drivers/Helpers");
+					$links[] = $link;
+				}
 			}
 			
 			if(isset($values['action']) && $values['action']=="blocked") {
-				$url = "employees?action=blocked";
-				$url = $url."&page=".$values['page'];
-				$link = array("url"=>$url, "name"=>"Load Blocked Employees");
-				$action_val = "blocked";
-				$links[] = $link;
+				if(in_array(205, $jobs)){
+					$url = "employees?action=blocked";
+					$url = $url."&page=".$values['page'];
+					$link = array("url"=>$url, "name"=>"Load Blocked Employees");
+					$action_val = "blocked";
+					$links[] = $link;
+				}
 			}
 			else{
-				$link = array("url"=>"employees?action=blocked", "name"=>"Load Blocked Employees");
-				$links[] = $link;
+				if(in_array(205, $jobs)){
+					$link = array("url"=>"employees?action=blocked", "name"=>"Load Blocked Employees");
+					$links[] = $link;
+				}
 			}
 			
 			/* if(isset($values['action']) && $values['action']=="terminated") {
@@ -94,24 +116,28 @@ class EmployeeController extends \Controller {
 				$links[] = $link;
 			} */
 			if(isset($values['action']) && $values['action']=="all") {
-				$url = "employees?action=all";
-				$url = $url."&page=".$values['page'];
-				$link = array("url"=>$url, "name"=>"Office Employees");
-				$action_val = "all";
-				$links[] = $link;
+				if(in_array(203, $jobs)){
+					$url = "employees?action=all";
+					$url = $url."&page=".$values['page'];
+					$link = array("url"=>$url, "name"=>"Office Employees");
+					$action_val = "all";
+					$links[] = $link;
+				}
 			}
 			else{
-				$link = array("url"=>"employees?action=all", "name"=>"Office Employees");
-				$links[] = $link;
+				if(in_array(203, $jobs)){
+					$link = array("url"=>"employees?action=all", "name"=>"Office Employees");
+					$links[] = $link;
+				}
 			}
 			$values['action_val'] = $action_val;
 			$values['links'] = $links;	
 			$values['entities'] = array();
 			
-			$theads = array('EmployeeID','Employee Name', "Branch", "MobileNuber", "Designation", "Email", "Attachments", "Family Members","Profile", "Actions");
+			$theads = array('EmployeeID','Employee Name', "Branch", "Client Branch", "MobileNuber", "Designation", "Email", "Attachments", "Family Members","Profile", "Actions");
 			$values["theads"] = $theads;
 			
-			$tds = array('empCode','fullName', "officeBranchName", "mobileNo", "name", "emailid", "proofs", "fatherName","status");
+			$tds = array('empCode','fullName', "officeBranchName", "Client Branch",  "mobileNo", "name", "emailid", "proofs", "fatherName","status");
 			$values["tds"] = $tds;
 			
 			$actions = array();
@@ -174,12 +200,12 @@ class EmployeeController extends \Controller {
 				if(isset($values['branch']) && $values['branch'] != ""){
 					$values["provider"] = $values["provider"]."&branch=".$values['branch'];
 					$entities = \Employee::where('officeBranchId',"=",$values['branch'])
-									->where('status',"=","BLOCKED")
+									->where('employee.status',"=","BLOCKED")
 									->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
 									->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 									->select($select_args)->paginate($entries);
 					$total = \Employee::where('officeBranchId',"=",$values['branch'])
-									->where('status',"=","BLOCKED")
+									->where('employee.status',"=","BLOCKED")
 									->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')
 									->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')
 									->select($select_args)->get();
@@ -218,6 +244,11 @@ class EmployeeController extends \Controller {
 					$total = \Employee::where('roleId',"!=",20)->where("roleId", "!=",19)->where("employee.status", "=","Active")->leftjoin('user_roles_master','employee.roleId','=','user_roles_master.id')->leftjoin('officebranch','employee.officeBranchId','=','officebranch.id')->get();
 					$total = count($total);					
 				}
+			}
+			else if(isset($values['action']) && $values['action']=="none"){
+				$values["provider"] = $values["provider"]."none";
+					$entities = \Employee::where('id',"=",0)->get();
+					$total = 0;
 			}
 			
 			
@@ -346,6 +377,7 @@ class EmployeeController extends \Controller {
 	 */
 	public function blockEmployee()
 	{
+		//$values["dsf"];
 		$values = Input::all();
 		$db_functions_ctrl = new DBFunctionsController();
 		$table = "Employee";
@@ -368,27 +400,28 @@ class EmployeeController extends \Controller {
 				$fields["status"] = "BLOCKED";
 			}
 			\Employee::where("id", "=", $values["id1"])->update($fields);
-		}
-		if($db_functions_ctrl->update($table, $fields, $data)){
-			if($isBlocked){
-				$table = "EmployeeActivity";
-				$fields = array("empid"=>$values["id1"],"reason"=>$values["remarks"],"date"=>date("Y-m-d",strtotime($values["tdate"])),"action"=>"UNBLOCKED");
-				$db_functions_ctrl->insert($table, $fields);
-				\Session::put("message","Employee Unblocked Successfully");
-				return Redirect::to("employees");
+			if(true){
+				if($isBlocked){
+					$table = "EmployeeActivity";
+					$fields = array("empid"=>$values["id1"],"reason"=>$values["remarks"],"date"=>date("Y-m-d",strtotime($values["tdate"])),"action"=>"UNBLOCKED");
+					$db_functions_ctrl->insert($table, $fields);
+					\Session::put("message","Employee Unblocked Successfully");
+					return Redirect::to("employees");
+				}
+				else{
+					$table = "EmployeeActivity";
+					$fields = array("empid"=>$values["id1"],"reason"=>$values["remarks"],"date"=>date("Y-m-d",strtotime($values["tdate"])),"action"=>"BLOCKED");
+					$db_functions_ctrl->insert($table, $fields);
+					\Session::put("message","Employee Blocked Successfully");
+					return Redirect::to("employees");
+				}
 			}
-			else{
-				$table = "EmployeeActivity";
-				$fields = array("empid"=>$values["id1"],"reason"=>$values["remarks"],"date"=>date("Y-m-d",strtotime($values["tdate"])),"action"=>"BLOCKED");
-				$db_functions_ctrl->insert($table, $fields);
-				\Session::put("message","Employee Blocked Successfully");
-				return Redirect::to("employees");
-			}
 		}
-		else{
+		
+		/*else{
 			\Session::put("message","Operation could not be completed, Try Again!");
 			return Redirect::to("employees");
-		}
+		}*/
 	}
 
 
@@ -422,7 +455,7 @@ class EmployeeController extends \Controller {
 				"idproofnumber"=>"idCardNumber","joiningdate"=>"joiningDate", "rtaoffice"=>"rtaBranch",
 				"aadhdaarnumber"=>"aadharNumber","rationcardnumber"=>"rationCardNumber", "drivinglicence"=>"drivingLicence",
 				"drivingliceneexpiredate"=>"drvLicenceExpDate","accountnumber"=>"accountNumber", "bankname"=>"bankName",
-				"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchIds", 
+				"ifsccode"=>"ifscCode", "branchname"=>"branchName", "officebranch"=>"officeBranchIds", "clients"=>"clientIds", 
 				"clientbranches"=>"contractIds", "presentaddress"=>"presentAddress","dateofbirth"=>"dob","salarycardno"=>"salaryCardNo"
 			);
 		$fields = array();
@@ -434,7 +467,7 @@ class EmployeeController extends \Controller {
 				else if($val == "password"){
 					$fields[$val] = \Hash::make($values[$key]);
 				}
-				else if($key == "clientbranches" || $key == "empcontracts" || $key == "officebranch"){
+				else if($key == "clientbranches" || $key == "empcontracts" || $key == "officebranch" || $key == "clients"){
 					$field_val = "";
 					$i = 0;
 					for($i=0; $i<count($values[$key]); $i++){
@@ -451,6 +484,11 @@ class EmployeeController extends \Controller {
 				}
 			}
 		}
+		$empCode = \Employee::orderBy('id', 'desc')->first();
+		$empCode = $empCode->empCode;
+		$empCode = "GT".(substr($empCode, 2)+1);
+		$fields["empCode"] = $empCode;
+		
 		$fields["roleId"] = $fields["rolePrevilegeId"];
 		$rolePrevilegeId = $fields["rolePrevilegeId"];
 		$entity = new \Employee();
@@ -460,8 +498,13 @@ class EmployeeController extends \Controller {
 		
 		$db_functions_ctrl = new DBFunctionsController();
 		$table = "Employee";
+// 		$empid = \Employee::where("empCode","=",$values["employeeid"])->first();
+// 		if(count($empid>0)){
+// 			\Session::put("message","Operation Could not be completed due to duplicate EMPCODE, Try Again!");
+// 			return \Redirect::to("addemployee");
+// 		}			
 		if($db_functions_ctrl->insert($table, $fields)){
-			$empid = \Employee::where("empCode","=",$values["employeeid"])->where("fullName","=",$values["fullname"])->first();
+			$empid = \Employee::where("empCode","=",$fields["empCode"])->where("fullName","=",$values["fullname"])->first();
 			$table = "SalaryDetails";
 			$fields = array("empId"=>$empid->id);
 			$db_functions_ctrl->insert($table, $fields);
@@ -521,6 +564,21 @@ class EmployeeController extends \Controller {
 		$empCode = $empCode->empCode;
 		$empCode = "GT".(substr($empCode, 2)+1);
 		echo $empCode;
+	}
+	
+	public function getClientBranches()
+	{
+		$values = Input::All();
+		$clientids = $values["clientids"];
+		$clientids = explode(",",$clientids);
+		$branches = \Contract::whereIn('clientId', $clientids)
+							->leftjoin("depots","depots.id","=","contracts.depotId")
+							->select(array("depots.id as id","depots.name as name"))->get();
+		$options_str = "";
+		foreach ($branches as $branch){
+			$options_str = $options_str."<option value='".$branch->id."'>".$branch->name."</option>";
+		}
+		echo $options_str;
 	}
 	
 	public function verifyEmailId()

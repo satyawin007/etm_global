@@ -99,7 +99,8 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for  INCHARGE ACCOUNT REPORT				 
+						<span>Results for  INCHARGE EXPENSES REPORT</span>
+						<span style="float:right; font-size: 16px; font-weight: bold;">Total Debit : <span id="dbamt">0.00</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Total Credit : <span id="cramt">0.00</span>&nbsp;&nbsp;&nbsp;&nbsp;  Opening Balance : <span id="opamt">0.00</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Closing Balance : <span id="clamt">0.00</span> &nbsp;&nbsp;&nbsp;</span>				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -110,6 +111,7 @@
 									<td>BRANCH/BANK</td>
 									<td>TRANSACTION TYPE</td>
 									<td>AMOUNT</td>
+									<td>PAYMENT INFO</td>
 									<td>DATE</td>
 									<td>COMMENTS</td>
 									<td>CREATED BY</td>
@@ -141,6 +143,7 @@
 									<td>REPORTED TO BRANCH</td>
 									<td>EXPENSE DATE</td>
 									<td>AMOUNT</td>
+									<td>PAYMENT INFO</td>
 									<td>TYPE</td>
 									<td>PURPOSE</td>
 									<td>PAID TO</td>
@@ -237,6 +240,7 @@
 				var form=$("#getreport");
 
 				$("#processing").show();
+
 				$.ajax({
 			        type:"POST",
 			        url:form.attr("action"),
@@ -275,6 +279,26 @@
 						myTable2.columns.adjust().draw(); // Redraw 
 						$("#table2").show();
 						$("#processing").hide();
+
+						$("#opening_balance").val("yes");
+		        		$.ajax({
+					        type:"POST",
+					        url:form.attr("action"),
+					        data:form.serialize(),
+					        success: function(response){
+						        var json = JSON.parse(response);
+						        op_bal =  json["opening_balance"];
+						        cl_bal =  json["closing_balance"];
+						        dbamt =  json["total_debit"];
+						        cramt =  json["total_credit"];
+						        $("#opamt").html(op_bal);
+						        $("#clamt").html(cl_bal);
+						        $("#dbamt").html(dbamt);
+						        $("#cramt").html(cramt);
+						        
+					        }
+		        		});
+		        		$("#opening_balance").val("no");
 			        }
 			    });
 			}
@@ -433,7 +457,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null
+						  null, null, null,  null, null, null,null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -475,7 +499,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null, null, null
+						  null, null, null, null, null, null, null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",

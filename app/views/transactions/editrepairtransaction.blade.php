@@ -68,7 +68,7 @@
 					<h4 class="panel-title">
 						<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#TEST">
 							<i class="ace-icon fa fa-angle-down bigger-110" data-icon-hide="ace-icon fa fa-angle-down" data-icon-show="ace-icon fa fa-angle-right"></i>
-							&nbsp;PURCHASE ORDER DETAILS
+							&nbsp;REPAIR TRANSACTION DETAILS
 						</a>
 					</h4>
 				</div>
@@ -279,6 +279,7 @@
 						<tr>
 							<th>Item</th>
 							<th>Vehicles</th>
+							<th>Veh Readings</th>
 							<th>Quantity</th>
 							<th>Amount</th>
 							<th>Remarks</th>
@@ -452,12 +453,19 @@
 			$("#incharge").attr("disabled",true);
 			$("#vehicle").attr("disabled",true);
 			$("#enableincharge").val("NO");
+			$("#paymentdate").attr("disabled",true);
+
+			amtpaid = $("#paymentPaid").val();
+			if(amtpaid=="Yes"){
+				$("#paymentdate").attr("disabled",false);
+			}
 
 			<?php
 				$select_args = array();
 				$select_args[] = "lookuptypevalues.name as item";
 				$select_args[] = "creditsuppliertransdetails.repairedItem as itemId";
 				$select_args[] = "creditsuppliertransdetails.vehicleIds as vehicleIds";
+				$select_args[] = "creditsuppliertransdetails.meeterReading as meeterReading";
 				$select_args[] = "creditsuppliertransdetails.quantity as qty";
 				$select_args[] = "creditsuppliertransdetails.amount as amount";
 				$select_args[] = "creditsuppliertransdetails.comments as comments";
@@ -476,7 +484,7 @@
 						$vehregs_text = $vehregs_text.$vehreg->veh_reg.",";
 					}
 					
-					$table_data = $table_data."['".$entity->item."', '".$vehregs_text."', '".$entity->qty."', '".$entity->amount."', '".$entity->comments."', '".$entity->id."', ";
+					$table_data = $table_data."['".$entity->item."', '".$vehregs_text."', '".$entity->meeterReading."', '".$entity->qty."', '".$entity->amount."', '".$entity->comments."', '".$entity->id."', ";
 					$table_data = $table_data.'\'<button class="btn btn-sm btn-primary" onclick="editItem('.($i).')">Edit</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-danger" onclick="removeItem('.($i).')">Remove</button>\', \''.$entity->itemId."', '".$entity->vehicleIds."'],";    
 				}
 				$table_data = $table_data."]; ";
@@ -496,18 +504,20 @@
 				text_data =  "";
 				$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.text+",";} });
 				tr[1] = text_data;
-				lname = $("#quantity").val();
+				lname = $("#meeterreading").val();
 				tr[2] = lname;
+				lname = $("#quantity").val();
+				tr[3] = lname;
 				unitprice = $("#amount").val();
-				tr[3] = unitprice;
+				tr[4] = unitprice;
 				status = $("#remarks").val();
-				tr[4] = status;
-				tr[5] =  "undefined";
-				tr[6] = '<button class="btn btn-sm btn-primary" onclick="editItem('+row+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+row+')">Remove</button>';
-				tr[7] = $("#item").val();
+				tr[5] = status;
+				tr[6] =  "undefined";
+				tr[7] = '<button class="btn btn-sm btn-primary" onclick="editItem('+row+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+row+')">Remove</button>';
+				tr[8] = $("#item").val();
 				text_data =  "";
 				$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.value+",";} });
-				tr[8] = text_data;
+				tr[9] = text_data;
 				if(country != ""  && lname!="" && unitprice!=""){
 					if(isEdit && editRowId>=0){
 						for(i=0; i<row; i++){
@@ -518,11 +528,12 @@
 								tabledata[i][3] = tr[3];
 								tabledata[i][4] = tr[4];
 								tabledata[i][5] = tr[5];
-								tabledata[i][6] = '<button class="btn btn-sm btn-primary" onclick="editItem('+editRowId+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+editRowId+')">Remove</button>';;
-								tabledata[i][7] = tr[7];
+								tabledata[i][6] = tr[6];
+								tabledata[i][7] = '<button class="btn btn-sm btn-primary" onclick="editItem('+editRowId+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+editRowId+')">Remove</button>';;
+								tabledata[i][8] = tr[8];
 								text_data =  "";
 								$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.value+",";} });
-								tabledata[i][8] = text_data;
+								tabledata[i][9] = text_data;
 								
 								//alert("test"+tabledata[i][7]);
 							}
@@ -539,6 +550,7 @@
 					$("#item option").each(function() { this.selected = (this.value == ""); });
 					$("#vehicles option").each(function() { this.selected = false; });
 					$("#quantity").val("");
+					$("#meeterreading").val("");
 					$("#amount").val("");
 					$("#remarks").val("");
 					$('.chosen-select').trigger('chosen:updated');
@@ -592,10 +604,12 @@
 			function enablePaymentType(val){
 				if(val == "Yes"){
 					$("#paymenttype").attr("disabled",false);
+					$("#paymentdate").attr("disabled",false);
 				}
 				else{
 					$("#paymenttype option:selected").removeAttr("selected");
 					$("#paymenttype").attr("disabled",true);
+					$("#paymentdate").attr("disabled",true);
 					$("#addfields").html("");
 				}
 			}
@@ -608,6 +622,7 @@
 				$("#item option").each(function() { this.selected = (this.value == ""); });
 				$("#iteminfo option").each(function() { this.selected = (this.value == ""); });
 				$("#quantity").val("");
+				$("#meeterreading").val("");
 				$("#unitprice").val("");
 				$('.chosen-select').trigger('chosen:updated');
 			}
@@ -615,7 +630,7 @@
 			function removeItem(rowid){
 				for(i=0; i<row; i++){
 					if(rowid == i){
-						for(j=0; j<7; j++){	
+						for(j=0; j<8; j++){	
 							tabledata[i][j]= "";
 						}
 					}
@@ -638,9 +653,10 @@
 				editRowId = rowid;
 				for(i=0; i<row; i++){
 					if(editRowId == i){
-						$("#quantity").val(tabledata[i][2]);				
-						$("#amount").val(tabledata[i][3]);
-						$("#remarks").val(tabledata[i][4]);
+						$("#meeterreading").val(tabledata[i][2]);
+						$("#quantity").val(tabledata[i][3]);				
+						$("#amount").val(tabledata[i][4]);
+						$("#remarks").val(tabledata[i][5]);
 						$("#item option").each(function() { this.selected = (this.text == tabledata[i][0]); });
 						$("#vehicles option").each(function() { 
 								//alert("test"+tabledata[i][1]);
@@ -668,18 +684,18 @@
 					if(tabledata[i][0] != ""){
 						jsondata = jsondata+"{";
 						tdata = tdata+"<tr>";
-						for(j=0; j<7; j++){	
+						for(j=0; j<8; j++){	
 							tdata = tdata+"<td>"+tabledata[i][j]+"</td>";
 						}
-						for(j=0; j<9; j++){	
-							if(j==6){
+						for(j=0; j<10; j++){	
+							if(j==7){
 							}
-							else if(j<8){
+							else if(j<9){
 								jsondata = jsondata+"\"i"+j+"\":\""+tabledata[i][j]+"\",";
 							}
-							else if(j==8){
-								totalamt = (totalamt*1)+(tabledata[i][3]*1);
-								jsondata = jsondata+"\"i"+8+"\":\""+tabledata[i][8]+"\"";
+							else if(j==9){
+								totalamt = (totalamt*1)+(tabledata[i][4]*1);
+								jsondata = jsondata+"\"i"+9+"\":\""+tabledata[i][9]+"\"";
 							}
 						}
 						tdata = tdata+"</tr>";

@@ -99,7 +99,8 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for GENERATE REPORT				 
+						<span>Results for GENERATE REPORT</span>
+						<span style="float:right; font-size: 16px; font-weight: bold;">Total Kms : <span id="totkms">0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Total Repair Kms : <span id="totrpkms">0</span> &nbsp;&nbsp;&nbsp;</span>				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -157,7 +158,15 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for WORKINGDAYS VEHICLE SUMMARY 			 
+						<span>WORKINGDAYS VEHICLE SUMMARY</span>
+						<span style="float:right; font-size: 16px; font-weight: bold;">
+							Tot Kms : <span id="totkms1">0</span> &nbsp;&nbsp;&nbsp;  
+							Tot Repair Kms : <span id="totrpkms1">0</span> &nbsp;&nbsp;&nbsp;
+							Tot Tp1 KMs  : <span id="tottp1kms">0</span> &nbsp;&nbsp;&nbsp;
+							Tot Tp2 KMs  : <span id="tottp2kms">0</span> &nbsp;&nbsp;&nbsp;
+							Tot Hdays KMs : <span id="tothdkms">0</span> &nbsp;&nbsp;&nbsp;
+							Tot Excess KMs : <span id="totexkms">0</span> &nbsp;&nbsp;&nbsp;
+						</span>				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -260,6 +269,7 @@
 				$.ajax({
 			      url: "getdepotsbyclientId?id="+val,
 			      success: function(data) {
+			    	  data = "<option value='0'> ALL </option>"+data;
 			    	  $("#depot").html(data);
 			    	  $('.chosen-select').trigger("chosen:updated");
 			      },
@@ -321,7 +331,7 @@
 			        success: function(response){
 			           var json = JSON.parse(response);
 			           //$("#totalexepenses").html(json["total_expenses"]);
-			           var data1 = json;
+			           var data1 = json["data"];
 			           var arr = [];
 			           for(var i = 0; i < data1.length; i++) {
 			        	    var parsed = data1[i];
@@ -332,6 +342,11 @@
 				            arr.push(row);
 			        	}
 			           if(reporttype == "getreport"){
+			        	    totkms =  json["total_kms"];
+			        	    totrpkms =  json["total_rp_kms"];
+				            $("#totkms").html(totkms);
+				            $("#totrpkms").html(totrpkms);
+				            
 							myTable1.clear().draw();
 							myTable1.rows.add(arr); // Add new data
 							myTable1.columns.adjust().draw(); // Redraw 
@@ -353,6 +368,19 @@
 							$("#table3").hide();
 			           }
 			           else if(reporttype == "workingdaysvehiclesummary"){
+							totkms =  json["total_kms"];
+			        	    totrpkms =  json["total_rp_kms"];
+			        	    total_tp1_kms = json["total_tp1_kms"];
+			        	    total_tp2_kms = json["total_tp2_kms"];
+			        	    total_hds_kms = json["total_hds_kms"];
+			        	    total_ex_kms =  json["total_ex_kms"];
+				            $("#totkms1").html(totkms);
+				            $("#totrpkms1").html(totrpkms);
+				            $("#tottp1kms").html(total_tp1_kms);
+				            $("#tottp2kms").html(total_tp2_kms);
+				            $("#tothdkms").html(total_hds_kms);
+				            $("#totexkms").html(total_ex_kms);
+				            
 			        	    myTable3.clear().draw();
 							myTable3.rows.add(arr); // Add new data
 							myTable3.columns.adjust().draw(); // Redraw 
@@ -583,7 +611,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
+							{ "bSortable": false }, { "bSortable": false }, null,
 							null, { "bSortable": false }, { "bSortable": false }							
 						],
 						"aaSorting": [],
@@ -626,7 +654,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
+							{ "bSortable": false }, { "bSortable": false }, null,
 							null, { "bSortable": false }, { "bSortable": false },
 							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
 							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },

@@ -292,6 +292,7 @@ use settings\AppSettingsController;
 						<tr>
 							<th>Item</th>
 							<th>Vehicles</th>
+							<th>Veh Reading</th>
 							<th>Quantity</th>
 							<th>Amount</th>
 							<th>Remarks</th>
@@ -460,6 +461,7 @@ use settings\AppSettingsController;
 			$("#totalamount").attr("readonly",true);
 			$("#totalamount").val("0.00");
 			$("#paymenttype").attr("disabled",true);
+			$("#paymentdate").attr("disabled",true);
 			$("#incharge").attr("disabled",true);
 			$("#enableincharge").val("NO");
 			$("#totalbody").hide();
@@ -478,17 +480,19 @@ use settings\AppSettingsController;
 				text_data =  "";
 				$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.text+",";} });
 				tr[1] = text_data;
+				meeterreading = $("#meeterreading").val();
+				tr[2] = meeterreading;
 				lname = $("#quantity").val();
-				tr[2] = lname;
+				tr[3] = lname;
 				unitprice = $("#amount").val();
-				tr[3] = unitprice;
+				tr[4] = unitprice;
 				status = $("#remarks").val();
-				tr[4] = status;
-				tr[5] = '<button class="btn btn-sm btn-primary" onclick="editItem('+row+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+row+')">Remove</button>';
-				tr[6] = $("#item").val();
+				tr[5] = status;
+				tr[6] = '<button class="btn btn-sm btn-primary" onclick="editItem('+row+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+row+')">Remove</button>';
+				tr[7] = $("#item").val();
 				text_data =  "";
 				$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.value+",";} });
-				tr[7] = text_data;
+				tr[8] = text_data;
 				if(country != ""  && lname!="" && unitprice!=""){
 					if(isEdit && editRowId>=0){
 						for(i=0; i<row; i++){
@@ -498,11 +502,12 @@ use settings\AppSettingsController;
 								tabledata[i][2] = tr[2];
 								tabledata[i][3] = tr[3];
 								tabledata[i][4] = tr[4];
-								tabledata[i][5] = '<button class="btn btn-sm btn-primary" onclick="editItem('+editRowId+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+editRowId+')">Remove</button>';;
-								tabledata[i][6] = $("#item").val();
+								tabledata[i][5] = tr[5];
+								tabledata[i][6] = '<button class="btn btn-sm btn-primary" onclick="editItem('+editRowId+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+editRowId+')">Remove</button>';;
+								tabledata[i][7] = $("#item").val();
 								text_data =  "";
 								$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.value+",";} });
-								tabledata[i][7] = text_data;
+								tabledata[i][8] = text_data;
 								//alert("test"+tabledata[i][7]);
 							}
 						}
@@ -518,6 +523,7 @@ use settings\AppSettingsController;
 					$("#item option").each(function() { this.selected = (this.value == ""); });
 					$("#vehicles option").each(function() { this.selected = false; });
 					$("#quantity").val("");
+					$("#meeterreading").val("");
 					$("#amount").val("");
 					$("#remarks").val("");
 					$('.chosen-select').trigger('chosen:updated');
@@ -636,10 +642,12 @@ use settings\AppSettingsController;
 			function enablePaymentType(val){
 				if(val == "Yes"){
 					$("#paymenttype").attr("disabled",false);
+					$("#paymentdate").attr("disabled",false);
 				}
 				else{
 					$("#paymenttype").val("");
 					$("#paymenttype").attr("disabled",true);
+					$("#paymentdate").attr("disabled",true);
 					$("#addfields").hide();
 				}
 			}
@@ -650,6 +658,7 @@ use settings\AppSettingsController;
 				$("#item option").each(function() { this.selected = (this.value == ""); });
 				$("#quantity").val("");
 				$("#amount").val("");
+				$("#meeterreading").val("");
 				$("#remarks").val("");
 				$('.chosen-select').trigger('chosen:updated');
 			}
@@ -657,7 +666,7 @@ use settings\AppSettingsController;
 			function removeItem(rowid){
 				for(i=0; i<row; i++){
 					if(rowid == i){
-						for(j=0; j<5; j++){	
+						for(j=0; j<6; j++){	
 							tabledata[i][j]= "";
 						}
 					}
@@ -670,9 +679,10 @@ use settings\AppSettingsController;
 				editRowId = rowid;
 				for(i=0; i<row; i++){
 					if(editRowId == i){
-						$("#quantity").val(tabledata[i][2]);				
-						$("#amount").val(tabledata[i][3]);
-						$("#remarks").val(tabledata[i][4]);
+						$("#meeterreading").val(tabledata[i][2]);
+						$("#quantity").val(tabledata[i][3]);				
+						$("#amount").val(tabledata[i][4]);
+						$("#remarks").val(tabledata[i][5]);
 						$("#item option").each(function() { this.selected = (this.text == tabledata[i][0]); });
 						$("#vehicles option").each(function() { 
 								//alert("test"+tabledata[i][1]);
@@ -710,18 +720,18 @@ use settings\AppSettingsController;
 					if(tabledata[i][0] != ""){
 						jsondata = jsondata+"{";
 						tdata = tdata+"<tr>";
-						for(j=0; j<6; j++){	
+						for(j=0; j<7; j++){	
 							tdata = tdata+"<td>"+tabledata[i][j]+"</td>";
 						}
-						for(j=0; j<8; j++){	
-							if(j==5){
+						for(j=0; j<9; j++){	
+							if(j==6){
 							}
-							else if(j<7){
+							else if(j<8){
 								jsondata = jsondata+"\"i"+j+"\":\""+tabledata[i][j]+"\",";
 							}
-							else if(j==7){
-								totalamt = (totalamt*1)+(tabledata[i][3]*1);
-								jsondata = jsondata+"\"i"+7+"\":\""+tabledata[i][7]+"\"";
+							else if(j==8){
+								totalamt = (totalamt*1)+(tabledata[i][4]*1);
+								jsondata = jsondata+"\"i"+8+"\":\""+tabledata[i][8]+"\"";
 							}
 						}
 						tdata = tdata+"</tr>";
