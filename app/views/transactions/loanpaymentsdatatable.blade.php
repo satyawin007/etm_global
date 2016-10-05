@@ -189,6 +189,7 @@ use Illuminate\Support\Facades\Input;
 									</label>
 									<input type="hidden" name="id[]" id="id_{{$i}}" value="{{$i}}" />
 									<input type="hidden" name="vehid[]" id="{{$i}}_loanid" value="{{$entity->id}}" />
+									<input type="hidden" name="loanno[]" id="{{$i}}_loanno" value="{{$entity->loanNo}}" />
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
 									<span style="color: red; font-weight: bold; font-size:14px;">{{$i+1}}</span>
@@ -267,17 +268,18 @@ use Illuminate\Support\Facades\Input;
 	@section('inline_js')
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
+			$("#incharge").attr("disabled",true);
+			$("#enableincharge").val("NO");
+			$("#paymenttype").attr("disabled",false);
 			<?php 
-				if(isset($values["tdspercentage"])) 
-					echo "var tdspercentage=".$values["tdspercentage"]."; "; 
-				else 
-					echo "var tdspercentage=1; "; 
-				echo "var totnetamt=".$totnetamt."; ";
-				echo "var totpaidamt=".$totpaidamt."; ";
+				if(isset($values["enableincharge"]) && $values["enableincharge"]=="YES") {
+					echo '$("#incharge").attr("disabled",false);';
+					echo '$("#enableincharge").val("YES");'; 
+				}
+				
 			?>
-			$("#totpaidamt").html(totpaidamt);
-			$("#totnetamt").html(totnetamt);
-			$("#balamt").html(totnetamt-totpaidamt);
+			$('.chosen-select').trigger('chosen:updated');
+
 			function showPaymentFields(val){
 				$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
 				url = 'getpaymentfields?paymenttype=';
@@ -489,10 +491,6 @@ use Illuminate\Support\Facades\Input;
 		    	$("#"+rowid+"_veh_remarks").attr("readonly",true);	
 			}
 
-			$("#incharge").attr("disabled",true);
-			$("#enableincharge").val("NO");
-			$("#paymenttype").attr("disabled",false);
-			$('.chosen-select').trigger('chosen:updated');
 			$("#enableincharge").on("change",function(){
 			  	val = $("#enableincharge").val();
 			  	if(val == "YES"){

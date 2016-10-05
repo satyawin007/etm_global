@@ -59,7 +59,7 @@ class LoanPaymentsController extends \Controller {
 		
 		$date_val = "";     $month_val = "";   $pmtdate_val = "";      $pmttype_val = "cash";
 		$branch_val = ""; $expensetype_val = "";   $bankaccount_val = "";  $chequenumber_val = ""; 
-		$loan_val = "";   $todate_val = "";  $billno_val = "";   $typeofloan_val = "";
+		$loan_val = "";   $todate_val = "";  $billno_val = "";   $typeofloan_val = ""; $incharge_val="0";
 		$enableincharge_val = "NO";
 		$values["show"] = "true";
 		if(isset($values["show"])){
@@ -100,6 +100,9 @@ class LoanPaymentsController extends \Controller {
 		}
 		if(isset($values["enableincharge"])){
 			$enableincharge_val = $values["enableincharge"];
+		}
+		if(isset($values["incharge"])){
+			$incharge_val = $values["incharge"];
 		}
 		if(isset($values["typeofloan"])){
 			$typeofloan_val = $values["typeofloan"];
@@ -145,9 +148,9 @@ class LoanPaymentsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"typeofloan", "value"=>$typeofloan_val, "content"=>"type of loan", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$loantypes_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"enableincharge", "id"=>"enableincharge","content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
+		$form_field = array("name"=>"enableincharge", "id"=>"enableincharge","content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("NO"=>"NO","YES"=>"YES"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"incharge", "id"=>"incharge", "value"=>$entity->inchargeId, "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange", "script"=>"getInchargeBalance(this.value)"), "options"=>$incharges_arr);
+		$form_field = array("name"=>"incharge", "id"=>"incharge", "value"=>$incharge_val, "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange", "script"=>"getInchargeBalance(this.value)"), "options"=>$incharges_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array(""=>"NOT PAID", "cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 		$form_fields[] = $form_field;
@@ -165,7 +168,7 @@ class LoanPaymentsController extends \Controller {
 	 *
 	 * @return Response
 	 */
-	public function addClientIncome()
+	public function addLoanPayments()
 	{
 		if (\Request::isMethod('post'))
 		{
@@ -181,53 +184,34 @@ class LoanPaymentsController extends \Controller {
 					unset($ids[$i]);
 				$i++;
 			}
-			$message = "The following vehicles income added successfully : <br/><b>";
-			$url = "clientincometransactions?paymenttype=".$values["paymenttype"]."&tdspercentage=".$values["tdspercentage"]."&month=".$values["month"]."&billdate=".$values["billdate"];
-			if(isset($values["paymentdate"])){ $url = $url."&paymentdate=".$values["paymentdate"];}
-			if(isset($values["billno"])){ $url = $url."&billno=".$values["billno"];}
-			if(isset($values["clientname"])){ $url = $url."&clientname=".$values["clientname"];}
-			if(isset($values["show"])){ $url = $url."&show=".$values["show"];}
-			if(isset($values["bankaccount"])){ $url = $url."&bankaccount=".$values["bankaccount"];}
-			if(isset($values["chequenumber"])){ $url = $url."&chequenumber=".$values["chequenumber"];}
-			if(isset($values["bankname"])){ $url = $url."&bankname=".$values["bankname"];}
-			if(isset($values["accountnumber"])){ $url = $url."&accountnumber=".$values["accountnumber"];}
-			if(isset($values["issuedate"])){ $url = $url."&issuedate=".$values["issuedate"];}
-			if(isset($values["transactiondate"])){ $url = $url."&transactiondate=".$values["transactiondate"];}
+			$message = "The following Loan Numbers added successfully : <br/><b>";
+			$url = "loanpayments";
+
 			foreach ($ids as $id){
 				$id = $id%$values["dynamic-table_length"];
-				$field_names = array("vehid"=>"vehicleId",
-									 "depotid"=>"depotId", 
-									 "veh_gross"=>"gross",
-									 "veh_tds"=>"tds",
-									 "veh_emi"=>"emi",
-									 "veh_stopped"=>"stopped", 
-									 "veh_otherincome"=>"otherIncome", 
-									 "veh_otherdeductions"=>"otherDeductions",
-									 "veh_netamount"=>"netAmount",
-									 "veh_clientamount"=>"clientAmount",
-									 "veh_remarks"=>"remarks");
+				$field_names = array("amount"=>"amount",
+									 "vehid"=>"entityValue",									 
+									 "remarks"=>"remarks");
 				$fields = array();
 				foreach ($field_names as $key=>$val){
 					if(isset($values[$key])){
 						$fields[$val] = $values[$key][$id];
 					}
 				}
-				$field_names = array("month"=>"month",
-									"clientname"=>"clientId",
-									"paymentdate"=>"paymentDate",
-									"billdate"=>"billDate",
-									"billno"=>"billNo",
+				$field_names = array("branch"=>"branchId",
+									"incharge"=>"inchargeId",
+									"entity_date"=>"entityDate",
+									"date"=>"date",
 									"paymenttype"=>"paymentType",
 									"bankaccount"=>"bankAccount",
 									"chequenumber"=>"chequeNumber",
 									"bankname"=>"bankName",
 									"accountnumber"=>"accountNumber",
 									"issuedate"=>"issueDate",
-									"transactiondate"=>"transactionDate",
-									"tdspercentage"=>"tdsPercentage");
+									"transactiondate"=>"transactionDate");
 				foreach ($field_names as $key=>$val){
 					if(isset($values[$key])){
-						if($key == "paymentdate" || $key == "billdate"  || $key == "issuedate" || $key == "transactiondate"){
+						if($key == "date" || $key == "entity_date"  || $key == "issuedate" || $key == "transactiondate"){
 							$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 						}
 						else {
@@ -235,16 +219,38 @@ class LoanPaymentsController extends \Controller {
 						}
 					}
 				}
+				$fields["name"] = "expense";
+				if(isset($values["expensetype"]) && $values["expensetype"]=="loanpayment"){
+					$fields["entity"] = "loanpayment";
+					$fields["lookupValueId"] = "147";					
+				}
+				else if(isset($values["expensetype"]) && $values["expensetype"]=="loanpayment"){
+					$fields["entity"] = "loanpayment";
+					$fields["lookupValueId"] = "147";
+				}
+				else if(isset($values["expensetype"]) && $values["expensetype"]=="loanpayment"){
+					$fields["entity"] = "loanpayment";
+					$fields["lookupValueId"] = "147";
+				}
 				$db_functions_ctrl = new DBFunctionsController();
-				$table = "ClientIncome";
+				
+				$transid =  strtoupper(uniqid().mt_rand(100,999));
+				$chars = array("a"=>"1","b"=>"2","c"=>"3","d"=>"4","e"=>"5","f"=>"6");
+				foreach($chars as $k=>$v){
+					$transid = str_replace($k, $v, $transid);
+				}
+				$fields["transactionId"] = $transid;
+				$fields["source"] = "loan payments";
+				
+				$table = "ExpenseTransaction";
 				\DB::beginTransaction();
 				$recid = "";
 				try{
 					$recid = $db_functions_ctrl->insert($table, $fields);
-					$message = $message.$values["vehreg"][$id].", ";
+					$message = $message.$values["loanno"][$id].", ";
 				}
 				catch(\Exception $ex){
-					\Session::put("message","Add Client Income : Operation Could not be completed, Try Again!");
+					\Session::put("message","Add Loan Payment : Operation Could not be completed, Try Again!");
 					\DB::rollback();
 					return \Redirect::to($url);
 				}				

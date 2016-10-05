@@ -891,7 +891,7 @@ Route::any('/updateclientholidaysrequeststatus', "contracts\ClientHolidaysContro
 
 Route::any('/loanpayments',"transactions\LoanPaymentsController@manageLoanPayments");
 
-Route::any('/addloanpayment',"transactions\LoanPaymentsController@addLoanPayment");
+Route::any('/addloanpayments',"transactions\LoanPaymentsController@addLoanPayments");
 
 Route::any('/billpayments',"billpayments\BillPaymentsController@manageBillPayments");
 
