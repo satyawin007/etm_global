@@ -414,7 +414,7 @@
 
 				var index = -1;		
 				for( var i = 0; i<attendence_data_update.length; i++ ) {
-					if( attendence_data_update[i]["recid"] == $("#recid").val() ) {
+					if( attendence_data_update[i]["empid"] == $("#empid").val() ) {
 						index = i;
 						break;
 					}
@@ -423,6 +423,8 @@
 					attendence_data_update.splice(index, 1);
 				}
 				attendence_data_update.push(data);
+				console.log(attendence_data_update);
+				
 				
 				$("#comments1").val("");
 				$("#substitute1").find('option:selected').removeAttr("selected");

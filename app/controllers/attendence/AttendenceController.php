@@ -239,6 +239,7 @@ class AttendenceController extends \Controller {
 				}
 				$success = true;
 			}
+			
 			if($success){
 				return json_encode(['status' => 'success', 'message' => 'Operation completed Successfully']);
 			}
