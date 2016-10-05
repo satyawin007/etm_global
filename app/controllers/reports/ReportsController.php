@@ -3404,7 +3404,7 @@ class ReportsController extends \Controller {
 	}
 	
 	private function getFuelReport($values){
-		if (\Request::isMethod('post'))
+	if (\Request::isMethod('post'))
 		{
 			if(!isset($values["fromdate"])){
 				$values["fromdate"] = "10-10-2013";
@@ -3414,30 +3414,84 @@ class ReportsController extends \Controller {
 			}
 			$frmDt = date("Y-m-d", strtotime($values["fromdate"]));
 			$toDt = date("Y-m-d", strtotime($values["todate"]));
+			
 			$resp = array();
 			DB::statement(DB::raw("CALL fuel_transactions_report('".$frmDt."', '".$toDt."');"));
 			if($values["fuelreporttype"] == "balanceSheetNoDt" || $values["fuelreporttype"] == "balanceSheet"){
+				$frmDt1 = date("Y-m-d", strtotime("10-10-2013"));
+				$toDt1 = date("Y-m-d", strtotime(date("d-m-Y")));
+				DB::statement(DB::raw("CALL fuel_transactions_report('".$frmDt1."', '".$toDt1."');"));
 				if($values["fuelstation"] == "0"){
 					$fuelstations =  \FuelStation::OrderBy("name")->get();
 					foreach ($fuelstations as $fuelstation){
 						$row = array();
 						$row["fuelstation"] = $fuelstation->name;
+						$row["fromdate"] = $frmDt;
+						/*$recs = DB::select( DB::raw("SELECT  FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["fromdate"] = $rec->amt;
+						}*/
+						$row["todate"] = $toDt;
+						/*$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["todate"] = $rec->amt;
+						}*/
+						$row["totvehs"] = 0;
+						$recs = DB::select( DB::raw("SELECT count(vehicleId) as count  FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."' and date BETWEEN '".$frmDt."' and '".$toDt."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["totvehs"] = $rec->count;
+						}
+						$row["totltrs"] = 0;
+						$recs = DB::select( DB::raw("SELECT sum(ltrs) as ltrs FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'and date BETWEEN '".$frmDt."' and '".$toDt."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["totltrs"] = sprintf('%0.2f',$rec->ltrs);
+						}
 						$row["totalamt"] = 0;
-						$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'"));
+						$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'and date BETWEEN '".$frmDt."' and '".$toDt."'"));
 						if(count($recs)>0) {
 							$rec = $recs[0];
 							$row["totalamt"] = $rec->amt;
 						}
 						$row["paidamt"] = 0;
-						$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where fuelStation='".$fuelstation->name."' and (entity='EXPENSE TRANSACTION' or paymentPaid='Yes')"));
+						$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where fuelStation='".$fuelstation->name."' and (entity='EXPENSE TRANSACTION' or paymentPaid='Yes')and date BETWEEN '".$frmDt."' and '".$toDt."'"));
 						if(count($recs)>0) {
 							$rec = $recs[0];
 							$row["paidamt"] = $rec->amt;
 						}
-						$row["balance"] = $row["totalamt"]-$row["paidamt"];
-						if($row["paidamt"] != 0  || $row["totalamt"] != 0){
+						$row["paidyes"] = 0;
+						$recs = DB::select( DB::raw("SELECT count(paymentPaid) as yes FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'and (entity='EXPENSE TRANSACTION' or paymentPaid='Yes') and date BETWEEN '".$frmDt."' and '".$toDt."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["paidyes"] = $rec->yes;
+						}
+						$row["paidno"] = 0;
+						$recs = DB::select( DB::raw("SELECT count(paymentPaid) as no FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'and (entity='EXPENSE TRANSACTION' or paymentPaid='No') and date BETWEEN '".$frmDt."' and '".$toDt."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["paidno"] = $rec->no;
+						}
+						$row["tilldtamt"] = 0;
+						$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where  entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."' and date BETWEEN '".$frmDt1."' and '".$toDt1."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["tilldtamt"] = $rec->amt;
+						}
+						$row["tdtpayamt"] = 0;
+						$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where date BETWEEN '".$frmDt1."' and '".$toDt1."' and fuelStation='".$fuelstation->name."' and entity='FUEL TRANSACTION' and (entity='EXPENSE TRANSACTION' or paymentPaid='yes')"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["tdtpayamt"] = $rec->amt;
+						}
+						
+						$row["balance"] = $row["tilldtamt"]-$row["tdtpayamt"];
+						if($row["tilldtamt"] != 0  || $row["tdtpayamt"] != 0){
 							$resp[] = $row;
 						}
+						
 					}
 				}
 				else if($values["fuelstation"] > 0){
@@ -3462,6 +3516,75 @@ class ReportsController extends \Controller {
 						if($row["paidamt"] != 0  || $row["totalamt"] != 0){
 							$resp[] = $row;
 						}
+					}foreach ($fuelstations as $fuelstation){
+						$row = array();
+						$row["fuelstation"] = $fuelstation->name;
+						$row["fromdate"] = $frmDt;
+						/*$recs = DB::select( DB::raw("SELECT  FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["fromdate"] = $rec->amt;
+						}*/
+						$row["todate"] = $toDt;
+						/*$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["todate"] = $rec->amt;
+						}*/
+						$row["totvehs"] = 0;
+						$recs = DB::select( DB::raw("SELECT count(vehicleId) as count  FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."' and date BETWEEN '".$frmDt."' and '".$toDt."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["totvehs"] = $rec->count;
+						}
+						$row["totltrs"] = 0;
+						$recs = DB::select( DB::raw("SELECT sum(ltrs) as ltrs FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'and date BETWEEN '".$frmDt."' and '".$toDt."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["totltrs"] = $rec->ltrs;
+						}
+						$row["totalamt"] = 0;
+						$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'and date BETWEEN '".$frmDt."' and '".$toDt."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["totalamt"] = $rec->amt;
+						}
+						$row["paidamt"] = 0;
+						$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where fuelStation='".$fuelstation->name."' and (entity='EXPENSE TRANSACTION' or paymentPaid='Yes')and date BETWEEN '".$frmDt."' and '".$toDt."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["paidamt"] = $rec->amt;
+						}
+						$row["paidyes"] = 0;
+						$recs = DB::select( DB::raw("SELECT count(paymentPaid) as yes FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'and (entity='EXPENSE TRANSACTION' or paymentPaid='Yes') and date BETWEEN '".$frmDt."' and '".$toDt."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["paidyes"] = $rec->yes;
+						}
+						$row["paidno"] = 0;
+						$recs = DB::select( DB::raw("SELECT count(paymentPaid) as no FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'and (entity='EXPENSE TRANSACTION' or paymentPaid='No') and date BETWEEN '".$frmDt."' and '".$toDt."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["paidno"] = $rec->no;
+						}
+						$row["tilldtamt"] = 0;
+						$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where  entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."' and date BETWEEN '".$frmDt1."' and '".$toDt1."'"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["tilldtamt"] = $rec->amt;
+						}
+						$row["tdtpayamt"] = 0;
+						$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where date BETWEEN '".$frmDt1."' and '".$toDt1."' and fuelStation='".$fuelstation->name."' and entity='FUEL TRANSACTION' and (entity='EXPENSE TRANSACTION' or paymentPaid='yes')"));
+						if(count($recs)>0) {
+							$rec = $recs[0];
+							$row["tdtpayamt"] = $rec->amt;
+						}
+						
+						$row["balance"] = $row["tilldtamt"]-$row["tdtpayamt"];
+						if($row["tilldtamt"] != 0  || $row["tdtpayamt"] != 0){
+							$resp[] = $row;
+						}
+						
 					}
 				}
 			}
@@ -4124,14 +4247,92 @@ class ReportsController extends \Controller {
 	}
 	
 	private function getStockPurchaseReport($values){
+	if (\Request::isMethod('post'))
+		{
+			//$values["test"];				
+			if(!isset($values["fromdate"]) || !isset($values["todate"])){
+					echo json_encode(array("total"=>0, "data"=>array()));
+					return ;
+				}
+				$frmdt = date("Y-m-d",strtotime($values["fromdate"]));
+				$todt = date("Y-m-d",strtotime($values["todate"]));
+			if ($values["reporttype"] == "stockpurchase")
+			{	
+			$select_args = array();
+			$select_args[] = "officebranch.name as officeBranchId";
+			$select_args[] = "items.name as item";
+			$select_args[] = "manufactures.name as manufacturer";
+			$select_args[] = "purchased_items.qty as qty";
+			$select_args[] = "purchased_items.qty as totalAmount";
+			$select_args[] = "purchase_orders.orderDate as orderDate";
+			$select_args[] = "creditsuppliers.suppliername as creditSupplierId";
+			$select_args[] = "employee1.fullName as incharge";
+			$select_args[] = "purchase_orders.billNumber as billNumber";
+			$select_args[] = "purchase_orders.status as paymentInfo";
+			$select_args[] = "purchase_orders.comments as comments";
+			$select_args[] = "employee.fullName as receivedBy";
+			$select_args[] = "purchase_orders.id as id";
+			$select_args[] = "purchase_orders.amountPaid as amountPaid";
+			$select_args[] = "purchase_orders.paymentType as paymentType";
+			$select_args[] = "employee.fullName as receivedBy";
+			$select_args[] = "purchased_items.unitPrice as unitPrice";
+			$select_args[] = "purchase_orders.filePath as filePath";
+			$select_args[] = "purchase_orders.createdBy as createdBy";
+			$select_args[] = "creditsuppliers.id as id";
+			$select_args[] = "creditsuppliers.supplierName as fname";
+			//$select_args[] = "cities.name as cname";
+			$resp = array();
+			$warehouses = \OfficeBranch::where("isWarehouse","=","Yes")->get();
+				$warehouse_arr = array();
+				foreach ($warehouses as $warehouse){
+					$warehouse_arr[$warehouse->id] = $warehouse->name;
+				}
+				
+				
+			$entities = \PurchasedItems::where("purchased_items.status","=","ACTIVE")
+										->where("purchase_orders.type","=","PURCHASE ORDER")
+										->where("purchase_orders.officeBranchId", "=", $values["warehouse"])
+										->whereBetween("purchase_orders.orderDate",array($frmdt,$todt))
+										->leftjoin("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
+										->leftjoin("items","items.id","=","purchased_items.itemId")
+										->leftjoin("manufactures","manufactures.id","=","purchased_items.manufacturerId")
+										->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
+										->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+										->leftjoin("employee","employee.id","=","purchase_orders.createdBy")
+										->leftjoin("employee as employee1","employee1.id","=","purchase_orders.inchargeId")
+										->select($select_args)->orderBy("purchase_orders.orderDate","desc")->get();
+			//$entities = $entities->toArray();
+			foreach ($entities as $entity){
+				$row = array();
+				$row["warehouse"] = $entity->officeBranchId;			
+				$row["itemname"] = $entity->item;
+				$row["manufacturer"] = $entity->manufacturer;
+				$row["purchasedQty"] = $entity->qty;
+				$row["totalamt"] = sprintf('%0.2f',$entity->qty*$entity->unitPrice);
+				$row["purchasedDate"] = date("d-m-Y",strtotime($entity->orderDate));
+				$row["purchasedfrom"] = $entity->fname;
+				$row["incharge"] = $entity->incharge;
+				$row["billNumber"] = $entity->billNumber;
+				$row["paymentInfo"] = "Amount Paid : ".$entity->amountPaid."<br/>"."Payment Type : ".$entity->paymentType;
+				$row["comments"] = $entity->comments;
+				$row["createdBy"] = $entity->receivedBy;
+				$resp[] = $row;
+			}
+			
+			}
+			echo json_encode($resp);
+			return;
+		}
+
 		$values['bredcum'] = strtoupper($values["reporttype"]);
 		$values['home_url'] = 'masters';
 		$values['add_url'] = 'getreport';
 		$values['form_action'] = 'getreport';
-		$values['action_val'] = '';
+		$values['action_val'] = '';;
 		$theads = array('Warehouse','Item Name', "Manufacturer", "Quantity", "Amouont", "Purchased Date", "Purchased From", "Incharge", "BillNo", "payment info", "comments", "Created By");
 		$values["theads"] = $theads;
-	
+		//$values["test"];
+
 		$form_info = array();
 		$form_info["name"] = "getreport";
 		$form_info["action"] = "getreport";
@@ -4140,30 +4341,26 @@ class ReportsController extends \Controller {
 		$form_info["back_url"] = "bankdetails";
 		$form_info["bredcum"] = "add bank details";
 		$form_info["reporttype"] = $values["reporttype"];
-	
-		$form_fields = array();
-		$select_args = array();
-		$select_args[] = "creditsuppliers.id as id";
-		$select_args[] = "creditsuppliers.supplierName as fname";
-		$select_args[] = "cities.name as cname";
-		
+
 		$warehouses = \OfficeBranch::where("isWarehouse","=","Yes")->get();
 		$warehouse_arr = array();
 		foreach ($warehouses as $warehouse){
-			$warehouse_arr[$warehouse->id] = $warehouse->name;
-		}
+		$warehouse_arr[$warehouse->id] = $warehouse->name;
+		}	
 		$form_field = array("name"=>"warehouse", "content"=>"report for ", "readonly"=>"",  "required"=>"required","type"=>"select",  "options"=>$warehouse_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
 		$form_fields[] = $form_field;
-	
+
 		$form_info["form_fields"] = $form_fields;
 		$values["form_info"] = $form_info;
 		$values["provider"] = "stockpurchase";
-		return View::make('reports.reportsdatatable', array("values"=>$values));
-	}
+		return View::make('reports.stockpurchase', array("values"=>$values));
+	
+}
+	
 	
 	private function getVehicleStockHistoryReport($values){
 		if (\Request::isMethod('post'))
@@ -4768,6 +4965,7 @@ class ReportsController extends \Controller {
 			$select_args[] = "fueltransactions.filledDate as endDate";
 			$select_args[] = "fueltransactions.startReading as startReading";
 			$select_args[] = "fueltransactions.litres as litres";
+			$select_args[] = "fueltransactions.fullTank as fullTank";
 			$select_args[] = "vehicle.vehicle_type as mileage";
 			$select_args[] = "fueltransactions.remarks as remarks";
 				
@@ -4779,74 +4977,99 @@ class ReportsController extends \Controller {
 			$frmdt = date("Y-m-d",strtotime($values["fromdate"]));
 			$todt = date("Y-m-d",strtotime($values["todate"]));
 			$resp = array();
-				
+				/*
 			$sql = \FuelTransaction::whereBetween("filledDate",array($frmdt,$todt));
 						if($values["depot"]!=0){
 							$sql->where("contracts.depotId",$values["depot"]);
 						}						
-						$sql->where("fullTank","YES")
-						->where("fueltransactions.deleted","No")
+						//$sql->where("fullTank","YES")
+						$sql->where("fueltransactions.deleted","No")
 						->where("fueltransactions.status","ACTIVE")
 						->where("contracts.clientId",$values["clientname"])
 						->join("contracts","contracts.id","=","fueltransactions.contractId")
 						->leftjoin("vehicle","vehicle.id","=","fueltransactions.vehicleId")
 						->leftjoin("lookuptypevalues","lookuptypevalues.id","=","vehicle.vehicle_type");
-			$entities =	$sql->select($select_args)->orderBy("fueltransactions.vehicleId","asc")->orderBy("filledDate","asc")->get();
-			$total = \FuelTransaction::whereBetween("filledDate",array($frmdt,$todt))
-						->where("fullTank","YES")
+			$entities =	$sql->select($select_args)->orderBy("fueltransactions.vehicleId","asc")->orderBy("filledDate","desc")->get();
+			$sql =\FuelTransaction::whereBetween("filledDate",array($frmdt,$todt));
+						//->where("fueltransactions.fullTank","YES")
+						if($values["depot"]!=0){
+							$sql->where("contracts.depotId",$values["depot"]);
+						}
+						//$sql->where("fullTank","YES")
+						$sql->where("fueltransactions.fullTank","No")
 						->where("fueltransactions.deleted","No")
 						->where("fueltransactions.status","ACTIVE")
 						->where("contracts.depotId",$values["depot"])
 						->where("contracts.clientId",$values["clientname"])
-						->join("contracts","contracts.id","=","fueltransactions.contractId")
-						->count();
+						->join("contracts","contracts.id","=","fueltransactions.contractId");
+			*/			
+			$entities = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+						->where("contractId",">",0)
+						->where("depots.id","=",$values["depot"])
+						->where("clients.id","=",$values["clientname"])
+						->whereBetween("filledDate",array($frmdt,$todt))
+						->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
+						->leftjoin("lookuptypevalues","lookuptypevalues.id","=","vehicle.vehicle_type")
+						->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
+						->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
+						->leftjoin("clients", "clients.id","=","contracts.clientId")
+						->leftjoin("depots", "depots.id","=","contracts.depotId")
+						->select($select_args)->orderBy("fueltransactions.vehicleId")->orderBy("filledDate","desc")->get();
+							
+			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+						->where("contractId",">",0)
+						->where("depots.id","=",$values["depot"])
+						->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
+						->leftjoin("depots", "depots.id","=","contracts.depotId")
+						->whereBetween("filledDate",array($frmdt,$todt))->count();
 			
+			//$total =  $sql->count();
 			$i=0;
+			$k=0;
 			$veh = "";
 			if(count($entities)>0){
-				$veh = $entities[0]->veh_reg;
+				$veh = $entities[0]->veh_reg;				
 			}
-			for($i=0; $i<count($entities)-1; $i++){
+			
+			for($i=0; $i<count($entities)-1; $i++){	
 				$row = array();
-				if($veh == $entities[$i+1]->veh_reg){
 					$row["veh_reg"] = $entities[$i]->veh_reg;
 					$row["vehicle_type"] = $entities[$i]->vehicle_type;
 					$row["yearof_pur"] = date("d-m-Y",strtotime($entities[$i]->yearof_pur));
-					$row["startDate"] = date("d-m-Y",strtotime($entities[$i]->startDate));
-					$row["endDate"] = date("d-m-Y",strtotime($entities[$i+1]->endDate));
+					$row["startDate"] = date("d-m-Y",strtotime($entities[$i+1]->endDate));
+					$row["endDate"] = date("d-m-Y",strtotime($entities[$i]->startDate));
+					$row["meterReading"] =  $entities[$i]->startReading;
 					$row["distance"] = $entities[$i+1]->startReading-$entities[$i]->startReading;
-					if($row["distance"]==0){
-						continue;
-					}
 					$row["litres"] = $entities[$i]->litres;
-					$row["mileage"] = round(($entities[$i+1]->startReading-$entities[$i]->startReading)/$entities[$i]->litres, 2);
-					$row["remarks"] = $entities[$i]->remarks." ";//.$entities[$i]->startReading;
-				}
-				else{
-					$veh = $entities[$i+1]->veh_reg;
-					if(($entities[$i+1]->startReading-$entities[$i]->startReading) <0){
-						continue;
+					$row["fullTank"] = $entities[$i]->fullTank;
+					$row["mileage"] = 0;
+					$ltrs = 0;
+					if($entities[$i]->fullTank=="YES"){
+						$j = $k+1;
+						while($j<count($entities))
+						{					
+							if($entities[$j]->vehicleId==$entities[$i]->vehicleId && $entities[$j]->fullTank=="YES"){								
+								$ltrs = $ltrs+$entities[$i]->litres;								
+								$row["mileage"] = round((($entities[$i]->startReading-$entities[$j]->startReading)/$ltrs), 2);
+								//echo $entities[$i]["startReading"].", ";
+								break;
+							}
+							if($j<count($entities) && $entities[$j]->fullTank=="NO"){
+								$ltrs = $ltrs+$entities[$j]->litres;
+							}
+							$j++;
+						}
 					}
-					$i++;
+					$k++;	
 					if($entities[$i]->veh_reg != $entities[$i+1]->veh_reg){
-						continue;
+						$row["mileage"] = 0;
+						$row["distance"] = 0;						
 					}
-					else{
-						continue;
-						/*$row["veh_reg"] = $entities[$i]->veh_reg;
-						$row["vehicle_type"] = $entities[$i]->vehicle_type;
-						$row["yearof_pur"] = date("d-m-Y",strtotime($entities[$i]->yearof_pur));
-						$row["startDate"] = date("d-m-Y",strtotime($entities[$i]->startDate));
-						$row["endDate"] = date("d-m-Y",strtotime($entities[$i+1]->endDate));
-						$row["distance"] = $entities[$i+1]->startReading-$entities[$i]->startReading;
-						$row["litres"] = $entities[$i]->litres;
-						$row["mileage"] = round(($entities[$i+1]->startReading-$entities[$i]->startReading)/$entities[$i]->litres, 2);
-						$row["remarks"] = $entities[$i]->remarks;//." ".$entities[$i]->startReading;
-						*/
-					}
-				}
+					$row["remarks"] = $entities[$i]->remarks." ";//.$entities[$i]->startReading;
 				$resp[] = $row;
 			}
+			
+			
 			if(count($entities)>0){
 				/*$row["veh_reg"] = $entities[$i]->veh_reg;
 				$row["vehicle_type"] = $entities[$i]->vehicle_type;
@@ -4868,7 +5091,7 @@ class ReportsController extends \Controller {
 		$values['add_url'] = 'loginlog';
 		$values['form_action'] = 'loginlog';
 		$values['action_val'] = '#';
-		$theads = array('vehicle no','Vehicle Type', "Year of purchase", "start date", "end date", "total distance", "total fuel", "mileage", "remarks");
+		$theads = array('vehicle no','Vehicle Type', "Year of purchase", "start date", "end date","meterReading", "total distance", "total fuel", "fulltank", "mileage", "remarks");
 		$values["theads"] = $theads;
 	
 		//$values["test"];
