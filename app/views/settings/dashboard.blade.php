@@ -110,9 +110,9 @@
 					<thead>
 						<tr>
 							<th>EMPLOYEE</th>
-							<th>APPRVODE</th>
 							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
+							<th>APPROVED</th>
 							<th>REJECTED</th>
 						</tr>
 					</thead>
@@ -129,9 +129,9 @@
 					<thead>
 						<tr>
 							<th>EMPLOYEE</th>
-							<th>APPRVODE</th>
 							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
+							<th>APPROVED</th>
 							<th>REJECTED</th>
 						</tr>
 					</thead>
@@ -147,9 +147,9 @@
 					<thead>
 						<tr>
 							<th>EMPLOYEE</th>
-							<th>APPRVODE</th>
 							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
+							<th>APPROVED</th>
 							<th>REJECTED</th>
 						</tr>
 					</thead>
@@ -167,9 +167,9 @@
 					<thead>
 						<tr>
 							<th>EMPLOYEE</th>
-							<th>APPRVODE</th>
 							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
+							<th>APPROVED</th>
 							<th>REJECTED</th>
 						</tr>
 					</thead>
@@ -186,9 +186,9 @@
 						<tr>
 							<th>EMPLOYEE</th>
 							<th>EXPENSE TYPE</th>
-							<th>APPRVODE</th>
 							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
+							<th>APPROVED</th>
 							<th>REJECTED</th>
 						</tr>
 					</thead>

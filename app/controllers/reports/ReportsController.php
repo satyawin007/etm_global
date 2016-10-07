@@ -197,6 +197,9 @@ class ReportsController extends \Controller {
 		if(isset($values["reporttype"]) && $values["reporttype"] == "inventory"){
 			return $this->getInventoryReport($values);
 		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "officeinventory"){
+			return $this->getOfficeInventoryReport($values);
+		}
 		if(isset($values["reporttype"]) && $values["reporttype"] == "repairstock"){
 			return $this->getRepairStockReport($values);
 		}
@@ -4561,6 +4564,7 @@ class ReportsController extends \Controller {
 	private function getInventoryReport($values){
 		if (\Request::isMethod('post'))
 		{
+			//$values["test"];
 			$frmDt = date("Y-m-d", strtotime($values["fromdate"]));
 			$toDt = date("Y-m-d", strtotime($values["todate"]));
 			$resp = array();
@@ -4589,14 +4593,16 @@ class ReportsController extends \Controller {
 				if($values["inventoryreporttype"] == "find_available_items" ){
 					$query = \PurchasedItems::where("purchased_items.status","=","ACTIVE")
 								->whereIn("purchase_orders.type",array("PURCHASE ORDER","TO WAREHOUSE"))
+								->where("items.stockType","=","NON OFFICE")
 								->where("purchase_orders.status","=","ACTIVE");
+					if($values["warehouse"]>0 && $values["item"]>0){
+						$query->where("purchase_orders.officeBranchId","=",$values["warehouse"])
+							  ->where("items.id","=",$values["item"]);
+					}
 					if($values["warehouse"]>0 && ($values["item"]==0 || $values["item"]=="")){
 						$query->where("purchase_orders.officeBranchId","=",$values["warehouse"]);
 					}
-					if($values["warehouse"]>0 && $values["item"]>0){
-						$query->where("purchase_orders.officeBranchId","=",$values["warehouse"]);
-						$query->where("items.id","=",$values["item"]);
-					}
+					
 					if($values["warehouse"]==0 && $values["item"]>0){
 						$query->where("items.id","=",$values["item"]);
 					}
@@ -4661,6 +4667,7 @@ class ReportsController extends \Controller {
 						$todt = date("Y-m-d",strtotime($values['todate']));
 						$query = \InventoryTransactions::where("inventory_transaction.status","=","ACTIVE")
 										->where("purchase_orders.status","=","ACTIVE")
+										->where("items.stockType","=","NON OFFICE")
 										->whereBetween("inventory_transaction.date",array($fromdt,$todt));
 						if($values["warehouse"]>0 && $values["warehouse"]<999){
 							$query->where("officebranch.id","=",$values["warehouse"]);
@@ -4760,14 +4767,14 @@ class ReportsController extends \Controller {
 		foreach ($warehouses as $warehouse){
 			$warehouse_arr = array();
 			$sub_warehouses = \Depot::where("status","=","ACTIVE")
-			->where("ParentWarehouse","=",$warehouse->id)->get();
+								->where("ParentWarehouse","=",$warehouse->id)->get();
 			foreach ($sub_warehouses as $sub_warehouse){
 				$warehouse_arr[$sub_warehouse->id] = $sub_warehouse->name."(".$sub_warehouse->code.")";
 			}
 			$warehouse_arr_total[$warehouse->name] = $warehouse_arr;
 		}
 		
-		$items = \Items::All();
+		$items = \Items::where("stockType","=","NON OFFICE")->get();
 		$items_arr = array();
 		$items_arr[0] = "All";
 		foreach ($items as $item){
@@ -4788,6 +4795,239 @@ class ReportsController extends \Controller {
 		$values["form_info"] = $form_info;
 		$values["provider"] = "dailysettlement";
 		return View::make('reports.inventoryreport', array("values"=>$values));
+	}
+	private function getOfficeInventoryReport($values){
+		if (\Request::isMethod('post'))
+		{
+			$frmDt = date("Y-m-d", strtotime($values["fromdate"]));
+			$toDt = date("Y-m-d", strtotime($values["todate"]));
+			$resp = array();
+			$select_args = array();
+			$select_args[] = "officebranch.name as officeBranchId";
+			$select_args[] = "items.name as item";
+			$select_args[] = "manufactures.name as manufacturer";
+			$select_args[] = "purchased_items.qty as qty";
+			$select_args[] = "purchased_items.purchasedQty as purchasedQty";
+			$select_args[] = "purchase_orders.orderDate as orderDate";
+			$select_args[] = "creditsuppliers.suppliername as creditSupplierId";
+			$select_args[] = "employee1.fullName as incharge";
+			$select_args[] = "purchase_orders.billNumber as billNumber";
+			$select_args[] = "purchase_orders.status as paymentInfo";
+			$select_args[] = "purchase_orders.comments as comments";
+			$select_args[] = "employee.fullName as receivedBy";
+			$select_args[] = "purchase_orders.id as id";
+			$select_args[] = "purchase_orders.amountPaid as amountPaid";
+			$select_args[] = "purchase_orders.paymentType as paymentType";
+			$select_args[] = "employee.fullName as receivedBy";
+			$select_args[] = "purchased_items.unitPrice as unitPrice";
+			$select_args[] = "purchase_orders.filePath as filePath";
+			$select_args[] = "depots.name as depotName";
+			$select_args[] = "officebranch.id as branchId";
+			if(isset($values["officeinventoryreporttype"])){
+				if($values["officeinventoryreporttype"] == "find_available_items" ){
+					$query = \PurchasedItems::where("purchased_items.status","=","ACTIVE")
+												->whereIn("purchase_orders.type",array("OFFICE PURCHASE ORDER","TO WAREHOUSE"))
+												->where("items.stockType","=","OFFICE")
+												->where("purchase_orders.status","=","ACTIVE");
+					if($values["warehouse"]>0 && $values["item"]>0){
+						$query->where("purchase_orders.officeBranchId","=",$values["warehouse"])
+							  ->where("items.id","=",$values["item"]);
+					}
+					if($values["warehouse"]>0 && ($values["item"]==0 || $values["item"]=="")){
+						$query->where("purchase_orders.officeBranchId","=",$values["warehouse"]);
+					}
+					if($values["warehouse"]==0 && $values["item"]>0){
+						$query->where("items.id","=",$values["item"]);
+					}
+					$query->leftjoin("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
+							->leftjoin("items","items.id","=","purchased_items.itemId")
+							->leftjoin("manufactures","manufactures.id","=","purchased_items.manufacturerId")
+							->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
+							->leftjoin("depots","depots.id","=","purchase_orders.officeBranchId")
+							->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+							->leftjoin("employee","employee.id","=","purchase_orders.createdBy")
+							->leftjoin("employee as employee1","employee1.id","=","purchase_orders.inchargeId");
+					$entities = $query->select($select_args)->orderBy("purchase_orders.orderDate","desc")->get();
+					foreach ($entities as $entity){
+						$row = array();
+						$row["officeBranchId"] = $entity->officeBranchId;
+						if($entity->officeBranchId == "" || $entity->officeBranchId == "0" || $entity->officeBranchId == "null"){
+							$row["officeBranchId"] = $entity->depotName;
+						}
+						$row["item"] = $entity->item;
+						$row["qty"] = $entity->qty;
+						$row["manufacturer"] = $entity->manufacturer;
+						$row["orderDate"] = date("d-m-Y",strtotime($entity->orderDate));
+						$row["orderqty"] = $entity->purchasedQty;
+						$row["billNumber"] = $entity->billNumber;
+						if($entity->filePath != ""){
+							$row["billNumber"] = "<a target='_blank' href='../app/storage/uploads/".$entity->filePath."'>".$entity->billNumber."</a>";
+						}
+						$row["creditSupplierId"] = $entity->creditSupplierId;
+						$resp[] = $row;
+					}
+				}
+				if(isset($values["officeinventoryreporttype"]) && $values["officeinventoryreporttype"] == "history"){
+					$select_args = array();
+					$select_args[] = "officebranch.name as officebranch";
+					$select_args[] = "items.name as item";
+					$select_args[] = "manufactures.name as manufacturer";
+					$select_args[] = "inventory_transaction.qty as qty";
+					$select_args[] = "purchased_items.purchasedQty as purchasedQty";
+					$select_args[] = "inventory_transaction.date as transactionDate";
+					$select_args[] = "inventory_transaction.action as transactiontype";
+					$select_args[] = "inventory_transaction.fromWareHouseId as fromWareHouseId";
+					$select_args[] = "officebranch1.name as toWareHouseId";
+					$select_args[] = "vehicle1.veh_reg as veh_reg1";
+					$select_args[] = "inventory_transaction.fromActionId as fromActionId";
+					$select_args[] = "inventory_transaction.toActionId as toActionId";
+					$select_args[] = "inventory_transaction.remarks as remarks";
+					$select_args[] = "purchase_orders.orderDate as orderDate";
+					$select_args[] = "creditsuppliers.suppliername as creditSupplierId";
+					$select_args[] = "purchase_orders.billNumber as billNumber";
+					$select_args[] = "purchase_orders.id as id";
+					$select_args[] = "purchase_orders.amountPaid as amountPaid";
+					$select_args[] = "purchase_orders.paymentType as paymentType";
+					$select_args[] = "employee.fullName as receivedBy";
+					$select_args[] = "purchased_items.unitPrice as unitPrice";
+					$select_args[] = "purchase_orders.filePath as filePath";
+					$select_args[] = "vehicle.veh_reg as veh_reg";
+					$select_args[] = "depots.name as depotName";
+					$select_args[] = "depots1.name as depot1Name";
+					$select_args[] = "officebranch.id as branchId";
+					if($values["officeinventoryreporttype"] == "history" ){
+						$fromdt = date("Y-m-d",strtotime($values['fromdate']));
+						$todt = date("Y-m-d",strtotime($values['todate']));
+						$query = \InventoryTransactions::where("inventory_transaction.status","=","ACTIVE")
+						->where("purchase_orders.status","=","ACTIVE")
+						->where("items.stockType","=","OFFICE")
+						->whereBetween("inventory_transaction.date",array($fromdt,$todt));
+						if($values["warehouse"]>0 && $values["warehouse"]<999){
+							$query->where("officebranch.id","=",$values["warehouse"]);
+						}
+						if($values["warehouse"]>999){
+							$query->where("depots.id","=",$values["warehouse"]);
+						}
+						if($values["item"]>0){
+							$query->where("items.id","=",$values["item"]);
+						}
+						$query->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")
+						->leftjoin("purchase_orders","purchase_orders.id","=","purchased_items.purchasedOrderId")
+						->leftjoin("items","items.id","=","purchased_items.itemId")
+						->leftjoin("vehicle","vehicle.id","=","inventory_transaction.toVehicleId")
+						->leftjoin("vehicle as vehicle1","vehicle1.id","=","inventory_transaction.fromVehicleId")
+						->leftjoin("manufactures","manufactures.id","=","purchased_items.manufacturerId")
+						->leftjoin("officebranch","officebranch.id","=","inventory_transaction.fromWareHouseId")
+						->leftjoin("officebranch as officebranch1","officebranch1.id","=","inventory_transaction.toWareHouseId")
+						->leftjoin("depots","depots.id","=","inventory_transaction.fromWareHouseId")
+						->leftjoin("depots as depots1","depots1.id","=","inventory_transaction.toWareHouseId")
+						->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
+						->leftjoin("employee","employee.id","=","purchase_orders.createdBy");
+						$entities = $query->select($select_args)->orderBy("inventory_transaction.date","desc")->get();
+						foreach ($entities as $entity){
+							$row = array();
+							$row["officeBranchId"] = $entity->officebranch;
+							if($entity->officebranch == "" || $entity->officebranch == "0" || $entity->officebranch == "null"){
+								$row["officeBranchId"] = $entity->depotName;
+							}
+							if($entity->depot1Name != ""){
+								$entity->toWareHouseId = $entity->depot1Name;
+							}
+								
+							$row["item"] = $entity->item;
+							$row["qty"] = $entity->qty;
+							$row["manufacturer"] = $entity->manufacturer;
+							$row["transactionDate"] = date("d-m-Y",strtotime($entity->transactionDate));
+							$transdetails = "";
+							if($entity->transactiontype=="itemtovehicles"){
+								$transdetails = $transdetails."Transaction Type : Items<br/> To Vehicle : ".$entity->veh_reg;
+							}
+							if($entity->transactiontype=="vehicletovehicle"){
+								$transdetails = $transdetails."Transaction Type : Vehicle To Vehicle <br/>".$entity->veh_reg1." To ". $entity->veh_reg;
+							}
+							if($entity->transactiontype=="warehousetowarehouse"){
+								$transdetails = $transdetails."Transaction Type : Warehouse To Warehouse <br/>".$entity->officebranch." To ". $entity->toWareHouseId;
+							}
+							$row["transinfo"] = $transdetails;
+							$row["orderDate"] = date("d-m-Y",strtotime($entity->orderDate));
+							$row["orderqty"] = $entity->purchasedQty;
+							$row["creditSupplierId"] = $entity->creditSupplierId;
+							$row["billNumber"] = $entity->billNumber;
+							if($entity->filePath != ""){
+								$row["billNumber"] = "<a target='_blank' href='../app/storage/uploads/".$entity->filePath."'>".$entity->veh_reg."</a>";
+							}
+							$row["remarks"] = $entity->remarks;
+							$resp[] = $row;
+								
+						}
+					}
+				}
+			}
+			echo json_encode($resp);
+			return;
+		}
+	
+		$values['bredcum'] = strtoupper($values["reporttype"]);
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'getreport';
+		$values['form_action'] = 'getreport';
+		$values['action_val'] = '';
+		$theads = array('Bank Name','Branch Name', "Account Name", "Account No", "Account Type");
+		$values["theads"] = $theads;
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "bankdetails";
+		$form_info["bredcum"] = "add bank details";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+		$form_fields = array();
+		$select_args = array();
+		$select_args[] = "fuelstationdetails.id as id";
+		$select_args[] = "fuelstationdetails.name as fname";
+		$select_args[] = "cities.name as cname";
+	
+		$warehouse_arr_total = array();
+		$warehouse_arr = array();
+		$warehouses = \OfficeBranch::where("isWareHouse","=","Yes")->get();
+		foreach ($warehouses as $warehouse){
+			$warehouse_arr[$warehouse->id] = $warehouse->name;
+		}
+		$warehouse_arr_total["main warehouses"] = $warehouse_arr;
+		foreach ($warehouses as $warehouse){
+			$warehouse_arr = array();
+			$sub_warehouses = \Depot::where("status","=","ACTIVE")
+			->where("ParentWarehouse","=",$warehouse->id)->get();
+			foreach ($sub_warehouses as $sub_warehouse){
+				$warehouse_arr[$sub_warehouse->id] = $sub_warehouse->name."(".$sub_warehouse->code.")";
+			}
+			$warehouse_arr_total[$warehouse->name] = $warehouse_arr;
+		}
+	
+		$items = \Items::where("stockType","=","OFFICE")->get();
+		$items_arr = array();
+		$items_arr[0] = "All";
+		foreach ($items as $item){
+			$items_arr[$item->id] = $item->name;
+		}
+		$form_field = array("name"=>"warehouse", "id"=>"warehouse", "content"=>"warehouse ", "readonly"=>"",  "required"=>"required","type"=>"selectgroup",  "options"=>$warehouse_arr_total, "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"item", "content"=>"item ", "readonly"=>"",  "required"=>"","type"=>"select",  "options"=>$items_arr, "class"=>"form-control chosen-select");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"officeinventoryreporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+	
+		$form_info["form_fields"] = $form_fields;
+		$values["form_info"] = $form_info;
+		$values["provider"] = "dailysettlement";
+		return View::make('reports.officeinventoryreport', array("values"=>$values));
 	}
 	
 	private function getLoginLogInfo($values)
@@ -6407,8 +6647,10 @@ private function getGlobalLoansReport($values)
 					$qry = $qry->whereIn("expensetransactions.lookupValueId",$lookup_arr);
 				}
 				
-				$recs = $qry->whereBetween("expensetransactions.date",array($frmDt,$toDt))->select($select_args)->get();
-				foreach($recs as  $rec) {
+				$recs = $qry->whereBetween("expensetransactions.date",array($frmDt,$toDt))->select($select_args)->orderBy("vehicle.id","desc")->get();
+				$i=0;
+				foreach($i=0;$i<count($recs); $i++) {
+					$rec = $recs[$i];
 					$row = array();
 					$row["vehicle"] = $rec->veh_reg;
 					$row["branch"] = $rec->branchname;
@@ -6458,7 +6700,7 @@ private function getGlobalLoansReport($values)
 		$values['add_url'] = 'loginlog';
 		$values['form_action'] = 'loginlog';
 		$values['action_val'] = '#';
-		$theads1 = array('VEHICLE REG','BRANCH', "RENEWAL TYPE", "AMOUNT", "DATE", "NEXTALERTDATE", "PAYMENT INFO", "REMARKS",  "CREATED BY",  "WF STATUS");
+		$theads1 = array('VEHICLE REG','BRANCH',"ROAD TAX", "INSURANCE","POLLUTION","PERMIT","FITNESS", "AMOUNT", "PAYMENT INFO", "REMARKS",  "CREATED BY",  "WF STATUS");
 		$values["theads"] = $theads1;
 		//$values["test"];
 	

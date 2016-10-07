@@ -243,24 +243,25 @@ class DashboardController extends \Controller {
 			foreach ($entities as $entity){
 				$row = array();
 				$row["0"] = $entity->name;
-				$sent_for_app_cnt = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-											->where("fueltransactions.createdBy","=",$entity->empid)
-											->where("fueltransactions.workFlowStatus","=","Approved")
-											->groupBy("fueltransactions.createdBy")
-											->count();
-				$row["1"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
+				
 				$sent_for_app_cnt = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
 											->where("fueltransactions.createdBy","=",$entity->empid)
 											->where("fueltransactions.workFlowStatus","=","Sent for Approval")
 											->groupBy("fueltransactions.createdBy")
 											->count();
-				$row["2"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
+				$row["1"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$requested_for_app_cnt = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
 											->where("fueltransactions.createdBy","=",$entity->empid)
 											->where("fueltransactions.workFlowStatus","=","Requested")
 											->groupBy("fueltransactions.createdBy")
 											->count();
-				$row["3"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
+				$row["2"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
+				$sent_for_app_cnt = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+											->where("fueltransactions.createdBy","=",$entity->empid)
+											->where("fueltransactions.workFlowStatus","=","Approved")
+											->groupBy("fueltransactions.createdBy")
+											->count();
+				$row["3"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$rejected_for_app_cnt = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
 											->where("fueltransactions.createdBy","=",$entity->empid)
 											->where("fueltransactions.workFlowStatus","=","Rejected")
@@ -321,24 +322,26 @@ class DashboardController extends \Controller {
 			foreach ($entities as $entity){
 				$row = array();
 				$row["0"] = $entity->name;
-				$sent_for_app_cnt = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","NO")
-													->where("creditsuppliertransactions.createdBy","=",$entity->empid)
-													->where("creditsuppliertransactions.workFlowStatus","=","Approved")
-													->groupBy("creditsuppliertransactions.createdBy")
-													->count();
-				$row["1"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
+				
+				
 				$sent_for_app_cnt = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","NO")
 													->where("creditsuppliertransactions.createdBy","=",$entity->empid)
 													->where("creditsuppliertransactions.workFlowStatus","=","Sent for Approval")
 													->groupBy("creditsuppliertransactions.createdBy")
 													->count();
-				$row["2"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
+				$row["1"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$requested_for_app_cnt = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","NO")
 													->where("creditsuppliertransactions.createdBy","=",$entity->empid)
 													->where("creditsuppliertransactions.workFlowStatus","=","Requested")
 													->groupBy("creditsuppliertransactions.createdBy")
 													->count();
-				$row["3"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
+				$row["2"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
+				$sent_for_app_cnt = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","NO")
+													->where("creditsuppliertransactions.createdBy","=",$entity->empid)
+													->where("creditsuppliertransactions.workFlowStatus","=","Approved")
+													->groupBy("creditsuppliertransactions.createdBy")
+													->count();
+				$row["3"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$rejected_for_app_cnt = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","NO")
 													->where("creditsuppliertransactions.createdBy","=",$entity->empid)
 													->where("creditsuppliertransactions.workFlowStatus","=","Rejected")
@@ -481,22 +484,22 @@ class DashboardController extends \Controller {
 				$row["0"] = $entity->name;
 				$sent_for_app_cnt = \Leaves::where("leaves.deleted","=","No")
 										->where("leaves.createdBy","=",$entity->empid)
-										->where("leaves.workFlowStatus","=","Approved")
-										->groupBy("leaves.createdBy")
-										->count();
-				$row["1"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
-				$sent_for_app_cnt = \Leaves::where("leaves.deleted","=","No")
-										->where("leaves.createdBy","=",$entity->empid)
 										->where("leaves.workFlowStatus","=","Sent for Approval")
 										->groupBy("leaves.createdBy")
 										->count();
-				$row["2"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
+				$row["1"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$requested_for_app_cnt = \Leaves::where("leaves.deleted","=","No")
 										->where("leaves.createdBy","=",$entity->empid)
 										->where("leaves.workFlowStatus","=","Requested")
 										->groupBy("leaves.createdBy")
 										->count();
-				$row["3"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
+				$row["2"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
+				$sent_for_app_cnt = \Leaves::where("leaves.deleted","=","No")
+										->where("leaves.createdBy","=",$entity->empid)
+										->where("leaves.workFlowStatus","=","Approved")
+										->groupBy("leaves.createdBy")
+										->count();
+				$row["3"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$rejected_for_app_cnt = \Leaves::where("leaves.deleted","=","No")
 										->where("leaves.createdBy","=",$entity->empid)
 										->where("leaves.workFlowStatus","=","Rejected")
@@ -561,22 +564,22 @@ class DashboardController extends \Controller {
 				$row["1"] = "INCOME TRANSACTION";
 				$sent_for_app_cnt = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
 													->where("incometransactions.createdBy","=",$entity->empid)
-													->where("incometransactions.workFlowStatus","=","Apporved")
-													->groupBy("incometransactions.createdBy")
-													->count();
-				$row["2"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
-				$sent_for_app_cnt = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
-													->where("incometransactions.createdBy","=",$entity->empid)
 													->where("incometransactions.workFlowStatus","=","Sent for Approval")
 													->groupBy("incometransactions.createdBy")
 													->count();
-				$row["3"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
+				$row["2"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$requested_for_app_cnt = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
 														->where("incometransactions.createdBy","=",$entity->empid)
 														->where("incometransactions.workFlowStatus","=","Requested")
 														->groupBy("incometransactions.createdBy")
 														->count();
-				$row["4"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
+				$row["3"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
+				$sent_for_app_cnt = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
+														->where("incometransactions.createdBy","=",$entity->empid)
+														->where("incometransactions.workFlowStatus","=","Apporved")
+														->groupBy("incometransactions.createdBy")
+														->count();
+				$row["4"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$rejected_for_app_cnt = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
 														->where("incometransactions.createdBy","=",$entity->empid)
 														->where("incometransactions.workFlowStatus","=","Rejected")
@@ -616,22 +619,22 @@ class DashboardController extends \Controller {
 				$row["1"] = "EXPENSE TRANSACTION";
 				$sent_for_app_cnt = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
 													->where("expensetransactions.createdBy","=",$entity->empid)
-													->where("expensetransactions.workFlowStatus","=","Apprvoed")
-													->groupBy("expensetransactions.createdBy")
-													->count();
-				$row["2"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
-				$sent_for_app_cnt = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
-													->where("expensetransactions.createdBy","=",$entity->empid)
 													->where("expensetransactions.workFlowStatus","=","Sent for Approval")
 													->groupBy("expensetransactions.createdBy")
 													->count();
-				$row["3"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
+				$row["2"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$requested_for_app_cnt = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
 													->where("expensetransactions.createdBy","=",$entity->empid)
 													->where("expensetransactions.workFlowStatus","=","Requested")
 													->groupBy("expensetransactions.createdBy")
 													->count();
-				$row["4"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
+				$row["3"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
+				$sent_for_app_cnt = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
+													->where("expensetransactions.createdBy","=",$entity->empid)
+													->where("expensetransactions.workFlowStatus","=","Apprvoed")
+													->groupBy("expensetransactions.createdBy")
+													->count();
+				$row["4"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$rejected_for_app_cnt = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
 													->where("expensetransactions.createdBy","=",$entity->empid)
 													->where("expensetransactions.workFlowStatus","=","Rejected")
