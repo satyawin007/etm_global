@@ -99,24 +99,88 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						<span>Results for  VEHICLE RENEWALS REPORT</span>
-						<span style="float:right; font-size: 16px; font-weight: bold;">Total Amount : <span id="dbamt">0.00</span>  &nbsp;&nbsp;&nbsp;</span>				 
+						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
 					<div>
-						<table id="dynamic-table" class="table table-striped table-bordered table-hover">
+						<table id="dynamic-table1" class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
-								<?php 
-									$theads = $values["theads"];
-									foreach ($theads as $thead){
-										echo "<th>".strtoupper($thead)."</th>";
-									}
-								?>
+									<td>WAREHOUSE</td>
+									<td>ITEM</td>
+									<td>AVAIL QTY</td>
+									<td>COMPANY</td>
+									<td>PURCHASED DATE</td>
+									<td>PURCHASED QTY</td>
+									<td>BILL NO</td>
+									<td>BILL DATE</td>
 								</tr>
 							</thead>
-							<tbody id="tbody">
+							<tbody id="tbody1">
+							</tbody>
+						</table>								
+					</div>
+				</div>					
+			</div>
+			<div id="table2">
+				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
+					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
+					<div class="clearfix">
+						<div id="tableTools-container2" class="pull-right tableTools-container"></div>
+					</div>
+					<div class="table-header" style="margin-top: 10px;">
+						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+					</div>
+					<!-- div.table-responsive -->
+					<!-- div.dataTables_borderWrap -->
+					<div>
+						<table id="dynamic-table2" class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<td>TRANSACTION INFO</td>
+									<td>PURCHASED DATE</td>
+									<td>PURCHASED QTY</td>
+									<td>PURCHASED FROM</td>
+									<td>BILL NO</td>
+									<td>REMARKS</td>
+								</tr>
+							</thead>
+							<tbody id="tbody2">
+							</tbody>
+						</table>								
+					</div>
+				</div>					
+			</div>
+			<div id="table3">
+				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
+					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
+					<div class="clearfix">
+						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
+					</div>
+					<div class="table-header" style="margin-top: 10px;">
+						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+					</div>
+					<!-- div.table-responsive -->
+					<!-- div.dataTables_borderWrap -->
+					<div>
+						<table id="dynamic-table3" class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+									<td>WAREHOUSE</td>
+									<td>ITEM</td>
+									<td>USED QTY</td>
+									<td>COMPANY</td>
+									<td>TRANSACTION DATE</td>
+									<td>TRANSACTION INFO</td>
+									<td>PURCHASED DATE</td>
+									<td>PURCHASED QTY</td>
+									<td>PURCHASED FROM</td>
+									<td>BILL NO</td>
+									<td>REMARKS</td>
+								</tr>
+							</thead>
+							<tbody id="tbody3">
 							</tbody>
 						</table>								
 					</div>
@@ -178,113 +242,140 @@
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#processing").hide();
+			$("#fuelstationid").hide();
+			$("#vehicleid").hide();
+			$("#driverid").hide();
 			reporttype = "";
-
+			var refresh1 = 0;
+			var refresh2 = 0;
+			var refresh3 = 0;
 			function generateReport(){
-				$("#reportfor").val("getreport") ;
-				//reporttype = "ticket_corgos_summery";
+				reporttype = "ticket_corgos_summery";
 				paginate(1);
 			}
 
+			function showSelectionType(val){
+				if(val=="balanceSheetNoDt" || val=="payment" || val=="balanceSheet" || val=="tracking"){
+					$("#fuelstationid").show();
+					$("#vehicleid").hide();
+					$("#driverid").hide();
+					if(val=="balanceSheetNoDt"){
+						$("#fromdate").prop("disabled",true);
+						$("#todate").prop("disabled",true);
+					}
+					else{
+						$("#fromdate").prop("disabled",false);
+						$("#todate").prop("disabled",false);
+					}
+				}
+				else if(val=="vehicleReport"){
+					$("#fuelstationid").hide();
+					$("#vehicleid").show();
+					$("#driverid").hide();
+				}
+				else if(val=="employeeReport"){
+					$("#fuelstationid").hide();
+					$("#vehicleid").hide();
+					$("#driverid").show();
+				}
+			}
+
+			reporttype = "";
+			function getReport1(){
+				reporttype = "find_available_items";
+				paginate(1);
+			}
 			function getReport2(){
-				$("#reportfor").val("summary") ;
-				//reporttype = "ticket_corgos_summery";
+				reporttype = "items_to_be_purchased";
 				paginate(1);
 			}
-			
-
-			function changeDepot(val){
-				$.ajax({
-			      url: "getdepotsbyclientId?id="+val,
-			      success: function(data) {
-			    	  data = "<option value='0'> ALL </option>"+data;
-			    	  $("#depot").html(data);
-			    	  $('.chosen-select').trigger("chosen:updated");
-			      },
-			      type: 'GET'
-			    });
-
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-			}
-
-			function getFormData(val){
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-				$.ajax({
-			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
-			      success: function(data) {
-			    	  $("#vehicle").html(data);
-			    	  $('.chosen-select').trigger("chosen:updated");
-			      },
-			      type: 'GET'
-			   });
-			   //myTable1.ajax.url("getservicelogsdatatabledata?name=servicelogs&clientid="+clientId+"&depotid="+depotId).load();
+			function getReport3(){
+				reporttype = "history";
+				paginate(1);
 			}
 
 			function paginate(page){
-				vendor = $("#vendor").val();
-				if(vendor == ""){
-					alert("select vendor");
+				reporttype1 = $("#warehouse").val();
+				if(reporttype1 == ""){
+					alert("select warehouse");
 					return;
 				}
-				
-				fdt = $("#fromdate").val();
-				if(fdt == ""){
-					alert("select daterange FROM date");
-					return;
+				fdt="";
+				tdt="";
+				if(reporttype == "history"){
+					fdt = $("#fromdate").val();
+					if(fdt == ""){
+						alert("select daterange FROM date");
+						return;
+					}
+					tdt = $("#fromdate").val();
+					if(tdt == ""){
+						alert("select daterange TO date");
+						return;
+					}
 				}
-				tdt = $("#todate").val();
+				else{
+					fdt = "01-01-2010";
+					tdt = <?php echo "'".date("d-m-Y")."';"?>;
+				}
 				dt = fdt+" - "+tdt;	
-				var form = $("#getreport");
-				/* alert(fdt);
-				alert(tdt);
-				alert(empname); */
+
+				$("#officeinventoryreporttype").val(reporttype);
+				var form=$("#getreport");	
 
 				$("#processing").show();
 				$.ajax({
 			        type:"POST",
-			        url:form.attr("action"),//+"?fromdate="+fdt+"&todate="+tdt+"&empname="+empname,
+			        url:form.attr("action"),
 			        data:form.serialize(),
 			        success: function(response){
+			           //alert(response);  
 			           var json = JSON.parse(response);
-			           //$("#totalexepenses").html(json["total_expenses"]);
-			           var data1 = json["data"];
-			           cramt =  json["total_expenses"];
-			           $("#dbamt").html(cramt);
 			           var arr = [];
-			           for(var i = 0; i < data1.length; i++) {
-			        	    var parsed = data1[i];
+			           for(var i = 0; i < json.length; i++) {
+			        	    var parsed = json[i];
 			        	    var row = [];
 			        	    for(var x in parsed){
 			        	    	row.push(parsed[x]);
 				            }
 				            arr.push(row);
 			        	}
-						myTable1.clear().draw();
-						myTable1.rows.add(arr); // Add new data
-						myTable1.columns.adjust().draw(); // Redraw 
-						$("#table1").show();
-							//$("#table3").hide();
-							/* if(refresh1 == 0){
+			        	if(reporttype == "find_available_items"){
+							myTable1.clear().draw();
+							myTable1.rows.add(arr); // Add new data
+							myTable1.columns.adjust().draw(); // Redraw 
+							$("#table1").show();
+							$("#table2").hide();
+							$("#table3").hide();
+							if(refresh1 == 0){
 								refresh1 = 1;
 								myTable1.draw();
-							}	 */	
-			           
-						/* var data2 = json["data2"];
-			            var arr1 = [];
-			            for(var i = 0; i < data2.length; i++) {
-			        	    var parsed = data2[i];
-			        	    var row = [];
-			        	    for(var x in parsed){
-			        	    	row.push(parsed[x]);
-				            }
-				            arr1.push(row);
+							}		
 			        	}
-						myTable2.clear().draw();
-						myTable2.rows.add(arr1); // Add new data
-						myTable2.columns.adjust().draw(); // Redraw 
-						$("#table2").show(); */
+			        	else if(reporttype == "payment"){
+							myTable2.clear().draw();
+							myTable2.rows.add(arr); // Add new data
+							myTable2.columns.adjust().draw(); // Redraw theDataTable
+							$("#table1").hide();
+							$("#table2").show();	
+							$("#table3").hide();
+							if(refresh2 == 0){
+								refresh2 = 1;
+								myTable2.draw();
+							}	
+			        	}
+			        	else if(reporttype == "history"){
+							myTable3.clear().draw();
+							myTable3.rows.add(arr); // Add new data
+							myTable3.columns.adjust().draw(); // Redraw theDataTable
+							$("#table1").hide();
+							$("#table2").hide();
+							$("#table3").show();
+							if(refresh3 == 0){
+								refresh3 = 1;
+								myTable3.draw();
+							}		
+			        	}
 						$("#processing").hide();
 			        }
 			    });
@@ -362,7 +453,7 @@
 			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.confirm('".Session::pull('message')."', function(result) {});";
 				}
 			?>
 
@@ -414,10 +505,11 @@
 
 			var myTable1 = null;
 			var myTable2 = null;
+			var myTable3 = null;
 
 			jQuery(function($) {
 					//initiate dataTables plugin
-					myTable1 = $('#dynamic-table')
+					myTable1 = $('#dynamic-table1')
 					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
 					.DataTable( {
 						dom: 'Bfrtip',
@@ -435,7 +527,6 @@
 							},
 							{
 								extend: 'pdfHtml5',
-								orientation: 'landscape',
 								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
 								exportOptions: {
 									columns: ':visible'
@@ -445,7 +536,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null,  null, null, null, null, null, null
+						  null, null, null,  null, null, null,  null, null,
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -458,7 +549,7 @@
 							style: 'multi'
 						}
 				    } );
-
+					
 					//initiate dataTables plugin
 					myTable2 = $('#dynamic-table2')
 					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
@@ -471,6 +562,7 @@
 							},
 							{
 								extend: 'excelHtml5',
+								 title: 'reportTitle',
 								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
 								exportOptions: {
 									columns: ':visible'
@@ -487,7 +579,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null
+						  null, null, null, null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -501,12 +593,54 @@
 						}
 				    } );
 
-
+					//initiate dataTables plugin
+					myTable3 = $('#dynamic-table3')
+					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
+					.DataTable( {
+						dom: 'Bfrtip',
+						buttons: [
+							{
+								extend:'colvis',
+								text : "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>"
+							},
+							{
+								extend: 'excelHtml5',
+								 title: 'reportTitle',
+								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
+								exportOptions: {
+									columns: ':visible'
+								}
+							},
+							{
+								extend: 'pdfHtml5',
+								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
+								exportOptions: {
+									columns: ':visible'
+								}
+							}
+							
+						], 
+						bAutoWidth: false,
+						"aoColumns": [
+							null, null, null, null, null, null, null, null, null, null, null
+						],
+						"aaSorting": [],
+						//"sScrollY": "500px",
+						//"bPaginate": false,
+						"sScrollX" : "true",
+						//"sScrollX": "300px",
+						//"sScrollXInner": "120%",
+						"bScrollCollapse": true,
+						select: {
+							style: 'multi'
+						}
+				    } );
 					////
 					setTimeout(function() {
-						//$("#table1").hide();
-						//$("#table2").hide();
-					}, 1000);
+						$("#table1").hide();
+						$("#table2").hide();
+						$("#table3").hide();
+					}, 500);
 				})
 			
 		</script>

@@ -2495,7 +2495,7 @@ class TransactionController extends \Controller {
 		$values = Input::all();
 		$json_resp = array();
 		$entity = \ServiceLog::join("contract_vehicles","contract_vehicles.id","=","service_logs.contractVehicleId")
-					->where("contract_vehicles.vehicleId","=",$values['id'])
+					->where("contract_vehicles.id","=",$values['id'])
 					->where("substituteVehicleId","=",0)
 					->where("serviceDate","<",date("Y-m-d",strtotime($values['date'])))
 					->orderBy("serviceDate","asc")->get();

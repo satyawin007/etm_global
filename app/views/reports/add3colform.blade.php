@@ -224,6 +224,18 @@
 				<div class="col-xs-3">
 					<input class="btn btn-sm btn-primary" type="button" value="  HISTORY " onclick="getReport3()"/>
 				</div>
+				<?php } else if($form_info['reporttype'] == "officeinventory"){?>
+				<div class="col-xs-offset-4 col-xs-3">
+					<input class="btn btn-sm btn-primary" type="button" value="  FIND AVAILABLE ITEMS  " onclick="getReport1()"/>
+				</div>
+				<!-- 				
+				<div class="col-xs-3">
+					<input class="btn btn-sm btn-primary" type="button" value="  FIND ITEMS TO BE ORDERED  " onclick="getReport2()"/>
+				</div>
+				 -->
+				<div class="col-xs-3">
+					<input class="btn btn-sm btn-primary" type="button" value="  HISTORY " onclick="getReport3()"/>
+				</div>
 			<?php } else if($form_info['reporttype'] == "servicelog"){?>
 				<div class="col-xs-offset-2 col-xs-3">
 					<input class="btn btn-sm btn-primary" type="button" value="  GENERATE REPORT  " onclick="generateReport()"/>
