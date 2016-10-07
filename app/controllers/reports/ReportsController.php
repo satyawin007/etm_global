@@ -209,6 +209,9 @@ class ReportsController extends \Controller {
 		if(isset($values["reporttype"]) && $values["reporttype"] == "vehicleperformance"){
 			return $this->getVehiclePerformance($values);
 		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "vehicletrackingreport"){
+			return $this->getVehicleTracking($values);
+		}
 		if(isset($values["reporttype"]) && $values["reporttype"] == "clientvehicletrips"){
 			return $this->getClientVehicleTrips($values);
 		}
@@ -782,50 +785,54 @@ class ReportsController extends \Controller {
 			$select_args[] = "officebranch.name as branch";
 			$select_args[] = "empdueamount.comments as remarks";
 			$select_args[] = "empdueamount.id as id";
+			$emps_arr = array();
+			if(isset($values["clientname"]) && isset($values["depot"]) ){
+				if(isset($values["depot"]) && $values["depot"]==0){
+					DB::statement(DB::raw("CALL contract_driver_helper_all('".$values["clientname"]."');"));
+				}
+				else{
+					DB::statement(DB::raw("CALL contract_driver_helper('".$values["depot"]."', '".$values["clientname"]."');"));
+				}
+				$entities = DB::select( DB::raw("select * from temp_contract_drivers_helpers group by id"));
+				foreach ($entities as $entity){
+					$emps_arr[] = $entity->id;
+				}
+			}
+			
+			$sql =  \EmpDueAmount::whereRaw(" (empdueamount.status='ACTIVE' or empdueamount.deleted='No') ");
+							if(isset($values["employee"]) && $values["employee"]>0){
+								$sql->where("empdueamount.empId","=",$values["employee"]);
+							}
+							else{
+								if(isset($values["officebranch"])){
+									$sql->whereRaw(" (roleId!=20 and roleId!=19) and FIND_IN_SET('".$values["officebranch"]."',employee.officeBranchIds)");
+								}
+								else{
+									$sql->whereIn("empdueamount.empId",$emps_arr);
+								}
+							}
+							$sql->whereBetween("paymentDate",array($frmDt,$toDt))
+							->leftjoin("employee","employee.id","=","empdueamount.empId")
+							->leftjoin("officebranch","officebranch.id","=","empdueamount.branchId");
+			$salaryadvances =   $sql->OrderBy("paymentDate")->select($select_args)->get();
 			$totaladvances = 0;
-			$totalreturns  = 0;
-			if(true){
-				if($values["employee"] == "0"){
-					$salaryadvances =  \EmpDueAmount::where("empdueamount.status","=","ACTIVE")->orWhere("empdueamount.deleted","=","No")->join("employee","employee.id","=","empdueamount.empId")->leftjoin("officebranch","officebranch.id","=","empdueamount.branchId")->OrderBy("paymentDate")->select($select_args)->get();
-					foreach ($salaryadvances as $salaryadvance){
-						$row = array();
-						$row["empname"] = $salaryadvance->empname;
-						if($salaryadvance->amount>0){
-							$totaladvances = $totaladvances+$salaryadvance->amount;
-							$row["amount"] = "<span style='color:green'> ".$salaryadvance->amount."</span>";
-						}
-						else{
-							$totalreturns = $totaladvances+$totalreturns;
-							$row["amount"] = "<span style='color:red'> ".$salaryadvance->amount."</span>";
-						}
-						$row["paymentDate"] = date("d-m-Y",strtotime($salaryadvance->paymentDate));
-						$row["branch"] = $salaryadvance->branch;
-						$row["remarks"] = $salaryadvance->remarks;
-						$row["id"] = $salaryadvance->id;
-						$resp[] = $row;
-					}
+			$totalreturns = 0;
+			foreach ($salaryadvances as $salaryadvance){
+				$row = array();
+				$row["empname"] = $salaryadvance->empname;
+				if($salaryadvance->amount>0){
+					$totaladvances = $totaladvances+$salaryadvance->amount;
+					$row["amount"] = "<span style='color:green'> ".$salaryadvance->amount."</span>";
 				}
-				else if($values["employee"] > 0){
-				$salaryadvances =  \EmpDueAmount::where("empdueamount.empId","=",$values["employee"])
-							->where(function($query){$query->where("empdueamount.status","=","ACTIVE")->orWhere("empdueamount.deleted","=","No");})->join("employee","employee.id","=","empdueamount.empId")->leftjoin("officebranch","officebranch.id","=","empdueamount.branchId")->OrderBy("paymentDate")->select($select_args)->get();
-					foreach ($salaryadvances as $salaryadvance){
-						$row = array();
-						$row["empname"] = $salaryadvance->empname;
-						if($salaryadvance->amount>0){
-							$totaladvances = $totaladvances+$salaryadvance->amount;
-							$row["amount"] = "<span style='color:green'> ".$salaryadvance->amount."</span>";
-						}
-						else{
-							$totalreturns = $totaladvances+$totalreturns;
-							$row["amount"] = "<span style='color:red'> ".$salaryadvance->amount."</span>";
-						}
-						$row["paymentDate"] = date("d-m-Y",strtotime($salaryadvance->paymentDate));
-						$row["branch"] = $salaryadvance->branch;
-						$row["remarks"] = $salaryadvance->remarks;
-						$row["id"] = $salaryadvance->id;
-						$resp[] = $row;
-					}
+				else{
+					$totalreturns = $totaladvances+$totalreturns;
+					$row["amount"] = "<span style='color:red'> ".$salaryadvance->amount."</span>";
 				}
+				$row["paymentDate"] = date("d-m-Y",strtotime($salaryadvance->paymentDate));
+				$row["branch"] = $salaryadvance->branch;
+				$row["remarks"] = $salaryadvance->remarks;
+				$row["id"] = $salaryadvance->id;
+				$resp[] = $row;
 			}
 			echo json_encode($resp);
 			return;
@@ -854,15 +861,31 @@ class ReportsController extends \Controller {
 		$select_args[] = "fuelstationdetails.name as fname";
 		$select_args[] = "cities.name as cname";
 	
-		$branches =  \Employee::ALL();
 		$branches_arr = array();
-		$branches_arr["0"] = "ALL EMPLOYEES";
+		$branches = \OfficeBranch::where("status","=","ACTIVE")->get();
 		foreach ($branches as $branch){
-			$branches_arr[$branch->id] = $branch->fullName." (".$branch->empCode.")";
+			$branches_arr[$branch->id] = $branch->name;
 		}
+		
+		$clients =  \Client::where("status","=","ACTIVE")->get();
+		$clients_arr = array();
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+		
 		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"employee", "content"=>"report for ", "readonly"=>"",  "required"=>"required","type"=>"select",  "options"=>$branches_arr, "class"=>"form-control chosen-select");
+		if(isset($values["type"]) && $values["type"]=="office"){
+			$form_field = array("name"=>"officebranch","content"=>"office branch", "readonly"=>"","required"=>"", "type"=>"select", "options"=>$branches_arr, "action"=>array("type"=>"onChange", "script"=>"getEmployeesByOffice(this.value);"), "class"=>"form-control chosen-select");
+			$form_fields[] = $form_field;
+		}
+		else{
+			$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getEmployeesByDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
+			$form_fields[] = $form_field;
+		}
+		$form_field = array("name"=>"employee", "content"=>"report for ", "readonly"=>"",  "required"=>"required","type"=>"select",  "options"=>array("0"=>"ALL"), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
 		$form_fields[] = $form_field;
@@ -2993,10 +3016,10 @@ class ReportsController extends \Controller {
 			}
 			if(isset($values["typeofreport"]) && $values["typeofreport"]=="bank_payment_report"){
 				if($values["paidfrombranch"] == "0"){
-					$sql = "SELECT officebranch.name as branch, employee.empCode as empId, employee.fullName as name, salaryMonth, paymentDate, (actualSalary) as actualSalary, (dueDeductions) as dueDeductions, (leaveDeductions) as leaveDeductions, (pf) as pf, (esi) as esi, sum(otherAmount) as other_amount, (salaryPaid) as salaryPaid, empsalarytransactions.paymentType, empsalarytransactions.bankAccount, empsalarytransactions.accountNumber, empsalarytransactions.chequeNumber, empsalarytransactions.bankName, empsalarytransactions.accountNumber, empsalarytransactions.issueDate, empsalarytransactions.transactionDate from empsalarytransactions join employee on employee.id=empsalarytransactions.empId left join officebranch on officebranch.id=empsalarytransactions.branchId where paymentType != 'cash' and paymentDate BETWEEN '".$frmDt."' and '".$toDt."' order by branchId";
+					$sql = "SELECT officebranch.name as branch, bankdetails.bankName as bankName1, bankdetails.accountNo as accountNumber1,  employee.empCode as empId, employee.fullName as name, salaryMonth, paymentDate, (actualSalary) as actualSalary, (dueDeductions) as dueDeductions, (leaveDeductions) as leaveDeductions, (pf) as pf, (esi) as esi, (otherAmount) as other_amount, (salaryPaid) as salaryPaid, empsalarytransactions.paymentType, empsalarytransactions.bankAccount, empsalarytransactions.chequeNumber, empsalarytransactions.chequeNumber, empsalarytransactions.bankName, empsalarytransactions.accountNumber, empsalarytransactions.issueDate, empsalarytransactions.transactionDate from empsalarytransactions left join employee on employee.id=empsalarytransactions.empId left join bankdetails on bankdetails.id=empsalarytransactions.bankAccount left join officebranch on officebranch.id=empsalarytransactions.branchId where paymentType != 'cash' and paymentDate BETWEEN '".$frmDt."' and '".$toDt."' order by branchId";
 				}
 				else if($values["paidfrombranch"]>0){
-					$sql = "SELECT officebranch.name as branch, employee.empCode as empId, employee.fullName as name, salaryMonth, paymentDate, (actualSalary) as actualSalary, (dueDeductions) as dueDeductions, (leaveDeductions) as leaveDeductions, (pf) as pf, (esi) as esi, sum(otherAmount) as other_amount, (salaryPaid) as salaryPaid, empsalarytransactions.paymentType, empsalarytransactions.bankAccount, empsalarytransactions.accountNumber, empsalarytransactions.chequeNumber, empsalarytransactions.bankName, empsalarytransactions.accountNumber, empsalarytransactions.issueDate, empsalarytransactions.transactionDate from empsalarytransactions join employee on employee.id=empsalarytransactions.empId left join officebranch on officebranch.id=empsalarytransactions.branchId where branchId=".$values["paidfrombranch"]." and paymentType != 'cash' and paymentDate BETWEEN '".$frmDt."' and '".$toDt."' order by branchId";
+					$sql = "SELECT officebranch.name as branch, bankdetails.bankName as bankName1, bankdetails.accountNo as accountNumber1,  employee.empCode as empId, employee.fullName as name, salaryMonth, paymentDate, (actualSalary) as actualSalary, (dueDeductions) as dueDeductions, (leaveDeductions) as leaveDeductions, (pf) as pf, (esi) as esi, (otherAmount) as other_amount, (salaryPaid) as salaryPaid, empsalarytransactions.paymentType, empsalarytransactions.bankAccount, empsalarytransactions.chequeNumber, empsalarytransactions.chequeNumber, empsalarytransactions.bankName, empsalarytransactions.accountNumber, empsalarytransactions.issueDate, empsalarytransactions.transactionDate from empsalarytransactions left join employee on employee.id=empsalarytransactions.empId left join bankdetails on bankdetails.id=empsalarytransactions.bankAccount left join officebranch on officebranch.id=empsalarytransactions.branchId where branchId=".$values["paidfrombranch"]." and paymentType != 'cash' and paymentDate BETWEEN '".$frmDt."' and '".$toDt."' order by branchId";
 				}
 				$salarytransactions =  \DB::select(DB::raw($sql));
 				foreach ($salarytransactions as $salarytransaction){
@@ -3008,18 +3031,21 @@ class ReportsController extends \Controller {
 					$row["paymentInfo"] = "";
 					if($salarytransaction->paymentType == "neft"){
 						$row["paymentInfo"] = "Payment type : NEFT<br/>";
-						$row["paymentInfo"] = $row["paymentInfo"]."Bank Name : ".$salarytransaction->bankName."<br/>";
-						$row["paymentInfo"] = $row["paymentInfo"]."Acct No. : ".$salarytransaction->accountNumber."<br/>";
+						$row["paymentInfo"] = $row["paymentInfo"]."Bank Name : ".$salarytransaction->bankName1."<br/>";
+						$row["paymentInfo"] = $row["paymentInfo"]."Acct No. : ".$salarytransaction->accountNumber1."<br/>";
+						$row["paymentInfo"] = $row["paymentInfo"]."Trans Ref No. : ".$salarytransaction->chequeNumber."<br/>";
 					}
 					else if($salarytransaction->paymentType == "ecs"){
 						$row["paymentInfo"] = "Payment type : ESC<br/>";
-						$row["paymentInfo"] = $row["paymentInfo"]."Bank Name : ".$salarytransaction->bankName."<br/>";
-						$row["paymentInfo"] = $row["paymentInfo"]."Acct No. : ".$salarytransaction->accountNumber."<br/>";
+						$row["paymentInfo"] = $row["paymentInfo"]."Bank Name : ".$salarytransaction->bankName1."<br/>";
+						$row["paymentInfo"] = $row["paymentInfo"]."Acct No. : ".$salarytransaction->accountNumber1."<br/>";
+						$row["paymentInfo"] = $row["paymentInfo"]."Trans Ref No. : ".$salarytransaction->chequeNumber."<br/>";
 					}
 					else if($salarytransaction->paymentType == "rtgs"){
 						$row["paymentInfo"] = "Payment type : RTGS<br/>";
-						$row["paymentInfo"] = $row["paymentInfo"]."Bank Name : ".$salarytransaction->bankName."<br/>";
-						$row["paymentInfo"] = $row["paymentInfo"]."Acct No. : ".$salarytransaction->accountNumber."<br/>";
+						$row["paymentInfo"] = $row["paymentInfo"]."Bank Name : ".$salarytransaction->bankName1."<br/>";
+						$row["paymentInfo"] = $row["paymentInfo"]."Acct No. : ".$salarytransaction->accountNumber1."<br/>";
+						$row["paymentInfo"] = $row["paymentInfo"]."Trans Ref No. : ".$salarytransaction->chequeNumber."<br/>";
 					}
 					else if($salarytransaction->paymentType == "cheque_debit"){
 						$row["paymentInfo"] = "Payment type : CHEQUE DEBIT<br/>";
@@ -5003,9 +5029,11 @@ class ReportsController extends \Controller {
 						->where("contracts.clientId",$values["clientname"])
 						->join("contracts","contracts.id","=","fueltransactions.contractId");
 			*/			
-			$entities = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-						->where("contractId",">",0)
-						->where("depots.id","=",$values["depot"])
+			$sql = \FuelTransaction::where("fueltransactions.status","=","ACTIVE");
+						if($values["depot"]!=0){
+							$sql->where("contracts.depotId",$values["depot"]);
+						}
+						$sql->where("contractId",">",0)
 						->where("clients.id","=",$values["clientname"])
 						->whereBetween("filledDate",array($frmdt,$todt))
 						->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
@@ -5013,16 +5041,9 @@ class ReportsController extends \Controller {
 						->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
 						->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
 						->leftjoin("clients", "clients.id","=","contracts.clientId")
-						->leftjoin("depots", "depots.id","=","contracts.depotId")
-						->select($select_args)->orderBy("fueltransactions.vehicleId")->orderBy("filledDate","desc")->get();
-							
-			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-						->where("contractId",">",0)
-						->where("depots.id","=",$values["depot"])
-						->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
-						->leftjoin("depots", "depots.id","=","contracts.depotId")
-						->whereBetween("filledDate",array($frmdt,$todt))->count();
-			
+						->leftjoin("depots", "depots.id","=","contracts.depotId");
+			$entities =	$sql->select($select_args)->orderBy("fueltransactions.vehicleId")->orderBy("filledDate","desc")->get();
+
 			//$total =  $sql->count();
 			$i=0;
 			$k=0;
@@ -5033,39 +5054,48 @@ class ReportsController extends \Controller {
 			
 			for($i=0; $i<count($entities)-1; $i++){	
 				$row = array();
-					$row["veh_reg"] = $entities[$i]->veh_reg;
-					$row["vehicle_type"] = $entities[$i]->vehicle_type;
-					$row["yearof_pur"] = date("d-m-Y",strtotime($entities[$i]->yearof_pur));
-					$row["startDate"] = date("d-m-Y",strtotime($entities[$i+1]->endDate));
-					$row["endDate"] = date("d-m-Y",strtotime($entities[$i]->startDate));
-					$row["meterReading"] =  $entities[$i]->startReading;
-					$row["distance"] = $entities[$i+1]->startReading-$entities[$i]->startReading;
-					$row["litres"] = $entities[$i]->litres;
-					$row["fullTank"] = $entities[$i]->fullTank;
-					$row["mileage"] = 0;
-					$ltrs = 0;
-					if($entities[$i]->fullTank=="YES"){
-						$j = $k+1;
-						while($j<count($entities))
-						{					
-							if($entities[$j]->vehicleId==$entities[$i]->vehicleId && $entities[$j]->fullTank=="YES"){								
-								$ltrs = $ltrs+$entities[$i]->litres;								
-								$row["mileage"] = round((($entities[$i]->startReading-$entities[$j]->startReading)/$ltrs), 2);
-								//echo $entities[$i]["startReading"].", ";
-								break;
-							}
-							if($j<count($entities) && $entities[$j]->fullTank=="NO"){
-								$ltrs = $ltrs+$entities[$j]->litres;
-							}
-							$j++;
+				$row["veh_reg"] = $entities[$i]->veh_reg;
+				$row["vehicle_type"] = $entities[$i]->vehicle_type;
+				$row["yearof_pur"] = date("d-m-Y",strtotime($entities[$i]->yearof_pur));
+				$row["startDate"] = date("d-m-Y",strtotime($entities[$i+1]->endDate));
+				$row["endDate"] = date("d-m-Y",strtotime($entities[$i]->startDate));
+				$row["meterReading"] =  $entities[$i]->startReading;
+				$row["distance"] = $entities[$i+1]->startReading-$entities[$i]->startReading;
+				if($row["distance"]<0){
+					$row["distance"] = $row["distance"]*-1;
+				}
+				$row["litres"] = $entities[$i]->litres;
+				$row["fullTank"] = $entities[$i]->fullTank;
+				$row["mileage"] = 0;
+				$ltrs = 0;
+				if($entities[$i]->fullTank=="NO"){
+					continue;
+				}
+				if($entities[$i]->fullTank=="YES"){
+					$j = $i+1;
+					while($j<count($entities))
+					{					
+						if($entities[$j]->vehicleId==$entities[$i]->vehicleId && $entities[$j]->fullTank=="YES"){								
+							$ltrs = $ltrs+$entities[$i]->litres;								
+							$row["mileage"] = round((($entities[$i]->startReading-$entities[$j]->startReading)/$ltrs), 2);
+							//$row["mileage"] = $row["mileage"]." - ".$entities[$i]->startReading." - ".$entities[$j]->startReading." - ".$ltrs;
+							break;
 						}
+						if($j<count($entities) && $entities[$j]->fullTank=="NO"){
+							$ltrs = $ltrs+$entities[$j]->litres;
+						}
+						$j++;
 					}
-					$k++;	
-					if($entities[$i]->veh_reg != $entities[$i+1]->veh_reg){
-						$row["mileage"] = 0;
-						$row["distance"] = 0;						
-					}
-					$row["remarks"] = $entities[$i]->remarks." ";//.$entities[$i]->startReading;
+				}
+				if($row["mileage"]<0){
+					$row["mileage"] = $row["mileage"]*-1;
+				}
+				if($entities[$i]->veh_reg != $entities[$i+1]->veh_reg){
+					continue;
+					$row["mileage"] = 0;
+					$row["distance"] = 0;						
+				}
+				$row["remarks"] = $entities[$i]->remarks." ";//.$entities[$i]->startReading;
 				$resp[] = $row;
 			}
 			
@@ -5933,6 +5963,7 @@ class ReportsController extends \Controller {
 		{
 			if ($values["reportfor"] == "getreport") {					
 				$select_args = array();
+				$select_args[] = "contracts.id as cid";
 				$select_args[] = "clients.name as clientname";
 				$select_args[] = "depots.name as depotname";
 				$select_args[] = "vehicle.veh_reg as veh_reg";
@@ -5961,6 +5992,7 @@ class ReportsController extends \Controller {
 				$recs = $qry->select($select_args)->orderBy("contracts.clientId")->orderBy("contracts.depotId")->get();
 				foreach($recs as  $rec) {
 					$row = array();
+					$row["cid"] = $rec->cid;
 					$row["client"] = $rec->clientname;
 					$row["branch"] = $rec->depotname;
 					$row["vehicle"] = $rec->veh_reg;
@@ -5981,7 +6013,7 @@ class ReportsController extends \Controller {
 		$values['add_url'] = 'loginlog';
 		$values['form_action'] = 'loginlog';
 		$values['action_val'] = '#';
-		$theads1 = array('CLIENT','BRANCH', "VEHICLE", "ENGINE NO", "CHASSIS NO", "veh type", "year of pur", "seating capacity");
+		$theads1 = array('CON ID', 'CLIENT','BRANCH', "VEHICLE", "ENGINE NO", "CHASSIS NO", "veh type", "year of pur", "seating capacity");
 		$values["theads1"] = $theads1;
 		//$values["test"];
 	
@@ -7094,6 +7126,306 @@ private function getGlobalLoansReport($values)
 		//$values['provider'] = "loginlog";
 	
 		return View::make('reports.vehicleperformancereport', array("values"=>$values));
+	}
+	
+	private function getVehicleTracking($values)
+	{
+		if (\Request::isMethod('post'))
+		{
+			//$values["test"];
+			$select_args = array();
+	
+			if(!isset($values["fromdate"]) || !isset($values["todate"])){
+				echo json_encode(array("total"=>0, "data"=>array()));
+				return ;
+			}
+	
+			$frmDt = date("Y-m-d",strtotime($values["fromdate"]));
+			$toDt = date("Y-m-d",strtotime($values["todate"]));
+			$resp = array();
+			$resp_obj = array();
+			DB::statement(DB::raw("CALL vehicle_performance_report('".$frmDt."', '".$toDt."');"));
+			$veh_arr = array();
+			if($values["vehicle"]==0){
+				$sql = \Contract::where("contract_vehicles.status","=","ACTIVE");
+				if($values["depot"]!=0){
+					$sql->where("contracts.depotId",$values["depot"]);
+				}
+				else{
+					$sql->where("contracts.clientId",$values["clientname"]);
+				}
+				$sql->where("contracts.depotId","=",$values["depot"])
+				->join("contract_vehicles","contracts.id","=","contract_vehicles.contractId");
+				$con_vehs = $sql->select(array("contract_vehicles.vehicleId as vehicleId"))->get();
+				foreach ($con_vehs as $con_veh){
+					$veh_arr[] = $con_veh->vehicleId;
+				}
+			}
+			else{
+				$veh_arr[] = $values["vehicle"];
+			}
+				
+			$branches = \OfficeBranch::All();
+			$branches_arr = array();
+			foreach ($branches as $branch){
+				$branches_arr[$branch->id] = $branch->name;
+			}
+				
+			$recs = DB::select( DB::raw("SELECT * FROM `temp_vehicle_performance` order by date desc"));
+			$income_arr = array();
+			$expense_arr = array();
+				
+			$all_veh_arr = array();
+			$all_vehs = \Vehicle::All();
+			foreach ($all_vehs as $all_veh){
+				$all_veh_arr[$all_veh->id] = $all_veh->veh_reg;
+			}
+			$expense_sum = 0;
+			$fuel_sum = 0;
+			$stock_sum = 0;
+			$repair_sum = 0;
+				
+			$repairs_veh_summery = array();
+			$repairs_veh_summery_amt = 0;
+			$repairs_veh_summery_veh = "";
+				
+			foreach($recs as  $rec) {
+				$row = array();
+				if($rec->type == "REPAIR TRANSACTION"){
+					$veh_arr_lc = explode(",", $rec->name);
+					foreach ($veh_arr_lc as $veh){
+						if(in_array($veh, $veh_arr)){
+							$row = array();
+							$row["veh_reg"] = $all_veh_arr[$veh];
+							$row["branch"] = "";
+							if($rec->branchId != 0){
+								$row["branch"] = $branches_arr[$rec->branchId];
+							}
+							$row["type"] = $rec->type;
+							$row["purpose"] = $rec->entity;
+							$row["date"] = date("d-m-Y",strtotime($rec->date));
+							$row["transinfo"] = "Credit Supplier : ".$rec->entityValue."<br/>Bill No. - ".$rec->billNo;
+							$row["amount"] = ($rec->amount)/(count($veh_arr_lc)-1);
+							$repair_sum = $repair_sum+(($rec->amount)/(count($veh_arr_lc)-1));
+							$row["remarks"] = $rec->remarks;
+							$expense_arr[] = $row;
+						}
+					}
+				}
+				if(in_array($rec->vehicleId, $veh_arr)){
+					if($rec->type == "income"){
+						$row["veh_reg"] = $rec->entity;
+						$row["branch"] = $branches_arr[$rec->branchId];
+						$row["type"] = $rec->name;
+						$row["date"] = date("d-m-Y",strtotime($rec->date));
+						$row["transinfo"] = "Bill No. - ".$rec->billNo;
+						$row["amount"] = $rec->amount;
+						$row["remarks"] = $rec->remarks;
+						$income_arr[] = $row;
+					}
+					else{
+						$row["veh_reg"] = $rec->entity;
+						$row["branch"] = "";
+						if($rec->branchId != 0){
+							$row["branch"] = $branches_arr[$rec->branchId];
+						}
+						$row["type"] = $rec->type;
+	
+						if($rec->type=="expense"){
+							$expense_sum = $expense_sum+$rec->amount;
+						}
+	
+						if($rec->type=="STOCK TRANSACTION"){
+							$stock_sum = $stock_sum+$rec->amount;
+						}
+	
+						$row["purpose"] = $rec->name;
+						$row["date"] = date("d-m-Y",strtotime($rec->date));
+						$row["transinfo"] = "";
+						if($rec->name ==  "FUEL"){
+							$row["transinfo"] = "Fuel Station : ".$rec->entityValue."<br/>Bill No. - ".$rec->billNo;
+							$fuel_sum = $fuel_sum+$rec->amount;
+						}
+						$row["amount"] = $rec->amount;
+						$row["remarks"] = $rec->remarks;
+						$expense_arr[] = $row;
+					}
+				}
+			}
+			$resp_obj["incomes"] = $income_arr;
+			$resp_obj["expenses"] = $expense_arr;
+			$resp_obj["expenses_summary"] = array(array("emp_salary"=>"0.0"),array("fuel"=>sprintf('%0.2f',$fuel_sum)),array("repairs"=>sprintf('%0.2f',$repair_sum)),array("stock"=>sprintf('%0.2f',$stock_sum)),array("others"=>sprintf('%0.2f',$expense_sum)));
+				
+				
+			$recs = DB::select( DB::raw("SELECT * FROM `temp_vehicle_performance`"));
+			$summary_by_vehicle = array();
+			foreach($veh_arr as  $veh_rec) {
+				$expense_sum = 0;
+				$fuel_sum = 0;
+				$stock_sum = 0;
+				$repair_sum = 0;
+				foreach($recs as  $rec) {
+					$row = array();
+					if($rec->type == "REPAIR TRANSACTION"){
+						$veh_arr_lc = explode(",", $rec->name);
+						foreach ($veh_arr_lc as $veh){
+							if($veh == $veh_rec){
+								$repair_sum = $repair_sum+(($rec->amount)/(count($veh_arr_lc)-1));
+							}
+						}
+					}
+					else{
+						if($veh_rec == $rec->vehicleId){
+							if($rec->type == "expense"){
+								$expense_sum = $expense_sum+$rec->amount;
+							}
+							if($rec->type == "FUEL"){
+								$fuel_sum = $fuel_sum+$rec->amount;
+							}
+							if($rec->type == "STOCK TRANSACTION"){
+								$stock_sum = $stock_sum+$rec->amount;
+							}
+						}
+					}
+				}
+				$row = array();
+				$row["vehicle"] = "";
+				if(isset($all_veh_arr[$veh_rec])){
+					$row["vehicle"] = $all_veh_arr[$veh_rec];
+				}
+	
+				$row["fuel"] = $fuel_sum;
+				$row["repair"] = $repair_sum;
+				$row["purchases"] = "0.0";
+				$row["stock"] = $stock_sum;
+				$row["salaries"] = "0.0";
+				$row["expense"] = $expense_sum;
+				$summary_by_vehicle[] = $row;
+			}
+			$resp_obj["summary_by_vehicle"] = $summary_by_vehicle;
+			
+			$select_args = array();
+			$select_args[] = "vehicle.veh_reg as veh_reg";
+			$select_args[] = "clients.name as cname";
+			$select_args[] = "depots.name as dname";
+			$select_args[] = "contract_vehicles.vehicleStartDate as vehicleStartDate";
+			$select_args[] = "contract_vehicles.inActiveDate as inActiveDate";
+			$select_args[] = "contract_vehicles.remarks as remarks";
+			$select_args[] = "contract_vehicles.status as status";
+			$select_args[] = "employee1.fullName as driver1";
+			$select_args[] = "employee2.fullName as driver2";
+			$select_args[] = "employee3.fullName as driver3";
+			$select_args[] = "employee4.fullName as driver4";
+			$select_args[] = "employee5.fullName as driver5";
+			$select_args[] = "employee6.fullName as helper";
+			
+			$recs = \ContractVehicle::where("vehicleId","=",$values["vehicle"])
+									->leftjoin("vehicle","vehicle.id","=","contract_vehicles.vehicleId")
+									->leftjoin("contracts","contracts.id","=","contract_vehicles.contractId")
+									->leftjoin("clients","clients.id","=","contracts.clientId")
+									->leftjoin("depots","depots.id","=","contracts.depotId")
+									->leftjoin("employee as employee1","employee1.id","=","contract_vehicles.driver1Id")
+									->leftjoin("employee as employee2","employee2.id","=","contract_vehicles.driver2Id")
+									->leftjoin("employee as employee3","employee3.id","=","contract_vehicles.driver3Id")
+									->leftjoin("employee as employee4","employee4.id","=","contract_vehicles.driver4Id")
+									->leftjoin("employee as employee5","employee5.id","=","contract_vehicles.driver5Id")
+									->leftjoin("employee as employee6","employee6.id","=","contract_vehicles.helperId")
+									->select($select_args)->get();
+			$summary_by_vehicle = array();
+			foreach($recs as  $rec) {
+				$row = array();
+				$row["vehicle"] = $rec->veh_reg;
+				$row["contract"] = $rec->dname." (".$rec->cname.")";
+				$row["status"] = $rec->status;
+				$row["drivers"] = $rec->driver1;
+				if($rec->driver2 != ""){
+					$row["drivers"] = $row["drivers"].", ".$rec->driver2;
+				}
+				if($rec->driver3 != ""){
+					$row["drivers"] = $row["drivers"].", ".$rec->driver3;
+				}
+				if($rec->driver4 != ""){
+					$row["drivers"] = $row["drivers"].", ".$rec->driver4;
+				}
+				if($rec->driver5 != ""){
+					$row["drivers"] = $row["drivers"].", ".$rec->driver5;
+				}
+				$row["helper"] = $rec->helper;
+				$row["startDate"] = date("d-m-Y",strtotime($rec->vehicleStartDate));
+				$row["endDate"] = date("d-m-Y",strtotime($rec->inActiveDate));
+				if($row["endDate"]=="01-01-1970" || $row["endDate"]=="00-00-0000"){
+					$row["endDate"] = "";
+				}
+				$row["remarks"] = $rec->remarks;
+				$summary_by_vehicle[] = $row;
+			}
+			$resp_obj["vehicle_contracts"] = $summary_by_vehicle;
+				
+			echo json_encode($resp_obj);
+			return;
+		}
+		$values['bredcum'] = "VEHICLE PERFORMANCE REPORT";
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'loginlog';
+		$values['form_action'] = 'loginlog';
+		$values['action_val'] = '#';
+		$theads = array('VEHICLE NO', 'CONTRACT', "STATUS", "DRIVERS", "HELPER", "START DT", "END DT", "REMARKS");
+		$values["theads0"] = $theads;
+		$theads = array('VEHICLE NO', 'BRANCH', "INCOME TYPE", "DATE", "TRANSACTION INFO", "AMOUNT",  "REMARKS");
+		$values["theads"] = $theads;
+		$theads = array('VEHICLE NO', 'BRANCH', "EXPENSES TYPE", 'PURPOSE', "DATE", "TRANSACTION INFO", "AMOUNT",  "REMARKS");
+		$values["theads1"] = $theads;
+		$theads = array('EXPENSES TYPE', "TOTAL AMOUNT");
+		$values["theads2"] = $theads;
+		$theads = array('VEHICLE NO','FUEL EXPENSE', "REPAIR EXPENSES", "PURCHASE EXPENSES", "STOCK EXPENSES", "SALARIES", "VEHICLE EXPENSES");
+		$values["theads3"] = $theads;
+	
+		//$values["test"];
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "users";
+		$form_info["bredcum"] = "VEHILE PERFORMANCE REPORT";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+	
+		$emp_arr = array();
+		$emp_arr[0] = "All";
+		$emps = \Employee::where("status","=","ACTIVE")->orderby("fullName")->get();
+		foreach ($emps as $emp){
+			$emp_arr[$emp->id] = $emp->fullName;
+		}
+	
+		$clients =  AppSettingsController::getEmpClients();
+		$clients_arr = array();
+		//$clients_arr[0] = "All";
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+	
+		$form_fields = array();
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"vehicle", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_info["form_fields"] = $form_fields;
+		$values['form_info'] = $form_info;
+	
+		$form_info["form_fields"] = array();
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
+		//$values['provider'] = "loginlog";
+	
+		return View::make('reports.vehicletrackingreport', array("values"=>$values));
 	}
 	
 	private function getVehicleMileageFullReport($values){

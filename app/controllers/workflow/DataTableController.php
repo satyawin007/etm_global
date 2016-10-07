@@ -327,8 +327,8 @@ class DataTableController extends \Controller {
 			else{
 				$entity["workFlowRemarks"] = $entity["workFlowRemarks"].'<input name="remarks[]" type="hidden" class="">';
 			}
-			if($entity["workFlowStatus"] == "Requested"){
-				$entity["workFlowStatus"] = 'pending for approval';
+			if($entity["workFlowStatus1"] == "Requested"){
+				$entity["workFlowStatus1"] = 'pending for approval';
 			}
 			$data_values = array_values($entity);
 			$action_data = "";
@@ -755,8 +755,194 @@ class DataTableController extends \Controller {
 		return array("total"=>$total, "data"=>$data);
 	}
 	
-	
 	private function getFuelTransactions($values, $length, $start){
+		$length++;
+		$total = 0;
+		$data = array();
+		$select_args = array();
+		$select_args[] = "officebranch.name as branchId";
+		$select_args[] = "fuelstationdetails.name as fuelStationName";
+		$select_args[] = "vehicle.veh_reg as vehicleId";
+		$select_args[] = "fueltransactions.startReading as startReading";
+		$select_args[] = "fueltransactions.litres as litres";
+		$select_args[] = "fueltransactions.fullTank as fullTank";
+		$select_args[] = "fueltransactions.fullTank as mileage";
+		$select_args[] = "employee4.fullName as inchargeId";
+		$select_args[] = "fueltransactions.filledDate as date";
+		$select_args[] = "fueltransactions.amount as amount";
+		$select_args[] = "fueltransactions.billNo as billNo";
+		//$select_args[] = "fueltransactions.fullTank as fullTank";
+		//$select_args[] = "fueltransactions.billNo as mileage";
+		$select_args[] = "fueltransactions.paymentType as paymentType";
+		$select_args[] = "fueltransactions.remarks as remarks";
+		$select_args[] = "employee2.fullName as createdBy";
+		$select_args[] = "fueltransactions.workFlowStatus as workFlowStatus";
+		$select_args[] = "fueltransactions.workFlowRemarks as workFlowRemarks";
+		$select_args[] = "fueltransactions.id as id";
+		$select_args[] = "fueltransactions.branchId as branch";
+		$select_args[] = "fueltransactions.contractId as contractId";
+		$select_args[] = "clients.name as clientname";
+		$select_args[] = "depots.name as depotname";
+		$select_args[] = "fueltransactions.filePath as filePath";
+		$select_args[] = "fueltransactions.startReading as startReading";
+		$select_args[] = "fueltransactions.litres as litres";
+	
+		$actions = array();
+		$values["actions"] = $actions;
+	
+		$search = $_REQUEST["search"];
+		$search = $search['value'];
+		$entities = \Vehicle::where("id","=",0)->get();
+	
+		$assingedBranches = AppSettingsController::getEmpBranches();
+		$emp_branches_str = "";
+		foreach ($assingedBranches as $assingedBranch){
+			$emp_branches_str = $emp_branches_str.$assingedBranch["id"].",";
+		}
+		$emp_branches_str = substr($emp_branches_str, 0, strlen($emp_branches_str)-1);
+		$emp_contracts = \Auth::user()->contractIds;
+		$emp_contracts_str = "";
+		if($emp_contracts=="" || $emp_contracts==0){
+			$clients = \Contract::All();
+			foreach ($clients as $client){
+				$emp_contracts_str = $emp_contracts_str.$client->id.",";
+			}
+		}
+		else{
+			$emp_contracts = explode(",", $emp_contracts);
+			$depots = \Depot::whereIn("depots.id",$emp_contracts)
+			->join("contracts", "depots.id", "=","contracts.depotId")
+			->select(array("contracts.id as id"))->get();
+			foreach ($depots as $depot){
+				$emp_contracts_str = $emp_contracts_str.$depot->id.",";
+			}
+		}
+		$emp_contracts_str = substr($emp_contracts_str, 0, strlen($emp_contracts_str)-1);
+	
+		if($search != ""){
+			$entities = \Vehicle::where("veh_reg", "like", "%$search%")
+			->where("vehicle.status","=","ACTIVE")->get();
+			$veh_arr = array();
+			foreach ($entities as $entity){
+				$veh_arr[] = $entity->id;
+			}
+			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+			->whereIn("vehicleId",$veh_arr)
+			->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
+			->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
+			->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
+			->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
+			->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
+			->leftjoin("employee as employee2", "employee2.id","=","fueltransactions.createdBy")
+			->leftjoin("employee as employee4", "employee4.id","=","fueltransactions.inchargeId")
+			->leftjoin("clients", "clients.id","=","contracts.clientId")
+			->leftjoin("depots", "depots.id","=","contracts.depotId");
+			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
+				
+			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+			->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
+			->count();
+		}
+		else {
+			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE");
+			if($values["logstatus"] != "All"){
+				$qry->where("fueltransactions.workFlowStatus","=",$values["logstatus"]);
+			}
+			$qry->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
+			->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
+			->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
+			->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
+			->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
+			->leftjoin("clients", "clients.id","=","contracts.clientId")
+			->leftjoin("employee as employee2", "employee2.id","=","fueltransactions.createdBy")
+			->leftjoin("employee as employee4", "employee4.id","=","fueltransactions.inchargeId")
+			->leftjoin("depots", "depots.id","=","contracts.depotId");
+			$entities = $qry->select($select_args)->orderBy("fueltransactions.vehicleId")->orderBy("filledDate","desc")->limit($length)->offset($start)->get();
+				
+			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE");
+			if($values["logstatus"] != "All"){
+				$qry->where("fueltransactions.workFlowStatus","=",$values["logstatus"]);
+			}
+			$qry->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))');
+	
+			$total = $qry->count();
+		}
+		$entities = $entities->toArray();
+		$r_cnt = 0;
+		$k = 0;
+		$i = 0;
+		foreach($entities as $entity){
+			if($r_cnt==$length){
+				continue;
+			}
+			$r_cnt++;
+			$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
+			if($entity["contractId"]>0){
+				$entity["branchId"] = $entity["depotname"]."(".$entity["clientname"].")";
+			}
+			if($entity["billNo"] != ""){
+				if($entity["filePath"]==""){
+					$entity["billNo"] = "<span style='color:red; font-weight:bold;'>".$entity["billNo"]."</span>";
+				}
+				else{
+					$entity["billNo"] = "<a href='../app/storage/uploads/".$entity["filePath"]."' target='_blank'>".$entity["billNo"]."</a>";
+				}
+			}
+			$entity["mileage"] = "0";
+			if($entity["fullTank"]=="YES"){
+				$j = $k+1;
+				$ltrs = 0;
+				while($j<count($entities))
+				{
+						
+					if($entities[$j]["vehicleId"]==$entity["vehicleId"] && $entities[$j]["fullTank"]=="YES"){
+						$ltrs = $ltrs+$entity["litres"];
+						$entity["mileage"] = round((($entity["startReading"]-$entities[$j]["startReading"])/$ltrs), 2);
+						//echo $entities[$i]["startReading"].", ";
+						break;
+					}
+					if($j<count($entities) && $entities[$j]["fullTank"]=="NO"){
+						$ltrs = $ltrs+$entities[$j]["litres"];
+					}
+					$j++;
+				}
+			}
+			$k++;
+			if($entity["workFlowStatus"] == "Sent for Approval"){
+				$entity["workFlowRemarks"] = '<label> <input name="remarks[]" type="text" class=""></label>';
+			}
+			else{
+				$entity["workFlowRemarks"] = $entity["workFlowRemarks"].'<input name="remarks[]" type="hidden" class="">';
+			}
+			if($entity["workFlowStatus"] == "Requested"){
+				$entity["workFlowStatus"] = 'pending for approval';
+			}
+			$data_values = array_values($entity);
+			$values1 = array("branch"=>$entity["branch"],"date"=>$entity["date"]);
+			$action_data = "";
+			if($entity["workFlowStatus"] != "Approved"){
+				$login_user = \Auth::user()->fullName;
+				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(505, $this->jobs))){
+					$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+				}
+				else{
+					$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="hidden" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+				}
+			}
+			else{
+				$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="hidden" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+			}
+			if($entity["workFlowStatus"] == "requested"){
+				$entity["workFlowStatus"] = 'pending for approval';
+			}
+			$data_values[16] = $action_data;
+			$data[] = $data_values;
+			$i++;
+		}
+		return array("total"=>$total, "data"=>$data);
+	}
+	
+	private function getFuelTransactions1($values, $length, $start){
 		$total = 0;
 		$data = array();
 		$select_args = array();

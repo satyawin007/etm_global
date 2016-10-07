@@ -567,14 +567,14 @@
 									INCHARGE TRANSACTIONS
 								</a>
 							</li>
-							<?php } if(in_array(504, $jobs)){?>
+							<?php } if(in_array(505, $jobs)){?>
 							<li class="hover">
 								<a href="workflow?type=expensetransactions">
 									<i class="menu-icon fa fa-caret-right"></i>
 									EXPENSE TRANSACTIONS
 								</a>
 							</li>
-							<?php } if(in_array(504, $jobs)){?>
+							<?php } if(in_array(506, $jobs)){?>
 							<li class="hover">
 								<a href="workflow?type=employeeleaves">
 									<i class="menu-icon fa fa-caret-right"></i>

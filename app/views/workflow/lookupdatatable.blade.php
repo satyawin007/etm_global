@@ -84,7 +84,7 @@
 						<div class="col-xs-3">
 							<select name="logstatus" id="logstatus" class="formcontrol chosen-select">
 								<option value="All">All</option>
-								<option value="Requested">Requested</option>
+								<option value="Requested">Pending for approval</option>
 								<option value="Sent for Approval">Sent for Approval</option>
 								<option value="Approved">Approved</option>
 								<option value="Rejected">Rejected</option>
@@ -102,7 +102,7 @@
 						<div class="col-xs-4">
 							<select name="logstatus" id="logstatus" class="formcontrol chosen-select">
 								<option value="All">All</option>
-								<option value="Requested">Requested</option>
+								<option value="Requested">Pending for Approval</option>
 								<option value="Sent for Approval">Sent for Approval</option>
 								<option value="Approved">Approved</option>
 								<option value="Rejected">Rejected</option>
@@ -125,7 +125,7 @@
 						<select name="workflowstatus" id="workflowstatus" class="formcontrol chosen-select">
 							<option value="Sent for Approval">Send for Approval</option>
 							<?php $jobs = Session::get("jobs");?>
-							<?php if(in_array(505, $jobs)){?>
+							<?php if(in_array(507, $jobs)){?>
 								<option value="Approved">Approved</option>
 								<option value="Rejected">Rejected</option>
 								<option value="Hold">Hold</option>

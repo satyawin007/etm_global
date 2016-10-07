@@ -204,7 +204,7 @@
 				clientId =  $("#clientname").val();
 				depotId = $("#depot").val();
 				$.ajax({
-			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
+			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&type=vehicleids",
 			      success: function(data) {
 			    	  data = data+"<option value='0'>ALL</option>";
 			    	  $("#vehicle").html(data);

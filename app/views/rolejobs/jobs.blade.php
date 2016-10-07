@@ -519,6 +519,7 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "workflow of PURCHASE TRANSACTION";
                                             		$menu_arr[] = "workflow of INCHARGE TRANSACTION";
                                             		$menu_arr[] = "workflow of EXPENSE TRANSACTION";
+                                            		$menu_arr[] = "workflow of EMPLOYEE LEAVES";
                                             		$menu_arr[] = "workflow of AUTHORIZATION";
                                             		
                                             		$i=501;

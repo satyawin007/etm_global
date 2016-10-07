@@ -97,7 +97,9 @@ use Illuminate\Support\Facades\Input;
 								<li>
 									&nbsp;
 								</li>
-	
+								<li>
+									&nbsp;
+								</li>	
 								<li>
 									&nbsp;
 								</li>
@@ -149,6 +151,9 @@ use Illuminate\Support\Facades\Input;
 									<a target="_blank" href="report?reporttype=vehicleperformance"> VEHICLE PERFORMANCE REPORT  </a>
 								</li>
 								<?php }?>
+								<li>
+									&nbsp;
+								</li>
 							</ul>
 						</div>
 						<div>
@@ -191,6 +196,11 @@ use Illuminate\Support\Facades\Input;
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=contractvehiclesreport">CONTRACT VEHICLES REPORT </a>
 								</li>
+								<?php } if(in_array(612, $jobs)) {?>								
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=vehicletrackingreport">VEHICLE TRACKING REPORT </a>
+								</li>
 								<?php } ?>
 								<li>
 									&nbsp;
@@ -220,7 +230,12 @@ use Illuminate\Support\Facades\Input;
 								<?php if(in_array(613, $jobs)) {?>
 								<li>
 									<i class="ace-icon fa fa-check green"></i>
-									<a target="_blank" href="report?reporttype=salaryadvances"> SALARY ADVANCES </a>
+									<a target="_blank" href="report?reporttype=salaryadvances&type=office"> SALARY ADVANCES (OFFICE) </a>
+								</li>
+								<?php } if(in_array(613, $jobs)) {?>	
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=salaryadvances&type=nonoffice"> SALARY ADVANCES (NON OFFICE) </a>
 								</li>
 								<?php } if(in_array(614, $jobs)) {?>	
 								<li>

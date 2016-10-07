@@ -130,6 +130,10 @@ use Illuminate\Support\Facades\Input;
 						if(isset($values["tdspercentage"])){
 							$url = $url."&tdspercentage=".$values["tdspercentage"];
 						}
+						if(isset($values["dieselhikeamount"])){ $dieselhikeamount = $values["dieselhikeamount"]; }
+						if(isset($values["excesskmsamount"])){ $excesskmsamount = $values["excesskmsamount"]; }
+						if(isset($values["extrakmsamount"])){ $extrakmsamount = $values["extrakmsamount"]; }
+						
 						if(isset($values["bankaccount"])){ $url = $url."&bankaccount=".$values["bankaccount"];}
 						if(isset($values["chequenumber"])){ $url = $url."&chequenumber=".$values["chequenumber"];}
 						if(isset($values["bankname"])){ $url = $url."&bankname=".$values["bankname"];}
@@ -151,6 +155,9 @@ use Illuminate\Support\Facades\Input;
 							<th>TDS</th>
 							<th>EMI</th>
 							<th>Stopped</th>
+							<th>insurance</th>
+							<th>toll gate</th>
+							<th>parking</th>
 							<th>Other Income</th>
 							<th>Other Deductions</th>
 							<th>Net</th>
@@ -223,6 +230,15 @@ use Illuminate\Support\Facades\Input;
 									<input type="text" style="max-width:70px;"  name="veh_stopped[]" readonly="readonly" onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_stopped" value="{{$rec->stopped}}"/>
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
+									<input type="text" style="max-width:70px;"  name="veh_insurance[]" readonly="readonly" onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_insurance" value="{{$rec->insurance}}"/>
+								</td>
+								<td style="font-weight: bold; vertical-align: middle">
+									<input type="text" style="max-width:70px;"  name="veh_tollgate[]" readonly="readonly" onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_tollgate" value="{{$rec->tollgate}}"/>
+								</td>
+								<td style="font-weight: bold; vertical-align: middle">
+									<input type="text" style="max-width:70px;"  name="veh_parking[]" readonly="readonly" onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_parking" value="{{$rec->parking}}"/>
+								</td>
+								<td style="font-weight: bold; vertical-align: middle">
 									<input type="text" style="max-width:70px;"  name="veh_otherincome[]" readonly="readonly"  onchange="calcNetAmount(this.id)" id="{{$i}}_veh_otherincome" value="{{$rec->otherIncome}}"/>
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
@@ -280,6 +296,15 @@ use Illuminate\Support\Facades\Input;
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
 									<input type="text" style="max-width:70px;"  name="veh_stopped[]" onchange="calcNetAmount(this.id)" id="{{$i}}_veh_stopped" value=""/>
+								</td>
+								<td style="font-weight: bold; vertical-align: middle">
+									<input type="text" style="max-width:70px;"  name="veh_insurance[]" readonly="readonly" onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_insurance" value=""/>
+								</td>
+								<td style="font-weight: bold; vertical-align: middle">
+									<input type="text" style="max-width:70px;"  name="veh_tollgate[]" readonly="readonly" onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_tollgate" value=""/>
+								</td>
+								<td style="font-weight: bold; vertical-align: middle">
+									<input type="text" style="max-width:70px;"  name="veh_parking[]" readonly="readonly" onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_parking" value=""/>
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
 									<input type="text" style="max-width:70px;"  name="veh_otherincome[]" onchange="calcNetAmount(this.id)" id="{{$i}}_veh_otherincome" value=""/>
@@ -742,6 +767,7 @@ use Illuminate\Support\Facades\Input;
 				.DataTable( {
 					bAutoWidth: false,
 					"aoColumns": [
+					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },
 					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },
 					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },
 					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },

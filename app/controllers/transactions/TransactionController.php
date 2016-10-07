@@ -2495,7 +2495,7 @@ class TransactionController extends \Controller {
 		$values = Input::all();
 		$json_resp = array();
 		$entity = \ServiceLog::join("contract_vehicles","contract_vehicles.id","=","service_logs.contractVehicleId")
-					->where("contract_vehicles.vehicleId","=",$values['id'])
+					->where("contract_vehicles.id","=",$values['id'])
 					->where("substituteVehicleId","=",0)
 					->where("serviceDate","<",date("Y-m-d",strtotime($values['date'])))
 					->orderBy("serviceDate","asc")->get();
@@ -2506,7 +2506,9 @@ class TransactionController extends \Controller {
 			$json_resp["endReading"] = $entity->endReading;
 		}
 		else{
-			$meeters = \VehicleMeeter::where("vehicleId","=",$values['id'])->where("status","=","ACTIVE")->first();
+			$con_veh_id = \ContractVehicle::where("contract_vehicles.id","=",$values['id'])->first();
+			$con_veh_id = $con_veh_id->vehicleId;
+			$meeters = \VehicleMeeter::where("vehicleId","=",$con_veh_id)->where("status","=","ACTIVE")->first();
 			if(count($meeters)>0){
 				$json_resp["endReading"] = $meeters->startReading;
 			}
@@ -2519,11 +2521,14 @@ class TransactionController extends \Controller {
 		$values = Input::all();
 		$json_resp = array();
 		$table = "";
+		$con_veh_id = \ContractVehicle::where("contract_vehicles.id","=",$values['vehicleid'])->first();
+		$con_veh_id = $con_veh_id->vehicleId;
 		$entities = \FuelTransaction::where("filledDate","<",date("Y-m-d",strtotime($values['date'])))
-								->where("vehicleId","=",$values['vehicleid'])
-								->where("status","=","ACTIVE")
+								->where("fueltransactions.vehicleId","=",$con_veh_id)
+								->where("fueltransactions.status","=","ACTIVE")
 								->where("fullTank","=","Yes")
-								->limit(6)->orderBy("filledDate","desc")->get();
+								->limit(6)->orderBy("filledDate","desc")
+								->select(array("filledDate","startReading","litres","amount","fullTank"))->get();
 		$i=0;
 		$cnt = count($entities);
 		if((count($entities)>5)){
@@ -2552,8 +2557,10 @@ class TransactionController extends \Controller {
 		$values = Input::all();
 		$json_resp = array();
 		$reading = 0;
+		$con_veh_id = \ContractVehicle::where("contract_vehicles.id","=",$values['vehicleId'])->first();
+		$con_veh_id = $con_veh_id->vehicleId;
 		$entities = \FuelTransaction::where("filledDate","<",date("Y-m-d",strtotime($values['date'])))
-						->where("vehicleId","=",$values['vehicleId'])
+						->where("vehicleId","=",$con_veh_id)
 						->where("status","=","ACTIVE")
 						->where("fullTank","=","YES")
 						->limit(6)->orderBy("filledDate","desc")->get();

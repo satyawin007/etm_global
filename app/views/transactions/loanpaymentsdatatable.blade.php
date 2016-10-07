@@ -94,7 +94,9 @@ use Illuminate\Support\Facades\Input;
 			<div class="col-xs-12" style="max-width: 98%;margin-left: 12px;">
 				<div class="table-header">
 					Results for "LOAN PAYMENTS"
+					<!--
 					<span style="float:right; font-size: 16px; font-weight: bold;">Total Net Amt : <span id="totnetamt">0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Total Client Paid Amt : <span id="totpaidamt">0</span> &nbsp;&nbsp;&nbsp;  Balance Amt : <span id="balamt">0</span> &nbsp;&nbsp;&nbsp;</span>				 
+					-->
 					</div>
 				<?php
 					$totnetamt = 0;
@@ -130,6 +132,9 @@ use Illuminate\Support\Facades\Input;
 						if(isset($values["incharge"])){
 							$url = $url."&incharge=".$values["incharge"];
 						}
+						if(isset($values["branch"])){
+							$url = $url."&branch=".$values["branch"];
+						}
 						if(isset($values["bankaccount"])){ $url = $url."&bankaccount=".$values["bankaccount"];}
 						if(isset($values["chequenumber"])){ $url = $url."&chequenumber=".$values["chequenumber"];}
 						if(isset($values["bankname"])){ $url = $url."&bankname=".$values["bankname"];}
@@ -144,9 +149,10 @@ use Illuminate\Support\Facades\Input;
 							<th class="center"></th>
 							<th>S No</th>
 							<th>Fin. Company</th>
-							<th>Loan Dt</th>
+							<th>Loan Date</th>
 							<th>Loan No</th>
 							<th>Amount</th>
+							<th>Tot Paid Amt</th>
 							<th>ROI</th>
 							<th>Pmt Amt</th>
 							<th>Month</th>
@@ -205,6 +211,12 @@ use Illuminate\Support\Facades\Input;
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
 									<span style="color: red; font-weight: bold; font-size:14px;">{{$entity->amountFinanced}}</span>
+								</td>
+								<?php 
+									$tot_paid_amt = ExpenseTransaction::where("status","=","ACTIVE")->where("entity","=","LOAN PAYMENT")->where("entityValue","=",$entity->id)->sum("amount");
+								?>
+								<td style="font-weight: bold; vertical-align: middle">
+									<span style="color: red; font-weight: bold; font-size:14px;">{{$tot_paid_amt}}</span>
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
 									<span style="color: red; font-weight: bold; font-size:14px;">{{$entity->interestRate}}</span>
@@ -693,7 +705,7 @@ use Illuminate\Support\Facades\Input;
 					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },
 					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },
 					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },
-					  { "bSortable": false },{ "bSortable": false }
+					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false }
 					],
 					"aaSorting": [],
 					
@@ -706,7 +718,7 @@ use Illuminate\Support\Facades\Input;
 					//"sScrollY": "200px",
 					//"bPaginate": false,
 			
-					"sScrollX": "100%",
+					//"sScrollX": "100%",
 					//"sScrollXInner": "120%",
 					//"bScrollCollapse": true,
 					//Note: if you are applying horizontal scrolling (sScrollX) on a ".table-bordered"

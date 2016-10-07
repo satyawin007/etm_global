@@ -41,7 +41,8 @@ class WorkFlowController extends \Controller {
 	private function fuelTransactionsWorkFlow($values)
 	{
 		$values['bredcum'] = "FUEL TRASACTIONS";  //"fulltank", 'mileage',
-		$theads = array('contract/branch', 'fuel station name', 'veh reg No', 'filled date', 'amount', 'bill no',  'payment type', 'remarks', "created By", 'WF Status', 'WF Remarks', "Actions");
+		//$theads = array('contract/branch', 'fuel station name', 'veh reg No', 'filled date', 'amount', 'bill no',  'payment type', 'remarks', "created By", 'WF Status', 'WF Remarks', "Actions");
+		$theads = array('contract/branch', 'fuel station name', 'veh reg No', 'st reading', 'ltrs', 'full tank', 'mileage', 'incharge', 'filled date', 'amount', 'bill no',  'payment type', 'remarks', "created By", 'WF Status', 'WF Remarks', "Actions");
 		$values["theads"] = $theads;
 
 		$form_info = array();

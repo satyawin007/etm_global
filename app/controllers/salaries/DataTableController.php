@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Auth;
 class DataTableController extends \Controller {
 
 	/**
@@ -197,7 +198,11 @@ class DataTableController extends \Controller {
 			$total = \Leaves::whereIn("empId", $fincomids_arr)->count();
 		}
 		else{
-			$entities = \Leaves::where("leaves.id",">",0)->leftjoin("employee","employee.id","=","leaves.empId")->leftjoin("officebranch","officebranch.id","=","leaves.branchId")->select($select_args)->limit($length)->offset($start)->get();
+			$entities = \Leaves::where("leaves.id",">",0)
+							->where("leaves.createdBy","=",Auth::user()->id)
+							->leftjoin("employee","employee.id","=","leaves.empId")
+							->leftjoin("officebranch","officebranch.id","=","leaves.branchId")
+							->select($select_args)->limit($length)->offset($start)->get();
 			$total = \Leaves::count();
 		}
 		$entities = $entities->toArray();

@@ -67,7 +67,7 @@ use Illuminate\Support\Facades\Input;
 
 	@section('page_content')
 		<div class="col-xs-offset-4 col-xs-8 ccordion-style1 panel-group">
-			<div class="col-xs-7 ">
+			<div class="col-xs-6 ">
 				<?php 
 					$jobs = Session::get("jobs");
 					if(in_array(338, $jobs)){
@@ -89,7 +89,15 @@ use Illuminate\Support\Facades\Input;
 							<span class="input-group-addon" id="transvalue">
 								AMOUNT
 							</span>
-							<input type="text" class="form-control search-query" id="transfield" placeholder="enter transactio no">
+							<select class="form-control chosen-select" id="transfield" >
+								<option value="">--select trans id--</option>
+								<?php 
+									$recs1 = \ExpenseTransaction::where("status","=","ACTIVE")->where("lookupValueId","=",346)->get();
+									foreach($recs1 as $rec1){
+										echo "<option value='".$rec1->chequeNumber."'>".$rec1->chequeNumber." (Rs. ".$rec1->amount.")</option>";
+									}
+								?>
+							</select>
 							<span class="input-group-btn">
 								<button type="button" id="getbtn" class="btn btn-purple btn-sm">
 									GET

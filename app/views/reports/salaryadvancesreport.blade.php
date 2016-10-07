@@ -202,6 +202,46 @@
 				}
 			}
 
+			function getEmployeesByOffice(id){
+				$.ajax({
+			      url: "getemployeesbyoffice?branch="+id,
+			      success: function(data) {
+			    	  data = "<option value='0'>ALL</option>"+data;
+				     $("#employee").html(data);
+				     $('.chosen-select').trigger('chosen:updated');
+			      },
+			      type: 'GET'
+			   });	
+			}
+
+			function getEmployeesByDepot(id){
+				clientname = $("#clientname").val();
+				$.ajax({
+			      url: "getemployeesbydepot?depot="+id+"&clientname="+clientname,
+			      success: function(data) {
+			    	  data = "<option value='0'>ALL</option>"+data;
+				     $("#employee").html(data);
+				     $('.chosen-select').trigger('chosen:updated');
+			      },
+			      type: 'GET'
+			   });	
+			}
+
+			function changeDepot(val){
+				$.ajax({
+			      url: "getdepotsbyclientId?id="+val,
+			      success: function(data) {
+			    	  data = "<option value='0'>ALL</option>"+data;
+			    	  $("#depot").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			    });
+
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+			}
+
 			function paginate(page){
 				reporttype = $("#employee").val();
 				if(reporttype == ""){

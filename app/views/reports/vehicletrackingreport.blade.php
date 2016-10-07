@@ -19,7 +19,6 @@
 			}
 			td {
 			    white-space: nowrap;
-			    min-width: 100%;
 			}
 			table {
 				min-width: 100% !important;
@@ -93,6 +92,36 @@
 		
 		
 		<div class="row" >
+			<div id="table0">
+				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
+					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
+					<div class="clearfix">
+						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
+					</div>
+					<div class="table-header" style="margin-top: 10px;">
+						Results for VEHICLE CONTRACTS				 
+					</div>
+					<!-- div.table-responsive -->
+					<!-- div.dataTables_borderWrap -->
+					<div>
+						<table id="dynamic-table0" class="table table-striped table-bordered table-hover">
+							<thead>
+								<tr>
+								<?php 
+									$theads = $values["theads0"];
+									foreach ($theads as $thead){
+										echo "<th>".$thead."</th>";
+									}
+								?>
+								</tr>
+							</thead>
+							<tbody id="tbody">
+							</tbody>
+						</table>								
+					</div>
+				</div>					
+			</div>
+			
 			<div id="table1">
 				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
 					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
@@ -100,30 +129,29 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for BRANCH SUMMARY SALARY REPORT				 
+						Results for VEHICLE INCOMES				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
 					<div>
-						<table id="dynamic-table1" class="table table-striped table-bordered table-hover">
+						<table id="dynamic-table" class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
-									<td>BRANCH NAME</td>
-									<td>ACTUAL SALARY</td>
-									<td>DUE DEDUCTIONS</td>
-									<td>LEAVE DEDUCTION</td>
-									<td>OTHER AMOUNT</td>
-									<td>PF</td>
-									<td>ESI</td>
-									<td>PAID SALARY</td>
+								<?php 
+									$theads = $values["theads"];
+									foreach ($theads as $thead){
+										echo "<th>".$thead."</th>";
+									}
+								?>
 								</tr>
 							</thead>
-							<tbody id="tbody1">
+							<tbody id="tbody">
 							</tbody>
 						</table>								
 					</div>
 				</div>					
 			</div>
+			
 			<div id="table2">
 				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
 					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
@@ -131,7 +159,7 @@
 						<div id="tableTools-container2" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for BRANCH WISE SALARY REPORT
+						Results for VEHICLE EXPENSES			 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -139,26 +167,21 @@
 						<table id="dynamic-table2" class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
-									<td>BRANCH NAME</td>
-									<td>EMP CODE</td>
-									<td>EMP NAME</td>
-									<td>SALARY MONTH</td>
-									<td>SALARY PAID ON</td>
-									<td>ACTUAL SALARY</td>
-									<td>DUE DEDUCTIONS</td>
-									<td>LEAVE DEDUCTION</td>
-									<td>OTHER AMOUNT</td>
-									<td>PF</td>
-									<td>ESI</td>
-									<td>PAID SALARY</td>
+								<?php 
+									$theads = $values["theads1"];
+									foreach ($theads as $thead){
+										echo "<th>".$thead."</th>";
+									}
+								?>
 								</tr>
 							</thead>
-							<tbody id="tbody2">
+							<tbody id="tbody">
 							</tbody>
 						</table>								
 					</div>
 				</div>					
 			</div>
+			
 			<div id="table3">
 				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
 					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
@@ -166,7 +189,7 @@
 						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
+						Results for VEHICLE EXPESENS SUMMARY	 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -174,15 +197,15 @@
 						<table id="dynamic-table3" class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
-									<td>BRANCH NAME</td>
-									<td>EMP CODE</td>
-									<td>EMP NAME</td>
-									<td>SALARY MONTH</td>
-									<td>PAID ON</td>
-									<td>PF/ESI AMOUNT</td>
+								<?php 
+									$theads = $values["theads2"];
+									foreach ($theads as $thead){
+										echo "<th>".$thead."</th>";
+									}
+								?>
 								</tr>
 							</thead>
-							<tbody id="tbody2">
+							<tbody id="tbody">
 							</tbody>
 						</table>								
 					</div>
@@ -193,10 +216,10 @@
 				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
 					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
 					<div class="clearfix">
-						<div id="tableTools-container2" class="pull-right tableTools-container"></div>
+						<div id="tableTools-container4" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for DETAILED SALARY REPORT				 				 
+						Results for SUMMERY BY VEHICLE				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -204,67 +227,15 @@
 						<table id="dynamic-table4" class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
-									<td>BRANCH NAME</td>
-									<td>EMP NAME</td>
-									<td>DESIGNATION</td>
-									<td>SAL MONTH</td>
-									<td>SAL PAID ON</td>
-									<td>JOIN DATE</td>
-									<td>ACTUAL SAL</td>
-									<td>TOT WORKING DAYS</td>
-									<td>CAS. LEAVES</td>
-									<td>LEAVES</td>
-									<td>EARLY TERM. DAYS</td>
-									<td>EMP WORKING DAYS</td>
-									<td>DUE AMOUNT</td>
-									<td>LEAVE AMT</td>
-									<td>OTHER AMT</td>
-									<td>PREV SAL</td>
-									<td>INCR AMT</td>
-									<td>INCR DATE</td>
-									<td>GROSS SAL</td>
-									<td>NET SAL</td>
-									<td>CARD NO</td>
-									<td>COMMENTS</td>
+								<?php 
+									$theads = $values["theads3"];
+									foreach ($theads as $thead){
+										echo "<th>".$thead."</th>";
+									}
+								?>
 								</tr>
 							</thead>
-							<tbody id="tbody2">
-							</tbody>
-						</table>								
-					</div>
-				</div>					
-			</div>
-			
-			<div id="table5">
-				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
-					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
-					<div class="clearfix">
-						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
-					</div>
-					<div class="table-header" style="margin-top: 10px;">
-						Results for BANK SALARY TRANSACTIONS
-					</div>
-					<!-- div.table-responsive -->
-					<!-- div.dataTables_borderWrap -->
-					<div>
-						<table id="dynamic-table5" class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<td>BRANCH NAME</td>
-									<td>EMP NAME - CODE</td>
-									<td>SALARY MONTH</td>
-									<td>PAID ON</td>
-									<td>PMT INFO</td>
-									<td>ACC SALARY</td>
-									<td>DUE DED</td>
-									<td>LEAVE DED</td>
-									<td>OTHERS</td>
-									<td>PF</td>
-									<td>ESI</td>
-									<td>PAID AMT</td>
-								</tr>
-							</thead>
-							<tbody id="tbody5">
+							<tbody id="tbody">
 							</tbody>
 						</table>								
 					</div>
@@ -272,7 +243,6 @@
 			</div>
 			
 		</div>
-		
 
 		<?php 
 			if(isset($values['modals'])) {
@@ -328,16 +298,6 @@
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#processing").hide();
-			$("#fuelstationid").hide();
-			$("#vehicleid").hide();
-			$("#driverid").hide();
-			$("#employeetype").attr("disabled",true);
-			$("#officebranch").attr("disabled",true);
-			$("#clientname").attr("disabled",true);
-			$("#depot").attr("disabled",true);
-			$("#paidfrombranch").attr("disabled",true);
-			$("#employee").attr("disabled",true);
-			$("#month").attr("disabled",true);
 			reporttype = "";
 
 			function generateReport(){
@@ -345,175 +305,11 @@
 				paginate(1);
 			}
 
-			function showSelectionType(val){
-				$("#employeetype").attr("disabled",true);
-				$("#officebranch").attr("disabled",true);
-				$("#clientname").attr("disabled",true);
-				$("#depot").attr("disabled",true);
-				$("#paidfrombranch").attr("disabled",true);
-				$("#employee").attr("disabled",true);
-				$("#month").attr("disabled",true);
-				if(val == "detailed_salary_report"){
-					$("#employeetype").attr("disabled",false);
-					$("#month").attr("disabled",false);
-				}
-				if(val == "branch_wise_salary_report" || val == "bank_payment_report"){
-					$("#employee").attr("disabled",true);
-					$("#paidfrombranch").attr("disabled",false);
-				}
-				if(val == "employee_wise_salary_report"){
-					$("#paidfrombranch").attr("disabled",true);
-					$("#employee").attr("disabled",false);
-				}
-				if(val == "pf_report" || val == "esi_report"){
-					$("#paidfrombranch").attr("disabled",true);
-					$("#employee").attr("disabled",true);
-				}
-				$('.chosen-select').trigger('chosen:updated');
-			}
-
-			function paginate(page){
-				reporttype = $("#typeofreport").val();
-				if(reporttype == ""){
-					alert("select type of report");
-					return;
-				}
-				
-				paidfrom = $("#paidfrombranch").val();
-				if((reporttype == "branch_wise_salary_report" || reporttype == "bank_payment_report") && paidfrom == ""){
-					alert("select paid from branch");
-					return;
-				}
-
-				if(reporttype == "detailed_salary_report"){
-					employeetype = $('#employeetype').val();
-					if(employeetype == ""){
-						alert("please select employee type");
-						return;
-					}
-
-					month = $('#month').val();
-					if(month == ""){
-						alert("please select month");
-						return;
-					}
-					
-					officebranch = $('#officebranch').val();
-					if(employeetype == "OFFICE" && officebranch==""){
-						alert("please select office branch");
-						return;
-					}
-	
-					clientname = $('#clientname').val();
-					clientbranch = $('#depot').val();
-					if(employeetype == "CLIENT BRANCH" && (clientname=="" || clientbranch=="")){
-						alert("please select client name and  branch");
-						return;
-					}
-				}
-				
-				employee = $("#employee").val();
-				if(reporttype == "employee_wise_salary_report" &&  employee == ""){
-					alert("select employee");
-					return;
-				}
-				fdt = $("#fromdate").val();
-				if(fdt == ""){
-					alert("select daterange FROM date");
-					return;
-				}
-				tdt = $("#fromdate").val();
-				if(tdt == ""){
-					alert("select daterange TO date");
-					return;
-				}
-				dt = fdt+" - "+tdt;	
-				var form=$("#getreport");
-
-
-				$("#processing").show();
-				$.ajax({
-			        type:"POST",
-			        url:form.attr("action"),
-			        data:form.serialize(),
-			        success: function(response){
-			           //alert(response);  
-			           var json = JSON.parse(response);
-			           var arr = [];
-			           for(var i = 0; i < json.length; i++) {
-			        	    var parsed = json[i];
-			        	    var row = [];
-			        	    for(var x in parsed){
-			        	    	row.push(parsed[x]);
-				            }
-				            arr.push(row);
-			        	}
-			        	if(reporttype == "branch_wise_salary_report"){
-							myTable1.clear().draw();
-							myTable1.rows.add(arr); // Add new data
-							myTable1.columns.adjust().draw(); // Redraw 
-							$("#table1").show();
-							$("#table2").hide();
-							$("#table3").hide();
-							$("#table4").hide();
-							$("#table5").hide();			
-			        	}
-			        	else if(reporttype == "employee_wise_salary_report"){
-							myTable2.clear().draw();
-							myTable2.rows.add(arr); // Add new data
-							myTable2.columns.adjust().draw(); // Redraw theDataTable
-							$("#table1").hide();
-							$("#table2").show();	
-							$("#table3").hide();
-							$("#table4").hide();
-							$("#table5").hide();		
-			        	}
-			        	else if(reporttype == "pf_report"|| reporttype == "esi_report"){
-							myTable3.clear().draw();
-							myTable3.rows.add(arr); // Add new data
-							myTable3.columns.adjust().draw(); // Redraw theDataTable
-							$("#table1").hide();
-							$("#table2").hide();
-							$("#table3").show();
-							$("#table4").hide();
-							$("#table5").hide();		
-			        	}
-			        	else if(reporttype == "detailed_salary_report"){
-							myTable4.clear().draw();
-							myTable4.rows.add(arr); // Add new data
-							myTable4.columns.adjust().draw(); // Redraw theDataTable
-							$("#table1").hide();
-							$("#table2").hide();
-							$("#table3").hide();
-							$("#table4").show();
-							$("#table5").hide();		
-			        	}
-			        	else if(reporttype == "bank_payment_report"){
-							myTable5.clear().draw();
-							myTable5.rows.add(arr); // Add new data
-							myTable5.columns.adjust().draw(); // Redraw theDataTable
-							$("#table1").hide();
-							$("#table2").hide();
-							$("#table3").hide();
-							$("#table4").hide();
-							$("#table5").show();		
-			        	}
-						$("#processing").hide();
-			        }
-			    });
-			}
-
-			function modalEditLookupValue(id, value){
-				$("#value1").val(value);
-				$("#id1").val(id);
-				return;				
-			}
-
 			function changeDepot(val){
 				$.ajax({
 			      url: "getdepotsbyclientId?id="+val,
 			      success: function(data) {
-				      data = "<option value='0'> ALL </option>"+data;
+			    	  data = "<option value='0'> ALL </option>"+data;
 			    	  $("#depot").html(data);
 			    	  $('.chosen-select').trigger("chosen:updated");
 			      },
@@ -524,20 +320,151 @@
 				depotId = $("#depot").val();
 			}
 
-			function enableClientDepot(val){
-				$("#paidfrombranch").attr("disabled",true);
-				if(val == "OFFICE"){
-					$("#clientname").attr("disabled",true);
-					$("#depot").attr("disabled",true);
-					$("#officebranch").attr("disabled",false);
-				}
-				else if(val == "CLIENT BRANCH"){
-					$("#clientname").attr("disabled",false);
-					$("#depot").attr("disabled",false);
-					$("#officebranch").attr("disabled",true);
-				}
-				$('.chosen-select').trigger("chosen:updated");
+			function getFormData(val){
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+				$.ajax({
+			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&type=vehicleids",
+			      success: function(data) {
+			    	  data = data+"<option value='0'>ALL</option>";
+			    	  $("#vehicle").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
+			   myTable.ajax.url("getservicelogsdatatabledata?name=servicelogs&clientid="+clientId+"&depotid="+depotId).load();
 			}
+
+			function paginate(page){
+				clientname = $("#clientname").val();
+				if(clientname == ""){
+					alert("select clientname");
+					return;
+				}
+				depot = $("#depot").val();
+				if(depot == ""){
+					alert("select depot");
+					return;
+				}
+				vehicle = $("#vehicle").val();
+				if(vehicle == ""){
+					alert("select vehicle");
+					return;
+				}
+				fdt = $("#fromdate").val();
+				if(fdt == ""){
+					alert("select daterange FROM date");
+					return;
+				}
+				tdt = $("#todate").val();
+				empname = $("#empname").val();
+				if(tdt == ""){
+					alert("select daterange TO date");
+					return;
+				}
+				dt = fdt+" - "+tdt;	
+				var form=$("#getreport");
+				/* alert(fdt);
+				alert(tdt);
+				alert(empname); */
+
+				$("#processing").show();
+				$.ajax({
+			        type:"POST",
+			        url:form.attr("action"),//+"?fromdate="+fdt+"&todate="+tdt+"&empname="+empname,
+			        data:form.serialize(),
+			        success: function(response){
+			           var json = JSON.parse(response);
+			           //$("#totalexepenses").html(json["total_expenses"]);
+			           var data1 = json["incomes"];
+			           var arr = [];
+			           for(var i = 0; i < data1.length; i++) {
+			        	    var parsed = data1[i];
+			        	    var row = [];
+			        	    for(var x in parsed){
+			        	    	row.push(parsed[x]);
+				            }
+				            arr.push(row);
+			        	}
+						myTable1.clear().draw();
+						myTable1.rows.add(arr); // Add new data
+						myTable1.columns.adjust().draw(); // Redraw 
+						$("#table1").show();
+
+						var data1 = json["expenses"];
+			            var arr = [];
+			            for(var i = 0; i < data1.length; i++) {
+			        	    var parsed = data1[i];
+			        	    var row = [];
+			        	    for(var x in parsed){
+			        	    	row.push(parsed[x]);
+				            }
+				            arr.push(row);
+			        	}
+						myTable2.clear().draw();
+						myTable2.rows.add(arr); // Add new data
+						myTable2.columns.adjust().draw(); // Redraw 
+						$("#table2").show();
+
+						var data1 = json["expenses_summary"];
+			            var arr = [];
+			            for(var i = 0; i < data1.length; i++) {
+			        	    var parsed = data1[i];
+			        	    var row = [];
+			        	    for(var x in parsed){
+				        	    row.push(x);
+			        	    	row.push(parsed[x]);
+				            }
+				            arr.push(row);
+			        	} 
+						myTable3.clear().draw();
+						myTable3.rows.add(arr); // Add new data
+						myTable3.columns.adjust().draw(); // Redraw 
+						$("#table3").show(); 
+
+						var data1 = json["summary_by_vehicle"];
+			            var arr = [];
+			            for(var i = 0; i < data1.length; i++) {
+			        	    var parsed = data1[i];
+			        	    var row = [];
+			        	    for(var x in parsed){
+			        	    	row.push(parsed[x]);
+				            }
+				            arr.push(row);
+			        	} 
+
+						myTable4.clear().draw();
+						myTable4.rows.add(arr); // Add new data
+						myTable4.columns.adjust().draw(); // Redraw 
+						$("#table4").show(); 
+
+						var data1 = json["vehicle_contracts"];
+			            var arr = [];
+			            for(var i = 0; i < data1.length; i++) {
+			        	    var parsed = data1[i];
+			        	    var row = [];
+			        	    for(var x in parsed){
+			        	    	row.push(parsed[x]);
+				            }
+				            arr.push(row);
+			        	} 
+
+						myTable0.clear().draw();
+						myTable0.rows.add(arr); // Add new data
+						myTable0.columns.adjust().draw(); // Redraw 
+						$("#table0").show(); 
+						
+						$("#processing").hide();
+			        }
+			    });
+			}
+
+			function modalEditLookupValue(id, value){
+				$("#value1").val(value);
+				$("#id1").val(id);
+				return;				
+			}
+			
 
 			function modalEditTransaction(id){
 				//$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
@@ -654,14 +581,15 @@
 				});
 			}
 
+			var myTable0 = null;
 			var myTable1 = null;
 			var myTable2 = null;
+			var myTable3 = null;
 			var myTable4 = null;
-			var myTable5 = null;
 
 			jQuery(function($) {
 					//initiate dataTables plugin
-					myTable1 = $('#dynamic-table1')
+					myTable0 = $('#dynamic-table0')
 					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
 					.DataTable( {
 						dom: 'Bfrtip',
@@ -688,7 +616,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null, null, null
+						  null, null, null,  null, null, null,  null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -701,9 +629,9 @@
 							style: 'multi'
 						}
 				    } );
-					
+
 					//initiate dataTables plugin
-					myTable2 = $('#dynamic-table2')
+					myTable1 = $('#dynamic-table')
 					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
 					.DataTable( {
 						dom: 'Bfrtip',
@@ -714,7 +642,6 @@
 							},
 							{
 								extend: 'excelHtml5',
-								 title: 'reportTitle',
 								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
 								exportOptions: {
 									columns: ':visible'
@@ -731,7 +658,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null, null, null, null, null, null, null
+						  null, null, null,  null, null, null,  null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -740,7 +667,49 @@
 						//"sScrollX": "300px",
 						//"sScrollXInner": "120%",
 						"bScrollCollapse": true,
-						
+						select: {
+							style: 'multi'
+						}
+				    } );
+				    
+
+					//initiate dataTables plugin
+					myTable2 = $('#dynamic-table2')
+					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
+					.DataTable( {
+						dom: 'Bfrtip',
+						buttons: [
+							{
+								extend:'colvis',
+								text : "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>"
+							},
+							{
+								extend: 'excelHtml5',
+								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
+								exportOptions: {
+									columns: ':visible'
+								}
+							},
+							{
+								extend: 'pdfHtml5',
+								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
+								exportOptions: {
+									columns: ':visible'
+								}
+							}
+							
+						], 
+						bAutoWidth: false,
+						"aoColumns": [
+								null, null, null,  null, null, null,  null, null
+						],
+						"aaSorting": [],
+						//"sScrollY": "500px",
+						//"bPaginate": false,
+						"sScrollX" : "true",
+						//"sScrollX": "300px",
+						//"sScrollXInner": "120%",
+						"bScrollCollapse": true,
 						select: {
 							style: 'multi'
 						}
@@ -758,7 +727,6 @@
 							},
 							{
 								extend: 'excelHtml5',
-								 title: 'reportTitle',
 								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
 								exportOptions: {
 									columns: ':visible'
@@ -775,7 +743,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null, null
+						  null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -801,7 +769,6 @@
 							},
 							{
 								extend: 'excelHtml5',
-								 title: 'reportTitle',
 								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
 								exportOptions: {
 									columns: ':visible'
@@ -818,7 +785,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+							null, null, null,  null, null, null,  null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -828,65 +795,18 @@
 						//"sScrollXInner": "120%",
 						"bScrollCollapse": true,
 						select: {
-							style: 'multi'	
+							style: 'multi'
 						}
 				    } );
-					////
-
-					//initiate dataTables plugin
-					myTable5 = $('#dynamic-table5')
-					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
-					.DataTable( {
-						dom: 'Bfrtip',
-						buttons: [
-							{
-								extend:'colvis',
-								text : "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>"
-							},
-							{
-								extend: 'excelHtml5',
-								 title: 'reportTitle',
-								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							},
-							{
-								extend: 'pdfHtml5',
-								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							}
-							
-						], 
-						bAutoWidth: false,
-						"aoColumns": [
-						  null, null, null, null, null, null, null, null, null, null, null, null
-						],
-						"aaSorting": [],
-						//"sScrollY": "500px",
-						//"bPaginate": false,
-						"sScrollX" : "true",
-						//"sScrollX": "300px",
-						//"sScrollXInner": "120%",
-						"bScrollCollapse": true,
-						select: {
-							style: 'multi'	
-						}
-				    } );
-					////
 					
-				})
-				
-				$(document).ready(function() {
+					////
 					setTimeout(function() {
-						//$("#table1").hide();
-						//$("#table2").hide();
-						//$("#table3").hide();
-						//$("#table4").hide();
-					}, 2000);
-			    });
+// 						$("#table1").hide();
+// 						$("#table2").hide();
+// 						$("#table3").hide();
+// 						$("#table4").hide();
+					}, 500);
+				})
 			
 		</script>
 	@stop

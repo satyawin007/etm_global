@@ -728,7 +728,7 @@ class SalariesController extends \Controller {
 		if($values["transid"]==""){
 			$values["transid"] = "zzzz";
 		}
-		$recs = \ExpenseTransaction::where("chequeNumber","=",$values["transid"])->get();
+		$recs = \ExpenseTransaction::where("status","=","ACTIVE")->where("chequeNumber","=",$values["transid"])->get();
 		foreach($recs as $rec){
 			$depo_amt = $depo_amt+$rec->amount;
 		}

@@ -61,54 +61,31 @@ class ClientIncomeController extends \Controller {
 		$clientname_val = ""; $depot_val = "";   $bankaccount_val = "";  $chequenumber_val = ""; 
 		$tdspercentage = "";   $todate_val = "";  $billno_val = "";   $show_val = "false";
 		$enableincharge_val = "NO";
+		$dieselhikeamount=0; $excesskmsamount=0; $extrakmsamount=0;
 		$values["show"] = "true";
-		if(isset($values["show"])){
-			$show_val = $values["show"];
-		}
-		if(isset($values["billdate"])){
-			$billdate_val = $values["billdate"];
-		}
-		if(isset($values["clientname"])){
-			$clientname_val = $values["clientname"];
-		}
-		if(isset($values["billno"])){
-			$billno_val = $values["billno"];
-		}
-		if(isset($values["month"])){
-			$month_val = $values["month"];
-		}
-		if(isset($values["paymentdate"])){
-			$pmtdate_val = $values["paymentdate"];
-		}
-		if(isset($values["paymenttype"])){
-			$pmttype_val = $values["paymenttype"];
-		}
-		if(isset($values["bankaccount"])){
-			$bankaccount_val = $values["bankaccount"];
-		}
-		if(isset($values["chequenumber"])){
-			$chequenumber_val = $values["chequenumber"];
-		}
-		if(isset($values["fromdate"])){
-			$fromdate_val = $values["fromdate"];
-		}
-		if(isset($values["todate"])){
-			$todate_val = $values["todate"];
-		}
-		if(isset($values["tdspercentage"])){
-			$tdspercentage = $values["tdspercentage"];
-		}
-		if(isset($values["enableincharge"])){
-			$enableincharge_val = $values["enableincharge"];
-		}
+		if(isset($values["show"])){ $show_val = $values["show"]; }
+		if(isset($values["billdate"])){ $billdate_val = $values["billdate"]; }
+		if(isset($values["clientname"])){ $clientname_val = $values["clientname"]; }
+		if(isset($values["billno"])){ $billno_val = $values["billno"]; }
+		if(isset($values["month"])){ $month_val = $values["month"]; }
+		if(isset($values["paymentdate"])){ $pmtdate_val = $values["paymentdate"]; }
+		if(isset($values["paymenttype"])){ $pmttype_val = $values["paymenttype"]; }
+		if(isset($values["bankaccount"])){ $bankaccount_val = $values["bankaccount"]; }
+		if(isset($values["chequenumber"])){ $chequenumber_val = $values["chequenumber"]; }
+		if(isset($values["fromdate"])){ $fromdate_val = $values["fromdate"]; }
+		if(isset($values["todate"])){ $todate_val = $values["todate"]; }
+		if(isset($values["tdspercentage"])){ $tdspercentage = $values["tdspercentage"]; }
+		if(isset($values["enableincharge"])){ $enableincharge_val = $values["enableincharge"]; }
 		$casual_leaves = 2;
-		if(isset($values["casualleaves"])){
-			$casual_leaves = $values["casualleaves"];
-		}
+		if(isset($values["dieselhikeamount"])){ $dieselhikeamount = $values["dieselhikeamount"]; }
+		if(isset($values["casualleaves"])){ $casual_leaves = $values["casualleaves"]; }
+		if(isset($values["excesskmsamount"])){ $excesskmsamount = $values["excesskmsamount"]; }
+		if(isset($values["extrakmsamount"])){ $extrakmsamount = $values["extrakmsamount"]; }
+		
 		$clients =  AppSettingsController::getEmpClients();
 		$clients_arr = array();
-		foreach ($clients as $client){
-			$clients_arr[$client['id']] = $client['name'];
+		foreach ($clients as $client){ 
+			$clients_arr[$client['id']] = $client['name']; 
 		}
 		
 		$depots_arr = array();
@@ -150,10 +127,16 @@ class ClientIncomeController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymentdate", "value"=>$pmtdate_val, "content"=>"payment date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array(""=>"NOT PAID", "cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
-		$form_fields[] = $form_field;
 		$form_field = array("name"=>"tdspercentage", "value"=>$tdspercentage, "content"=>"tds percentage(%)", "readonly"=>"", "required"=>"required", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
+		$form_field = array("name"=>"dieselhikeamount", "value"=>$dieselhikeamount, "content"=>"Diesel Hike Amt", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"excesskmsamount", "value"=>$excesskmsamount, "content"=>"Excess Kms Amt", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"extrakmsamount", "value"=>$extrakmsamount, "content"=>"Extra Kms Amt", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array(""=>"NOT PAID", "cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
+		$form_fields[] = $form_field;  
 	
 		$form_info["form_fields"] = $form_fields;
 		$values["form_info"] = $form_info;
@@ -203,6 +186,9 @@ class ClientIncomeController extends \Controller {
 									 "veh_gross"=>"gross",
 									 "veh_tds"=>"tds",
 									 "veh_emi"=>"emi",
+									 "veh_insurance"=>"insurance",
+									 "veh_tollgate"=>"tollgate",
+								 	 "veh_parking"=>"parking",
 									 "veh_stopped"=>"stopped", 
 									 "veh_otherincome"=>"otherIncome", 
 									 "veh_otherdeductions"=>"otherDeductions",
@@ -226,6 +212,9 @@ class ClientIncomeController extends \Controller {
 									"bankname"=>"bankName",
 									"accountnumber"=>"accountNumber",
 									"issuedate"=>"issueDate",
+									"dieselhikeamount"=>"dieselHikeAmount",
+									"excesskmsamount"=>"excessKmsAmount",
+									"extrakmsamount"=>"extraKmsAmount",
 									"transactiondate"=>"transactionDate",
 									"tdspercentage"=>"tdsPercentage");
 				foreach ($field_names as $key=>$val){

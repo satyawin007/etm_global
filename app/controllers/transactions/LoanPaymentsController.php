@@ -140,7 +140,7 @@ class LoanPaymentsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"date", "value"=>$date_val, "content"=>"date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"entity_date", "value"=>$month_val, "content"=>"for month", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$month_arr);
+		$form_field = array("name"=>"entity_date", "value"=>$month_val, "content"=>"for month", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$month_arr); 
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"expensetype", "value"=>$expensetype_val, "content"=>"expense type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("loanpayment"=>"LOAN PAYMENT", "loaninterestpayment"=>"LOAN INTEREST PAYMENT", "late_fee_charges"=>"LATE FEE CHARGES"));
 		$form_fields[] = $form_field;
@@ -151,6 +151,8 @@ class LoanPaymentsController extends \Controller {
 		$form_field = array("name"=>"enableincharge", "id"=>"enableincharge","content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("NO"=>"NO","YES"=>"YES"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"incharge", "id"=>"incharge", "value"=>$incharge_val, "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange", "script"=>"getInchargeBalance(this.value)"), "options"=>$incharges_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"inchargebalance", "value"=>"",  "content"=>"Incharge balance", "value"=>"", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array(""=>"NOT PAID", "cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 		$form_fields[] = $form_field;
@@ -218,19 +220,19 @@ class LoanPaymentsController extends \Controller {
 							$fields[$val] = $values[$key];
 						}
 					}
-				}
+				} 
 				$fields["name"] = "expense";
 				if(isset($values["expensetype"]) && $values["expensetype"]=="loanpayment"){
-					$fields["entity"] = "loanpayment";
+					$fields["entity"] = "LOAN PAYMENT";
 					$fields["lookupValueId"] = "147";					
 				}
-				else if(isset($values["expensetype"]) && $values["expensetype"]=="loanpayment"){
-					$fields["entity"] = "loanpayment";
-					$fields["lookupValueId"] = "147";
+				else if(isset($values["expensetype"]) && $values["expensetype"]=="late_fee_charges"){
+					$fields["entity"] = "LATE FEE/OTHER CHARGES";
+					$fields["lookupValueId"] = "355";
 				}
-				else if(isset($values["expensetype"]) && $values["expensetype"]=="loanpayment"){
-					$fields["entity"] = "loanpayment";
-					$fields["lookupValueId"] = "147";
+				else if(isset($values["expensetype"]) && $values["expensetype"]=="loaninterestpayment"){
+					$fields["entity"] = "LOAN INTEREST PAYMENT";
+					$fields["lookupValueId"] = "336";
 				}
 				$db_functions_ctrl = new DBFunctionsController();
 				
@@ -247,6 +249,12 @@ class LoanPaymentsController extends \Controller {
 				$recid = "";
 				try{
 					$recid = $db_functions_ctrl->insert($table, $fields);
+					if(isset($values["incharge"]) && $values["incharge"]>0){
+						$incharge_acct = \InchargeAccounts::where("empid","=",$values["incharge"])->first();
+						$balance_amount = $incharge_acct->balance;
+						$balance_amount = $balance_amount-$fields["amount"];
+						\InchargeAccounts::where("empid","=",$values["incharge"])->update(array("balance"=>$balance_amount));
+					}
 					$message = $message.$values["loanno"][$id].", ";
 				}
 				catch(\Exception $ex){

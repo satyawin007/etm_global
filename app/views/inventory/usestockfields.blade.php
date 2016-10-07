@@ -115,10 +115,12 @@
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"qty", "id"=>"qty",  "content"=>"Quantity", "readonly"=>"",  "required"=>"", "type"=>"text", "action"=>array("type"=>"onchange","script"=>"validateQuantity(this.value)"), "class"=>"form-control");
 	$form_fields[] = $form_field;
-	$form_field = array("name"=>"vehicle", "id"=>"vehicle",  "content"=>"vehicle", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
-	$form_fields[] = $form_field;
-	$form_field = array("name"=>"meeterreading", "id"=>"meeterreading",  "content"=>"meeter reading", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
-	$form_fields[] = $form_field;
+	if(isset($values["stocktype"])&& $values["stocktype"]=="nonoffice"){
+		$form_field = array("name"=>"vehicle", "id"=>"vehicle",  "content"=>"vehicle", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"meeterreading", "id"=>"meeterreading",  "content"=>"meeter reading", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+	}
 	$form_field = array("name"=>"remarks", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"", "type"=>"textarea", "class"=>"form-control");
 	$form_fields[] = $form_field;
 	$form_field = array("name"=>"bill", "id"=>"bill",  "content"=>"bill", "readonly"=>"",  "required"=>"", "type"=>"link", "class"=>"form-control");

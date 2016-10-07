@@ -199,10 +199,15 @@ class ServiceLogController extends \Controller {
 			$entities = \ContractVehicle::join("vehicle","vehicle.id","=","contract_vehicles.vehicleId")
 							->where("contractId","=",$contractId)
 							->where("contract_vehicles.status","=",$status)
-							->select(array("contract_vehicles.id as id", "vehicle.veh_reg as name"))
+							->select(array("contract_vehicles.id as id", "vehicle.id as vehid", "vehicle.veh_reg as name"))
 							->groupBy("vehicle.id")->get();
 			foreach ($entities as $entity){
-				$response = $response."<option value='".$entity->id."'>".$entity->name."</option>";
+				if(isset($values["type"]) && $values["type"]=="vehicleids"){
+					$response = $response."<option value='".$entity->vehid."'>".$entity->name."</option>";
+				}
+				else{
+					$response = $response."<option value='".$entity->id."'>".$entity->name."</option>";
+				}
 			}
 		}
 		echo $response;

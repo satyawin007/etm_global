@@ -239,7 +239,7 @@
 				clientId =  $("#clientname").val();
 				depotId = $("#depot").val();
 				$.ajax({
-			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
+			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&type=vehicleids",
 			      success: function(data) {
 			    	  $("#vehicle").html(data);
 			    	  $('.chosen-select').trigger("chosen:updated");
