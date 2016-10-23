@@ -212,6 +212,9 @@ class ReportsController extends \Controller {
 		if(isset($values["reporttype"]) && $values["reporttype"] == "vehicleperformance"){
 			return $this->getVehiclePerformance($values);
 		}
+		if(isset($values["reporttype"]) && $values["reporttype"] == "vehicleincome"){
+			return $this->getVehicleIncome($values);
+		}
 		if(isset($values["reporttype"]) && $values["reporttype"] == "vehicletrackingreport"){
 			return $this->getVehicleTracking($values);
 		}
@@ -3455,13 +3458,13 @@ class ReportsController extends \Controller {
 					foreach ($fuelstations as $fuelstation){
 						$row = array();
 						$row["fuelstation"] = $fuelstation->name;
-						$row["fromdate"] = $frmDt;
+						$row["fromdate"] = $values["fromdate"];
 						/*$recs = DB::select( DB::raw("SELECT  FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'"));
 						if(count($recs)>0) {
 							$rec = $recs[0];
 							$row["fromdate"] = $rec->amt;
 						}*/
-						$row["todate"] = $toDt;
+						$row["todate"] = $values["todate"];
 						/*$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'"));
 						if(count($recs)>0) {
 							$rec = $recs[0];
@@ -3520,6 +3523,7 @@ class ReportsController extends \Controller {
 						if($row["tilldtamt"] != 0  || $row["tdtpayamt"] != 0){
 							$resp[] = $row;
 						}
+						$resp1 = array("data"=>$resp);
 						
 					}
 				}
@@ -3545,6 +3549,7 @@ class ReportsController extends \Controller {
 						if($row["paidamt"] != 0  || $row["totalamt"] != 0){
 							$resp[] = $row;
 						}
+						$resp1 = array("data"=>$resp);
 					}foreach ($fuelstations as $fuelstation){
 						$row = array();
 						$row["fuelstation"] = $fuelstation->name;
@@ -3613,6 +3618,7 @@ class ReportsController extends \Controller {
 						if($row["tilldtamt"] != 0  || $row["tdtpayamt"] != 0){
 							$resp[] = $row;
 						}
+						$resp1 = array("data"=>$resp);
 						
 					}
 				}
@@ -3638,6 +3644,7 @@ class ReportsController extends \Controller {
 							$row["createdBy"] = $rec->createdBy;
 							$resp[] = $row;
 						}
+						$resp1 = array("data"=>$resp);
 					}
 				}
 				else if($values["fuelstation"] > 0){
@@ -3654,12 +3661,15 @@ class ReportsController extends \Controller {
 							$row["createdBy"] = $rec->createdBy;
 							$resp[] = $row;
 						}
+						$resp1 = array("data"=>$resp);
 					}
 				}
 			}
 			else if($values["fuelreporttype"] == "tracking"){
 				if($values["fuelstation"] == "0"){
 					$fuelstations =  \FuelStation::OrderBy("name")->get();
+					$tot_ltrs = 0;
+					$tot_amt = 0;
 					foreach ($fuelstations as $fuelstation){
 						$row = array();
 						$row["fuelstation"] = $fuelstation->name;
@@ -3668,16 +3678,22 @@ class ReportsController extends \Controller {
 							$row["vehicle"] = $rec->veh_reg;
 							$row["date"] = date("d-m-Y",strtotime($rec->date));
 							$row["ltrs"] = $rec->ltrs;
+							$tot_ltrs = $tot_ltrs+$rec->ltrs;
 							$row["amount"] = $rec->amount;
+							$tot_amt = $tot_amt+$rec->amount;
 							$row["info"] = "Source : ".$rec->entity."<br/>"."Payment Type : ". $rec->paymentType;
 							$row["remarks"] = $rec->remarks;
 							$row["createdBy"] = $rec->createdBy;
 							$resp[] = $row;
 						}
+						$resp1 = array("data"=>$resp, "total_amt"=>$tot_amt, "total_ltrs"=>$tot_ltrs);
+						
 					}
 				}
 				else if($values["fuelstation"] > 0){
 					$fuelstations =  \FuelStation::where("id","=",$values["fuelstation"])->get();
+					$tot_ltrs = 0;
+					$tot_amt = 0;
 					foreach ($fuelstations as $fuelstation){
 						$row = array();
 						$row["fuelstation"] = $fuelstation->name;
@@ -3686,12 +3702,15 @@ class ReportsController extends \Controller {
 							$row["vehicle"] = $rec->veh_reg;
 							$row["date"] = date("d-m-Y",strtotime($rec->date));
 							$row["ltrs"] = $rec->ltrs;
+							$tot_ltrs = $tot_ltrs+$rec->ltrs;
 							$row["amount"] = $rec->amount;
+							$tot_amt = $tot_amt+$rec->amount;
 							$row["info"] = "Source : ".$rec->entity."<br/>"."Payment Type : ". $rec->paymentType;
 							$row["remarks"] = $rec->remarks;
 							$row["createdBy"] = $rec->createdBy;
 							$resp[] = $row;
 						}
+						$resp1 = array("data"=>$resp, "total_amt"=>$tot_amt, "total_ltrs"=>$tot_ltrs);
 					}
 				}
 			}
@@ -3709,8 +3728,10 @@ class ReportsController extends \Controller {
 					$row["createdBy"] = $rec->createdBy;
 					$resp[] = $row;
 				}
+				$resp1 = array("data"=>$resp);
+				
 			}
-			echo json_encode($resp);
+			echo json_encode($resp1);
 			return;
 		}
 	
@@ -4094,6 +4115,10 @@ class ReportsController extends \Controller {
 				$select_args[] = "creditsuppliertransactions.labourCharges as labourCharges";
 				$select_args[] = "creditsuppliertransactions.electricianCharges as electricianCharges";
 				$select_args[] = "creditsuppliertransactions.batta as batta";
+				$select_args[] = "creditsuppliertransactions.billNumber as bill";
+				$select_args[] = "creditsuppliertransactions.paymentPaid as paymentPaid";
+				$select_args[] = "creditsuppliertransactions.comments as remarks";
+				
 				
 				$recs = $qry->select($select_args)->get();
 				
@@ -4120,7 +4145,9 @@ class ReportsController extends \Controller {
 					$row["labourcharge"] = $rec->labourCharges;
 					$row["electriciancharge"] = $rec->electricianCharges;
 					$row["batta"] = $rec->batta;
-					
+					$row["paymentPaid"] = $rec->paymentPaid;
+					$row["bill"] = $rec->billNumber;
+					$row["remarks"] = $rec->comments;
 					$resp[] = $row;
 				}
 			}
@@ -4139,7 +4166,10 @@ class ReportsController extends \Controller {
 				$select_args[] = "manufactures.name as itemcompany";
 				$select_args[] = "purchased_items.purchasedQty as purchasedQty";
 				$select_args[] = "purchased_items.unitPrice as unitPrice";
+				$select_args[] = "purchase_orders.amountPaid as amountPaid";
 				$select_args[] = "purchase_orders.orderDate as orderDate";
+				$select_args[] = "purchase_orders.billNumber as billNumber";
+				$select_args[] = "purchase_orders.comments as comments";
 				
 				$recs = $qry->select($select_args)->get();
 				
@@ -4151,6 +4181,9 @@ class ReportsController extends \Controller {
 					$row["purchasedQty"] = $rec->purchasedQty;
 					$row["amount"] = ($rec->purchasedQty*$rec->unitPrice);
 					$row["orderDate"] = date("d-m-Y",strtotime($rec->orderDate));
+					$row["amountPaid"] = $rec->amountPaid;
+					$row["billNumber"] = $rec->billNumber;
+					$row["comments"] = $rec->comments;
 					
 					$resp[] = $row;
 				}
@@ -4158,7 +4191,7 @@ class ReportsController extends \Controller {
 			else if($values["supplierreporttype"] == "vehicleReport"){
 				//$qry=  \CreditSupplierTransactions::whereBetween("date",array($frmDt,$toDt));
 				
-				$qry1 = "select creditsuppliertransdetails.vehicleIds as vehicleIds, creditsuppliers.supplierName as creditsuppliername, creditsuppliertransactions.date as date, lookuptypevalues.name as itemdetails, creditsuppliertransactions.amount as amount from ";
+				$qry1 = "select creditsuppliertransdetails.vehicleIds as vehicleIds, creditsuppliers.supplierName as creditsuppliername,creditsuppliertransactions.billNumber as billNumber,creditsuppliertransactions.paymentPaid as paymentPaid, creditsuppliertransactions.comments as comments,creditsuppliertransactions.date as date, lookuptypevalues.name as itemdetails, creditsuppliertransactions.amount as amount from ";
 				$qry1 = $qry1."creditsuppliertransactions left join creditsuppliertransdetails on creditsuppliertransactions.id = creditsuppliertransdetails.creditSupplierTransId";
 				$qry1 = $qry1." left join creditsuppliers on creditsuppliers.id = creditsuppliertransactions.creditSupplierId";
 				$qry1 = $qry1." left join lookuptypevalues on creditsuppliertransdetails.repairedItem = lookuptypevalues.id";
@@ -4204,6 +4237,9 @@ class ReportsController extends \Controller {
 					$row["transactiondate"] = date("d-m-Y",strtotime($rec->date));
 					$row["itemdetails"] = $rec->itemdetails;
 					$row["repairamount"] = $rec->amount;
+					$row["paymentPaid"] = $rec->paymentPaid;
+					$row["billNumber"] = $rec->billNumber;
+					$row["comments"] = $rec->comments;
 					
 					$resp[] = $row;
 				}
@@ -6649,7 +6685,7 @@ private function getGlobalLoansReport($values)
 				
 				$recs = $qry->whereBetween("expensetransactions.date",array($frmDt,$toDt))->select($select_args)->orderBy("vehicle.id","desc")->get();
 				$i=0;
-				foreach($i=0;$i<count($recs); $i++) {
+				for($i=0;$i<count($recs); $i++) {
 					$rec = $recs[$i];
 					$row = array();
 					$row["vehicle"] = $rec->veh_reg;
@@ -7368,6 +7404,170 @@ private function getGlobalLoansReport($values)
 		//$values['provider'] = "loginlog";
 	
 		return View::make('reports.vehicleperformancereport', array("values"=>$values));
+	}
+	private function getVehicleIncome($values)
+	{
+		if (\Request::isMethod('post'))
+		{
+			//$values["test"];
+				
+			if(!isset($values["fromdate"]) || !isset($values["todate"])){
+				echo json_encode(array("total"=>0, "data"=>array()));
+				return ;
+			}
+			if(isset($values["typeOfIncome"]) && $values["typeOfIncome"]=="CONTRACT INCOME"){
+				if(true){
+			$select_args = array();
+			$select_args[] = "client_income.month as month";
+			$select_args[] = "client_income.tds as tds";
+			$select_args[] = "client_income.vehicleId as no_of_veh";
+			$select_args[] = "client_income.emi as emi";
+			$select_args[] = "client_income.gross as gross_amt";
+			$select_args[] = "client_income.netAmount as netAmount";
+			$frmdt = date("Y-m-d",strtotime($values["fromdate"]));
+			$todt = date("Y-m-d",strtotime($values["todate"]));
+			$clientname=$values["clientname"];
+			$resp = array();
+			$sql = "SELECT client_income.month as month, sum(client_income.tds) as tds, count(client_income.vehicleId) as no_of_veh, sum(client_income.emi) as emi, sum(client_income.gross) as gross_amt, sum(client_income.netAmount) as netAmount,sum(client_income.clientAmount)as received from client_income where month BETWEEN '".$frmdt."' and '".$todt."' and client_income.clientId='".$clientname."' group by client_income.month";
+			$recs =  \DB::select(DB::raw($sql));
+			
+			/*$qry=  \ClientIncome::where("client_income.clientId","=",$values["clientname"])
+								->where("client_income.depotId","=",$values["depot"])
+								->whereBetween("client_income.month",array($frmdt,$todt))
+								->count("client_income.vehicleId","as","no_of_veh")
+								->sum("client_income.tds","as","tds")
+								->sum("client_income.emi")
+								->sum("client_income.gross")
+								->sum("client_income.netAmount");
+						
+			$recs = $qry->select($select_args)/*->count("client_income.vehicleId")
+											  ->sum("client_income.tds")
+											  ->sum("client_income.emi")
+											  ->sum("client_income.gross")
+											  ->sum("client_income.netAmount")
+											  ->groupBy("client_income.month")->get();*/
+			//print_r($recs); die();
+			$i=1;
+			foreach($recs as  $rec) {
+				$row = array();
+				$row["S.no"] = $i;
+				$row["month"] = date("F",strtotime($rec->month));
+				$row["no_of_veh"] = $rec->no_of_veh;
+				$row["gross_amt"] = $rec->gross_amt;
+				$row["tds"] = $rec->tds;
+				$row["emi"] = $rec->emi;
+				$row["netAmount"] = $rec->netAmount;
+				$row["received"] = $rec->received;
+				$row["balance"] = $row["netAmount"]-$row["received"];
+				$resp[] = $row;
+				$i++;
+			}
+			if(isset($values["typeOfIncome"]) && $values["typeOfIncome"]=="INCOME TRANSATIONS"){
+				if(true){
+					$select_args = array();
+					$select_args[] = "client_income.month as month";
+					$select_args[] = "client_income.tds as tds";
+					$select_args[] = "client_income.vehicleId as no_of_veh";
+					$select_args[] = "client_income.emi as emi";
+					$select_args[] = "client_income.gross as gross_amt";
+					$select_args[] = "client_income.netAmount as netAmount";
+					$frmdt = date("Y-m-d",strtotime($values["fromdate"]));
+					$todt = date("Y-m-d",strtotime($values["todate"]));
+					$clientname=$values["clientname"];
+					$resp = array();
+					$sql = "SELECT client_income.month as month, sum(client_income.tds) as tds, count(client_income.vehicleId) as no_of_veh, sum(client_income.emi) as emi, sum(client_income.gross) as gross_amt, sum(client_income.netAmount) as netAmount,sum(client_income.clientAmount)as received from client_income where month BETWEEN '".$frmdt."' and '".$todt."' and client_income.clientId='".$clientname."' group by client_income.month";
+					$recs =  \DB::select(DB::raw($sql));
+						
+					/*$qry=  \ClientIncome::where("client_income.clientId","=",$values["clientname"])
+					 ->where("client_income.depotId","=",$values["depot"])
+					 ->whereBetween("client_income.month",array($frmdt,$todt))
+					 ->count("client_income.vehicleId","as","no_of_veh")
+					 ->sum("client_income.tds","as","tds")
+					 ->sum("client_income.emi")
+					 ->sum("client_income.gross")
+					 ->sum("client_income.netAmount");
+			
+						$recs = $qry->select($select_args)/*->count("client_income.vehicleId")
+						->sum("client_income.tds")
+						->sum("client_income.emi")
+						->sum("client_income.gross")
+						->sum("client_income.netAmount")
+						->groupBy("client_income.month")->get();*/
+					//print_r($recs); die();
+					$i=1;
+					foreach($recs as  $rec) {
+						$row = array();
+						$row["S.no"] = $i;
+						$row["month"] = date("F",strtotime($rec->month));
+						$row["no_of_veh"] = $rec->no_of_veh;
+						$row["gross_amt"] = $rec->gross_amt;
+						$row["tds"] = $rec->tds;
+						$row["emi"] = $rec->emi;
+						$row["netAmount"] = $rec->netAmount;
+						$row["received"] = $rec->received;
+						$row["balance"] = $row["netAmount"]-$row["received"];
+						$resp[] = $row;
+						$i++;
+					}
+				}
+			}
+			
+			echo json_encode($resp);
+			return;
+				}
+			}
+		}
+		$values['bredcum'] = "CLIENT VEHICLE INCOME REPORT";
+		$values['home_url'] = 'masters';
+		$values['add_url'] = 'loginlog';
+		$values['form_action'] = 'loginlog';
+		$values['action_val'] = '#';
+		$theads = array("s.no","month", "no of veh", "gross amt", "tds", "emi", "net", "received", "balance");
+		$values["theads"] = $theads;
+	
+		//$values["test"];
+	
+		$form_info = array();
+		$form_info["name"] = "getreport";
+		$form_info["action"] = "getreport";
+		$form_info["method"] = "post";
+		$form_info["class"] = "form-horizontal";
+		$form_info["back_url"] = "users";
+		$form_info["bredcum"] = "CLIENT VEHICLE TRIPS REPORT";
+		$form_info["reporttype"] = $values["reporttype"];
+	
+	
+		$emp_arr = array();
+		$emp_arr[0] = "All";
+		$emps = \Employee::where("status","=","ACTIVE")->orderby("fullName")->get();
+		foreach ($emps as $emp){
+			$emp_arr[$emp->id] = $emp->fullName;
+		}
+	
+		$clients =  AppSettingsController::getEmpClients();
+		$clients_arr = array();
+		foreach ($clients as $client){
+			$clients_arr[$client['id']] = $client['name'];
+		}
+	
+		$form_fields = array();
+		$form_field = array("name"=>"typeOfIncome", "content"=>"type Of Income", "readonly"=>"",  "required"=>"required", "type"=>"select","class"=>"form-control chosen-select", "options"=>array("CONTRACT INCOME"=>"CONTRACT INCOME", "INCOME TRANSATIONS"=>"INCOME TRANSACTIONS"));
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$clients_arr);
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"daterange", "content"=>"date range", "readonly"=>"",  "required"=>"required","type"=>"daterange", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"reporttype", "value"=>$values["reporttype"], "content"=>"", "readonly"=>"",  "required"=>"required","type"=>"hidden");
+		$form_fields[] = $form_field;
+		$form_info["form_fields"] = $form_fields;
+		$values['form_info'] = $form_info;
+	
+		$form_info["form_fields"] = array();
+		$modals[] = $form_info;
+		$values["modals"] = $modals;
+		//$values['provider'] = "loginlog";
+	
+		return View::make('reports.vehicleincome', array("values"=>$values));
 	}
 	
 	private function getVehicleTracking($values)
