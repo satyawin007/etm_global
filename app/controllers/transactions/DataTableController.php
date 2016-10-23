@@ -966,7 +966,7 @@ class DataTableController extends \Controller {
 	
 		$entities = $entities->toArray();
 		foreach($entities as $entity){
-			if($entity["lookupValueId"]>900){
+			if($entity["lookupValueId"]>900 &&$entity["lookupValueId"]<1000){
 				$expenses_arr = array();
 				$expenses_arr["998"] = "CREDIT SUPPLIER PAYMENT";
 				$expenses_arr["997"] = "FUEL STATION PAYMENT";
@@ -977,6 +977,7 @@ class DataTableController extends \Controller {
 				$expenses_arr["992"] = "ONLINE OPERATORS";
 				$expenses_arr["991"] = "DAILY FINANCE PAYMENT";
 				$expenses_arr["989"] = "VEHICLE RENEWAL";
+				$entity["name"] = "";
 				$entity["name"] = $expenses_arr[$entity["lookupValueId"]];
 			}
 			

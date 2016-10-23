@@ -90,6 +90,33 @@
 		</div>	
 		<div id="processing" class="modal-backdrop fade in"><div id = "loading" > <i  class="ace-icon fa fa-spinner fa-spin orange bigger-250"></i>	</div></div>
 		
+		<div id="modal-table" class="modal fade in" tabindex="-1" >
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header no-padding">
+						<div class="table-header">
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+								<span class="white">x</span>
+							</button>
+							Results for fuel station - <span id="headval"></span>
+						</div>
+					</div>
+
+					<div class="modal-body no-padding">
+						<table class="table table-striped table-bordered table-hover no-margin-bottom no-border-top">
+							<thead>
+								<tr>
+									<th>VEHICLE</th>
+									<th>AMOUNT PAID ON</th>
+									<th>NEXT ALERT DATE</th>
+								</tr>
+							</thead>
+							<tbody id="tbodydata"></tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
 		
 		<div class="row" >
 			<div id="table1">
@@ -99,7 +126,7 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>		 
+						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -163,10 +190,7 @@
 						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						
-						<span> Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?> </span>		 
-						<span style="float:right; font-size: 16px; font-weight: bold;">TOTAL AMOUNT : <span id="totamt">0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  TOTAL FUEL : <span id="totfuel">0</span> &nbsp;&nbsp;&nbsp;</span>				 
-						
+						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -284,6 +308,11 @@
 				}
 			}
 
+			function getData(id, name, fromdate, todate){
+				$("#headval").html(name);
+				alert(id+", "+name+", "+fromdate+", "+todate);
+			}
+
 			function paginate(page){
 				reporttype = $("#fuelreporttype").val();
 				if(reporttype == ""){
@@ -319,10 +348,9 @@
 			        success: function(response){
 			           //alert(response);  
 			           var json = JSON.parse(response);
-			           var data = json["data"];
 			           var arr = [];
-			           for(var i = 0; i < data.length; i++) {
-			        	    var parsed = data[i];
+			           for(var i = 0; i < json.length; i++) {
+			        	    var parsed = json[i];
 			        	    var row = [];
 			        	    for(var x in parsed){
 			        	    	row.push(parsed[x]);
@@ -354,10 +382,6 @@
 							}	
 			        	}
 			        	else if(reporttype == "tracking" || reporttype == "vehicleReport"){
-			        		totamt =  json["total_amt"];
-			        	    totfuel =  json["total_ltrs"];
-				            $("#totamt").html(totamt);
-				            $("#totfuel").html(totfuel);
 							myTable3.clear().draw();
 							myTable3.rows.add(arr); // Add new data
 							myTable3.columns.adjust().draw(); // Redraw theDataTable

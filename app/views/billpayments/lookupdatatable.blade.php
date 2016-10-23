@@ -330,7 +330,6 @@
 			}
 
 			function modalEditBillPayments(billNo,billDate,paidDate, totalAmount, amountPaid,name,billParticulars, remarks ,status, id,clientId,parentBillId,transctionType){
-				alert(billNo);
 				$("#paiddate1").val(paidDate);				
 				$("#totalamount1").val(totalAmount);
 				$("#amountpaid1").val(amountPaid);

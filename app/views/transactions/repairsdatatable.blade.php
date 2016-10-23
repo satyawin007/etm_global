@@ -383,6 +383,24 @@ use settings\AppSettingsController;
 			   });
 			}
 
+			function getContractVehicles(val){
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+				vehiclestatus =  $("input[name=vehiclestatus]:checked").val();
+				if(vehiclestatus == undefined){
+					vehiclestatus = "ACTIVE";
+				}
+				//alert(vehiclestatus);
+				$.ajax({
+			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&vehiclestatus="+vehiclestatus,
+			      success: function(data) {
+			    	  $("#vehicleno").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
+			}
+
 			function getFormData(val){
 				clientId =  $("#clientname").val();
 				depotId = $("#depot").val();
