@@ -46,7 +46,6 @@ class DataTableController extends \Controller {
 		$data = array();
 		$select_args = array();
 		$select_args[] = "bill_payments.billNo as billNo";
-		$select_args[] = "bill_payments.billMonth as billMonth";
 		$select_args[] = "bill_payments.billDate as billDate";
 		$select_args[] = "bill_payments.paidDate as paidDate";
 		$select_args[] = "bill_payments.totalAmount as totalAmount";
@@ -107,13 +106,6 @@ class DataTableController extends \Controller {
 					$entity["paidDate"] = "";
 				}
 			}
-			if($entity["billMonth"] != ""){
-				$billMonth = date("d-m-Y",strtotime($entity["billMonth"]));
-				$entity["billMonth"] = date("F",strtotime($entity["billMonth"]));
-				if($billMonth == "01-01-1970"){
-					$entity["billMonth"] = "";
-				}
-			}
 			$entity["dueAmount"] = $entity["totalAmount"]-$paid_amt_tot;
 			$data_values = array_values($entity);
 			$actions = $values['actions'];
@@ -133,7 +125,7 @@ class DataTableController extends \Controller {
 					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
 				}
 			}
-			$data_values[11] = $action_data;
+			$data_values[10] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

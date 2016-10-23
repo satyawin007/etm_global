@@ -75,6 +75,7 @@ class DashboardController extends \Controller {
 			$vehcileids = array();
 			$select_args = array();
 			$select_args[] = "vehicle.veh_reg as veh_reg";
+			$select_args[] = "lookuptypevalues.name as name";
 			$select_args[] = "expensetransactions.nextAlertDate as nextAlertDate";
 // 			$select_args[] = "vehicle.insurance_last_paid as insurance_last_paid";
 // 			$select_args[] = "vehicle.pol_last_paid as pol_last_paid";
@@ -94,55 +95,94 @@ class DashboardController extends \Controller {
 			}
 			else{
 				$entities = \Vehicle::where("vehicle.status","=","ACTIVE")
-									->orderBy("vehicle.id")->get();
+									->where("expensetransactions.nextAlertDate","!=","0000-00-00")
+									->where("expensetransactions.nextAlertDate","!=","1970-01-01")
+									->leftjoin("expensetransactions","expensetransactions.vehicleIds","=","vehicle.id")
+									->leftjoin("lookuptypevalues","expensetransactions.lookupValueId","=","lookuptypevalues.id")
+									->select($select_args)->orderBy("vehicle.id")->get();
 			}
 			$cnt = 0;
-			$entities = array(297,299,302,300,301);
-			foreach ($recs as $rec){
+			foreach ($entities as $entity){
+				$date1=date_create($today);
+				$date2=date_create($entity->nextAlertDate);
+				$diff=date_diff($date1,$date2);
+// 				echo $diff->format("%R%a").", "; continue;
 				$row = array();
-				$row["type"] = $rec;
-				$trans = \ExpenseTransaction::where("lookupTypeId","=",$rec)
-											->leftjoin("vehicle","expensetransactions.vehicleIds","=","vehicle.id")
-											->where("expensetransactions.nextAlertDate","!=","0000-00-00")
-											->where("expensetransactions.nextAlertDate","!=","1970-01-01")
-											->select($select_args)->get();
-				
-				$in_10day_cnt = 0;
-				$in_10day_vehs_str = "";
-				$in_20day_cnt = 0;
-				$in_20day_vehs_str = "";
-				$in_30day_cnt = 0;
-				$in_30day_vehs_str = "";
-				$expired_cnt = 0;
-				$expired_vehs_str = "";
-				
-				foreach ($entities as $entity){
-					$date1=date_create($today);
-					$date2=date_create($entity->nextAlertDate);
+				if($diff->format("%R%a") > 0 && $diff->format("%R%a") < 30){
+					$row["0"] = $entity->veh_reg;
+					$row["1"] = $entity->name;
+					$row["2"] = "";
+					if($diff->format("%R%a") > 0 && $diff->format("%R%a") < 10){
+						$row["3"] = '<span class="badge badge-warning">'.($diff->format("%a")).'</span>';
+					}
+					else{
+						$row["3"] = "";
+					}
+					if($diff->format("%R%a") >= 10){
+						$row["4"] = '<span class="badge badge-danger">'.($diff->format("%a")).'</span>';
+					}
+					else{
+						$row["4"] = "";
+					}
+					$resp[] = $row;
+					$cnt++;
+				}
+				else if($diff->format("%R%a") < 0){
+					$row["0"] = $entity->veh_reg;
+					$row["1"] = $entity->name;
+					$row["2"] = '<span class="badge badge-inverse">'.$diff->format("%a").'</span>';
+					$row["3"] = "";
+					$row["4"] = "";
+					$resp[] = $row;
+					$cnt++;
+				}
+				/* if(!in_array($entity->veh_reg, $vehcileids)){
+					$date2=date_create($entity->insurance_last_paid);
 					$diff=date_diff($date1,$date2);
-					// 				echo $diff->format("%R%a").", "; continue;
-					$row = array();
-					if($diff->format("%R%a") > 0 && $diff->format("%R%a") < 30){
-						if($diff->format("%R%a") > 0 && $diff->format("%R%a") < 10){
-							$in_10day_cnt++;
-							$in_10day_vehs_str=$in_10day_vehs_str.$entity->veh_reg." - ".date("d-m-Y",strtotime($entity->nextAlertDate))."<br/>";
-						}
-						if($diff->format("%R%a") >= 10){
-							$in_30day_cnt++;
-							$in_30day_vehs_str=$in_30day_vehs_str.$entity->veh_reg." - ".date("d-m-Y",strtotime($entity->nextAlertDate))."<br/>";
-						}
+					if($diff->format("%R%a") < 0 && $diff->format("%R%a") < -365){
+						$row["0"] = $entity->veh_reg; 
+						$row["1"] = "INSURANCE PAYMENT";
+						$row["2"] = '<span class="badge badge-inverse">'.($diff->format("%a")-365).'</span>';
+						$row["3"] = "";
+						$row["4"] = "";
 						$resp[] = $row;
 						$cnt++;
 					}
-					else if($diff->format("%R%a") < 0){
-						$expired_cnt++;
-						$expired_vehs_str=$expired_vehs_str.$entity->veh_reg." - ".date("d-m-Y",strtotime($entity->nextAlertDate))."<br/>";
+					$date2=date_create($entity->pol_last_paid);
+					$diff=date_diff($date1,$date2);
+					if($diff->format("%R%a") < 0 && $diff->format("%R%a") < -365){
+						$row["0"] = $entity->veh_reg;
+						$row["1"] = "POLLUTION PAYMENT";
+						$row["2"] = '<span class="badge badge-inverse">'.($diff->format("%a")-365).'</span>';
+						$row["3"] = "";
+						$row["4"] = "";
+						$resp[] = $row;
+						$cnt++;
+					}
+					$date2=date_create($entity->permit_last_paid);
+					$diff=date_diff($date1,$date2);
+					if($diff->format("%R%a") < 0 && $diff->format("%R%a") < -365){
+						$row["0"] = $entity->veh_reg;
+						$row["1"] = "PERMIT PAYMENT";
+						$row["2"] = '<span class="badge badge-inverse">'.($diff->format("%a")-365).'</span>';
+						$row["3"] = "";
+						$row["4"] = "";
+						$resp[] = $row;
+						$cnt++;
+					}
+					$date2=date_create($entity->fit_last_paid);
+					$diff=date_diff($date1,$date2);
+					if($diff->format("%R%a") < 0 && $diff->format("%R%a") < -365){
+						$row["0"] = $entity->veh_reg;
+						$row["1"] = "FITNESS PAYMENT";
+						$row["2"] = '<span class="badge badge-inverse">'.($diff->format("%a")-365).'</span>';
+						$row["3"] = "";
+						$row["4"] = "";
+						$resp[] = $row;
+						$cnt++;
 					}
 				}
-				$row["in10days"] = $in_10day_cnt;
-				$row["in20days"] = $in_20day_cnt;
-				$row["in30days"] = $in_30day_cnt;
-				$row["expired"] = $expired_cnt;
+				$vehcileids[] = $entity->veh_reg; */
 			}
 			return array("total"=>$cnt, "data"=>$resp);
 		}
@@ -203,18 +243,19 @@ class DashboardController extends \Controller {
 			foreach ($entities as $entity){
 				$row = array();
 				$row["0"] = $entity->name;
-				$requested_for_app_cnt = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-											->where("fueltransactions.createdBy","=",$entity->empid)
-											->where("fueltransactions.workFlowStatus","=","Requested")
-											->groupBy("fueltransactions.createdBy")
-											->count();
-				$row["2"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
+				
 				$sent_for_app_cnt = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
 											->where("fueltransactions.createdBy","=",$entity->empid)
 											->where("fueltransactions.workFlowStatus","=","Sent for Approval")
 											->groupBy("fueltransactions.createdBy")
 											->count();
 				$row["1"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
+				$requested_for_app_cnt = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
+											->where("fueltransactions.createdBy","=",$entity->empid)
+											->where("fueltransactions.workFlowStatus","=","Requested")
+											->groupBy("fueltransactions.createdBy")
+											->count();
+				$row["2"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
 				$sent_for_app_cnt = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
 											->where("fueltransactions.createdBy","=",$entity->empid)
 											->where("fueltransactions.workFlowStatus","=","Approved")
@@ -282,18 +323,19 @@ class DashboardController extends \Controller {
 				$row = array();
 				$row["0"] = $entity->name;
 				
+				
+				$sent_for_app_cnt = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","NO")
+													->where("creditsuppliertransactions.createdBy","=",$entity->empid)
+													->where("creditsuppliertransactions.workFlowStatus","=","Sent for Approval")
+													->groupBy("creditsuppliertransactions.createdBy")
+													->count();
+				$row["1"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$requested_for_app_cnt = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","NO")
 													->where("creditsuppliertransactions.createdBy","=",$entity->empid)
 													->where("creditsuppliertransactions.workFlowStatus","=","Requested")
 													->groupBy("creditsuppliertransactions.createdBy")
 													->count();
 				$row["2"] = '<span class="badge badge-warning">'.$requested_for_app_cnt.'</span>';
-				$sent_for_app_cnt = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","NO")
-													->where("creditsuppliertransactions.createdBy","=",$entity->empid)
-													->where("creditsuppliertransactions.workFlowStatus","=","Sent for Approval")
-													->groupBy("creditsuppliertransactions.createdBy")
-													->count();
-				$row["1"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';				
 				$sent_for_app_cnt = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","NO")
 													->where("creditsuppliertransactions.createdBy","=",$entity->empid)
 													->where("creditsuppliertransactions.workFlowStatus","=","Approved")
@@ -363,16 +405,16 @@ class DashboardController extends \Controller {
 				$row["0"] = $entity->name;
 				$sent_for_app_cnt = \PurchasedOrders::where("purchase_orders.status","=","ACTIVE")
 													->where("purchase_orders.createdBy","=",$entity->empid)
-													->where("purchase_orders.workFlowStatus","=","Sent for Approval")
-													->groupBy("purchase_orders.createdBy")
-													->count();
-				$row["2"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
-				$sent_for_app_cnt = \PurchasedOrders::where("purchase_orders.status","=","ACTIVE")
-													->where("purchase_orders.createdBy","=",$entity->empid)
 													->where("purchase_orders.workFlowStatus","=","Approved")
 													->groupBy("purchase_orders.createdBy")
 													->count();
 				$row["1"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
+				$sent_for_app_cnt = \PurchasedOrders::where("purchase_orders.status","=","ACTIVE")
+													->where("purchase_orders.createdBy","=",$entity->empid)
+													->where("purchase_orders.workFlowStatus","=","Sent for Approval")
+													->groupBy("purchase_orders.createdBy")
+													->count();
+				$row["2"] = '<span class="badge badge-success">'.$sent_for_app_cnt.'</span>';
 				$requested_for_app_cnt = \PurchasedOrders::where("purchase_orders.status","=","ACTIVE")
 													->where("purchase_orders.createdBy","=",$entity->empid)
 													->where("purchase_orders.workFlowStatus","=","Requested")
