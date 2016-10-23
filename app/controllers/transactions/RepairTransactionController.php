@@ -86,19 +86,20 @@ class RepairTransactionController extends \Controller {
 					$fields["quantity"] = $jsonitem->i3;
 					$fields["amount"] = $jsonitem->i4;
 					$fields["comments"] = $jsonitem->i5;
-					$fields["vehicleIds"] = $jsonitem->i8;
 					$veh_arr = explode(",",$jsonitem->i8);
 					$con_ids = "";
+					$veh_ids = "";
 					foreach ($veh_arr as $veh){
-						$contract_veh = \ContractVehicle::where("vehicleId","=",$veh)
-										->where("status","=","ACTIVE")->get();
+						$contract_veh = \ContractVehicle::where("id","=",$veh)->get();
 						if(count($contract_veh)>0){
 							$contract_veh = $contract_veh[0];
 							$con_ids = $con_ids.$contract_veh->contractId.",";
+							$veh_ids = $veh_ids.$contract_veh->vehicleId.",";
 							$url = "repairtransactions?type=contracts";
 						}
 					}
 					$fields["contractIds"] = $con_ids;
+					$fields["vehicleIds"] = $veh_ids;
 					$db_functions_ctrl->insert($table, $fields);
 					$table = "CreditSupplierTransactions";
 					$data = array("id"=>$recid);
@@ -106,7 +107,6 @@ class RepairTransactionController extends \Controller {
 					$fields["contractId"] = $con_ids;
 					$db_functions_ctrl->update($table, $fields, $data);
 				}
-				
 			}
 			catch(\Exception $ex){
 				\Session::put("message","Add Repaired Item : Operation Could not be completed, Try Again!");
@@ -876,7 +876,7 @@ class RepairTransactionController extends \Controller {
 		$form_fields[] = $form_field;
 		if(isset($values["type"]) && $values["type"]=="contracts"){
 			$veh_arr = array();
-			$ass_clientbranches = \Auth::user()->contractIds;
+			/*$ass_clientbranches = \Auth::user()->contractIds;
 			if(\Auth::user()->contractIds == "0" || \Auth::user()->contractIds == ""){
 				$contracts_vehs = \ContractVehicle::where("contract_vehicles.status","=","ACTIVE")
 							->join("vehicle","contract_vehicles.vehicleId","=","vehicle.id")
@@ -892,16 +892,7 @@ class RepairTransactionController extends \Controller {
 			}
 			foreach ($contracts_vehs as $contracts_veh){
 				$veh_arr[$contracts_veh->id] = $contracts_veh->veh_reg;
-			}
-			$clients =  AppSettingsController::getEmpClients();
-			$clients_arr = array();
-			foreach ($clients as $client){
-				$clients_arr[$client['id']] = $client['name'];
-			}
-			/* $form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getFormData(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
-			$form_fields[] = $form_field; */
+			}*/			
 		}
 		/* $form_field = array("name"=>"vehicle", "content"=>"Vehicle", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$veh_arr, "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field; */
@@ -965,6 +956,19 @@ class RepairTransactionController extends \Controller {
 		$form_fields = array();
 		$form_field = array("name"=>"item", "content"=>"item", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>$items_arr,  "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
+		if(isset($values["type"]) && $values["type"]=="contracts"){
+			$clients =  AppSettingsController::getEmpClients();
+			$clients_arr = array();
+			foreach ($clients as $client){
+				$clients_arr[$client['id']] = $client['name'];
+			}
+			$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"vehiclestatus", "content"=>"contract_status", "readonly"=>"",  "required"=>"", "type"=>"radio", "class"=>"form-control chosen-select", "options"=>array("ACTIVE"=>"ACTIVE", "INACTIVE"=>"INACTIVE"));
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getContractVehicles(this.id);"), "class"=>"form-control chosen-select", "options"=>array());
+			$form_fields[] = $form_field;
+		}
 		$form_field = array("name"=>"vehicles", "content"=>"Vehicle", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$veh_arr, "multiple"=>"multiple", "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"meeterreading", "content"=>"meeter reading", "readonly"=>"", "required"=>"required","type"=>"text", "class"=>"form-control");

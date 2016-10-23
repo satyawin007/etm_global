@@ -2,8 +2,8 @@
 use Illuminate\Support\Facades\Input;
 use settings\AppSettingsController;
 ?>
-@extends('masters.master')
-	@section('inline_css')
+
+	<?php $__env->startSection('inline_css'); ?>
 		<style>
 			.pagination {
 			    display: inline-block;
@@ -45,24 +45,25 @@ use settings\AppSettingsController;
 			  width: 100% !important;
 			}
 		</style>
-	@section('page_css')
+	<?php $__env->startSection('page_css'); ?>
 		<link rel="stylesheet" href="../assets/css/jquery-ui.custom.css" />
 		<link rel="stylesheet" href="../assets/css/bootstrap-datepicker3.css"/>
 		<link rel="stylesheet" href="../assets/css/chosen.css" />
 		<link rel="stylesheet" href="../assets/css/daterangepicker.css" />
-	@stop
+	<?php $__env->stopSection(); ?>
 		
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('bredcum')	
+	<?php $__env->startSection('bredcum'); ?>	
 		<small>
 			TRANSACTIONS
 			<i class="ace-icon fa fa-angle-double-right"></i>
-			{{$values['bredcum']}}
-		</small>
-	@stop
+			<?php echo $values['bredcum']; ?>
 
-	@section('page_content')
+		</small>
+	<?php $__env->stopSection(); ?>
+
+	<?php $__env->startSection('page_content'); ?>
 	<div id="accordion2" class="col-xs-offset-0 col-xs-12 accordion-style1 panel-group" style="width: 99%;">			
 			<div class="panel panel-default">
 				<div class="panel-heading">
@@ -88,8 +89,8 @@ use settings\AppSettingsController;
 									<?php $form_field = array("name"=>"branch2", "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>
 									<label class="col-xs-5 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-											<option value="">-- {{$form_field['name']}} --</option>
+										<select class="<?php echo $form_field['class']; ?>"  <?php echo $form_field['required']; ?>  name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+											<option value="">-- <?php echo $form_field['name']; ?> --</option>
 											<?php 
 												foreach($form_field["options"] as $key => $value){
 													echo "<option value='$key'>$value</option>";
@@ -167,7 +168,7 @@ use settings\AppSettingsController;
 				<div class="panel-collapse collapse in" id="TEST">
 					<div class="panel-body" style="padding: 0px">
 						<?php $form_info = $values["form_info"]; ?>
-						<form style="padding-top:20px;" class="{{$form_info['class']}}" action="{{$form_info['action']}}" method="{{$form_info['method']}}" name="{{$form_info['name']}}"  id="{{$form_info['name']}}" enctype="multipart/form-data">
+						<form style="padding-top:20px;" class="<?php echo $form_info['class']; ?>" action="<?php echo $form_info['action']; ?>" method="<?php echo $form_info['method']; ?>" name="<?php echo $form_info['name']; ?>"  id="<?php echo $form_info['name']; ?>" enctype="multipart/form-data">
 							<div>
 							<?php $form_fields = $form_info['form_fields'];?>	
 							<?php foreach ($form_fields as $form_field) {?>
@@ -176,7 +177,7 @@ use settings\AppSettingsController;
 								<div class="form-group" >
 									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<input {{$form_field['readonly']}} type="{{$form_field['type']}}" id="{{$form_field['name']}}" {{$form_field['required']}} name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
+										<input <?php echo $form_field['readonly']; ?> type="<?php echo $form_field['type']; ?>" id="<?php echo $form_field['name']; ?>" <?php echo $form_field['required']; ?> name="<?php echo $form_field['name']; ?>" class="<?php echo $form_field['class']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
 									</div>			
 								</div>
 								<?php } ?>
@@ -189,13 +190,13 @@ use settings\AppSettingsController;
 								</div>
 								<?php } ?>
 								<?php if($form_field['type'] === "hidden"){ ?>
-										<input type="{{$form_field['type']}}" id="{{$form_field['name']}}" name="{{$form_field['name']}}" value="{{$form_field['value']}}" >
+										<input type="<?php echo $form_field['type']; ?>" id="<?php echo $form_field['name']; ?>" name="<?php echo $form_field['name']; ?>" value="<?php echo $form_field['value']; ?>" >
 								<?php } ?>
 								<?php if($form_field['type'] === "textarea"){ ?>				
 								<div class="form-group">
 									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<textarea {{$form_field['readonly']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"></textarea>
+										<textarea <?php echo $form_field['readonly']; ?> id="<?php echo $form_field['name']; ?>" name="<?php echo $form_field['name']; ?>" class="<?php echo $form_field['class']; ?>"></textarea>
 									</div>			
 								</div>
 								<?php } ?>
@@ -204,7 +205,7 @@ use settings\AppSettingsController;
 								<div class="form-group">
 									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<input type="file" id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="form-control file"/>
+										<input type="file" id="<?php echo $form_field['name']; ?>" name="<?php echo $form_field['name']; ?>" class="form-control file"/>
 									</div>			
 								</div>
 								<?php } ?>
@@ -227,8 +228,8 @@ use settings\AppSettingsController;
 								<div class="form-group">
 									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<select class="{{$form_field['class']}}" {{$form_field['required']}} name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>  <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-											<option value="">-- {{$form_field['name']}} --</option>
+										<select class="<?php echo $form_field['class']; ?>" <?php echo $form_field['required']; ?> name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>  <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+											<option value="">-- <?php echo $form_field['name']; ?> --</option>
 											<?php 
 												foreach($form_field["options"] as $key => $value){
 													if(isset($form_field['value']) && $form_field['value']==$key) { 
@@ -264,8 +265,8 @@ use settings\AppSettingsController;
 											?>
 											<div class="checkbox inline">
 												<label>
-													<input name="{{$key}}" value="YES" type="checkbox" class="ace">
-													<span class="lbl">&nbsp;{{$key}} &nbsp;&nbsp;</span>
+													<input name="<?php echo $key; ?>" value="YES" type="checkbox" class="ace">
+													<span class="lbl">&nbsp;<?php echo $key; ?> &nbsp;&nbsp;</span>
 												</label>
 											</div>
 											<?php } ?>
@@ -345,18 +346,18 @@ use settings\AppSettingsController;
 								<div class="form-group">
 									<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<input {{$form_field['readonly']}} type="{{$form_field['type']}}" id="{{$form_field['name']}}" required="{{$form_field['required']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
+										<input <?php echo $form_field['readonly']; ?> type="<?php echo $form_field['type']; ?>" id="<?php echo $form_field['name']; ?>" required="<?php echo $form_field['required']; ?>" name="<?php echo $form_field['name']; ?>" class="<?php echo $form_field['class']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
 									</div>			
 								</div>
 								<?php } ?>
 								<?php if($form_field['type'] === "hidden"){ ?>
-									<input type="{{$form_field['type']}}" id="{{$form_field['name']}}" name="{{$form_field['name']}}" value="{{$form_field['value']}}" >
+									<input type="<?php echo $form_field['type']; ?>" id="<?php echo $form_field['name']; ?>" name="<?php echo $form_field['name']; ?>" value="<?php echo $form_field['value']; ?>" >
 								<?php } ?>
 								<?php if($form_field['type'] === "textarea"){ ?>				
 								<div class="form-group">
 									<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<textarea {{$form_field['readonly']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"></textarea>
+										<textarea <?php echo $form_field['readonly']; ?> id="<?php echo $form_field['name']; ?>" name="<?php echo $form_field['name']; ?>" class="<?php echo $form_field['class']; ?>"></textarea>
 									</div>			
 								</div>
 								<?php } ?>
@@ -365,8 +366,8 @@ use settings\AppSettingsController;
 								<div class="form-group">
 									<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<select class="{{$form_field['class']}}" name="{{$form_field['name']}}" id="{{$form_field['name']}}"  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>  <?php if(isset($form_field['multiple'])) {  echo " multiple "; }?>>
-											<option value="">-- {{$form_field['name']}} --</option>
+										<select class="<?php echo $form_field['class']; ?>" name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>"  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>  <?php if(isset($form_field['multiple'])) {  echo " multiple "; }?>>
+											<option value="">-- <?php echo $form_field['name']; ?> --</option>
 											<?php 
 												foreach($form_field["options"] as $key => $value){
 													echo "<option value='$key'>$value</option>";
@@ -386,8 +387,8 @@ use settings\AppSettingsController;
 										?>
 										<div class="checkbox inline">
 											<label>
-												<input name="{{$key}}" id="{{$key}}" value="YES" type="checkbox" class="ace">
-												<span class="lbl">&nbsp;{{$value}} &nbsp;&nbsp;</span>
+												<input name="<?php echo $key; ?>" id="<?php echo $key; ?>" value="YES" type="checkbox" class="ace">
+												<span class="lbl">&nbsp;<?php echo $value; ?> &nbsp;&nbsp;</span>
 											</label>
 										</div>
 										<?php } ?>
@@ -404,8 +405,8 @@ use settings\AppSettingsController;
 										?>
 										<div class="radio inline">
 											<label>
-												<input name="{{$form_field['content']}}" id="{{$value}}" value="{{$value}}" type="radio" class="ace">
-												<span class="lbl">&nbsp;{{$value}} &nbsp;&nbsp;</span>
+												<input name="<?php echo $form_field['content']; ?>" id="<?php echo $value; ?>" value="<?php echo $value; ?>" type="radio" class="ace">
+												<span class="lbl">&nbsp;<?php echo $value; ?> &nbsp;&nbsp;</span>
 											</label>
 										</div>
 										<?php } ?>
@@ -436,9 +437,9 @@ use settings\AppSettingsController;
 		</div>
 	</div><!-- PAGE CONTENT ENDS -->
 	</div>		
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('page_js')
+	<?php $__env->startSection('page_js'); ?>
 		<!-- page specific plugin scripts -->
 		<script src="../assets/js/dataTables/jquery.dataTables.js"></script>
 		<script src="../assets/js/dataTables/jquery.dataTables.bootstrap.js"></script>
@@ -453,9 +454,9 @@ use settings\AppSettingsController;
 		<script src="../assets/js/date-time/daterangepicker.js"></script>		
 		<script src="../assets/js/bootbox.js"></script>
 		<script src="../assets/js/chosen.jquery.js"></script>
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('inline_js')
+	<?php $__env->startSection('inline_js'); ?>
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#totalamount").attr("readonly",true);
@@ -782,7 +783,7 @@ use settings\AppSettingsController;
 					alert("select amount paid");
 					return false;
 				}
-				$("#{{$form_info['name']}}").submit();
+				$("#<?php echo $form_info['name']; ?>").submit();
 			});
 
 			$('.number').keydown(function(e) {
@@ -1000,4 +1001,5 @@ use settings\AppSettingsController;
 			
 			})
 		</script>
-	@stop
+	<?php $__env->stopSection(); ?>
+<?php echo $__env->make('masters.master', array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>

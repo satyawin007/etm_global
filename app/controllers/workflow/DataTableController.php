@@ -320,7 +320,9 @@ class DataTableController extends \Controller {
 		}
 		$entities = $entities->toArray();
 		$i = 0;
-		foreach($entities as $entity){	
+		foreach($entities as $entity){
+			$entity["fromDate"] = date("d-m-Y",strtotime($entity["fromDate"]));
+			$entity["toDate"] = date("d-m-Y",strtotime($entity["toDate"]));
 			if($entity["workFlowStatus"] == "Sent for Approval"){
 				$entity["workFlowRemarks"] = '<label> <input name="remarks[]" type="text" class=""></label>';
 			}
@@ -334,7 +336,7 @@ class DataTableController extends \Controller {
 			$action_data = "";
 			if($entity["workFlowStatus"] != "Approved"){
 			$login_user = \Auth::user()->fullName;
-				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(505, $this->jobs))){
+				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(507, $this->jobs))){
 					$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
 				}
 				else{
@@ -549,7 +551,7 @@ class DataTableController extends \Controller {
 			$action_data = "";
 			if($entity["workFlowStatus"] != "Approved"){
 				$login_user = \Auth::user()->fullName;
-				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(505, $this->jobs))){
+				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(507, $this->jobs))){
 					$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
 				}
 				else{
@@ -644,6 +646,7 @@ class DataTableController extends \Controller {
 			$entities = \PurchasedOrders::whereIn("purchase_orders.officeBranchId",$branchids_arr)
 							->orWhereIn("purchase_orders.creditSupplierId",$supids_arr)
 							->where("purchase_orders.status","=","ACTIVE")
+							->whereIn("purchase_orders.type",array("PURCHASE ORDER","OFFICE PURCHASE ORDER"))
 							->whereRaw('purchase_orders.officeBranchId in('.$emp_branches_str.')')
 							->leftjoin("officebranch", "officebranch.id","=","purchase_orders.officeBranchId")
 							->leftjoin("creditsuppliers", "creditsuppliers.id","=","purchase_orders.creditSupplierId")
@@ -655,7 +658,7 @@ class DataTableController extends \Controller {
 							->where("purchase_orders.status","=","ACTIVE")->count();
 		}
 		else {
-			$qry = \PurchasedOrders::where("purchase_orders.status","=","ACTIVE");
+			$qry = \PurchasedOrders::where("purchase_orders.status","=","ACTIVE")->whereIn("purchase_orders.type",array("PURCHASE ORDER","OFFICE PURCHASE ORDER"));
 			if($values["logstatus"] != "All"){
 				$qry->where("purchase_orders.workFlowStatus","=",$values["logstatus"]);
 			}
@@ -738,7 +741,7 @@ class DataTableController extends \Controller {
 			$action_data = "";
 			if($entity["workFlowStatus"] != "Approved"){
 				$login_user = \Auth::user()->fullName;
-				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(505, $this->jobs))){
+				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(507, $this->jobs))){
 					$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
 				}
 				else{
@@ -747,6 +750,9 @@ class DataTableController extends \Controller {
 			}
 			else{
 				$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="hidden" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
+			}
+			if(!(isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (in_array(507, $this->jobs))){
+				continue;
 			}
 			$data_values[12] = $action_data;
 			$data[] = $data_values;
@@ -821,48 +827,27 @@ class DataTableController extends \Controller {
 	
 		if($search != ""){
 			$entities = \Vehicle::where("veh_reg", "like", "%$search%")
-							->where("vehicle.status","=","ACTIVE")->get();
-							$veh_arr_str = "0,";
-							foreach ($entities as $entity){
-								$veh_arr_str = $veh_arr_str.$entity->id.",";
-							}
-							//echo $veh_arr_str;die();
-							$veh_arr_str = substr($veh_arr_str, 0, strlen($veh_arr_str)-1);
-							//echo $veh_arr_str;die();
-							
-							$entities = \FuelStation::where("name", "like", "%$search%")->get();
-							$station_arr_str = "0,";
-							foreach ($entities as $entity){
-								$station_arr_str = $station_arr_str.$entity->id.",";
-							}
-							$station_arr_str = substr($station_arr_str, 0, strlen($station_arr_str)-1);
-							//echo $station_arr_str;die();
-							
-							$entities = \Employee::where("fullName", "like", "%$search%")->get();
-							$createdBy_arr_str= "-1,";
-							foreach ($entities as $entity){
-								$createdBy_arr_str= $createdBy_arr_str. $entity->id.",";
-							}
-							$createdBy_arr_str = substr($createdBy_arr_str, 0, strlen($createdBy_arr_str)-1);
-				
+			->where("vehicle.status","=","ACTIVE")->get();
+			$veh_arr = array();
+			foreach ($entities as $entity){
+				$veh_arr[] = $entity->id;
+			}
 			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-									->whereRaw('(fueltransactions.fuelStationId in('.$station_arr_str.') or fueltransactions.vehicleId in('.$veh_arr_str.') or fueltransactions.createdBy in('.$createdBy_arr_str.')) ')
-									//->whereRaw('(fueltransactions.fuelStationId in('.$station_arr_str.') or fueltransactions.vehicleId in('.$veh_arr_str.')) ')
-									->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
-									->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
-									->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
-									->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
-									->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
-									->leftjoin("employee as employee2", "employee2.id","=","fueltransactions.createdBy")
-									->leftjoin("employee as employee4", "employee4.id","=","fueltransactions.inchargeId")
-									->leftjoin("clients", "clients.id","=","contracts.clientId")
-									->leftjoin("depots", "depots.id","=","contracts.depotId");
+			->whereIn("vehicleId",$veh_arr)
+			->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
+			->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
+			->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
+			->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
+			->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
+			->leftjoin("employee as employee2", "employee2.id","=","fueltransactions.createdBy")
+			->leftjoin("employee as employee4", "employee4.id","=","fueltransactions.inchargeId")
+			->leftjoin("clients", "clients.id","=","contracts.clientId")
+			->leftjoin("depots", "depots.id","=","contracts.depotId");
 			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
 				
 			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-									->whereRaw('(fueltransactions.fuelStationId in('.$station_arr_str.') or fueltransactions.vehicleId in('.$veh_arr_str.') or fueltransactions.createdBy in('.$createdBy_arr_str.')) ')
-									->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
-									->count();
+			->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
+			->count();
 		}
 		else {
 			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE");
@@ -943,7 +928,7 @@ class DataTableController extends \Controller {
 			$action_data = "";
 			if($entity["workFlowStatus"] != "Approved"){
 				$login_user = \Auth::user()->fullName;
-				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(505, $this->jobs))){
+				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(507, $this->jobs))){
 					$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
 				}
 				else{
@@ -1028,22 +1013,8 @@ class DataTableController extends \Controller {
 			foreach ($entities as $entity){
 				$veh_arr[] = $entity->id;
 			}
-			$entities = \FuelStation::where("name", "like", "%$search%")
-			->where("fuelstationdetails.status","=","ACTIVE")->get();
-			$station_arr = array();
-			foreach ($entities as $entity){
-				$station_arr[] = $entity->id;
-			}
-			$entities = \FuelTransaction::where("createdBy", "like", "%$search%")
-			->where("fueltransactions.status","=","ACTIVE")->get();
-			$createdBy_arr = array();
-			foreach ($entities as $entity){
-				$createdBy_arr[] = $entity->id;
-			}
 			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
 							->whereIn("vehicleId",$veh_arr)
-							->whereIn("fuelStationId",$station_arr)
-							->whereIn("createdBy",$createdBy_arr)
 							->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
 							->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
 							->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
@@ -1125,7 +1096,7 @@ class DataTableController extends \Controller {
 			$action_data = "";
 			if($entity["workFlowStatus"] != "Approved"){
 				$login_user = \Auth::user()->fullName;
-				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(505, $this->jobs))){
+				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(507, $this->jobs))){
 					$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
 				}
 				else{
@@ -1335,7 +1306,7 @@ class DataTableController extends \Controller {
 				$action_data = "";
 				if($entity["workFlowStatus"] != "Approved"){
 					$login_user = \Auth::user()->fullName;
-					if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(505, $this->jobs))){
+					if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(507, $this->jobs))){
 						$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
 					}
 					else{
@@ -1484,7 +1455,7 @@ class DataTableController extends \Controller {
 				$action_data = "";
 				if($entity["workFlowStatus"] != "Approved"){
 					$login_user = \Auth::user()->fullName;
-					if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(505, $this->jobs))){
+					if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(507, $this->jobs))){
 						$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
 					}
 					else{
@@ -1595,7 +1566,7 @@ class DataTableController extends \Controller {
 				$action_data = "";
 				if($entity["workFlowStatus"] != "Approved"){
 				$login_user = \Auth::user()->fullName;
-					if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(505, $this->jobs))){
+					if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(507, $this->jobs))){
 						$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="checkbox" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
 					}
 					else{
