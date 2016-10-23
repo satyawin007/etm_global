@@ -439,7 +439,6 @@ class DataTableController extends \Controller {
 		$search = $search['value'];
 		if($search != ""){
 			$entities = \PurchasedOrders::where("creditsuppliers.supplierName", "like", "%$search%")
-						->whereIn("purchase_orders.type",array("PURCHASE ORDER","OFFICE PURCHASE ORDER"))
 						->leftjoin("officebranch","officebranch.id","=","purchase_orders.officeBranchId")
 						->leftjoin("creditsuppliers","creditsuppliers.id","=","purchase_orders.creditSupplierId")
 						->leftjoin("employee","employee.id","=","purchase_orders.receivedBy")
@@ -525,7 +524,7 @@ class DataTableController extends \Controller {
 			if(isset($entity["workFlowStatus"]) && $entity["workFlowStatus"]=="Approved"){
 				$action_data = "";
 			}
-			$data_values[18] = $action_data;
+			$data_values[15] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

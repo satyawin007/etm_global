@@ -16,7 +16,7 @@ class BillPaymentsController extends \Controller {
 		{
 			//$values["test"];
 			$values = Input::all();
-			$field_names = array("billno"=>"billNo","month"=>"billMonth","billdate"=>"billDate","paiddate"=>"paidDate",
+			$field_names = array("billno"=>"billNo","billdate"=>"billDate","paiddate"=>"paidDate",
 					"totalamount"=>"totalAmount","amountpaid"=>"amountPaid","clientname"=>"clientId","parentbill"=>"parentBillId",
 					"billparticulars"=>"billParticulars","remarks"=>"remarks");
 			$fields = array();
@@ -99,7 +99,7 @@ class BillPaymentsController extends \Controller {
 		{
 			//$values["test"];
 			$values = Input::all();
-			$field_names = array("billno1"=>"billNo","month1"=>"billMonth","billdate1"=>"billDate","paiddate1"=>"paidDate",
+			$field_names = array("billno1"=>"billNo","billdate1"=>"billDate","paiddate1"=>"paidDate",
 					"totalamount1"=>"totalAmount","amountpaid1"=>"amountPaid","clientname1"=>"clientId","parentbill1"=>"parentBillId",
 					"billparticulars1"=>"billParticulars","remarks1"=>"remarks","status1"=>"status");
 			$fields = array();
@@ -172,7 +172,7 @@ class BillPaymentsController extends \Controller {
 		$values['add_url'] = 'addbill';
 		$values['form_action'] = 'bill';
 		$values['action_val'] = '';
-		$theads = array('Bill No','For Month','Bill Date', "Paid Date", "Total Amount", "Amount Paid","Due Amount","Client","Bill Particulars","Transaction","Remarks","Actions");
+		$theads = array('Bill No','Bill Date', "Paid Date", "Total Amount", "Amount Paid","Due Amount","Client","Bill Particulars","Transaction","Remarks","Actions");
 		$values["theads"] = $theads;
 			
 		$actions = array();
@@ -183,21 +183,6 @@ class BillPaymentsController extends \Controller {
 		if(!isset($values['entries'])){
 			$values['entries'] = 10;
 		}
-		
-		$month_arr = array();
-		$month_arr[date('Y', strtotime('-1 year'))."-12-01"] = 'Dec '.date('Y', strtotime('-1 year'));
-		$month_arr[date('Y')."-01-01"] = 'Jan '.date('Y');
-		$month_arr[date('Y')."-02-01"] = 'Feb '.date('Y');
-		$month_arr[date('Y')."-03-01"] = 'March '.date('Y');
-		$month_arr[date('Y')."-04-01"] = 'April '.date('Y');
-		$month_arr[date('Y')."-05-01"] = 'May '.date('Y');
-		$month_arr[date('Y')."-06-01"] = 'June '.date('Y');
-		$month_arr[date('Y')."-07-01"] = 'July'.date('Y');
-		$month_arr[date('Y')."-08-01"] = 'Aug '.date('Y');
-		$month_arr[date('Y')."-09-01"] = 'Sep '.date('Y');
-		$month_arr[date('Y')."-10-01"] = 'Oct '.date('Y');
-		$month_arr[date('Y')."-11-01"] = 'Nov '.date('Y');
-		$month_arr[date('Y')."-12-01"] = 'Dec '.date('Y');
 	
 		$form_info = array();
 		$form_info["name"] = "addbillpayment";
@@ -226,8 +211,6 @@ class BillPaymentsController extends \Controller {
 		$form_field = array("name"=>"parentbill","id"=>"parentbill", "content"=>"parent bill", "readonly"=>"",  "required"=>"","action"=>array("type"=>"onchange","script"=>"getbillno(this.value)"), "type"=>"select", "class"=>"form-control chosen-select", "options"=>$parentbills_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"billno", "content"=>"bill no", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"month",  "content"=>"for month", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$month_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"billdate", "content"=>"bill date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
@@ -262,8 +245,6 @@ class BillPaymentsController extends \Controller {
 		$form_info["back_url"] = "cities";
 		$form_info["bredcum"] = "add billpayments";
 		$form_field = array("name"=>"billno1", "content"=>"bill no", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"month1",  "content"=>"for month", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$month_arr);
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"billdate1", "content"=>"bill date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;

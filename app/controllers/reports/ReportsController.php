@@ -3454,15 +3454,14 @@ class ReportsController extends \Controller {
 					$fuelstations =  \FuelStation::OrderBy("name")->get();
 					foreach ($fuelstations as $fuelstation){
 						$row = array();
-						//
-						$row["fuelstation"] = '<a href="#modal-table" role="button" data-toggle="modal" onclick="getData('.$fuelstation->id.', \''.$fuelstation->name.'\', \''.$values["fromdate"].'\', \''.$values["todate"].'\')" <span="">'.$fuelstation->name.'</a>';
-						$row["fromdate"] = $values["fromdate"];
+						$row["fuelstation"] = $fuelstation->name;
+						$row["fromdate"] = $frmDt;
 						/*$recs = DB::select( DB::raw("SELECT  FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'"));
 						if(count($recs)>0) {
 							$rec = $recs[0];
 							$row["fromdate"] = $rec->amt;
 						}*/
-						$row["todate"] = $values["todate"];
+						$row["todate"] = $toDt;
 						/*$recs = DB::select( DB::raw("SELECT sum(amount) as amt FROM `temp_fuel_transaction` where entity='FUEL TRANSACTION' and fuelStation='".$fuelstation->name."'"));
 						if(count($recs)>0) {
 							$rec = $recs[0];
@@ -6638,7 +6637,7 @@ private function getGlobalLoansReport($values)
 								->leftjoin("lookuptypevalues as lookuptypevalues1","lookuptypevalues1.id","=","expensetransactions.entityValue")
 								->leftjoin("employee","employee.id","=","expensetransactions.createdBy")
 								->leftjoin("officebranch","officebranch.id","=","expensetransactions.branchId")
-								->join("vehicle","vehicle.id","=","expensetransactions.vehicleIds")
+								->leftjoin("vehicle","vehicle.id","=","expensetransactions.vehicleIds")
 								->where("expensetransactions.status","=","ACTIVE");
 				if($values["renewaltype"] != 0){
 					$qry = $qry->where("expensetransactions.lookupValueId","=",$values["renewaltype"]);
@@ -6648,206 +6647,48 @@ private function getGlobalLoansReport($values)
 					$qry = $qry->whereIn("expensetransactions.lookupValueId",$lookup_arr);
 				}
 				
-				$recs = $qry->whereBetween("expensetransactions.date",array($frmDt,$toDt))->select($select_args)->orderBy("vehicle.veh_reg","asc")->get();
+				$recs = $qry->whereBetween("expensetransactions.date",array($frmDt,$toDt))->select($select_args)->orderBy("vehicle.id","desc")->get();
 				$i=0;
-				$veh_reg = "";
-				
-				$row = array();
-				$row["vehicle"] = "";
-				$row["branch"] = "";
-				$row["roadtax"] = "";
-				$row["insurance"] = "";
-				$row["pollution"] = "";
-				$row["permit"] = "";
-				$row["fitness"] = "";
-				$row["amount"] = "";				
-				$row["pmtinfo"] = "";
-				$row["remarks"] = "";
-				$row["createdby"] = "";
-				$row["wfstatus"] = "";
-				
-				if(count($recs)>0){
-					$veh_reg = $recs[0]->veh_reg;
-				}
-				for($i=0;$i<count($recs); $i++) {
+				foreach($i=0;$i<count($recs); $i++) {
 					$rec = $recs[$i];
-					if($rec->veh_reg==$veh_reg){
-						$row["vehicle"] = $rec->veh_reg."<br/>";
-						$row["branch"] = $row["branch"].$rec->branchname."<br/>";
-						if($rec->renewaltype == "INSURANCE"){
-							$row["insurance"] = $row["insurance"]."Insurance Company : ".$rec->entityValue."<br/>Paid Date : ".date("d-m-Y",strtotime($rec->date))."<br/>Renewal Date : ".date("d-m-Y",strtotime($rec->nextAlertDate))."<br/>";
-							$totexpenses = $totexpenses+$rec->amount;
-							$row["insurance"] = $row["insurance"]."Paid Amount : ".$rec->amount."<br/>";
-							if($rec->paymentType != "cash"){
-								if($rec->paymentType == "ecs" || $rec->paymentType == "neft" || $rec->paymentType == "rtgs" || $rec->paymentType == "cheque_debit" || $rec->paymentType == "cheque_credit"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$bank_dt = \BankDetails::where("id","=",$rec->bankAccountId)->first();
-									if(count($bank_dt)>0){
-										$rec->paymentType = $rec->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
-									}
-									$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
-								}
-								if($rec->paymentType == "credit_card" || $rec->paymentType == "debit_card"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$bank_dt = \Cards::where("id","=",$rec->bankAccountId)->first();
-									if(count($bank_dt)>0){
-										$rec->paymentType = $rec->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
-									}
-									$rec->paymentType = $rec->paymentType."<br/>Ref No : ".$rec->chequeNumber;
-								}
-								if($rec->paymentType == "dd"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
-								}
-							}
-							$row["insurance"] = $row["insurance"]."Payment Info : ".$rec->paymentType."<br/>";
-							$row["insurance"] = $row["insurance"]."Remarks : ".$rec->remarks."<br/>";
-							$row["insurance"] = $row["insurance"]."Created By : ".$rec->empname."<br/>";
-							$row["insurance"] = $row["insurance"]."WorkFlow Status : ".$rec->wfstatus."<br/><br/>";
-						}
-						if($rec->renewaltype == "TAX"){
-							$row["roadtax"] = $row["roadtax"]."Paid Date : ".date("d-m-Y",strtotime($rec->date))."<br/>Renewal Date : ".date("d-m-Y",strtotime($rec->nextAlertDate))."<br/>";
-							$totexpenses = $totexpenses+$rec->amount;
-							$row["roadtax"] = $row["roadtax"]."Paid Amount : ".$rec->amount."<br/>";
-							if($rec->paymentType != "cash"){
-								if($rec->paymentType == "ecs" || $rec->paymentType == "neft" || $rec->paymentType == "rtgs" || $rec->paymentType == "cheque_debit" || $rec->paymentType == "cheque_credit"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$bank_dt = \BankDetails::where("id","=",$rec->bankAccountId)->first();
-									if(count($bank_dt)>0){
-										$rec->paymentType = $rec->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
-									}
-									$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
-								}
-								if($rec->paymentType == "credit_card" || $rec->paymentType == "debit_card"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$bank_dt = \Cards::where("id","=",$rec->bankAccountId)->first();
-									if(count($bank_dt)>0){
-										$rec->paymentType = $rec->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
-									}
-									$rec->paymentType = $rec->paymentType."<br/>Ref No : ".$rec->chequeNumber;
-								}
-								if($rec->paymentType == "dd"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
-								}
-							}
-							$row["roadtax"] = $row["roadtax"]."Payment Info : ".$rec->paymentType."<br/>";
-							$row["roadtax"] = $row["roadtax"]."Remarks : ".$rec->remarks."<br/>";
-							$row["roadtax"] = $row["roadtax"]."Created By : ".$rec->empname."<br/>";
-							$row["roadtax"] = $row["roadtax"]."WorkFlow Status : ".$rec->wfstatus."<br/><br/>";
-						}
-						if($rec->renewaltype == "POLLUTION"){
-							$row["pollution"] = $row["pollution"]."Paid Date : ".date("d-m-Y",strtotime($rec->date))."<br/>Renewal Date : ".date("d-m-Y",strtotime($rec->nextAlertDate))."<br/>";
-							$totexpenses = $totexpenses+$rec->amount;
-							$row["pollution"] = $row["pollution"]."Paid Amount : ".$rec->amount."<br/>";
-							if($rec->paymentType != "cash"){
-								if($rec->paymentType == "ecs" || $rec->paymentType == "neft" || $rec->paymentType == "rtgs" || $rec->paymentType == "cheque_debit" || $rec->paymentType == "cheque_credit"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$bank_dt = \BankDetails::where("id","=",$rec->bankAccountId)->first();
-									if(count($bank_dt)>0){
-										$rec->paymentType = $rec->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
-									}
-									$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
-								}
-								if($rec->paymentType == "credit_card" || $rec->paymentType == "debit_card"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$bank_dt = \Cards::where("id","=",$rec->bankAccountId)->first();
-									if(count($bank_dt)>0){
-										$rec->paymentType = $rec->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
-									}
-									$rec->paymentType = $rec->paymentType."<br/>Ref No : ".$rec->chequeNumber;
-								}
-								if($rec->paymentType == "dd"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
-								}
-							}
-							$row["pollution"] = $row["pollution"]."Payment Info : ".$rec->paymentType."<br/>";
-							$row["pollution"] = $row["pollution"]."Remarks : ".$rec->remarks."<br/>";
-							$row["pollution"] = $row["pollution"]."Created By : ".$rec->empname."<br/>";
-							$row["pollution"] = $row["pollution"]."WorkFlow Status : ".$rec->wfstatus."<br/><br/>";
-						}
-						if($rec->renewaltype == "PERMIT"){
-							$row["permit"] = $row["permit"]."Paid Date : ".date("d-m-Y",strtotime($rec->date))."<br/>Renewal Date : ".date("d-m-Y",strtotime($rec->nextAlertDate))."<br/>";
-							$totexpenses = $totexpenses+$rec->amount;
-							$row["permit"] = $row["permit"]."Paid Amount : ".$rec->amount."<br/>";
-							if($rec->paymentType != "cash"){
-								if($rec->paymentType == "ecs" || $rec->paymentType == "neft" || $rec->paymentType == "rtgs" || $rec->paymentType == "cheque_debit" || $rec->paymentType == "cheque_credit"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$bank_dt = \BankDetails::where("id","=",$rec->bankAccountId)->first();
-									if(count($bank_dt)>0){
-										$rec->paymentType = $rec->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
-									}
-									$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
-								}
-								if($rec->paymentType == "credit_card" || $rec->paymentType == "debit_card"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$bank_dt = \Cards::where("id","=",$rec->bankAccountId)->first();
-									if(count($bank_dt)>0){
-										$rec->paymentType = $rec->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
-									}
-									$rec->paymentType = $rec->paymentType."<br/>Ref No : ".$rec->chequeNumber;
-								}
-								if($rec->paymentType == "dd"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
-								}
-							}
-							$row["permit"] = $row["permit"]."Payment Info : ".$rec->paymentType."<br/>";
-							$row["permit"] = $row["permit"]."Remarks : ".$rec->remarks."<br/>";
-							$row["permit"] = $row["permit"]."Created By : ".$rec->empname."<br/>";
-							$row["permit"] = $row["permit"]."WorkFlow Status : ".$rec->wfstatus."<br/><br/>";
-						}
-						if($rec->renewaltype == "FITNESS"){
-							$row["fitness"] = $row["fitness"]."Paid Date : ".date("d-m-Y",strtotime($rec->date))."<br/>Renewal Date : ".date("d-m-Y",strtotime($rec->nextAlertDate))."<br/>";
-							$totexpenses = $totexpenses+$rec->amount;
-							$row["fitness"] = $row["fitness"]."Paid Amount : ".$rec->amount."<br/>";
-							if($rec->paymentType != "cash"){
-								if($rec->paymentType == "ecs" || $rec->paymentType == "neft" || $rec->paymentType == "rtgs" || $rec->paymentType == "cheque_debit" || $rec->paymentType == "cheque_credit"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$bank_dt = \BankDetails::where("id","=",$rec->bankAccountId)->first();
-									if(count($bank_dt)>0){
-										$rec->paymentType = $rec->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
-									}
-									$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
-								}
-								if($rec->paymentType == "credit_card" || $rec->paymentType == "debit_card"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$bank_dt = \Cards::where("id","=",$rec->bankAccountId)->first();
-									if(count($bank_dt)>0){
-										$rec->paymentType = $rec->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
-									}
-									$rec->paymentType = $rec->paymentType."<br/>Ref No : ".$rec->chequeNumber;
-								}
-								if($rec->paymentType == "dd"){
-									$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
-									$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
-								}
-							}
-							$row["fitness"] = $row["fitness"]."Payment Info : ".$rec->paymentType."<br/>";
-							$row["fitness"] = $row["fitness"]."Remarks : ".$rec->remarks."<br/>";
-							$row["fitness"] = $row["fitness"]."Created By : ".$rec->empname."<br/>";
-							$row["fitness"] = $row["fitness"]."WorkFlow Status : ".$rec->wfstatus."<br/><br/>";
-						}						
+					$row = array();
+					$row["vehicle"] = $rec->veh_reg;
+					$row["branch"] = $rec->branchname;
+					$row["renewaltype"] = $rec->renewaltype;
+					if($rec->renewaltype == "INSURANCE"){
+						$row["renewaltype"] = $row["renewaltype"]." (".$rec->entityValue.")";
 					}
-					else{
-						$resp[] = $row;
-						$veh_reg = $rec->veh_reg;
-						$row = array();
-						$row["vehicle"] = "";
-						$row["branch"] = "";
-						$row["roadtax"] = "";
-						$row["insurance"] = "";
-						$row["pollution"] = "";
-						$row["permit"] = "";
-						$row["fitness"] = "";
-						$row["amount"] = "";
-						$row["pmtinfo"] = "";
-						$row["remarks"] = "";
-						$row["createdby"] = "";
-						$row["wfstatus"] = "";
-						$i--;
+					$totexpenses = $totexpenses+$rec->amount;
+					$row["amount"] = $rec->amount;
+					$row["date"] = date("d-m-Y",strtotime($rec->date));
+					$row["nextAlertDate"] = date("d-m-Y",strtotime($rec->nextAlertDate));
+					if($rec->paymentType != "cash"){
+						if($rec->paymentType == "ecs" || $rec->paymentType == "neft" || $rec->paymentType == "rtgs" || $rec->paymentType == "cheque_debit" || $rec->paymentType == "cheque_credit"){
+							$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+							$bank_dt = \BankDetails::where("id","=",$rec->bankAccountId)->first();
+							if(count($bank_dt)>0){
+								$rec->paymentType = $rec->paymentType."Bank A/c : ".$bank_dt->bankName."( ".$bank_dt->accountNo.")<br/>";
+							}
+							$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
+						}
+						if($rec->paymentType == "credit_card" || $rec->paymentType == "debit_card"){
+							$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+							$bank_dt = \Cards::where("id","=",$rec->bankAccountId)->first();
+							if(count($bank_dt)>0){
+								$rec->paymentType = $rec->paymentType."Card Details : ".$bank_dt->cardNumber."( ".$bank_dt->cardHolderName.")";
+							}
+							$rec->paymentType = $rec->paymentType."<br/>Ref No : ".$rec->chequeNumber;
+						}
+						if($rec->paymentType == "dd"){
+							$rec->paymentType = "Payment Type : ".$rec->paymentType."<br/>";
+							$rec->paymentType = $rec->paymentType."Ref No : ".$rec->chequeNumber;
+						}
 					}
+					$row["pmtinfo"] = $rec->paymentType;
+					$row["remarks"] = $rec->remarks;
+					$row["createdby"] = $rec->empname;
+					$row["wfstatus"] = $rec->wfstatus;
+					$resp[] = $row;
 				}
 			}
 			$resp_json = array("data"=>$resp,"total_expenses"=>$totexpenses);
@@ -6859,8 +6700,7 @@ private function getGlobalLoansReport($values)
 		$values['add_url'] = 'loginlog';
 		$values['form_action'] = 'loginlog';
 		$values['action_val'] = '#';
-		//$theads1 = array('VEHICLE REG','BRANCH',"ROAD TAX", "INSURANCE","POLLUTION","PERMIT","FITNESS", "AMOUNT", "PAYMENT INFO", "REMARKS",  "CREATED BY",  "WF STATUS");
-		$theads1 = array('VEHICLE REG','BRANCH',"ROAD TAX", "INSURANCE","POLLUTION","PERMIT","FITNESS");
+		$theads1 = array('VEHICLE REG','BRANCH',"ROAD TAX", "INSURANCE","POLLUTION","PERMIT","FITNESS", "AMOUNT", "PAYMENT INFO", "REMARKS",  "CREATED BY",  "WF STATUS");
 		$values["theads"] = $theads1;
 		//$values["test"];
 	

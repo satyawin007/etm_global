@@ -219,13 +219,6 @@ use Illuminate\Support\Facades\Input;
 							$fromdt = date("Y-m-d",strtotime($values["fromdate"]));
 							$todt = date("Y-m-d",strtotime($values["todate"]));
 							foreach($entities as $entity){
-								$date1 = strtotime(date("Y-m-d",strtotime($entity->joiningDate)));
-								//$date2 = strtotime(date("Y-m-d",strtotime($entity->terminationDate)));
-								$date3 = strtotime($fromdt);
-								//$date4 = strtotime($todt);
-								if($date1>$date3){
-									continue;
-								}
 								if($entity->roleId == 19){
 									$entity->roleId = "DRIVER";
 								}
@@ -792,9 +785,6 @@ use Illuminate\Support\Facades\Input;
 
 			function saveRecord(rowid, eid,type){
 				salarymonth = $("#month").val();
-				paymenttype = $("#paymenttype").val();
-				chequenumber = $("#chequenumber").val();
-				bankaccount = $("#bankaccount").val();
 				pfopted = $("#"+rowid+"_pfopted").val();
 				emp_salary = $("#"+rowid+"_emp_salary").val();
 				leaves = $("#"+rowid+"_leaves").val();
@@ -810,10 +800,7 @@ use Illuminate\Support\Facades\Input;
 				url = url+"&leave_deductions="+leave_deductions;
 				url = url+"&emp_salary="+emp_salary;
 				url = url+"&comments="+comments;
-				url = url+"&paymenttype="+paymenttype;
 				url = url+"&month="+salarymonth;
-				url = url+"&chequenumber="+chequenumber;
-				url = url+"&bankaccount="+bankaccount;
 
 				$.ajax({
 			      url: url,

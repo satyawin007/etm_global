@@ -90,33 +90,6 @@
 		</div>	
 		<div id="processing" class="modal-backdrop fade in"><div id = "loading" > <i  class="ace-icon fa fa-spinner fa-spin orange bigger-250"></i>	</div></div>
 		
-		<div id="modal-table" class="modal fade in" tabindex="-1" >
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header no-padding">
-						<div class="table-header">
-							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-								<span class="white">x</span>
-							</button>
-							Results for fuel station - <span id="headval"></span>
-						</div>
-					</div>
-
-					<div class="modal-body no-padding">
-						<table class="table table-striped table-bordered table-hover no-margin-bottom no-border-top">
-							<thead>
-								<tr>
-									<th>VEHICLE</th>
-									<th>AMOUNT PAID ON</th>
-									<th>NEXT ALERT DATE</th>
-								</tr>
-							</thead>
-							<tbody id="tbodydata"></tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
 		
 		<div class="row" >
 			<div id="table1">
@@ -306,11 +279,6 @@
 					$("#vehicleid").hide();
 					$("#driverid").show();
 				}
-			}
-
-			function getData(id, name, fromdate, todate){
-				$("#headval").html(name);
-				alert(id+", "+name+", "+fromdate+", "+todate);
 			}
 
 			function paginate(page){
