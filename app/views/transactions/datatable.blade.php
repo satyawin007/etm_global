@@ -944,7 +944,7 @@ use settings\AppSettingsController;
 	        		previousreading = $("#previousreading").val();
 	        		previousreading = parseInt(previousreading);
 	        		startreading = parseInt(startreading);
-	        		if(previousreading>startreading){
+	        		if(previousreading>=startreading){
 		        		alert("Current reading must be greater than previous reading");
 		        		$("#startreading").val("");
 		        		return;
@@ -971,11 +971,7 @@ use settings\AppSettingsController;
 	        	if(status == "YES"){
 		            $.ajax({
 					      url: "getvehiclelastreading?vehicleId="+vehicleid+"&date="+date,
-					      success: function(response) {
-					    	  response = jQuery.parseJSON(response);	
-					    	  prev_reading = parseInt(response.reading);
-					    	  litres = parseFloat(litres)+parseFloat(response.litres);
-					    	  //alert(prev_reading+" - "+litres+" - "+startreading);
+					      success: function(prev_reading) {
 						      mileage = (startreading-prev_reading)/litres;
 						      mileage = parseFloat(mileage).toFixed(2);
 						      $("#mileage").val(mileage);

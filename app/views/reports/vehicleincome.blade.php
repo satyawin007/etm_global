@@ -1,4 +1,5 @@
-	<?php $__env->startSection('inline_css'); ?>
+@extends('masters.master')
+	@section('inline_css')
 		<style>
 			.pagination {
 			    display: inline-block;
@@ -50,25 +51,24 @@
 			  margin-top: 5px;
 			}
 		</style>
-	<?php $__env->startSection('page_css'); ?>
+	@section('page_css')
 		<link rel="stylesheet" href="../assets/css/jquery-ui.custom.css" />
 		<link rel="stylesheet" href="../assets/css/chosen1.css" />
 		<link rel="stylesheet" href="../assets/css/bootstrap-datepicker3.css"/>
 		<link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.1.1/css/buttons.dataTables.min.css"/>
-	<?php $__env->stopSection(); ?>
+	@stop
 		
-	<?php $__env->stopSection(); ?>
+	@stop
 	
-	<?php $__env->startSection('bredcum'); ?>	
+	@section('bredcum')	
 		<small>
 			REPORTS
 			<i class="ace-icon fa fa-angle-double-right"></i>
-			<?php echo $values['bredcum']; ?>
-
+			{{$values['bredcum']}}
 		</small>
-	<?php $__env->stopSection(); ?>
+	@stop
 
-	<?php $__env->startSection('page_content'); ?>
+	@section('page_content')
 		<div id="accordion1" class="col-xs-offset-0 col-xs-12 accordion-style1 panel-group" style="width: 99%;">			
 			<div class="panel panel-default">
 				<div class="panel-heading">
@@ -82,7 +82,7 @@
 				<div class="panel-collapse collapse in" id="TEST">
 					<div class="panel-body" style="padding: 0px">
 						<?php $form_info = $values["form_info"]; ?>
-						<?php echo $__env->make("reports.add3colform",$form_info, array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>						
+						@include("reports.add3colform",$form_info)						
 					</div>
 				</div>
 			</div>
@@ -99,8 +99,7 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						<span>Results for  VEHICLE RENEWALS REPORT</span>
-						<span style="float:right; font-size: 16px; font-weight: bold;">Total Amount : <span id="dbamt">0.00</span>  &nbsp;&nbsp;&nbsp;</span>				 
+						<span>Results for CLINET INCOME REPORT</span>
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -122,6 +121,7 @@
 					</div>
 				</div>					
 			</div>
+			
 		</div>
 
 		<?php 
@@ -129,7 +129,7 @@
 				$modals = $values['modals'];
 				foreach ($modals as $modal){
 		?>
-				<?php echo $__env->make('masters.layouts.modalform', $modal, array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>
+				@include('masters.layouts.modalform', $modal)
 		<?php }} ?>
 		
 		<div id="edit" class="modal" tabindex="-1">
@@ -153,9 +153,9 @@
 			</div>
 		</div><!-- PAGE CONTENT ENDS -->
 		
-	<?php $__env->stopSection(); ?>
+	@stop
 	
-	<?php $__env->startSection('page_js'); ?>
+	@section('page_js')
 		<!-- page specific plugin scripts -->
 		<script src="../assets/js/dataTables/jquery.dataTables.js"></script>
 		<script src="../assets/js/dataTables/jquery.dataTables.bootstrap.js"></script>
@@ -172,32 +172,23 @@
 		<script src="../assets/js/bootbox.js"></script>
 		<script src="../assets/js/chosen.jquery.js"></script>
 		<script src="../assets/js/autosize.js"></script>
-	<?php $__env->stopSection(); ?>
+	@stop
 	
-	<?php $__env->startSection('inline_js'); ?>
+	@section('inline_js')
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#processing").hide();
 			reporttype = "";
 
 			function generateReport(){
-				$("#reportfor").val("getreport") ;
-				//reporttype = "ticket_corgos_summery";
+				reporttype = "ticket_corgos_summery";
 				paginate(1);
 			}
-
-			function getReport2(){
-				$("#reportfor").val("summary") ;
-				//reporttype = "ticket_corgos_summery";
-				paginate(1);
-			}
-			
 
 			function changeDepot(val){
 				$.ajax({
 			      url: "getdepotsbyclientId?id="+val,
 			      success: function(data) {
-			    	  data = "<option value='0'> ALL </option>"+data;
 			    	  $("#depot").html(data);
 			    	  $('.chosen-select').trigger("chosen:updated");
 			      },
@@ -212,7 +203,7 @@
 				clientId =  $("#clientname").val();
 				depotId = $("#depot").val();
 				$.ajax({
-			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId,
+			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&type=vehicleids",
 			      success: function(data) {
 			    	  $("#vehicle").html(data);
 			    	  $('.chosen-select').trigger("chosen:updated");
@@ -223,20 +214,32 @@
 			}
 
 			function paginate(page){
-				vendor = $("#vendor").val();
-				if(vendor == ""){
-					alert("select vendor");
+				if(typeOfIncome == ""){
+					alert("select type of income")
 					return;
 				}
-				
+				if(clientname == ""){
+					alert("select clientname");
+					return;
+				}
+				depot = $("#depot").val();
+				if(depot == ""){
+					alert("select depot");
+					return;
+				}
 				fdt = $("#fromdate").val();
 				if(fdt == ""){
 					alert("select daterange FROM date");
 					return;
 				}
 				tdt = $("#todate").val();
+				empname = $("#empname").val();
+				if(tdt == ""){
+					alert("select daterange TO date");
+					return;
+				}
 				dt = fdt+" - "+tdt;	
-				var form = $("#getreport");
+				var form=$("#getreport");
 				/* alert(fdt);
 				alert(tdt);
 				alert(empname); */
@@ -249,9 +252,7 @@
 			        success: function(response){
 			           var json = JSON.parse(response);
 			           //$("#totalexepenses").html(json["total_expenses"]);
-			           var data1 = json["data"];
-			           cramt =  json["total_expenses"];
-			           $("#dbamt").html(cramt);
+			           var data1 = json;
 			           var arr = [];
 			           for(var i = 0; i < data1.length; i++) {
 			        	    var parsed = data1[i];
@@ -265,12 +266,7 @@
 						myTable1.rows.add(arr); // Add new data
 						myTable1.columns.adjust().draw(); // Redraw 
 						$("#table1").show();
-							//$("#table3").hide();
-							/* if(refresh1 == 0){
-								refresh1 = 1;
-								myTable1.draw();
-							}	 */	
-			           
+						
 						/* var data2 = json["data2"];
 			            var arr1 = [];
 			            for(var i = 0; i < data2.length; i++) {
@@ -312,11 +308,11 @@
 			}
 
 			$("#reset").on("click",function(){
-				$("#<?php echo $form_info['name']; ?>").reset();
+				$("#{{$form_info['name']}}").reset();
 			});
 
 			$("#submit").on("click",function(){
-				//$("#<?php echo $form_info['name']; ?>").submit();
+				//$("#{{$form_info['name']}}").submit();
 			});
 
 			$("#provider").on("change",function(){
@@ -445,7 +441,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null,  null
+						  null, null, null,  null, null, null,  null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -487,7 +483,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null
+						  null, null, null,  null, null, null, null,null,null,null,null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -500,8 +496,7 @@
 							style: 'multi'
 						}
 				    } );
-
-
+					
 					////
 					setTimeout(function() {
 						//$("#table1").hide();
@@ -510,5 +505,4 @@
 				})
 			
 		</script>
-	<?php $__env->stopSection(); ?>
-<?php echo $__env->make('masters.master', array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>
+	@stop
