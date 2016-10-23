@@ -126,7 +126,7 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>		 
+						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -190,10 +190,7 @@
 						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						
-						<span> Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?> </span>		 
-						<span style="float:right; font-size: 16px; font-weight: bold;">TOTAL AMOUNT : <span id="totamt">0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  TOTAL FUEL : <span id="totfuel">0</span> &nbsp;&nbsp;&nbsp;</span>				 
-						
+						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -351,10 +348,9 @@
 			        success: function(response){
 			           //alert(response);  
 			           var json = JSON.parse(response);
-			           var data = json["data"];
 			           var arr = [];
-			           for(var i = 0; i < data.length; i++) {
-			        	    var parsed = data[i];
+			           for(var i = 0; i < json.length; i++) {
+			        	    var parsed = json[i];
 			        	    var row = [];
 			        	    for(var x in parsed){
 			        	    	row.push(parsed[x]);
@@ -386,10 +382,6 @@
 							}	
 			        	}
 			        	else if(reporttype == "tracking" || reporttype == "vehicleReport"){
-			        		totamt =  json["total_amt"];
-			        	    totfuel =  json["total_ltrs"];
-				            $("#totamt").html(totamt);
-				            $("#totfuel").html(totfuel);
 							myTable3.clear().draw();
 							myTable3.rows.add(arr); // Add new data
 							myTable3.columns.adjust().draw(); // Redraw theDataTable
