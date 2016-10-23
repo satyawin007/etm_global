@@ -827,27 +827,48 @@ class DataTableController extends \Controller {
 	
 		if($search != ""){
 			$entities = \Vehicle::where("veh_reg", "like", "%$search%")
-			->where("vehicle.status","=","ACTIVE")->get();
-			$veh_arr = array();
-			foreach ($entities as $entity){
-				$veh_arr[] = $entity->id;
-			}
+							->where("vehicle.status","=","ACTIVE")->get();
+							$veh_arr_str = "0,";
+							foreach ($entities as $entity){
+								$veh_arr_str = $veh_arr_str.$entity->id.",";
+							}
+							//echo $veh_arr_str;die();
+							$veh_arr_str = substr($veh_arr_str, 0, strlen($veh_arr_str)-1);
+							//echo $veh_arr_str;die();
+							
+							$entities = \FuelStation::where("name", "like", "%$search%")->get();
+							$station_arr_str = "0,";
+							foreach ($entities as $entity){
+								$station_arr_str = $station_arr_str.$entity->id.",";
+							}
+							$station_arr_str = substr($station_arr_str, 0, strlen($station_arr_str)-1);
+							//echo $station_arr_str;die();
+							
+							$entities = \Employee::where("fullName", "like", "%$search%")->get();
+							$createdBy_arr_str= "-1,";
+							foreach ($entities as $entity){
+								$createdBy_arr_str= $createdBy_arr_str. $entity->id.",";
+							}
+							$createdBy_arr_str = substr($createdBy_arr_str, 0, strlen($createdBy_arr_str)-1);
+				
 			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-			->whereIn("vehicleId",$veh_arr)
-			->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
-			->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
-			->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
-			->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
-			->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
-			->leftjoin("employee as employee2", "employee2.id","=","fueltransactions.createdBy")
-			->leftjoin("employee as employee4", "employee4.id","=","fueltransactions.inchargeId")
-			->leftjoin("clients", "clients.id","=","contracts.clientId")
-			->leftjoin("depots", "depots.id","=","contracts.depotId");
+									->whereRaw('(fueltransactions.fuelStationId in('.$station_arr_str.') or fueltransactions.vehicleId in('.$veh_arr_str.') or fueltransactions.createdBy in('.$createdBy_arr_str.')) ')
+									//->whereRaw('(fueltransactions.fuelStationId in('.$station_arr_str.') or fueltransactions.vehicleId in('.$veh_arr_str.')) ')
+									->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
+									->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
+									->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
+									->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
+									->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
+									->leftjoin("employee as employee2", "employee2.id","=","fueltransactions.createdBy")
+									->leftjoin("employee as employee4", "employee4.id","=","fueltransactions.inchargeId")
+									->leftjoin("clients", "clients.id","=","contracts.clientId")
+									->leftjoin("depots", "depots.id","=","contracts.depotId");
 			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
 				
 			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-			->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
-			->count();
+									->whereRaw('(fueltransactions.fuelStationId in('.$station_arr_str.') or fueltransactions.vehicleId in('.$veh_arr_str.') or fueltransactions.createdBy in('.$createdBy_arr_str.')) ')
+									->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
+									->count();
 		}
 		else {
 			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE");
@@ -1013,8 +1034,22 @@ class DataTableController extends \Controller {
 			foreach ($entities as $entity){
 				$veh_arr[] = $entity->id;
 			}
+			$entities = \FuelStation::where("name", "like", "%$search%")
+			->where("fuelstationdetails.status","=","ACTIVE")->get();
+			$station_arr = array();
+			foreach ($entities as $entity){
+				$station_arr[] = $entity->id;
+			}
+			$entities = \FuelTransaction::where("createdBy", "like", "%$search%")
+			->where("fueltransactions.status","=","ACTIVE")->get();
+			$createdBy_arr = array();
+			foreach ($entities as $entity){
+				$createdBy_arr[] = $entity->id;
+			}
 			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
 							->whereIn("vehicleId",$veh_arr)
+							->whereIn("fuelStationId",$station_arr)
+							->whereIn("createdBy",$createdBy_arr)
 							->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
 							->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
 							->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")

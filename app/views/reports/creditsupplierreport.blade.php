@@ -204,6 +204,9 @@
 									<td>LABOUR CHARGES</td>
 									<td>ELECTRICIAN CHARGES</td>
 									<td>BATTA</td>
+									<td>PAYMENTPAID</td>
+									<td>BILL</td>
+									<td>REMARKS</td>
 								</tr>
 							</thead>
 							<tbody id="tbody4">
@@ -233,6 +236,9 @@
 									<td>QUANTITY</td>
 									<td>AMOUNT</td>
 									<td>PURCHASED DATE</td>
+									<td>PAYMENTPAID</td>
+									<td>BILL</td>
+									<td>REMARKS</td>
 								</tr>
 							</thead>
 							<tbody id="tbody5">
@@ -261,6 +267,9 @@
 									<td>TRANSACTION DATE</td>
 									<td>ITEM DETAILS</td>
 									<td>AMOUNT</td>
+									<td>PAYMENTPAID</td>
+									<td>BILL</td>
+									<td>REMARKS</td>
 								</tr>
 							</thead>
 							<tbody id="tbody6">
@@ -810,7 +819,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null,null,null,null
+						  null, null, null, null, null, null,null,null,null,null,null,null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -850,7 +859,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,null, null,null
+						  null, null, null,null, null,null,null,null,null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -891,7 +900,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,null, null
+						  null, null, null, null, null, null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",

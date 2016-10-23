@@ -90,33 +90,6 @@
 		</div>	
 		<div id="processing" class="modal-backdrop fade in"><div id = "loading" > <i  class="ace-icon fa fa-spinner fa-spin orange bigger-250"></i>	</div></div>
 		
-		<div id="modal-table" class="modal fade in" tabindex="-1" >
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header no-padding">
-						<div class="table-header">
-							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-								<span class="white">x</span>
-							</button>
-							Results for fuel station - <span id="headval"></span>
-						</div>
-					</div>
-
-					<div class="modal-body no-padding">
-						<table class="table table-striped table-bordered table-hover no-margin-bottom no-border-top">
-							<thead>
-								<tr>
-									<th>VEHICLE</th>
-									<th>AMOUNT PAID ON</th>
-									<th>NEXT ALERT DATE</th>
-								</tr>
-							</thead>
-							<tbody id="tbodydata"></tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
 		
 		<div class="row" >
 			<div id="table1">
@@ -126,97 +99,29 @@
 						<div id="tableTools-container1" class="pull-right tableTools-container"></div>
 					</div>
 					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>		 
+						<span>Results for CLINET INCOME REPORT</span>
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
 					<div>
-						<table id="dynamic-table1" class="table table-striped table-bordered table-hover">
+						<table id="dynamic-table" class="table table-striped table-bordered table-hover">
 							<thead>
 								<tr>
-									<td>FUEL STATION </td>
-									<td>FROM DATE</td>
-									<td>TO DATE</td>
-									<td>TOT VEHS</td>
-									<td>TOT LTRS </td>
-									<td>TOT AMT</td>
-									<td>PAID AMT</td>
-									<td>PAID YES</td>
-									<td>PAID NO</td>
-									<td>TILL DT AMT</td>
-									<td>TDT PAY AMT</td>
-									<td>BALANCE</td>
+								<?php 
+									$theads = $values["theads"];
+									foreach ($theads as $thead){
+										echo "<th>".strtoupper($thead)."</th>";
+									}
+								?>
 								</tr>
 							</thead>
-							<tbody id="tbody1">
+							<tbody id="tbody">
 							</tbody>
 						</table>								
 					</div>
 				</div>					
 			</div>
-			<div id="table2">
-				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
-					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
-					<div class="clearfix">
-						<div id="tableTools-container2" class="pull-right tableTools-container"></div>
-					</div>
-					<div class="table-header" style="margin-top: 10px;">
-						Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?>				 
-					</div>
-					<!-- div.table-responsive -->
-					<!-- div.dataTables_borderWrap -->
-					<div>
-						<table id="dynamic-table2" class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<td>FUEL STATION</td>
-									<td>PAID AMOUNT</td>
-									<td>PAID DATE</td>
-									<td>PAYMENT INFO</td>
-									<td>COMMENTS</td>
-									<td>CREATED BY</td>
-								</tr>
-							</thead>
-							<tbody id="tbody2">
-							</tbody>
-						</table>								
-					</div>
-				</div>					
-			</div>
-			<div id="table3">
-				<div class="row col-xs-12" style="padding-left:2%; padding-top: 1%">
-					<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
-					<div class="clearfix">
-						<div id="tableTools-container3" class="pull-right tableTools-container"></div>
-					</div>
-					<div class="table-header" style="margin-top: 10px;">
-						
-						<span> Results for <?php if(isset($values['type'])){ echo '"'.strtoupper($values['type'])." REPORT".'"';} ?> </span>		 
-						<span style="float:right; font-size: 16px; font-weight: bold;">TOTAL AMOUNT : <span id="totamt">0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  TOTAL FUEL : <span id="totfuel">0</span> &nbsp;&nbsp;&nbsp;</span>				 
-						
-					</div>
-					<!-- div.table-responsive -->
-					<!-- div.dataTables_borderWrap -->
-					<div>
-						<table id="dynamic-table3" class="table table-striped table-bordered table-hover">
-							<thead>
-								<tr>
-									<td>FUEL STATION</td>
-									<td>VEHICLE</td>
-									<td>FILLED DATE</td>
-									<td>NO OF LTRS</td>
-									<td>AMOUNT</td>
-									<td>PAID BY BRANCH</td>
-									<td>COMMENTS</td>
-									<td>CREATED BY</td>
-								</tr>
-							</thead>
-							<tbody id="tbody2">
-							</tbody>
-						</table>								
-					</div>
-				</div>					
-			</div>
+			
 		</div>
 
 		<?php 
@@ -273,134 +178,109 @@
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#processing").hide();
-			$("#fuelstationid").hide();
-			$("#vehicleid").hide();
-			$("#driverid").hide();
 			reporttype = "";
-			var refresh1 = 0;
-			var refresh2 = 0;
-			var refresh3 = 0;
+
 			function generateReport(){
 				reporttype = "ticket_corgos_summery";
 				paginate(1);
 			}
 
-			function showSelectionType(val){
-				if(val=="balanceSheetNoDt" || val=="payment" || val=="balanceSheet" || val=="tracking"){
-					$("#fuelstationid").show();
-					$("#vehicleid").hide();
-					$("#driverid").hide();
-					if(val=="balanceSheetNoDt"){
-						$("#fromdate").prop("disabled",false);
-						$("#todate").prop("disabled",false);
-					}
-					else{
-						$("#fromdate").prop("disabled",false);
-						$("#todate").prop("disabled",false);
-					}
-				}
-				else if(val=="vehicleReport"){
-					$("#fuelstationid").hide();
-					$("#vehicleid").show();
-					$("#driverid").hide();
-				}
-				else if(val=="employeeReport"){
-					$("#fuelstationid").hide();
-					$("#vehicleid").hide();
-					$("#driverid").show();
-				}
+			function changeDepot(val){
+				$.ajax({
+			      url: "getdepotsbyclientId?id="+val,
+			      success: function(data) {
+			    	  $("#depot").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			    });
+
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
 			}
 
-			function getData(id, name, fromdate, todate){
-				$("#headval").html(name);
-				alert(id+", "+name+", "+fromdate+", "+todate);
+			function getFormData(val){
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+				$.ajax({
+			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&type=vehicleids",
+			      success: function(data) {
+			    	  $("#vehicle").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
+			   //myTable1.ajax.url("getservicelogsdatatabledata?name=servicelogs&clientid="+clientId+"&depotid="+depotId).load();
 			}
 
 			function paginate(page){
-				reporttype = $("#fuelreporttype").val();
-				if(reporttype == ""){
-					alert("select report type");
+				if(typeOfIncome == ""){
+					alert("select type of income")
 					return;
 				}
-				fdt="";
-				tdt="";
-				if(reporttype != "balanceSheetNoDt"){
-					fdt = $("#fromdate").val();
-					if(fdt == ""){
-						alert("select daterange FROM date");
-						return;
-					}
-					tdt = $("#fromdate").val();
-					if(tdt == ""){
-						alert("select daterange TO date");
-						return;
-					}
+				if(clientname == ""){
+					alert("select clientname");
+					return;
 				}
-				else{
-					fdt = "01-01-2010";
-					tdt = <?php echo "'".date("d-m-Y")."';"?>;
+				depot = $("#depot").val();
+				if(depot == ""){
+					alert("select depot");
+					return;
+				}
+				fdt = $("#fromdate").val();
+				if(fdt == ""){
+					alert("select daterange FROM date");
+					return;
+				}
+				tdt = $("#todate").val();
+				empname = $("#empname").val();
+				if(tdt == ""){
+					alert("select daterange TO date");
+					return;
 				}
 				dt = fdt+" - "+tdt;	
-				var form=$("#getreport");	
+				var form=$("#getreport");
+				/* alert(fdt);
+				alert(tdt);
+				alert(empname); */
 
 				$("#processing").show();
 				$.ajax({
 			        type:"POST",
-			        url:form.attr("action"),
+			        url:form.attr("action"),//+"?fromdate="+fdt+"&todate="+tdt+"&empname="+empname,
 			        data:form.serialize(),
 			        success: function(response){
-			           //alert(response);  
 			           var json = JSON.parse(response);
-			           var data = json["data"];
+			           //$("#totalexepenses").html(json["total_expenses"]);
+			           var data1 = json;
 			           var arr = [];
-			           for(var i = 0; i < data.length; i++) {
-			        	    var parsed = data[i];
+			           for(var i = 0; i < data1.length; i++) {
+			        	    var parsed = data1[i];
 			        	    var row = [];
 			        	    for(var x in parsed){
 			        	    	row.push(parsed[x]);
 				            }
 				            arr.push(row);
 			        	}
-			        	if(reporttype == "balanceSheetNoDt" || reporttype == "balanceSheet"){
-							myTable1.clear().draw();
-							myTable1.rows.add(arr); // Add new data
-							myTable1.columns.adjust().draw(); // Redraw 
-							$("#table1").show();
-							$("#table2").hide();
-							$("#table3").hide();
-							if(refresh1 == 0){
-								refresh1 = 1;
-								myTable1.draw();
-							}		
+						myTable1.clear().draw();
+						myTable1.rows.add(arr); // Add new data
+						myTable1.columns.adjust().draw(); // Redraw 
+						$("#table1").show();
+						
+						/* var data2 = json["data2"];
+			            var arr1 = [];
+			            for(var i = 0; i < data2.length; i++) {
+			        	    var parsed = data2[i];
+			        	    var row = [];
+			        	    for(var x in parsed){
+			        	    	row.push(parsed[x]);
+				            }
+				            arr1.push(row);
 			        	}
-			        	else if(reporttype == "payment"){
-							myTable2.clear().draw();
-							myTable2.rows.add(arr); // Add new data
-							myTable2.columns.adjust().draw(); // Redraw theDataTable
-							$("#table1").hide();
-							$("#table2").show();	
-							$("#table3").hide();
-							if(refresh2 == 0){
-								refresh2 = 1;
-								myTable2.draw();
-							}	
-			        	}
-			        	else if(reporttype == "tracking" || reporttype == "vehicleReport"){
-			        		totamt =  json["total_amt"];
-			        	    totfuel =  json["total_ltrs"];
-				            $("#totamt").html(totamt);
-				            $("#totfuel").html(totfuel);
-							myTable3.clear().draw();
-							myTable3.rows.add(arr); // Add new data
-							myTable3.columns.adjust().draw(); // Redraw theDataTable
-							$("#table1").hide();
-							$("#table2").hide();
-							$("#table3").show();
-							if(refresh3 == 0){
-								refresh3 = 1;
-								myTable3.draw();
-							}		
-			        	}
+						myTable2.clear().draw();
+						myTable2.rows.add(arr1); // Add new data
+						myTable2.columns.adjust().draw(); // Redraw 
+						$("#table2").show(); */
 						$("#processing").hide();
 			        }
 			    });
@@ -533,7 +413,7 @@
 
 			jQuery(function($) {
 					//initiate dataTables plugin
-					myTable1 = $('#dynamic-table1')
+					myTable1 = $('#dynamic-table')
 					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
 					.DataTable( {
 						dom: 'Bfrtip',
@@ -551,6 +431,7 @@
 							},
 							{
 								extend: 'pdfHtml5',
+								orientation: 'landscape',
 								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
 								exportOptions: {
 									columns: ':visible'
@@ -560,50 +441,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null, null,  null, null, null, null,  null
-						],
-						"aaSorting": [],
-						//"sScrollY": "500px",
-						//"bPaginate": false,
-						"sScrollX" : "true",
-						//"sScrollX": "300px",
-						//"sScrollXInner": "120%",
-						"bScrollCollapse": true,
-						select: {
-							style: 'multi'
-						}
-				    } );
-					
-					//initiate dataTables plugin
-					myTable2 = $('#dynamic-table2')
-					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
-					.DataTable( {
-						dom: 'Bfrtip',
-						buttons: [
-							{
-								extend:'colvis',
-								text : "<i class='fa fa-search bigger-110 blue'></i> <span class='hidden'>Show/hide columns</span>"
-							},
-							{
-								extend: 'excelHtml5',
-								 title: 'reportTitle',
-								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							},
-							{
-								extend: 'pdfHtml5',
-								text : "<i class='fa fa-file-pdf-o bigger-110 red'></i> <span class='hidden'>Export to PDF</span>",
-								exportOptions: {
-									columns: ':visible'
-								}
-							}
-							
-						], 
-						bAutoWidth: false,
-						"aoColumns": [
-						  null, null, null, null, null, null
+						  null, null, null,  null, null, null,  null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -618,7 +456,7 @@
 				    } );
 
 					//initiate dataTables plugin
-					myTable3 = $('#dynamic-table3')
+					myTable2 = $('#dynamic-table2')
 					//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
 					.DataTable( {
 						dom: 'Bfrtip',
@@ -629,7 +467,6 @@
 							},
 							{
 								extend: 'excelHtml5',
-								 title: 'reportTitle',
 								text : "<i class='fa fa-file-excel-o bigger-110 green'></i> <span class='hidden'>Export to Excel</span>",
 								exportOptions: {
 									columns: ':visible'
@@ -646,7 +483,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null, null, null
+						  null, null, null,  null, null, null, null,null,null,null,null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",
@@ -659,12 +496,12 @@
 							style: 'multi'
 						}
 				    } );
+					
 					////
 					setTimeout(function() {
-						$("#table1").hide();
-						$("#table2").hide();
-						$("#table3").hide();
-					}, 500);
+						//$("#table1").hide();
+						//$("#table2").hide();
+					}, 1000);
 				})
 			
 		</script>
