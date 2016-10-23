@@ -1,9 +1,8 @@
 <?php
 use Illuminate\Support\Facades\Input;
-use settings\AppSettingsController;
 ?>
-@extends('masters.master')
-	@section('inline_css')
+
+	<?php $__env->startSection('inline_css'); ?>
 		<style>
 			.pagination {
 			    display: inline-block;
@@ -45,129 +44,39 @@ use settings\AppSettingsController;
 			  width: 100% !important;
 			}
 		</style>
-	@section('page_css')
+	<?php $__env->startSection('page_css'); ?>
 		<link rel="stylesheet" href="../assets/css/jquery-ui.custom.css" />
 		<link rel="stylesheet" href="../assets/css/bootstrap-datepicker3.css"/>
 		<link rel="stylesheet" href="../assets/css/chosen.css" />
 		<link rel="stylesheet" href="../assets/css/daterangepicker.css" />
-	@stop
+	<?php $__env->stopSection(); ?>
 		
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('bredcum')	
+	<?php $__env->startSection('bredcum'); ?>	
 		<small>
-			TRANSACTIONS
+			INVENTORY
 			<i class="ace-icon fa fa-angle-double-right"></i>
-			{{$values['bredcum']}}
-		</small>
-	@stop
+			<?php echo $values['bredcum']; ?>
 
-	@section('page_content')
-	<div id="accordion2" class="col-xs-offset-0 col-xs-12 accordion-style1 panel-group" style="width: 99%;">			
-			<div class="panel panel-default">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#TEST">
-							<i class="ace-icon fa fa-angle-down bigger-110" data-icon-hide="ace-icon fa fa-angle-down" data-icon-show="ace-icon fa fa-angle-right"></i>
-							&nbsp;ADD REPAIR TRANSACTION
-						</a>
-					</h4>
-				</div>
-				<div class="panel-collapse collapse in" id="TEST">
-					<div class="panel-body" style="padding: 0px">
-						<div class="col-xs-offset-1 col-xs-10" style="margin-top: 1%; margin-bottom: 1%">
-							<div class="col-xs-6">
-								<div class="form-group">
-									<?php 
-										$branches = AppSettingsController::getEmpBranches();
-										$branches_arr = array();
-										foreach ($branches as $branch){
-											$branches_arr[$branch["id"]] = $branch["name"];
-										}
-									?>
-									<?php $form_field = array("name"=>"branch2", "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>
-									<label class="col-xs-5 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-									<div class="col-xs-7">
-										<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-											<option value="">-- {{$form_field['name']}} --</option>
-											<?php 
-												foreach($form_field["options"] as $key => $value){
-													echo "<option value='$key'>$value</option>";
-												}
-											?>
-										</select>
-									</div>			
-								</div>	
-							</div>
-							<div class="col-xs-5">
-								<div class="form-group">
-									<label style="margin-left: 40px;" class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper("date");  echo '<span style="color:red;">*</span>'; ?> </label>
-									<div class="col-xs-6">
-										<input type="text" id="dt" required="required" name="dt" class="form-control date-picker" />
-									</div>			
-								</div>
-							</div>			
-							<div class="col-xs-1" >
-								<div class="form-group">
-									<label class="col-xs-0 control-label no-padding-right" for="form-field-1"> </label>
-									<div class="col-xs-5" id="verify">
-										<input type="button" class="btn btn-sm btn-primary" value="VERIFY" onclick="verifyDate()"/>
-									</div>			
-								</div>
-							</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	
-		<div class="col-xs-12" style="margin-top: -1%">
-		<div class="">
-			<div class="">
-				<div>
-				<form style="padding-top: 0px; display: none;" class="form-horizontal" action="addtransaction" method="post" name="transactionform" id="transactionform" enctype="multipart/form-data">
-										<div id="formbody">	
-										</div>
-					
-<!-- 					<div id="addfields"></div> -->
-					<div class="clearfix form-actions">
-						<div class="col-md-offset-4 col-md-8" style="margin-top: 2%; margin-bottom: 1%">
-							<button id="submit" class="btn primary" type="submit">
-								<i class="ace-icon fa fa-check bigger-110"></i>
-								SUBMIT
-							</button>
-							<!--  <input type="submit" class="btn btn-info" type="button" value="SUBMIT"> -->
-							&nbsp; &nbsp; &nbsp;
-							<button id="reset" class="btn" type="reset">
-								<i class="ace-icon fa fa-undo bigger-110"></i>
-								RESET
-							</button>
-						</div>
-					</div>
-				</form>
-			</div>
-				</div>
-			</div>
-		</div>
-							
-					</div>
-				</div>
-			</div>
-		</div>
-		<div id="totalbody">
+		</small>
+	<?php $__env->stopSection(); ?>
+
+	<?php $__env->startSection('page_content'); ?>
 		<div id="accordion1" class="col-xs-offset-0 col-xs-12 accordion-style1 panel-group">			
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
 						<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#TEST">
 							<i class="ace-icon fa fa-angle-down bigger-110" data-icon-hide="ace-icon fa fa-angle-down" data-icon-show="ace-icon fa fa-angle-right"></i>
-							&nbsp;ADD REPAIR TRANSACTION
+							&nbsp;PURCHASE ORDER DETAILS
 						</a>
 					</h4>
 				</div>
 				<div class="panel-collapse collapse in" id="TEST">
 					<div class="panel-body" style="padding: 0px">
 						<?php $form_info = $values["form_info"]; ?>
-						<form style="padding-top:20px;" class="{{$form_info['class']}}" action="{{$form_info['action']}}" method="{{$form_info['method']}}" name="{{$form_info['name']}}"  id="{{$form_info['name']}}" enctype="multipart/form-data">
+						<form style="padding-top:20px;" class="<?php echo $form_info['class']; ?>" action="<?php echo $form_info['action']; ?>" method="<?php echo $form_info['method']; ?>" name="<?php echo $form_info['name']; ?>"  id="<?php echo $form_info['name']; ?>" enctype="multipart/form-data">
 							<div>
 							<?php $form_fields = $form_info['form_fields'];?>	
 							<?php foreach ($form_fields as $form_field) {?>
@@ -176,7 +85,7 @@ use settings\AppSettingsController;
 								<div class="form-group" >
 									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<input {{$form_field['readonly']}} type="{{$form_field['type']}}" id="{{$form_field['name']}}" {{$form_field['required']}} name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
+										<input <?php echo $form_field['readonly']; ?> type="<?php echo $form_field['type']; ?>" id="<?php echo $form_field['name']; ?>" <?php echo $form_field['required']; ?> name="<?php echo $form_field['name']; ?>" class="<?php echo $form_field['class']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
 									</div>			
 								</div>
 								<?php } ?>
@@ -188,23 +97,25 @@ use settings\AppSettingsController;
 									</div>			
 								</div>
 								<?php } ?>
+								
 								<?php if($form_field['type'] === "hidden"){ ?>
-										<input type="{{$form_field['type']}}" id="{{$form_field['name']}}" name="{{$form_field['name']}}" value="{{$form_field['value']}}" >
-								<?php } ?>
-								<?php if($form_field['type'] === "textarea"){ ?>				
-								<div class="form-group">
-									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-									<div class="col-xs-7">
-										<textarea {{$form_field['readonly']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"></textarea>
-									</div>			
-								</div>
+										<input type="<?php echo $form_field['type']; ?>" id="<?php echo $form_field['name']; ?>" name="<?php echo $form_field['name']; ?>" value="<?php echo $form_field['value']; ?>" >
 								<?php } ?>
 								
 								<?php if($form_field['type'] === "file"){ ?>				
 								<div class="form-group">
 									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<input type="file" id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="form-control file"/>
+										<input type="file" id="<?php echo $form_field['name']; ?>" name="<?php echo $form_field['name']; ?>" class="form-control file"/>
+									</div>			
+								</div>
+								<?php } ?>
+								
+								<?php if($form_field['type'] === "textarea"){ ?>				
+								<div class="form-group">
+									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+									<div class="col-xs-7">
+										<textarea <?php echo $form_field['readonly']; ?> id="<?php echo $form_field['name']; ?>" name="<?php echo $form_field['name']; ?>" class="<?php echo $form_field['class']; ?>"></textarea>
 									</div>			
 								</div>
 								<?php } ?>
@@ -227,8 +138,8 @@ use settings\AppSettingsController;
 								<div class="form-group">
 									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<select class="{{$form_field['class']}}" {{$form_field['required']}} name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>  <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-											<option value="">-- {{$form_field['name']}} --</option>
+										<select class="<?php echo $form_field['class']; ?>" <?php echo $form_field['required']; ?> name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>  <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+											<option value="">-- <?php echo $form_field['name']; ?> --</option>
 											<?php 
 												foreach($form_field["options"] as $key => $value){
 													if(isset($form_field['value']) && $form_field['value']==$key) { 
@@ -243,7 +154,6 @@ use settings\AppSettingsController;
 									</div>			
 								</div>				
 								<?php } ?>
-								
 								<?php if($form_field['type'] === "checkboxslide"){ ?>
 									<div class="form-group">
 										<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
@@ -264,18 +174,18 @@ use settings\AppSettingsController;
 											?>
 											<div class="checkbox inline">
 												<label>
-													<input name="{{$key}}" value="YES" type="checkbox" class="ace">
-													<span class="lbl">&nbsp;{{$key}} &nbsp;&nbsp;</span>
+													<input name="<?php echo $key; ?>" value="YES" type="checkbox" class="ace">
+													<span class="lbl">&nbsp;<?php echo $key; ?> &nbsp;&nbsp;</span>
 												</label>
 											</div>
 											<?php } ?>
 										</div>
 									</div>
-								<?php } ?>						
+								<?php } ?>	
 							</div>							
 							<?php } ?>
 					</div>
-					 <div id="addfields"></div> 
+					<div id="addfields"></div>
 				</div>
 			</div>
 		</div>
@@ -291,11 +201,12 @@ use settings\AppSettingsController;
 					<thead>
 						<tr>
 							<th>Item</th>
-							<th>Vehicles</th>
-							<th>Veh Reading</th>
+							<th>Item Type</th>
+							<th>Item Info</th>
+							<th>Item Numbers</th>
 							<th>Quantity</th>
-							<th>Amount</th>
-							<th>Remarks</th>
+							<th>Price of Unit</th>
+							<th>status</th>
 							<th>Actions</th>
 						</tr>
 					</thead>
@@ -307,7 +218,7 @@ use settings\AppSettingsController;
 		</div>
 		<div class="clearfix form-actions" style="margin-bottom: 0px;" >
 			<div class="col-md-offset-4 col-md-8" style="margin-top: 2%; margin-bottom: 1%">
-				<button class="btn primary" type="submit" id="submit1">
+				<button id="submit" class="btn primary" type="submit" id="submit">
 					<i class="ace-icon fa fa-check bigger-110"></i>
 					SUBMIT
 				</button>
@@ -321,7 +232,6 @@ use settings\AppSettingsController;
 		</div>
 		</form>
 	</div>	
-	</div>
 	<div id="modal-form" class="modal" tabindex="-1">
 		<div class="modal-dialog">
 			<div class="modal-content">
@@ -345,28 +255,30 @@ use settings\AppSettingsController;
 								<div class="form-group">
 									<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<input {{$form_field['readonly']}} type="{{$form_field['type']}}" id="{{$form_field['name']}}" required="{{$form_field['required']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
+										<input <?php echo $form_field['readonly']; ?> type="<?php echo $form_field['type']; ?>" id="<?php echo $form_field['name']; ?>" required="<?php echo $form_field['required']; ?>" name="<?php echo $form_field['name']; ?>" class="<?php echo $form_field['class']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
 									</div>			
 								</div>
 								<?php } ?>
+								
 								<?php if($form_field['type'] === "hidden"){ ?>
-									<input type="{{$form_field['type']}}" id="{{$form_field['name']}}" name="{{$form_field['name']}}" value="{{$form_field['value']}}" >
+									<input type="<?php echo $form_field['type']; ?>" id="<?php echo $form_field['name']; ?>" name="<?php echo $form_field['name']; ?>" value="<?php echo $form_field['value']; ?>" >
 								<?php } ?>
+								
 								<?php if($form_field['type'] === "textarea"){ ?>				
-								<div class="form-group">
-									<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-									<div class="col-xs-7">
-										<textarea {{$form_field['readonly']}} id="{{$form_field['name']}}" name="{{$form_field['name']}}" class="{{$form_field['class']}}"></textarea>
-									</div>			
-								</div>
+									<div class="form-group" id="div_<?php echo $form_field['name']; ?>">
+										<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
+										<div class="col-xs-7">
+											<textarea <?php if(isset($form_field["placeholder"])) echo " placeholder='".$form_field["placeholder"]."' ";?> <?php echo $form_field['readonly']; ?> id="<?php echo $form_field['name']; ?>" name="<?php echo $form_field['name']; ?>" class="<?php echo $form_field['class']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>></textarea>
+										</div>			
+									</div>
 								<?php } ?>
 								
 								<?php if($form_field['type'] === "select"){ ?>
 								<div class="form-group">
 									<label class="col-xs-3 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-7">
-										<select class="{{$form_field['class']}}" name="{{$form_field['name']}}" id="{{$form_field['name']}}"  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>  <?php if(isset($form_field['multiple'])) {  echo " multiple "; }?>>
-											<option value="">-- {{$form_field['name']}} --</option>
+										<select class="<?php echo $form_field['class']; ?>" name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>"  <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?>>
+											<option value="">-- <?php echo $form_field['name']; ?> --</option>
 											<?php 
 												foreach($form_field["options"] as $key => $value){
 													echo "<option value='$key'>$value</option>";
@@ -386,8 +298,8 @@ use settings\AppSettingsController;
 										?>
 										<div class="checkbox inline">
 											<label>
-												<input name="{{$key}}" id="{{$key}}" value="YES" type="checkbox" class="ace">
-												<span class="lbl">&nbsp;{{$value}} &nbsp;&nbsp;</span>
+												<input name="<?php echo $key; ?>" id="<?php echo $key; ?>" value="YES" type="checkbox" class="ace">
+												<span class="lbl">&nbsp;<?php echo $value; ?> &nbsp;&nbsp;</span>
 											</label>
 										</div>
 										<?php } ?>
@@ -404,8 +316,8 @@ use settings\AppSettingsController;
 										?>
 										<div class="radio inline">
 											<label>
-												<input name="{{$form_field['content']}}" id="{{$value}}" value="{{$value}}" type="radio" class="ace">
-												<span class="lbl">&nbsp;{{$value}} &nbsp;&nbsp;</span>
+												<input name="<?php echo $form_field['content']; ?>" id="<?php echo $value; ?>" value="<?php echo $value; ?>" type="radio" class="ace">
+												<span class="lbl">&nbsp;<?php echo $value; ?> &nbsp;&nbsp;</span>
 											</label>
 										</div>
 										<?php } ?>
@@ -436,9 +348,9 @@ use settings\AppSettingsController;
 		</div>
 	</div><!-- PAGE CONTENT ENDS -->
 	</div>		
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('page_js')
+	<?php $__env->startSection('page_js'); ?>
 		<!-- page specific plugin scripts -->
 		<script src="../assets/js/dataTables/jquery.dataTables.js"></script>
 		<script src="../assets/js/dataTables/jquery.dataTables.bootstrap.js"></script>
@@ -453,9 +365,10 @@ use settings\AppSettingsController;
 		<script src="../assets/js/date-time/daterangepicker.js"></script>		
 		<script src="../assets/js/bootbox.js"></script>
 		<script src="../assets/js/chosen.jquery.js"></script>
-	@stop
+		<script src="../assets/js/autosize.js"></script>
+	<?php $__env->stopSection(); ?>
 	
-	@section('inline_js')
+	<?php $__env->startSection('inline_js'); ?>
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#totalamount").attr("readonly",true);
@@ -464,36 +377,37 @@ use settings\AppSettingsController;
 			$("#paymentdate").attr("disabled",true);
 			$("#incharge").attr("disabled",true);
 			$("#enableincharge").val("NO");
-			$("#totalbody").hide();
 			tabledata = [];
 			row = 0;
 			isEdit = false;
 			editRowId = -1;
 			function getFormValues(){
+				if(!$("#itemnumbers").attr("readonly")){
+					ckval = $("#itemnumbers").val();
+					if(!validateInput(ckval)){
+						return false;
+					}
+				}
 				tr = [];
 				country = $("#item option:selected").text();
-				if($("#item").val() == ""){
-					alert("Please Select Item");
-					return;
-				}
 				tr[0] = country;
-				text_data =  "";
-				$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.text+",";} });
-				tr[1] = text_data;
-				meeterreading = $("#meeterreading").val();
-				tr[2] = meeterreading;
-				lname = $("#quantity").val();
+				itemtype = $("#itemtype option:selected").text();
+				tr[1] = itemtype;
+				fname = $("#iteminfo option:selected").text();
+				tr[2] = fname;
+				lname = $("#itemnumbers").val();
 				tr[3] = lname;
-				unitprice = $("#amount").val();
-				tr[4] = unitprice;
-				status = $("#remarks").val();
-				tr[5] = status;
-				tr[6] = '<button class="btn btn-sm btn-primary" onclick="editItem('+row+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+row+')">Remove</button>';
-				tr[7] = $("#item").val();
-				text_data =  "";
-				$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.value+",";} });
-				tr[8] = text_data;
-				if(country != ""  && lname!="" && unitprice!=""){
+				lname = $("#quantity").val();
+				tr[4] = lname;
+				unitprice = $("#unitprice").val();
+				tr[5] = unitprice;
+				status = $("#status").val();
+				tr[6] = status;
+				tr[7] = '<button class="btn btn-sm btn-primary" onclick="editItem('+row+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+row+')">Remove</button>';
+				tr[8] = $("#item").val();
+				tr[9] = $("#itemtype").val();
+				tr[10] = $("#iteminfo").val();
+				if(country != "" && fname!="" && lname!="" && unitprice!=""){
 					if(isEdit && editRowId>=0){
 						for(i=0; i<row; i++){
 							if(editRowId == i){
@@ -503,12 +417,11 @@ use settings\AppSettingsController;
 								tabledata[i][3] = tr[3];
 								tabledata[i][4] = tr[4];
 								tabledata[i][5] = tr[5];
-								tabledata[i][6] = '<button class="btn btn-sm btn-primary" onclick="editItem('+editRowId+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+editRowId+')">Remove</button>';;
-								tabledata[i][7] = $("#item").val();
-								text_data =  "";
-								$("#vehicles option").each(function() { if(this.selected){ text_data=text_data+this.value+",";} });
-								tabledata[i][8] = text_data;
-								//alert("test"+tabledata[i][7]);
+								tabledata[i][6] = tr[6];
+								tabledata[i][7] = '<button class="btn btn-sm btn-primary" onclick="editItem('+editRowId+')">Edit</button>&nbsp;&nbsp;&nbsp;'+'<button class="btn btn-sm btn-danger" onclick="removeItem('+editRowId+')">Remove</button>';;
+								tabledata[i][8] = $("#item").val();
+								tabledata[i][9] = $("#itemtype").val();
+								tabledata[i][10] = $("#iteminfo").val();
 							}
 						}
 						isEdit = false;
@@ -516,64 +429,20 @@ use settings\AppSettingsController;
 						drawTable();
 					}
 					else{
-						tabledata[row] = tr;
+						//tabledata[row] = tr;
+						tabledata.push(tr);
 						row++;
 						drawTable();
 					}
+					$("#status option").each(function() { this.selected = (this.value == ""); });
 					$("#item option").each(function() { this.selected = (this.value == ""); });
-					$("#vehicles option").each(function() { this.selected = false; });
+					$("#iteminfo option").each(function() { this.selected = (this.value == ""); });
 					$("#quantity").val("");
-					$("#meeterreading").val("");
-					$("#amount").val("");
-					$("#remarks").val("");
+					$("#itemnumbers").val("");
+					$("#itemnumbers").attr("readonly",false);
+					$("#unitprice").val("");
 					$('.chosen-select').trigger('chosen:updated');
 				}
-			}
-
-			function verifyDate(){
-				branch = $("#branch2").val();
-				dt = $("#dt").val();
-				if(branch == ""){
-					alert("select branch office");
-					return;
-				}
-				if(dt == ""){
-					alert("select date");
-					return;
-				}
-				$('#verify').hide();
-				$.ajax({
-			      url: "verifytransactiondateandbranch?branch="+branch+"&date="+dt,
-			      success: function(data) {
-				      if(data=="NO"){
-				    	  bootbox.confirm('Sorry!!! Transactions closed for this date. Please contact Accountant.', function(result) {});
-				    	  $('#verify').show();
-				    	  $("#totalbody").hide();
-				    	  $("#accordion2").show();
-				      }
-				      else{
-					      $("#branch").val(branch);
-					      $("#branchname").val($("#branch2 option:selected").text());
-					      $("#date").val(dt);
-				    	  $("#totalbody").show();
-				    	  $("#accordion2").hide();
-				    	  
-				      }
-			      },
-			      type: 'GET'
-			   });	
-				//$('#trantypebody').show();
-			}
-
-			function getManufacturers(id){
-				$.ajax({
-			      url: "getmanufacturers?itemid="+id,
-			      success: function(data) {
-			    	  $("#iteminfo").html(data);
-					  $('.chosen-select').trigger('chosen:updated');
-			      },
-			      type: 'GET'
-			   });
 			}
 
 			function enableIncharge(val){
@@ -593,67 +462,91 @@ use settings\AppSettingsController;
 				}
 			}
 
-			function getFormData(val){
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
+			function getInchargeBalance(val){
 				$.ajax({
-			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&type=vehicleids",
-			      success: function(data) {
-			    	  $("#vehicles").html(data);
-			    	  $('.chosen-select').trigger("chosen:updated");
-			      },
-			      type: 'GET'
+				  url: "getinchargebalance?id="+val,
+				  success: function(data) {
+					  $("#inchargebalance").val(data);
+				  },
+				  type: 'GET'
 			   });
 			}
 
-			function changeDepot(val){
-				$.ajax({
-			      url: "getdepotsbyclientId?id="+val,
-			      success: function(data) {
-			    	  $("#depot").html(data);
-			    	  $('.chosen-select').trigger("chosen:updated");
-			      },
-			      type: 'GET'
-			    });
-
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-			}
-
-			function getContractVehicles(val){
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-				vehiclestatus =  $("input[name=contract_status]:checked").val();
-				if(vehiclestatus == undefined){
-					vehiclestatus = "ACTIVE";
+			function verifyBillNo(val){
+				supplierid = $("#creditsupplier").val();
+				if(supplierid != undefined && supplierid ==""){
+					alert("Please select creditsupplier");
+					return false;
 				}
-				//alert(vehiclestatus);
 				$.ajax({
-			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&vehiclestatus="+vehiclestatus,
+				  url: "verifybillno?billno="+val+"&creditsupplier="+supplierid,
+				  success: function(data) {
+					  if(data=="yes"){
+						  alert("Bill no already exists");
+						  $("#billnumber").val("");
+					  }
+				  },
+				  type: 'GET'
+			   });
+			}
+
+			function getCreditSupplierByState(val){
+				$.ajax({
+				  url: "getcreditsuppliersbystate?branchId="+val,
+				  success: function(data) {
+					  var obj = JSON.parse(data);
+					  $("#creditsupplier").html(obj.suppliers);
+					  $("#receivedby").html(obj.incharges);
+					  $('.chosen-select').trigger('chosen:updated');
+				  },
+				  type: 'GET'
+			   });
+			}
+
+			function validateInput(val){
+				itemnumbers = $("#itemnumbers").val();
+				qty = $("#quantity").val();
+				itemnumbers = itemnumbers.split(",");
+				if(qty != itemnumbers.length){
+					alert("Quantity and Item Numbers count does not match");
+					return false;
+				}
+				return true;
+			}
+
+			function getManufacturers(id){
+				$("#itemnumbers").attr("readonly",true);
+				$.ajax({
+			      url: "getmanufacturers?itemid="+id,
 			      success: function(data) {
-			    	  $("#vehicles").append(data);
-			    	  $('.chosen-select').trigger("chosen:updated");
+			    	  var obj = JSON.parse(data);
+			    	  $("#iteminfo").html(obj.manufactures);
+			    	  $("#itemtype").html(obj.itemtypes);
+			    	  if(obj.itemnumberstatus=="Yes"){
+			    		  $("#itemnumbers").attr("readonly",false);
+			    	  }
+			    	  
+					  $('.chosen-select').trigger('chosen:updated');
 			      },
 			      type: 'GET'
 			   });
-			}			
+			}
 
 			function showPaymentFields(val){
-				//alert(val);
 				$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
 				$.ajax({
-			      url: "getpaymentfields?paymenttype="+val,
-			      success: function(data) {
-			    	  $("#addfields").html(data);
-			    	  $('.date-picker').datepicker({
-						autoclose: true,
-						todayHighlight: true
-					  });
-			    	  $("#addfields").show();
-			    	  $('.chosen-select').chosen();
-			      },
-			      type: 'GET'
-			   });
+				      url: "getpaymentfields?paymenttype="+val,
+				      success: function(data) {
+				    	  $("#addfields").html(data);
+				    	  $('.date-picker').datepicker({
+							autoclose: true,
+							todayHighlight: true
+						  });
+				    	  $("#addfields").show();
+				      },
+				      type: 'GET'
+				   });
+				
 			}
 
 			function enablePaymentType(val){
@@ -672,22 +565,26 @@ use settings\AppSettingsController;
 			function resetValues(){
 				isEdit = false;
 				editRowId = -1;
+				$("#status option").each(function() { this.selected = (this.value == ""); });
 				$("#item option").each(function() { this.selected = (this.value == ""); });
+				$("#itemtype option").each(function() { this.selected = (this.value == ""); });
+				$("#iteminfo option").each(function() { this.selected = (this.value == ""); });
 				$("#quantity").val("");
-				$("#amount").val("");
-				$("#meeterreading").val("");
-				$("#remarks").val("");
+				$("#unitprice").val("");
+				$("#itemnumbers").val("");
+				$("#itemnumbers").attr("readonly",false);
 				$('.chosen-select').trigger('chosen:updated');
 			}
 
 			function removeItem(rowid){
+				var index = -1;	
 				for(i=0; i<row; i++){
 					if(rowid == i){
-						for(j=0; j<6; j++){	
-							tabledata[i][j]= "";
-						}
+						index = i;
+						break;
 					}
 				}
+				tabledata.splice(index, 1 );	
 				drawTable();
 			}
 
@@ -696,22 +593,13 @@ use settings\AppSettingsController;
 				editRowId = rowid;
 				for(i=0; i<row; i++){
 					if(editRowId == i){
-						$("#meeterreading").val(tabledata[i][2]);
-						$("#quantity").val(tabledata[i][3]);				
-						$("#amount").val(tabledata[i][4]);
-						$("#remarks").val(tabledata[i][5]);
+						$("#itemnumbers").val(tabledata[i][3]);
+						$("#quantity").val(tabledata[i][4]);				
+						$("#unitprice").val(tabledata[i][5]);
+						$("#status option").each(function() { this.selected = (this.value == tabledata[i][6]); });
 						$("#item option").each(function() { this.selected = (this.text == tabledata[i][0]); });
-						$("#vehicles option").each(function() { 
-								//alert("test"+tabledata[i][1]);
-								var text_arr = tabledata[i][1];
-								text_arr = text_arr.split(",");
-								for(j=0;j<text_arr.length;j++){
-									if(this.text == text_arr[j]){
-										this.selected = true; 
-									}
-								}
-							}
-						);
+						$("#itemtype option").each(function() { this.selected = (this.text == tabledata[i][1]); });
+						$("#iteminfo option").each(function() { this.selected = (this.text == tabledata[i][2]); });
 						$('.chosen-select').trigger('chosen:updated');
 						$("#modal-form").modal("show");
 						break;
@@ -719,70 +607,57 @@ use settings\AppSettingsController;
 				}
 			}
 
-			function getInchargeBalance(val){
-				$.ajax({
-			      url: "getinchargebalance?id="+val,
-			      success: function(data) {
-			    	  $("#inchargebalance").val(data);
-			      },
-			      type: 'GET'
-			   });
-			}
-
 			function drawTable(){
 				tdata = "";
 				totalamt = 0;
 				jsondata = "[";
 				for(i=0; i<row; i++){
-					if(tabledata[i][0] != ""){
+					if(typeof tabledata[i]!== "undefined" && tabledata[i][0] != ""){
 						jsondata = jsondata+"{";
 						tdata = tdata+"<tr>";
-						for(j=0; j<7; j++){	
+						for(j=0; j<8; j++){	
 							tdata = tdata+"<td>"+tabledata[i][j]+"</td>";
-						}
-						for(j=0; j<9; j++){	
-							if(j==6){
-							}
-							else if(j<8){
+							if(j<6){
 								jsondata = jsondata+"\"i"+j+"\":\""+tabledata[i][j]+"\",";
 							}
-							else if(j==8){
-								totalamt = (totalamt*1)+(tabledata[i][4]*1);
-								jsondata = jsondata+"\"i"+8+"\":\""+tabledata[i][8]+"\"";
+							if(j==6){
+								jsondata = jsondata+"\"i"+j+"\":\""+tabledata[i][j]+"\",";
+								jsondata = jsondata+"\"i"+7+"\":\""+tabledata[i][8]+"\",";
+								jsondata = jsondata+"\"i"+8+"\":\""+tabledata[i][9]+"\",";
+								jsondata = jsondata+"\"i"+9+"\":\""+tabledata[i][10]+"\"";
 							}
 						}
-						tdata = tdata+"</tr>";
-						if((i+1)==row){
-						jsondata = jsondata+"}";
-						}
-						else{
-							jsondata = jsondata+"},";
-						}
+						totalamt = totalamt+(tabledata[i][4]*tabledata[i][5]);
+						tdata = tdata+"</tr>";						
+						jsondata = jsondata+"},";
 					}
 				}
-				jsondata = jsondata+"]";
+				jsondata = String(jsondata);
+				jsondata1  = jsondata.substring(0, jsondata.length-1);
+				jsondata = jsondata1+"]";
 				$("#jsondata").val(jsondata);
 				$("#totalamount").val(totalamt.toFixed(2));
 				$("#tbody").html(tdata);
 			}
 
-			$("#submit1").on("click",function(){
-				creditsupplier = $("#creditsupplier").val();
-				if(creditsupplier != undefined && creditsupplier == ""){
-					alert("select creditsupplier");
+			$("#submit").on("click",function(){
+				var creditsupplier = $("#creditsupplier").val();
+				if(creditsupplier != undefined && creditsupplier ==""){
+					alert("Please select creditsupplier");
 					return false;
 				}
-				vehicleno = $("#vehicle").val();
-				if(vehicleno != undefined && vehicleno == ""){
-					alert("select vehicle");
+
+				var warehouse = $("#warehouse").val();
+				if(warehouse != undefined && warehouse ==""){
+					alert("Please select warehouse");
 					return false;
 				}
-				vehicleno = $("#amountpaid").val();
-				if(vehicleno != undefined && vehicleno == ""){
-					alert("select amount paid");
+
+				var receivedby = $("#receivedby").val();
+				if(receivedby != undefined && receivedby ==""){
+					alert("Please select receivedby");
 					return false;
 				}
-				$("#{{$form_info['name']}}").submit();
 			});
 
 			$('.number').keydown(function(e) {
@@ -803,6 +678,22 @@ use settings\AppSettingsController;
 
 			//$('.input-mask-phone').mask('(999) 999-9999');
 			
+			<?php 
+				if(Session::has('message')){
+					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+				}
+			?>
+
+			//to translate the daterange picker, please copy the "examples/daterange-fr.js" contents here before initialization
+			$('.date-range-picker').daterangepicker({
+				'applyClass' : 'btn-sm btn-success',
+				'cancelClass' : 'btn-sm btn-default',	
+				locale: {
+					applyLabel: 'Apply',
+					cancelLabel: 'Cancel',
+				}
+			});
+
 			$('.file').ace_file_input({
 				no_file:'No File ...',
 				btn_choose:'Choose',
@@ -818,28 +709,127 @@ use settings\AppSettingsController;
 			//pre-show a file name, for example a previously selected file
 			//$('#id-input-file-1').ace_file_input('show_file_list', ['myfile.txt'])
 		
+		
+			$('#id-input-file-3').ace_file_input({
+				style: 'well',
+				btn_choose: 'Drop files here or click to choose',
+				btn_change: null,
+				no_icon: 'ace-icon fa fa-cloud-upload',
+				droppable: true,
+				thumbnail: 'small'//large | fit
+				//,icon_remove:null//set null, to hide remove/reset button
+				/**,before_change:function(files, dropped) {
+					//Check an example below
+					//or examples/file-upload.html
+					return true;
+				}*/
+				/**,before_remove : function() {
+					return true;
+				}*/
+				,
+				preview_error : function(filename, error_code) {
+					//name of the file that failed
+					//error_code values
+					//1 = 'FILE_LOAD_FAILED',
+					//2 = 'IMAGE_LOAD_FAILED',
+					//3 = 'THUMBNAIL_FAILED'
+					//alert(error_code);
+				}
+		
+			}).on('change', function(){
+				//console.log($(this).data('ace_input_files'));
+				//console.log($(this).data('ace_input_method'));
+			});
 			
-			<?php 
-				if(Session::has('message')){
-					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+			
+			//$('#id-input-file-3')
+			//.ace_file_input('show_file_list', [
+				//{type: 'image', name: 'name of image', path: 'http://path/to/image/for/preview'},
+				//{type: 'file', name: 'hello.txt'}
+			//]);
+		
+			
+			
+		
+			//dynamically change allowed formats by changing allowExt && allowMime function
+			$('#id-file-format').removeAttr('checked').on('change', function() {
+				var whitelist_ext, whitelist_mime;
+				var btn_choose
+				var no_icon
+				if(this.checked) {
+					btn_choose = "Drop images here or click to choose";
+					no_icon = "ace-icon fa fa-picture-o";
+		
+					whitelist_ext = ["jpeg", "jpg", "png", "gif" , "bmp"];
+					whitelist_mime = ["image/jpg", "image/jpeg", "image/png", "image/gif", "image/bmp"];
 				}
-			?>
-
-			//to translate the daterange picker, please copy the "examples/daterange-fr.js" contents here before initialization
-			$('.date-range-picker').daterangepicker({
-				'applyClass' : 'btn-sm btn-success',
-				'cancelClass' : 'btn-sm btn-default',	
-				locale: {
-					applyLabel: 'Apply',
-					cancelLabel: 'Cancel',
+				else {
+					btn_choose = "Drop files here or click to choose";
+					no_icon = "ace-icon fa fa-cloud-upload";
+					
+					whitelist_ext = null;//all extensions are acceptable
+					whitelist_mime = null;//all mimes are acceptable
 				}
-			})
+				var file_input = $('#id-input-file-3');
+				file_input
+				.ace_file_input('update_settings',
+				{
+					'btn_choose': btn_choose,
+					'no_icon': no_icon,
+					'allowExt': whitelist_ext,
+					'allowMime': whitelist_mime
+				})
+				file_input.ace_file_input('reset_input');
+				
+				file_input
+				.off('file.error.ace')
+				.on('file.error.ace', function(e, info) {
+					//console.log(info.file_count);//number of selected files
+					//console.log(info.invalid_count);//number of invalid files
+					//console.log(info.error_list);//a list of errors in the following format
+					
+					//info.error_count['ext']
+					//info.error_count['mime']
+					//info.error_count['size']
+					
+					//info.error_list['ext']  = [list of file names with invalid extension]
+					//info.error_list['mime'] = [list of file names with invalid mimetype]
+					//info.error_list['size'] = [list of file names with invalid size]
+					
+					
+					/**
+					if( !info.dropped ) {
+						//perhapse reset file field if files have been selected, and there are invalid files among them
+						//when files are dropped, only valid files will be added to our file array
+						e.preventDefault();//it will rest input
+					}
+					*/
+					
+					
+					//if files have been selected (not dropped), you can choose to reset input
+					//because browser keeps all selected files anyway and this cannot be changed
+					//we can only reset file field to become empty again
+					//on any case you still should check files with your server side script
+					//because any arbitrary file can be uploaded by user and it's not safe to rely on browser-side measures
+				});
+				
+				
+				/**
+				file_input
+				.off('file.preview.ace')
+				.on('file.preview.ace', function(e, info) {
+					console.log(info.file.width);
+					console.log(info.file.height);
+					e.preventDefault();//to prevent preview
+				});
+				*/
+			
+			});
 			<?php 
 				if(isset($values["daterange"])){
 					echo "$('.date-range-picker').val('".$values["daterange"]."')";
 				}
 			?>
-			
 
 			if(!ace.vars['touch']) {
 				$('.chosen-select').chosen({allow_single_deselect:true}); 
@@ -869,6 +859,7 @@ use settings\AppSettingsController;
 					if(which == 2) $('#form-field-select-4').addClass('tag-input-style');
 					 else $('#form-field-select-4').removeClass('tag-input-style');
 				});
+
 			}
 
 			jQuery(function($) {
@@ -907,8 +898,7 @@ use settings\AppSettingsController;
 						style: 'multi'
 					}
 			    } );
-			
-				
+
 				//style the message box
 				var defaultCopyAction = myTable.button(1).action();
 				myTable.button(1).action(function (e, dt, button, config) {
@@ -1000,4 +990,5 @@ use settings\AppSettingsController;
 			
 			})
 		</script>
-	@stop
+	<?php $__env->stopSection(); ?>
+<?php echo $__env->make('masters.master', array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>

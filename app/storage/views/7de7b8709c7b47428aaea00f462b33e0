@@ -1,5 +1,4 @@
-@extends('masters.master')
-	@section('inline_css')
+	<?php $__env->startSection('inline_css'); ?>
 		<style>
 			.pagination {
 			    display: inline-block;
@@ -51,24 +50,25 @@
 			  margin-top: 5px;
 			}
 		</style>
-	@section('page_css')
+	<?php $__env->startSection('page_css'); ?>
 		<link rel="stylesheet" href="../assets/css/jquery-ui.custom.css" />
 		<link rel="stylesheet" href="../assets/css/chosen1.css" />
 		<link rel="stylesheet" href="../assets/css/bootstrap-datepicker3.css"/>
 		<link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.1.1/css/buttons.dataTables.min.css"/>
-	@stop
+	<?php $__env->stopSection(); ?>
 		
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('bredcum')	
+	<?php $__env->startSection('bredcum'); ?>	
 		<small>
 			REPORTS
 			<i class="ace-icon fa fa-angle-double-right"></i>
-			{{$values['bredcum']}}
-		</small>
-	@stop
+			<?php echo $values['bredcum']; ?>
 
-	@section('page_content')
+		</small>
+	<?php $__env->stopSection(); ?>
+
+	<?php $__env->startSection('page_content'); ?>
 		<div id="accordion1" class="col-xs-offset-0 col-xs-12 accordion-style1 panel-group" style="width: 99%;">			
 			<div class="panel panel-default">
 				<div class="panel-heading">
@@ -82,7 +82,7 @@
 				<div class="panel-collapse collapse in" id="TEST">
 					<div class="panel-body" style="padding: 0px">
 						<?php $form_info = $values["form_info"]; ?>
-						@include("reports.add3colform",$form_info)						
+						<?php echo $__env->make("reports.add3colform",$form_info, array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>						
 					</div>
 				</div>
 			</div>
@@ -221,7 +221,7 @@
 				$modals = $values['modals'];
 				foreach ($modals as $modal){
 		?>
-				@include('masters.layouts.modalform', $modal)
+				<?php echo $__env->make('masters.layouts.modalform', $modal, array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>
 		<?php }} ?>
 		
 		<div id="edit" class="modal" tabindex="-1">
@@ -245,9 +245,9 @@
 			</div>
 		</div><!-- PAGE CONTENT ENDS -->
 		
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('page_js')
+	<?php $__env->startSection('page_js'); ?>
 		<!-- page specific plugin scripts -->
 		<script src="../assets/js/dataTables/jquery.dataTables.js"></script>
 		<script src="../assets/js/dataTables/jquery.dataTables.bootstrap.js"></script>
@@ -264,9 +264,9 @@
 		<script src="../assets/js/bootbox.js"></script>
 		<script src="../assets/js/chosen.jquery.js"></script>
 		<script src="../assets/js/autosize.js"></script>
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('inline_js')
+	<?php $__env->startSection('inline_js'); ?>
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#processing").hide();
@@ -420,11 +420,11 @@
 			}
 
 			$("#reset").on("click",function(){
-				$("#{{$form_info['name']}}").reset();
+				$("#<?php echo $form_info['name']; ?>").reset();
 			});
 
 			$("#submit").on("click",function(){
-				//$("#{{$form_info['name']}}").submit();
+				//$("#<?php echo $form_info['name']; ?>").submit();
 			});
 
 			$("#provider").on("change",function(){
@@ -660,4 +660,5 @@
 				})
 			
 		</script>
-	@stop
+	<?php $__env->stopSection(); ?>
+<?php echo $__env->make('masters.master', array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>

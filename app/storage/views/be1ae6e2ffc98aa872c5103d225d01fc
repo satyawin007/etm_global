@@ -1,8 +1,8 @@
 <?php
 use settings\AppSettingsController;
 ?>
-@extends('masters.master')
-	@section('inline_css')
+
+	<?php $__env->startSection('inline_css'); ?>
 		<style>
 			.pagination {
 			    display: inline-block;
@@ -38,24 +38,25 @@ use settings\AppSettingsController;
 			  width: 100% !important;
 			}
 		</style>
-	@section('page_css')
+	<?php $__env->startSection('page_css'); ?>
 		<link rel="stylesheet" href="../assets/css/jquery-ui.custom.css" />
 		<link rel="stylesheet" href="../assets/css/bootstrap-datepicker3.css"/>
 		<link rel="stylesheet" href="../assets/css/chosen1.css" />
 		<link rel="stylesheet" href="../assets/css/daterangepicker.css" />
-	@stop
+	<?php $__env->stopSection(); ?>
 		
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('bredcum')	
+	<?php $__env->startSection('bredcum'); ?>	
 		<small>
 			TRANSACTIONS
 			<i class="ace-icon fa fa-angle-double-right"></i>
-			{{$values['bredcum']}}
-		</small>
-	@stop
+			<?php echo $values['bredcum']; ?>
 
-	@section('page_content')
+		</small>
+	<?php $__env->stopSection(); ?>
+
+	<?php $__env->startSection('page_content'); ?>
 	<div id="previous_logs">
 		<div class="row" style="margin-top: 0px;">
                         	<div class=" col-xs-offset-1 col-xs-10  widget-container-col ui-sortable">
@@ -127,7 +128,7 @@ use settings\AppSettingsController;
 				</div>
 				<div class="panel-collapse collapse in" id="TEST">
 					<div class="panel-body" style="padding: 0px">
-						@include("transactions.add3colform",$form_info)						
+						<?php echo $__env->make("transactions.add3colform",$form_info, array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>						
 					</div>
 				</div>
 			</div>
@@ -142,7 +143,7 @@ use settings\AppSettingsController;
 					<?php if(($values['bredcum'] == "CONTRACT EXPENSE TRANSACTIONS" || $values['bredcum'] == "EXPENSES TRANSACTIONS") && in_array(305, $jobs)){ ?>
 					<div class="clearfix">
 						<div class="col-xs-12 input-group">
-							<form action="{{$values['form_action']}}" name="paginate" id="paginate">
+							<form action="<?php echo $values['form_action']; ?>" name="paginate" id="paginate">
 							<div class="col-xs-4">
 								<div class="form-group">
 									<label class="col-xs-4 control-label no-padding-right" for="form-field-1">DATE RANGE<span style="color:red;">*</span></label>
@@ -166,8 +167,8 @@ use settings\AppSettingsController;
 											<?php 
 												$form_field = array("name"=>"clientname1", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot1(this.value);"), "class"=>"form-control chosen-select");
 											?>
-											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-												<option value="">-- {{$form_field['name']}} --</option>
+											<select class="<?php echo $form_field['class']; ?>"  <?php echo $form_field['required']; ?>  name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+												<option value="">-- <?php echo $form_field['name']; ?> --</option>
 												<?php 
 													$clients =  AppSettingsController::getEmpClients();
 													foreach ($clients as $client){
@@ -180,8 +181,8 @@ use settings\AppSettingsController;
 											<?php 
 												$form_field = array("name"=>"depot1", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
 											?>
-											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-												<option value="">-- {{$form_field['name']}} --</option>
+											<select class="<?php echo $form_field['class']; ?>"  <?php echo $form_field['required']; ?>  name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+												<option value="">-- <?php echo $form_field['name']; ?> --</option>
 											</select>
 										</div>
 									</div>	
@@ -200,8 +201,8 @@ use settings\AppSettingsController;
 									<?php $form_field = array("name"=>"branch1", "value"=>$values["branch1"], "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>
 									<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-8">
-										<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-											<option value="">-- {{$form_field['name']}} --</option>
+										<select class="<?php echo $form_field['class']; ?>"  <?php echo $form_field['required']; ?>  name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+											<option value="">-- <?php echo $form_field['name']; ?> --</option>
 											<?php 
 												foreach($form_field["options"] as $key => $value){
 													if(isset($form_field['value']) && $form_field['value']==$key) { 
@@ -236,8 +237,8 @@ use settings\AppSettingsController;
 									<?php $form_field = array("name"=>"expensestype1", "value"=>$values["expensestype1"], "content"=>"type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>
 									<label class="col-xs-2 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-10">
-										<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-											<option value="">-- {{$form_field['name']}} --</option>
+										<select class="<?php echo $form_field['class']; ?>"  <?php echo $form_field['required']; ?>  name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+											<option value="">-- <?php echo $form_field['name']; ?> --</option>
 											<?php 
 												foreach($form_field["options"] as $key => $value){
 													if(isset($form_field['value']) && $form_field['value']==$key) { 
@@ -252,7 +253,7 @@ use settings\AppSettingsController;
 									</div>			
 								</div>
 							</div>
-							<input type="hidden" name="transtype_h" id="transtype_h" value="{{$values['transtype']}}"/>
+							<input type="hidden" name="transtype_h" id="transtype_h" value="<?php echo $values['transtype']; ?>"/>
 							<div class="col-xs-1" style="margin-top: 0px; margin-left:-20px; margin-bottom: -10px">
 								<div class="form-group">
 									<label class="col-xs-0 control-label no-padding-right" for="form-field-1"> </label>
@@ -278,7 +279,7 @@ use settings\AppSettingsController;
 					<?php } else {?>
 					<div class="clearfix">
 						<div class="col-xs-12 input-group">
-							<form action="{{$values['form_action']}}" name="paginate" id="paginate">
+							<form action="<?php echo $values['form_action']; ?>" name="paginate" id="paginate">
 							<div class="col-xs-6">
 								<div class="form-group">
 									<label class="col-xs-4 control-label no-padding-right" for="form-field-1">DATE RANGE<span style="color:red;">*</span></label>
@@ -302,8 +303,8 @@ use settings\AppSettingsController;
 											<?php 
 												$form_field = array("name"=>"clientname1", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot1(this.value);"), "class"=>"form-control chosen-select");
 											?>
-											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-												<option value="">-- {{$form_field['name']}} --</option>
+											<select class="<?php echo $form_field['class']; ?>"  <?php echo $form_field['required']; ?>  name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+												<option value="">-- <?php echo $form_field['name']; ?> --</option>
 												<?php 
 													$clients =  AppSettingsController::getEmpClients();
 													foreach ($clients as $client){
@@ -316,8 +317,8 @@ use settings\AppSettingsController;
 											<?php 
 												$form_field = array("name"=>"depot1", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
 											?>
-											<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-												<option value="">-- {{$form_field['name']}} --</option>
+											<select class="<?php echo $form_field['class']; ?>"  <?php echo $form_field['required']; ?>  name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+												<option value="">-- <?php echo $form_field['name']; ?> --</option>
 											</select>
 										</div>
 									</div>	
@@ -336,8 +337,8 @@ use settings\AppSettingsController;
 									<?php $form_field = array("name"=>"branch1", "value"=>$values["branch1"], "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>
 									<label class="col-xs-2 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 									<div class="col-xs-10">
-										<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-											<option value="">-- {{$form_field['name']}} --</option>
+										<select class="<?php echo $form_field['class']; ?>"  <?php echo $form_field['required']; ?>  name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+											<option value="">-- <?php echo $form_field['name']; ?> --</option>
 											<?php 
 												foreach($form_field["options"] as $key => $value){
 													if(isset($form_field['value']) && $form_field['value']==$key) { 
@@ -353,7 +354,7 @@ use settings\AppSettingsController;
 								</div>
 								<?php } ?>
 							</div>
-							<input type="hidden" name="transtype_h" id="transtype_h" value="{{$values['transtype']}}"/>
+							<input type="hidden" name="transtype_h" id="transtype_h" value="<?php echo $values['transtype']; ?>"/>
 							<div class="col-xs-1" style="margin-top: 0px; margin-left:-20px; margin-bottom: -10px">
 								<div class="form-group">
 									<label class="col-xs-0 control-label no-padding-right" for="form-field-1"> </label>
@@ -379,7 +380,7 @@ use settings\AppSettingsController;
 					<?php }?>
 					<div class="table-header" style="margin-top: 10px;">
 						Results for <?php if(isset($values['transtype'])){ echo '"'.strtoupper($values['transtype'])." TRANCTIONS".'"';} ?>				 
-						<div style="float:right;padding-right: 15px;padding-top: 6px;"><a style="color: white;" href="{{$values['home_url']}}"><i class="ace-icon fa fa-home bigger-200"></i></a> &nbsp; &nbsp; &nbsp; <a style="color: white;"  href="{{$values['add_url']}}"><i class="ace-icon fa fa-plus-circle bigger-200"></i></a></div>				
+						<div style="float:right;padding-right: 15px;padding-top: 6px;"><a style="color: white;" href="<?php echo $values['home_url']; ?>"><i class="ace-icon fa fa-home bigger-200"></i></a> &nbsp; &nbsp; &nbsp; <a style="color: white;"  href="<?php echo $values['add_url']; ?>"><i class="ace-icon fa fa-plus-circle bigger-200"></i></a></div>				
 					</div>
 					<!-- div.table-responsive -->
 					<!-- div.dataTables_borderWrap -->
@@ -406,7 +407,7 @@ use settings\AppSettingsController;
 				$modals = $values['modals'];
 				foreach ($modals as $modal){
 		?>
-				@include('masters.layouts.modalform', $modal)
+				<?php echo $__env->make('masters.layouts.modalform', $modal, array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>
 		<?php }} ?>
 		
 		<div id="edit" class="modal" tabindex="-1">
@@ -430,9 +431,9 @@ use settings\AppSettingsController;
 			</div>
 		</div><!-- PAGE CONTENT ENDS -->
 		
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('page_js')
+	<?php $__env->startSection('page_js'); ?>
 		<!-- page specific plugin scripts -->
 		<script src="../assets/js/dataTables/jquery.dataTables.js"></script>
 		<script src="../assets/js/dataTables/jquery.dataTables.bootstrap.js"></script>
@@ -448,9 +449,9 @@ use settings\AppSettingsController;
 		<script src="../assets/js/bootbox.js"></script>
 		<script src="../assets/js/chosen.jquery.js"></script>
 		<script src="../assets/js/autosize.js"></script>
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('inline_js')
+	<?php $__env->startSection('inline_js'); ?>
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
@@ -944,7 +945,7 @@ use settings\AppSettingsController;
 	        		previousreading = $("#previousreading").val();
 	        		previousreading = parseInt(previousreading);
 	        		startreading = parseInt(startreading);
-	        		if(previousreading>startreading){
+	        		if(previousreading>=startreading){
 		        		alert("Current reading must be greater than previous reading");
 		        		$("#startreading").val("");
 		        		return;
@@ -1235,9 +1236,9 @@ use settings\AppSettingsController;
 					$("#bankaccount").val(temp);
 					$("#bankId").val(temp1);
 					$.ajax({
-	                    url: "{{$form_info['action']}}",
+	                    url: "<?php echo $form_info['action']; ?>",
 	                    type: "post",
-	                    data: $("#{{$form_info['name']}}").serialize(),
+	                    data: $("#<?php echo $form_info['name']; ?>").serialize(),
 	                    success: function(response) {
 	                        //alert(response);
 	                    	response = jQuery.parseJSON(response);	
@@ -1252,16 +1253,16 @@ use settings\AppSettingsController;
 	            				myin.value="income"; 
 	            				document.getElementById('transactionform').appendChild(myin);
 	                        	$.ajax({
-	        	                    url: "{{$form_info['action']}}",
+	        	                    url: "<?php echo $form_info['action']; ?>",
 	        	                    type: "post",
-	        	                    data: $("#{{$form_info['name']}}").serialize(),
+	        	                    data: $("#<?php echo $form_info['name']; ?>").serialize(),
 	        	                    success: function(response) {
 	        	                        //alert(response);
 	        	                    	response = jQuery.parseJSON(response);	
 	        	                        if(response.status=="success"){
 	        	                            bootbox.alert(response.message);
 	                                		window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
-	        	                        	resetForm("{{$form_info['name']}}");
+	        	                        	resetForm("<?php echo $form_info['name']; ?>");
 	        	                        }
 	        	                        if(response.status=="fail"){
 	        	                        	bootbox.alert(response.message);
@@ -1278,9 +1279,9 @@ use settings\AppSettingsController;
 				}
 				else{
 					$.ajax({
-	                    url: "{{$form_info['action']}}",
+	                    url: "<?php echo $form_info['action']; ?>",
 	                    type: "post",
-	                    data: $("#{{$form_info['name']}}").serialize(),
+	                    data: $("#<?php echo $form_info['name']; ?>").serialize(),
 	                    success: function(response) {
 	                        //alert(response);
 	                    	response = jQuery.parseJSON(response);	
@@ -1310,7 +1311,7 @@ use settings\AppSettingsController;
                         			bootbox.alert(response.message);
                         			window.setTimeout(function(){location.reload();}, 2000 ); // 5 seconds
 	                        	}
-	                        	resetForm("{{$form_info['name']}}");
+	                        	resetForm("<?php echo $form_info['name']; ?>");
 	                        }
 	                        if(response.status=="fail"){
 	                        	bootbox.alert(response.message);
@@ -1319,7 +1320,7 @@ use settings\AppSettingsController;
 	                });
 				}
 				return false;
-				//$("#{{$form_info['name']}}").submit();
+				//$("#<?php echo $form_info['name']; ?>").submit();
 			});
 
 			function resetForm(formid)
@@ -1667,4 +1668,5 @@ use settings\AppSettingsController;
 			});
 			
 		</script>
-	@stop
+	<?php $__env->stopSection(); ?>
+<?php echo $__env->make('masters.master', array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>

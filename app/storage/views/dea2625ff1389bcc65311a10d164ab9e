@@ -1,8 +1,4 @@
-<?php
-use settings\AppSettingsController;
-?>
-@extends('masters.master')
-	@section('inline_css')
+	<?php $__env->startSection('inline_css'); ?>
 		<style>
 			.pagination {
 			    display: inline-block;
@@ -17,159 +13,61 @@ use settings\AppSettingsController;
 			    padding-bottom: 0px;
 			    background-color: #EFF3F8;
 			}
-			th {
-			    white-space: nowrap;
-			}
-			td {
-			    white-space: nowrap;
-			}
-			panel-group .panel {
-			    margin-bottom: 20px;
-			    border-radius: 4px;
-			}
-			label{
-				text-align: right;
-				margin-top: 3px;
-			}
-			.ace-file-input {
-			    text-align: left !important;
+			th, td {
+				white-space: nowrap;
 			}
 			.chosen-container{
 			  width: 100% !important;
 			}
 		</style>
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('page_css')
-		<link rel="stylesheet" href="../assets/css/jquery-ui.custom.css" />
+	<?php $__env->startSection('page_css'); ?>
 		<link rel="stylesheet" href="../assets/css/bootstrap-datepicker3.css"/>
-		<link rel="stylesheet" href="../assets/css/chosen1.css" />
-		<link rel="stylesheet" href="../assets/css/daterangepicker.css" />
-	@stop
+		<link rel="stylesheet" href="../assets/css/chosen.css" />
+	<?php $__env->stopSection(); ?>
 	
-	@section('bredcum')	
+	<?php $__env->startSection('bredcum'); ?>	
 		<small>
 			INVENTORY
 			<i class="ace-icon fa fa-angle-double-right"></i>
-			{{$values['bredcum']}}
-		</small>
-	@stop
+			<?php echo $values['bredcum']; ?>
 
-	@section('page_content')
-		<?php if(isset($values["create_link"])){ 
-			$create_link  = $values["create_link"];
-			if(isset($values["type"])&& $values["type"]=="contracts"){
-				$create_link['href'] = $create_link['href']."?type=contracts";
-			}
-		?>
-		<div class="row" style="margin-right: 0px;"><div class="pull-right tableTools-container"><a class="btn btn-sm btn-primary"  href="{{$create_link['href']}}" >{{$create_link["text"]}}</a></div></div>
-		<?php } ?>
-		<div class="clearfix col-xs-12 input-group">
-			<form action="{{$values['form_action']}}" name="paginate" id="paginate">
-			<div class="col-xs-5">
-				<div class="form-group">
-					<label class="col-xs-3 control-label no-padding-right" for="form-field-1">DATE RANGE<span style="color:red;">*</span></label>
-					<div class="col-xs-9">
-						<div class="input-daterange input-group">
-							<input type="text" id="fromdate"  style="padding-top: 15px;padding-bottom: 18px;" required="required" name="fromdate" <?php if(isset($values["fromdate"])) echo " value=".$values["fromdate"]." "; ?> class="input-sm form-control"/>
-							<span class="input-group-addon">
-								<i class="fa fa-exchange"></i>
-							</span>
-							<input type="text" class="input-sm form-control"  style="padding-top: 15px;padding-bottom: 18px;" id="todate" required="required" <?php if(isset($values["fromdate"])) echo " value=".$values["todate"]." "; ?>  name="todate"/>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="col-xs-4">
-				<?php if(false){ ?>
-					<div class="form-group">
-						<div class="col-xs-6">
-							<?php 
-								$form_field = array("name"=>"clientname1", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot1(this.value);"), "class"=>"form-control chosen-select");
-							?>
-							<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-								<option value="">-- {{$form_field['name']}} --</option>
-								<?php 
-									$clients =  AppSettingsController::getEmpClients();
-									foreach ($clients as $client){
-										echo '<option value="'.$client['id'].'">'.$client['name'].'</option>'; 
-									}
-								?>
-							</select>
-						</div>
-						<div class="col-xs-6">
-							<?php 
-								$form_field = array("name"=>"depot1", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
-							?>
-							<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-								<option value="">-- {{$form_field['name']}} --</option>
-							</select>
-						</div>
-					</div>	
-				<?php } else {?>
-					<div class="form-group">
-					<?php 
-						$branches =  AppSettingsController::getEmpBranches();
-						$branches_arr = array();
-						foreach ($branches as $branch){
-							$branches_arr[$branch["id"]] = $branch["name"];
-						}
-						if(!isset($values['branch1'])){
-							$values["branch1"] = 0;
-						}
-					?>
-					<?php $form_field = array("name"=>"branch1", "value"=>$values["branch1"], "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>
-					<label class="col-xs-2 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
-					<div class="col-xs-10">
-						<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-							<option value="">-- {{$form_field['name']}} --</option>
-							<?php 
-								foreach($form_field["options"] as $key => $value){
-									if(isset($form_field['value']) && $form_field['value']==$key) { 
-										echo "<option selected='selected' value='$key'>$value</option>";
-									}
-									else{
-										echo "<option value='$key'>$value</option>";
-									}
-								}
-							?>
-						</select>
-					</div>			
-				</div>
+		</small>
+	<?php $__env->stopSection(); ?>
+
+	<?php $__env->startSection('page_content'); ?>
+		<div class="row ">
+			<div class="col-xs-offset-1 col-xs-10">
+				<?php $form_info = $values["form_info"]; ?>
+				<?php $jobs = Session::get("jobs");?>
+				<?php if(($form_info['action']=="addinventorylookupvalue" && in_array(320, $jobs)) or 
+						($form_info['action']=="addmanufacturer" && in_array(322, $jobs)) or
+						($form_info['action']=="additemcategory" && in_array(324, $jobs)) or
+						($form_info['action']=="additemtype" && in_array(326, $jobs)) or
+						($form_info['action']=="additem" && in_array(328, $jobs))
+						
+					  ){ ?>
+					  	<?php echo $__env->make("inventory.addlookupform",$form_info, array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>
 				<?php } ?>
 			</div>
-			<div class="col-xs-1" style="margin-top: 0px; margin-left:-20px; margin-bottom: -10px">
-				<div class="form-group">
-					<label class="col-xs-0 control-label no-padding-right" for="form-field-1"> </label>
-					<div class="col-xs-5">
-						<input class="btn btn-sm btn-primary" type="button" value="GET" onclick="test()"/>
-					</div>			
-				</div>
-			</div>
-			<input type="hidden" name="page" id="page" /> 
-			<?php 
-			if(isset($values['links'])){
-				$links = $values['links'];
-				foreach($links as $link){
-					echo "<a class='btn btn-white btn-success' href=".$link['url'].">".$link['name']."</a> &nbsp; &nbsp; &nbsp";
-				}
-			}
-			?>
-			<?php echo "<input type='hidden' name='action' value='".$values['action_val']."'/>"; ?>					
-			</form>
-		</div>	
-		<div class="col-xs-12">
+		</div>
+				
+		<div class="row ">
+		<div class="col-xs-offset-1 col-xs-10">
+			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 10px;">MANAGE <?php echo $values["bredcum"]; ?></h3>		
 			<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
 			<div class="clearfix">
 				<div class="pull-left">
-					<form action="{{$values['form_action']}}" name="paginate" id="paginate">
+					
+					<form action="<?php echo $values['form_action']; ?>" name="paginate" id="paginate">
 					<?php 
 					if(isset($values['selects'])){
 						$selects = $values['selects'];
 						foreach($selects as $select){
 						?>
-						<label>{{ strtoupper($select["name"]) }}</label>
-						<select class="form-control-inline" id="{{$select['name']}}" style="height: 33px; padding-top: 0px;" name="{{$select["name"]}}" onChage="paginate(1)">
+						<label><?php echo strtoupper($select["name"]); ?></label>
+						<select class="form-control-inline" id="<?php echo $select['name']; ?>" style="height: 33px; padding-top: 0px;" name="<?php echo $select["name"]; ?>" onChage="paginate(1)">
 							<?php 
 								foreach($select["options"] as $key => $value){									
 									$option =  "<option value='".$key."' ";
@@ -196,10 +94,9 @@ use settings\AppSettingsController;
 				</div>
 				<div class="pull-right tableTools-container"></div>
 			</div>
-			
 			<div class="table-header" style="margin-top: 10px;">
-				Results for "{{$values['bredcum']}}"	
-				<?php $jobs = Session::get("jobs");?>			 
+				Results for "<?php echo $values['bredcum']; ?>"				 
+								
 			</div>
 			<!-- div.table-responsive -->
 			<!-- div.dataTables_borderWrap -->
@@ -218,13 +115,14 @@ use settings\AppSettingsController;
 				</table>								
 			</div>
 		</div>
+		</div>
 
 		<?php 
 			if(isset($values['modals'])) {
 				$modals = $values['modals'];
 				foreach ($modals as $modal){
 		?>
-				@include('masters.layouts.modalform', $modal);
+				<?php echo $__env->make('masters.layouts.modalform', $modal, array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>;
 		<?php }} ?>
 		
 		<div id="edit" class="modal" tabindex="-1">
@@ -248,9 +146,9 @@ use settings\AppSettingsController;
 			</div>
 		</div><!-- PAGE CONTENT ENDS -->
 		
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('page_js')
+	<?php $__env->startSection('page_js'); ?>
 		<!-- page specific plugin scripts -->
 		<script src="../assets/js/dataTables/jquery.dataTables.js"></script>
 		<script src="../assets/js/dataTables/jquery.dataTables.bootstrap.js"></script>
@@ -261,199 +159,188 @@ use settings\AppSettingsController;
 		<script src="../assets/js/dataTables/extensions/buttons/buttons.colVis.js"></script>
 		<script src="../assets/js/dataTables/extensions/select/dataTables.select.js"></script>
 		<script src="../assets/js/date-time/bootstrap-datepicker.js"></script>
-		<script src="../assets/js/date-time/moment.js"></script>
-		<script src="../assets/js/date-time/daterangepicker.js"></script>		
 		<script src="../assets/js/bootbox.js"></script>
 		<script src="../assets/js/chosen.jquery.js"></script>
-		<script src="../assets/js/autosize.js"></script>
-	@stop
+		<script src="../assets/js/jquery.maskedinput.js"></script>
+	<?php $__env->stopSection(); ?>
 	
-	@section('inline_js')
+	<?php $__env->startSection('inline_js'); ?>
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
-			$("#branch").on("change",function(){paginate(1);});
+
+			function checkvalidation(val,id,table){
+				url = "";
+				message ="";
+				if(table == "InventoryLookupValues"){
+					//alert("hi");
+					parentId = $("#type").val();
+					if(parentId != undefined && parentId ==""){
+						alert("Please select type");
+						 $("#"+id).val("");
+						return false;
+					}
+					url = "checkvalidation?table="+table+"&name="+val+"&parentId="+parentId;
+					message = "This VALUE: "+val+" is already existed";
+				}
+				else if(table == "Manufacturers"){
+					url = "checkvalidation?table="+table+"&name="+val;
+					message = "This Manufacturers Name: "+val+" is already existed";
+				}
+				else if(table == "ItemCategories"){
+					url = "checkvalidation?table="+table+"&name="+val;
+					message = "This ITEM CATEGORY NAME: "+val+" is already existed";
+				}
+				else if(table == "ItemTypes"){
+					itemCategoryId = $("#itemcategory").val();
+					if(itemCategoryId != undefined && itemCategoryId == ""){
+						alert("Please select ITEM CATEGORY");
+						 $("#"+id).val("");
+						return false;
+					}
+					url = "checkvalidation?table="+table+"&name="+val+"&itemCategoryId="+itemCategoryId;
+					message = "This ITEM TYPE NAME Name: "+val+" is already existed";
+				}
+				else if(table == "Items"){
+					url = "checkvalidation?table="+table+"&name="+val;
+					message = "This ITEM NAME: "+val+" is already existed";
+				}
+				$.ajax({
+				      url: url,
+				      success: function(data) {
+					      if(data == "exists"){
+					    	  bootbox.alert(message, function(result) {});
+					    	  $("#"+id).val("");
+					      }
+				      },
+				      type: 'GET'
+				   });
+			}
 
 			function paginate(page){
+				var myin = document.createElement("input"); 
+				myin.type='hidden'; 
+				myin.name='type'; 
+				myin.value=$("#type").val(); 
+				document.getElementById('paginate').appendChild(myin); 
+				var myin = document.createElement("input"); 
+				myin.type='hidden'; 
+				myin.name='id'; 
+				myin.value=$("#type").val(); 
+				document.getElementById('paginate').appendChild(myin); 
 				$("#page").val(page);
 				$("#paginate").submit();				
 			}
 
-			function modalEditPurchaseOrderItem(id, repairedItem, quantity, amount, comments, status){
-				$("#status option").each(function() { this.selected = (this.value == status); });
-				$("#item option").each(function() { this.selected = (this.text == repairedItem); });
+			function modalEditItem(id){
+				//$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
+				url = "edititem?id="+id;
+				var ifr=$('<iframe />', {
+		            id:'MainPopupIframe',
+		            src:url,
+		            style:'seamless="seamless" scrolling="no" display:none;width:100%;height:423px; border:0px solid',
+		            load:function(){
+		                $(this).show();
+		            }
+		        });
+	    	    $("#modal_body").html(ifr);
+			};
+
+
+			function modalEditLookupValue(id, value, remarks, modules, fields, enabled, status){
+				$("#value1").val(value);
 				$("#id1").val(id);
-				$("#quantity").val(quantity);
-				$("#amount").val(amount);
-				$("#remarks").val(comments);
+				$("#remarks1").text(remarks);
+				//var array = modules.split(",");	
+				//$("#modules1[] option").each(function() {alert("dsaf"); this.selected = true; });				
+				if(status=="ACTIVE") {
+					$("#ACTIVE").prop("checked",true);
+				}
+				else{
+					$("#INACTIVE").prop("checked",true);
+				}
+				if(enabled=="YES") {
+					$("#YES").prop("checked",true);
+				}
+				else{
+					$("#NO").prop("checked",true);
+				}
+				return;				
+			}
+
+			function modalEditManufacture(id, name, description, status){
+				$("#name1").val(name);				
+				$("#description1").val(description);
+				$("#status1 option").each(function() { this.selected = (this.text == status); });
+				$("#id1").val(id);		
+			}
+
+			function modalEditItemCategories(id, name, description, status){
+				$("#name1").val(name);				
+				$("#description1").val(description);
+				$("#status1 option").each(function() { this.selected = (this.text == status); });
+				$("#id1").val(id);		
+			}
+
+			function modalEditItemType(id, name, catid, description, status){
+				$("#name1").val(name);				
+				$("#description1").val(description);
+				$("#status1 option").each(function() { this.selected = (this.text == status); });
+				$("#itemcategory1 option").each(function() { this.selected = (this.text == catid); });
+				$("#id1").val(id);	
 				$('.chosen-select').trigger('chosen:updated');
-				return;
 			}
 
-			function deleteRepairTransaction(id) {
-				bootbox.confirm("Are you sure, you want to delete this repair transaction?", function(result) {
-					if(result) {
-						$.ajax({
-					      url: "deleterepairtransaction?id="+id,
-					      success: function(data) {
-						      if(data=="success"){
-						    	  bootbox.confirm('REPAIR TRANSACTION SUCCESSFULLY DELETED!', function(result) {});
-						      }
-						      else{
-						    	  bootbox.confirm('REPAIR TRANSACTION COULD NOT BE DELETED!', function(result) {});
-						      }
-					      },
-					      type: 'GET'
-					   });	
-					   location.reload();
-					}
-				});
-			};
-			
-			function getInchargeBalance(val){
+
+			$("#reset").on("click",function(){
+				$("#<?php echo $form_info['name']; ?>").reset();
+			});
+
+			$("#submit").on("click",function(){
+				var type = $("#type").val();
+				if(type != undefined && type ==""){
+					alert("Please select type");
+					return false;
+				}
+				var itemcategory = $("#itemcategory").val();
+				if(itemcategory != undefined && itemcategory ==""){
+					alert("Please select itemcategory");
+					return false;
+				}
+				var itemtype = $("#itemtype").val();
+				if(itemtype != undefined && itemtype ==""){
+					alert("Please select itemtype");
+					return false;
+				}
+				
+				$("#<?php echo $form_info['name']; ?>").submit();
+			});
+
+			$("#type").on("change",function(){
+				if(this.value != ""){
+					window.location.replace('inventorylookupvalues?type='+this.value);
+				}
+			});
+
+			$("#provider").on("change",function(){
+				val = $("#provider option:selected").html();
+				window.location.replace('serviceproviders?provider='+val);
+			});
+
+			function changeState(val){
 				$.ajax({
-				  url: "getinchargebalance?id="+val,
-				  success: function(data) {
-					  $("#inchargebalance").val(data);
-				  },
-				  type: 'GET'
-			   });
-			}
-
-			function modalEditRepairTransaction(id){
-				//$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
-				url = "editrepairtransaction?id="+id;
-				var ifr=$('<iframe />', {
-		            id:'MainPopupIframe',
-		            src:url,
-		            style:'seamless="seamless" scrolling="no" display:none;width:100%;height:423px; border:0px solid',
-		            load:function(){
-		                $(this).show();
-		            }
-		        });
-	    	    $("#modal_body").html(ifr);
-			};
-
-			function modalViewRepairTransactionItems(id){
-				//$("#addfields").html('<div style="margin-left:600px; margin-top:100px;"><i class="ace-icon fa fa-spinner fa-spin orange bigger-125" style="font-size: 250% !important;"></i></div>');
-				url = "viewrepairtransactionitems?id="+id;
-				var ifr=$('<iframe />', {
-		            id:'MainPopupIframe',
-		            src:url,
-		            style:'seamless="seamless" scrolling="no" display:none;width:100%;height:423px; border:0px solid',
-		            load:function(){
-		                $(this).show();
-		            }
-		        });
-	    	    $("#modal_body").html(ifr);
-			};
-
-			function test(){
-				url="gettransactiondatatabledata?name=<?php echo $values["provider"] ?>";
-				branch = $("#branch1").val();
-				if(branch == ""){
-					alert("select branch");
-					return;
-				}
-				url = url+"&branch="+branch;
-				fdt = $("#fromdate").val();
-				if(fdt == ""){
-					alert("select FROM date");
-					return;
-				}
-				url = url+"&fromdate="+fdt;
-				tdt = $("#todate").val();
-				if(tdt == ""){
-					alert("select TO date");
-					return;
-				}
-				url = url+"&todate="+tdt;
-				myTable.ajax.url(url).load();
-				//$("#paginate").submit();				
-			}
-
-			function getManufacturers(id){
-				$.ajax({
-			      url: "getmanufacturers?itemid="+id,
+			      url: "getcitiesbystateid?id="+val,
 			      success: function(data) {
-			    	  $("#manufacturer").html(data);
-					  $('.chosen-select').trigger('chosen:updated');
+			    	  $("#cityname").html(data);
 			      },
 			      type: 'GET'
 			   });
 			}
-
-			function getContractVehicles(val){
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-				vehiclestatus =  $("input[name=vehiclestatus]:checked").val();
-				if(vehiclestatus == undefined){
-					vehiclestatus = "ACTIVE";
-				}
-				//alert(vehiclestatus);
-				$.ajax({
-			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&vehiclestatus="+vehiclestatus,
-			      success: function(data) {
-			    	  $("#vehicleno").html(data);
-			    	  $('.chosen-select').trigger("chosen:updated");
-			      },
-			      type: 'GET'
-			   });
-			}
-
-			function getFormData(val){
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-				$.ajax({
-			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&type=vehicleids",
-			      success: function(data) {
-			    	  $("#vehicle").html(data);
-			    	  $('.chosen-select').trigger("chosen:updated");
-			      },
-			      type: 'GET'
-			   });
-			   myTable.ajax.url("getservicelogsdatatabledata?name=servicelogs&clientid="+clientId+"&depotid="+depotId).load();
-			}
-
-			function changeDepot(val){
-				$.ajax({
-			      url: "getdepotsbyclientId?id="+val,
-			      success: function(data) {
-			    	  $("#depot").html(data);
-			    	  $('.chosen-select').trigger("chosen:updated");
-			      },
-			      type: 'GET'
-			    });
-
-				clientId =  $("#clientname").val();
-				depotId = $("#depot").val();
-			}
-			
-			
 			<?php 
 				if(Session::has('message')){
-					echo "bootbox.hideAll();";echo "bootbox.alert('".Session::pull('message')."', function(result) {});";
+					echo "bootbox.confirm('".Session::pull('message')."', function(result) {});";
 				}
 			?>
-
-			//datepicker plugin
-			//link
-			$('.date-picker').datepicker({
-				autoclose: true,
-				todayHighlight: true
-			})
-			//show datepicker when clicking on the icon
-			.next().on(ace.click_event, function(){
-				$(this).prev().focus();
-			});
-
-			$('.number').keydown(function(e) {
-				this.value = this.value.replace(/[^0-9.]/g, ''); 
-				this.value = this.value.replace(/(\..*)\./g, '$1');
-			});
-
-			//or change it into a date range picker
-			$('.input-daterange').datepicker({autoclose:true,todayHighlight: true});
 
 			if(!ace.vars['touch']) {
 				$('.chosen-select').chosen({allow_single_deselect:true}); 
@@ -484,11 +371,29 @@ use settings\AppSettingsController;
 					 else $('#form-field-select-4').removeClass('tag-input-style');
 				});
 			}
+
+			$('.number').keydown(function(e) {
+				this.value = this.value.replace(/[^0-9.]/g, ''); 
+				this.value = this.value.replace(/(\..*)\./g, '$1');
+			});
+		
+			//datepicker plugin
+			//link
+			$('.date-picker').datepicker({
+				autoclose: true,
+				todayHighlight: true
+			})
+			//show datepicker when clicking on the icon
+			.next().on(ace.click_event, function(){
+				$(this).prev().focus();
+			});
+
+			$('.input-mask-phone').mask('(999) 999-9999');
 			
-			var myTable = null;
-			jQuery(function($) {
+
+			jQuery(function($) {		
 				//initiate dataTables plugin
-				myTable = 
+				var myTable = 
 				$('#dynamic-table')
 				//.wrap("<div class='dataTables_borderWrap' />")   //if you are applying horizontal scrolling (sScrollX)
 
@@ -508,7 +413,7 @@ use settings\AppSettingsController;
 					"bProcessing": true,
 			        "bServerSide": true,
 					"ajax":{
-		                url :"gettransactiondatatabledata?name=", // json datasource
+		                url :"getinventorydatatabledata?name=<?php echo $values["provider"] ?>", // json datasource
 		                type: "post",  // method  , by default get
 		                error: function(){  // error handling
 		                    $(".employee-grid-error").html("");
@@ -527,7 +432,8 @@ use settings\AppSettingsController;
 					//Note: if you are applying horizontal scrolling (sScrollX) on a ".table-bordered"
 					//you may want to wrap the table inside a "div.dataTables_borderWrap" element
 			
-					//"iDisplayLength": 50			
+					//"iDisplayLength": 50
+			
 			
 					select: {
 						style: 'multi'
@@ -705,4 +611,5 @@ use settings\AppSettingsController;
 			});
 			
 		</script>
-	@stop
+	<?php $__env->stopSection(); ?>
+<?php echo $__env->make('masters.master', array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>

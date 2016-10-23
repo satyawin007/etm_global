@@ -167,6 +167,8 @@ class SalariesController extends \Controller {
 			$chequenumber_val = $values["chequenumber"];
 			$form_field = array("name"=>"chequenumber", "value"=>$chequenumber_val, "content"=>"", "readonly"=>"", "type"=>"hidden");
 			$form_fields[] = $form_field;
+			$form_field = array("name"=>"bankaccount", "value"=>$bankaccount_val, "content"=>"", "readonly"=>"", "type"=>"hidden");
+			$form_fields[] = $form_field;
 		}
 		$form_field = array("name"=>"show", "value"=>$show_val, "content"=>"", "readonly"=>"", "type"=>"hidden");
 		$form_fields[] = $form_field;
@@ -302,6 +304,8 @@ class SalariesController extends \Controller {
 		if(isset($values["chequenumber"])){
 			$chequenumber_val = $values["chequenumber"];
 			$form_field = array("name"=>"chequenumber", "value"=>$chequenumber_val, "content"=>"", "readonly"=>"", "type"=>"hidden");
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"bankaccount", "value"=>$bankaccount_val, "content"=>"", "readonly"=>"", "type"=>"hidden");
 			$form_fields[] = $form_field;
 		}
 		$form_field = array("name"=>"show", "value"=>$show_val, "content"=>"", "readonly"=>"", "type"=>"hidden");
@@ -465,7 +469,6 @@ class SalariesController extends \Controller {
 					return \Redirect::to($url);
 				}
 				\DB::commit();
-				
 			}
 			$message= $message."</b>";
 			\Session::put("message",$message);
@@ -520,7 +523,7 @@ class SalariesController extends \Controller {
 			}
 			$salaryPaid = $actualSalary - ($pf + $esi + $proftax)+$dailyTripsAllowance;
 			
-			if($dueDeductions != "0.00")
+			if($dueDeductions != "0.00" || $leave_deductions != "0.00")
 				$salaryPaid = $salaryPaid - ($dueDeductions+$leave_deductions);
 			else
 			 	$dueDeductions= 0;
@@ -531,7 +534,7 @@ class SalariesController extends \Controller {
 			$values["salarypaid"] = $salaryPaid;
 			$values["totalsalary"] = $actualSalary;
 
-			$field_names = array("id"=>"empId","totalsalary"=>"actualSalary","other_amt"=>"otherAmount", "daily_trips_salary"=>"dailyTripsSalary","daily_trips_allowance"=>"dailyTripsAllowance","local_trips_salary"=>"localTripsSalary","leave_amount"=>"leaveAmount","deductions"=>"dueDeductions","leave_deductions"=>"leaveDeductions","salarypaid"=>"salaryPaid","pfopted"=>"pfOpted","pf"=>"pf","esi"=>"esi","proftax"=>"profTax", "bankaccount"=>"bankAccount","cheque"=>"chequeNumber","comments"=>"comments");
+			$field_names = array("id"=>"empId","totalsalary"=>"actualSalary","other_amt"=>"otherAmount", "daily_trips_salary"=>"dailyTripsSalary","daily_trips_allowance"=>"dailyTripsAllowance","local_trips_salary"=>"localTripsSalary","leave_amount"=>"leaveAmount","deductions"=>"dueDeductions","leave_deductions"=>"leaveDeductions","salarypaid"=>"salaryPaid","pfopted"=>"pfOpted","pf"=>"pf","esi"=>"esi","proftax"=>"profTax","paymenttype"=>"paymentType","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","comments"=>"comments");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
 				if(isset($values[$key])){
@@ -556,6 +559,8 @@ class SalariesController extends \Controller {
 						}
 					}
 				}
+				echo "success";
+				return;
 			}
 			echo "fail";
 		}

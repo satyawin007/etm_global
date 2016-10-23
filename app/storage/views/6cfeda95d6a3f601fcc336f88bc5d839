@@ -1,5 +1,4 @@
-@extends('masters.master')
-	@section('inline_css')
+	<?php $__env->startSection('inline_css'); ?>
 		<style>
 			.page-header h1 {
 				padding: 0;
@@ -19,24 +18,24 @@
 				text-decoration:none;
 			}
 		</style>
-	@stop
+	<?php $__env->stopSection(); ?>
 
-	@section('bredcum')	
+	<?php $__env->startSection('bredcum'); ?>	
 		<small>
 			HOME
 			<i class="ace-icon fa fa-angle-double-right"></i>
 			DASHBOARD
 		</small>
-	@stop
+	<?php $__env->stopSection(); ?>
 
-	@section('page_content')
+	<?php $__env->startSection('page_content'); ?>
 		<div class="col-xs-12 center">
 			<div class="col-xs-12 center">
 				<?php 
 					$rec = Parameters::where("name","=","dashboardmessage")->get();
 					$rec = $rec[0];
 				?>
-				<marquee>{{$rec->value}}</marquee>
+				<marquee><?php echo $rec->value; ?></marquee>
 			</div>
 			<div class="col-xs-6">
 				<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 10px;">VEHICLE RENEWALS</h3>
@@ -244,9 +243,9 @@
 			</div>
 
 		</div>
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('page_js')
+	<?php $__env->startSection('page_js'); ?>
 		<!-- page specific plugin scripts -->
 		<script src="../assets/js/dataTables/jquery.dataTables.js"></script>
 		<script src="../assets/js/dataTables/jquery.dataTables.bootstrap.js"></script>
@@ -258,9 +257,9 @@
 		<script src="../assets/js/dataTables/extensions/select/dataTables.select.js"></script>
 		<script src="../assets/js/date-time/bootstrap-datepicker.js"></script>
 		<script src="../assets/js/bootbox.js"></script>
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('inline_js')
+	<?php $__env->startSection('inline_js'); ?>
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
@@ -562,4 +561,5 @@
 			});
 			
 		</script>
-	@stop
+	<?php $__env->stopSection(); ?>
+<?php echo $__env->make('masters.master', array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>

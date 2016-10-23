@@ -1,8 +1,8 @@
 <?php
 use settings\AppSettingsController;
 ?>
-@extends('masters.master')
-	@section('inline_css')
+
+	<?php $__env->startSection('inline_css'); ?>
 		<style>
 			.pagination {
 			    display: inline-block;
@@ -38,34 +38,35 @@ use settings\AppSettingsController;
 			  width: 100% !important;
 			}
 		</style>
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('page_css')
+	<?php $__env->startSection('page_css'); ?>
 		<link rel="stylesheet" href="../assets/css/jquery-ui.custom.css" />
 		<link rel="stylesheet" href="../assets/css/bootstrap-datepicker3.css"/>
 		<link rel="stylesheet" href="../assets/css/chosen1.css" />
 		<link rel="stylesheet" href="../assets/css/daterangepicker.css" />
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('bredcum')	
+	<?php $__env->startSection('bredcum'); ?>	
 		<small>
 			INVENTORY
 			<i class="ace-icon fa fa-angle-double-right"></i>
-			{{$values['bredcum']}}
-		</small>
-	@stop
+			<?php echo $values['bredcum']; ?>
 
-	@section('page_content')
+		</small>
+	<?php $__env->stopSection(); ?>
+
+	<?php $__env->startSection('page_content'); ?>
 		<?php if(isset($values["create_link"])){ 
 			$create_link  = $values["create_link"];
 			if(isset($values["type"])&& $values["type"]=="contracts"){
 				$create_link['href'] = $create_link['href']."?type=contracts";
 			}
 		?>
-		<div class="row" style="margin-right: 0px;"><div class="pull-right tableTools-container"><a class="btn btn-sm btn-primary"  href="{{$create_link['href']}}" >{{$create_link["text"]}}</a></div></div>
+		<div class="row" style="margin-right: 0px;"><div class="pull-right tableTools-container"><a class="btn btn-sm btn-primary"  href="<?php echo $create_link['href']; ?>" ><?php echo $create_link["text"]; ?></a></div></div>
 		<?php } ?>
 		<div class="clearfix col-xs-12 input-group">
-			<form action="{{$values['form_action']}}" name="paginate" id="paginate">
+			<form action="<?php echo $values['form_action']; ?>" name="paginate" id="paginate">
 			<div class="col-xs-5">
 				<div class="form-group">
 					<label class="col-xs-3 control-label no-padding-right" for="form-field-1">DATE RANGE<span style="color:red;">*</span></label>
@@ -87,8 +88,8 @@ use settings\AppSettingsController;
 							<?php 
 								$form_field = array("name"=>"clientname1", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot1(this.value);"), "class"=>"form-control chosen-select");
 							?>
-							<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-								<option value="">-- {{$form_field['name']}} --</option>
+							<select class="<?php echo $form_field['class']; ?>"  <?php echo $form_field['required']; ?>  name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+								<option value="">-- <?php echo $form_field['name']; ?> --</option>
 								<?php 
 									$clients =  AppSettingsController::getEmpClients();
 									foreach ($clients as $client){
@@ -101,8 +102,8 @@ use settings\AppSettingsController;
 							<?php 
 								$form_field = array("name"=>"depot1", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
 							?>
-							<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-								<option value="">-- {{$form_field['name']}} --</option>
+							<select class="<?php echo $form_field['class']; ?>"  <?php echo $form_field['required']; ?>  name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+								<option value="">-- <?php echo $form_field['name']; ?> --</option>
 							</select>
 						</div>
 					</div>	
@@ -121,8 +122,8 @@ use settings\AppSettingsController;
 					<?php $form_field = array("name"=>"branch1", "value"=>$values["branch1"], "content"=>"branch", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$branches_arr); ?>
 					<label class="col-xs-2 control-label no-padding-right" for="form-field-1"> <?php echo strtoupper($form_field['content']); if($form_field['required']=="required") echo '<span style="color:red;">*</span>'; ?> </label>
 					<div class="col-xs-10">
-						<select class="{{$form_field['class']}}"  {{$form_field['required']}}  name="{{$form_field['name']}}" id="{{$form_field['name']}}" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
-							<option value="">-- {{$form_field['name']}} --</option>
+						<select class="<?php echo $form_field['class']; ?>"  <?php echo $form_field['required']; ?>  name="<?php echo $form_field['name']; ?>" id="<?php echo $form_field['name']; ?>" <?php if(isset($form_field['action'])) { $action = $form_field['action'];  echo $action['type']."=".$action['script']; }?> <?php if(isset($form_field['multiple'])) { echo " multiple "; }?>>
+							<option value="">-- <?php echo $form_field['name']; ?> --</option>
 							<?php 
 								foreach($form_field["options"] as $key => $value){
 									if(isset($form_field['value']) && $form_field['value']==$key) { 
@@ -162,14 +163,14 @@ use settings\AppSettingsController;
 			<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
 			<div class="clearfix">
 				<div class="pull-left">
-					<form action="{{$values['form_action']}}" name="paginate" id="paginate">
+					<form action="<?php echo $values['form_action']; ?>" name="paginate" id="paginate">
 					<?php 
 					if(isset($values['selects'])){
 						$selects = $values['selects'];
 						foreach($selects as $select){
 						?>
-						<label>{{ strtoupper($select["name"]) }}</label>
-						<select class="form-control-inline" id="{{$select['name']}}" style="height: 33px; padding-top: 0px;" name="{{$select["name"]}}" onChage="paginate(1)">
+						<label><?php echo strtoupper($select["name"]); ?></label>
+						<select class="form-control-inline" id="<?php echo $select['name']; ?>" style="height: 33px; padding-top: 0px;" name="<?php echo $select["name"]; ?>" onChage="paginate(1)">
 							<?php 
 								foreach($select["options"] as $key => $value){									
 									$option =  "<option value='".$key."' ";
@@ -198,7 +199,7 @@ use settings\AppSettingsController;
 			</div>
 			
 			<div class="table-header" style="margin-top: 10px;">
-				Results for "{{$values['bredcum']}}"	
+				Results for "<?php echo $values['bredcum']; ?>"	
 				<?php $jobs = Session::get("jobs");?>			 
 			</div>
 			<!-- div.table-responsive -->
@@ -224,7 +225,7 @@ use settings\AppSettingsController;
 				$modals = $values['modals'];
 				foreach ($modals as $modal){
 		?>
-				@include('masters.layouts.modalform', $modal);
+				<?php echo $__env->make('masters.layouts.modalform', $modal, array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>;
 		<?php }} ?>
 		
 		<div id="edit" class="modal" tabindex="-1">
@@ -248,9 +249,9 @@ use settings\AppSettingsController;
 			</div>
 		</div><!-- PAGE CONTENT ENDS -->
 		
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('page_js')
+	<?php $__env->startSection('page_js'); ?>
 		<!-- page specific plugin scripts -->
 		<script src="../assets/js/dataTables/jquery.dataTables.js"></script>
 		<script src="../assets/js/dataTables/jquery.dataTables.bootstrap.js"></script>
@@ -266,9 +267,9 @@ use settings\AppSettingsController;
 		<script src="../assets/js/bootbox.js"></script>
 		<script src="../assets/js/chosen.jquery.js"></script>
 		<script src="../assets/js/autosize.js"></script>
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('inline_js')
+	<?php $__env->startSection('inline_js'); ?>
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
@@ -705,4 +706,5 @@ use settings\AppSettingsController;
 			});
 			
 		</script>
-	@stop
+	<?php $__env->stopSection(); ?>
+<?php echo $__env->make('masters.master', array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>

@@ -1,5 +1,4 @@
-@extends('masters.master')
-	@section('inline_css')
+	<?php $__env->startSection('inline_css'); ?>
 		<style>
 			.pagination {
 			    display: inline-block;
@@ -21,24 +20,25 @@
 			  width: 100% !important;
 			}
 		</style>
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('page_css')
+	<?php $__env->startSection('page_css'); ?>
 		<link rel="stylesheet" href="../assets/css/bootstrap-datepicker3.css"/>
 		<link rel="stylesheet" href="../assets/css/chosen.css" />
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('bredcum')	
+	<?php $__env->startSection('bredcum'); ?>	
 		<small>
 			ADMINISTRATION
 			<i class="ace-icon fa fa-angle-double-right"></i>
 			MASTERS
 			<i class="ace-icon fa fa-angle-double-right"></i>
-			{{$values['bredcum']}}
-		</small>
-	@stop
+			<?php echo $values['bredcum']; ?>
 
-	@section('page_content')
+		</small>
+	<?php $__env->stopSection(); ?>
+
+	<?php $__env->startSection('page_content'); ?>
 		<div class="row ">
 			<div class="col-xs-offset-1 col-xs-10">
 				<?php $form_info = $values["form_info"]; ?>
@@ -46,26 +46,26 @@
 				<?php if(($form_info['action']=="addbillpayment" && in_array(309, $jobs)) or 
 						($form_info['action']=="addrole" && in_array(239, $jobs))
 					  ){ ?>
-					@include("billpayments.addlookupform",$form_info)
+					<?php echo $__env->make("billpayments.addlookupform",$form_info, array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>
 				<?php } ?>
 			</div>
 		</div>
 				
 		<div class="row ">
 		<div class="col-xs-offset-1 col-xs-10">
-			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 10px;">MANAGE {{$values["bredcum"]}}</h3>		
+			<h3 class="header smaller lighter blue" style="font-size: 15px; font-weight: bold;margin-bottom: 10px;">MANAGE <?php echo $values["bredcum"]; ?></h3>		
 			<?php if(!isset($values['entries'])) $values['entries']=10; if(!isset($values['branch'])) $values['branch']=0; if(!isset($values['page'])) $values['page']=1; ?>
 			<div class="clearfix">
 				<div class="pull-left">
 					
-					<form action="{{$values['form_action']}}" name="paginate" id="paginate" enctype="multipart/form-data">
+					<form action="<?php echo $values['form_action']; ?>" name="paginate" id="paginate" enctype="multipart/form-data">
 					<?php 
 					if(isset($values['selects'])){
 						$selects = $values['selects'];
 						foreach($selects as $select){
 						?>
-						<label>{{ strtoupper($select["name"]) }}</label>
-						<select class="form-control-inline" id="{{$select['name']}}" style="height: 33px; padding-top: 0px;" name="{{$select["name"]}}" onChage="paginate(1)">
+						<label><?php echo strtoupper($select["name"]); ?></label>
+						<select class="form-control-inline" id="<?php echo $select['name']; ?>" style="height: 33px; padding-top: 0px;" name="<?php echo $select["name"]; ?>" onChage="paginate(1)">
 							<?php 
 								foreach($select["options"] as $key => $value){									
 									$option =  "<option value='".$key."' ";
@@ -93,8 +93,8 @@
 				<div class="pull-right tableTools-container"></div>
 			</div>
 			<div class="table-header" style="margin-top: 10px;">
-				Results for "{{$values['bredcum']}}"				 
-				<div style="float:right;padding-right: 15px;padding-top: 6px;"><a style="color: white;" href="{{$values['home_url']}}"><i class="ace-icon fa fa-home bigger-200"></i></a> </div>				
+				Results for "<?php echo $values['bredcum']; ?>"				 
+				<div style="float:right;padding-right: 15px;padding-top: 6px;"><a style="color: white;" href="<?php echo $values['home_url']; ?>"><i class="ace-icon fa fa-home bigger-200"></i></a> </div>				
 			</div>
 			<!-- div.table-responsive -->
 			<!-- div.dataTables_borderWrap -->
@@ -120,12 +120,12 @@
 				$modals = $values['modals'];
 				foreach ($modals as $modal){
 		?>
-				@include('masters.layouts.edit2colmodalform', $modal);
+				<?php echo $__env->make('masters.layouts.edit2colmodalform', $modal, array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>;
 		<?php }} ?>
 		
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('page_js')
+	<?php $__env->startSection('page_js'); ?>
 		<!-- page specific plugin scripts -->
 		<script src="../assets/js/dataTables/jquery.dataTables.js"></script>
 		<script src="../assets/js/dataTables/jquery.dataTables.bootstrap.js"></script>
@@ -139,9 +139,9 @@
 		<script src="../assets/js/bootbox.js"></script>
 		<script src="../assets/js/chosen.jquery.js"></script>
 		<script src="../assets/js/jquery.maskedinput.js"></script>
-	@stop
+	<?php $__env->stopSection(); ?>
 	
-	@section('inline_js')
+	<?php $__env->startSection('inline_js'); ?>
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
@@ -424,7 +424,7 @@
 			
 
 			$("#reset").on("click",function(){
-				$("#{{$form_info['name']}}").reset();
+				$("#<?php echo $form_info['name']; ?>").reset();
 			});
 
 			$("#submit").on("click",function(){
@@ -531,7 +531,7 @@
 					alert("Please select loanpurpose");
 					return false;
 				}
-				$("#{{$form_info['name']}}").submit();
+				$("#<?php echo $form_info['name']; ?>").submit();
 			});
 
 			$("#type").on("change",function(){
@@ -837,4 +837,5 @@
 			});
 			
 		</script>
-	@stop
+	<?php $__env->stopSection(); ?>
+<?php echo $__env->make('masters.master', array_except(get_defined_vars(), array('__data', '__path')))->render(); ?>
