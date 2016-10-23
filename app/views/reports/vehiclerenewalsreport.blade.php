@@ -445,7 +445,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null,  null, null, null,  null, null, null, null, null, null
+						  null, null, null,  null, null, null,  null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",

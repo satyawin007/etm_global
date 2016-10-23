@@ -47,6 +47,10 @@ use Illuminate\Support\Facades\Input;
 			.chosen-container{
 			  width: 100% !important;
 			}
+			.modal-dialog {
+			     width: 80%;
+			    margin: 30px auto;
+			}
 		</style>
 	@section('page_css')
 		<link rel="stylesheet" href="../assets/css/jquery-ui.custom.css" />
@@ -66,6 +70,81 @@ use Illuminate\Support\Facades\Input;
 	@stop
 
 	@section('page_content')
+		<div>
+			<?php 
+				$billedamt = 0.00;
+				$receivedamt = 0.00;
+				$table_data = "";
+				if(isset($values["month"]) && $values["month"]!="" && isset($values["clientname"]) && $values["clientname"]!=""){
+					$recs = BillPayments::where("billMonth","=",$values["month"])
+											->where("clientId","=",$values["clientname"])
+											->where("status","=","ACTIVE")->get();
+					$parent_bill_arr = array();
+					foreach($recs as $rec){
+						$parent_bill_no = "";
+						if($rec->parentBillId>0 && isset($parent_bill_arr[$rec->parentBillId])){
+							$parent_bill_no = $parent_bill_arr[$rec->parentBillId];
+						}
+						$table_data = $table_data."<tr>";
+						$table_data = $table_data."<td>".$rec->billNo."</td>";
+						$table_data = $table_data."<td>".date("F",strtotime($rec->billMonth))."</td>";
+						$table_data = $table_data."<td>".$rec->totalAmount."</td>";
+						$table_data = $table_data."<td>".$rec->amountPaid."</td>";
+						$table_data = $table_data."<td>".date("d-m-Y",strtotime($rec->billDate))."</td>";
+						$table_data = $table_data."<td>".date("d-m-Y",strtotime($rec->paidDate))."</td>";
+						$table_data = $table_data."<td>".$rec->billParticulars."</td>";
+						$table_data = $table_data."<td>".$rec->remarks."</td>";
+						$table_data = $table_data."<td>".$parent_bill_no."</td>";
+						$table_data = $table_data."<td>".$rec->transctionType."</td>";
+						$table_data = $table_data."</tr>";
+						
+						if($rec->parentBillId==0){
+							$parent_bill_arr[$rec->id]=$rec->billNo;
+							$billedamt = $billedamt+$rec->totalAmount;
+						}
+						$receivedamt = $receivedamt+$rec->amountPaid;
+					}
+				}
+				$balamt = $billedamt-$receivedamt;
+			?>
+			<span style="float:right; margin-right:1%; font-size: 16px; font-weight: bold;">Billed Amount for the Month : <span ><a href="#modal-table" role="button" data-toggle="modal"  <span="" >{{round(($billedamt), 2)}}</a></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Total Received Amt for the month : <span id="receivedamt">{{$receivedamt}}</span> &nbsp;&nbsp;&nbsp;  Balance Amt : <span id="balamtformonth">{{$balamt}}</span> &nbsp;&nbsp;&nbsp;</span>				 
+		</div>
+		<div id="modal-table" class="modal fade" tabindex="-1">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header no-padding">
+							<div class="table-header">
+								<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+									<span class="white">&times;</span>
+								</button>
+								Results for Client Income Info
+							</div>
+						</div>
+
+						<div class="modal-body no-padding">
+							<table class="table table-striped table-bordered table-hover no-margin-bottom no-border-top">
+								<thead>
+									<tr>
+										<th>Bill No</th>
+										<th>Bill Month</th>
+										<th>Total Amount</th>
+										<th>Amont Paid</th>
+										<th>Bill Date</th>
+										<th>Paid Date</th>
+										<th>Bill Particulars</th>
+										<th>Remarks</th>
+										<th>Parent BillNo</th>
+										<th>Transaction Type</th>
+									</tr>
+								</thead>
+								<tbody>
+									{{$table_data}}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
 		
 		<div id="accordion1" class="col-xs-offset-0 col-xs-12 accordion-style1 panel-group" style="width: 98%; margin-left: 10px;">			
 			<div class="panel panel-default">
@@ -95,7 +174,7 @@ use Illuminate\Support\Facades\Input;
 				<div class="table-header">
 					Results for "CLIENT INCOME"
 					<span style="float:right; font-size: 16px; font-weight: bold;">Total Net Amt : <span id="totnetamt">0</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Total Client Paid Amt : <span id="totpaidamt">0</span> &nbsp;&nbsp;&nbsp;  Balance Amt : <span id="balamt">0</span> &nbsp;&nbsp;&nbsp;</span>				 
-					</div>
+				</div>
 				<?php
 					$totnetamt = 0;
 					$totpaidamt = 0;

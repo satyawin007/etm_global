@@ -176,7 +176,7 @@ use Illuminate\Support\Facades\Input;
 							$entities =  \Loan::leftJoin("financecompanies","financecompanies.id","=","loans.financeCompanyId")
 												->where("loans.status","=","ACTIVE")
 												->where("financecompanies.id","=",$values["financecompany"])
-												->where("loans.purpose","=",$values["typeofloan"])
+												->whereRaw(" FIND_IN_SET('".$values["typeofloan"]."',loans.purpose)")
 												->select($select_args)
 												->get();
 							$i = 0;

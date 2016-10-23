@@ -43,61 +43,77 @@
 				<table id="dynamic-table1" class="table table-striped table-bordered table-hover">
 					<thead>
 						<tr>
-							<th>VEHICLE REG NO</th>
-							<th>RENEWALS INFO</th>
-							<th>EXPIRED DAYS</th>
+							<th>RENEWAL TYPE</th>
 							<th>EXPIRED IN 10 DAYS</th>
+							<th>EXPIRED IN 20 DAYS</th>
 							<th>EXPIRED IN 30 DAYS</th>
+							<th>EXPIRED DAYS</th>
 						</tr>
 					</thead>
 					<tbody>
 					<?php 
 						$select_args = array();
 						$select_args[] = "vehicle.veh_reg as veh_reg";
-						$select_args[] = "lookuptypevalues.name as name";
+						$select_args[] = "expensetransactions.date as date";
 						$select_args[] = "expensetransactions.nextAlertDate as nextAlertDate";
-						$entities = \Vehicle::where("vehicle.status","=","ACTIVE")
-									->where("expensetransactions.nextAlertDate","!=","0000-00-00")
-									->where("expensetransactions.nextAlertDate","!=","1970-01-01")
-									->leftjoin("expensetransactions","expensetransactions.vehicleIds","=","vehicle.id")
-									->leftjoin("lookuptypevalues","expensetransactions.lookupValueId","=","lookuptypevalues.id")
-									->select($select_args)->orderBy("vehicle.id")->get();
+						$select_args[] = "lookuptypevalues.name as name";
 						$cnt = 0;
 						$today = date("Y-m-d");
-						foreach ($entities as $entity){
-							$date1=date_create($today);
-							$date2=date_create($entity->nextAlertDate);
-							$diff=date_diff($date1,$date2);
-							// 				echo $diff->format("%R%a").", "; continue;
-							$row = array();
-							if($diff->format("%R%a") > 0 && $diff->format("%R%a") < 30){
-								echo "<tr>";
-								echo "<td>".$entity->veh_reg."</td>";
-								echo "<td>".$entity->name."</td>";
-								echo "<td></td>";
-								if($diff->format("%R%a") > 0 && $diff->format("%R%a") < 10){
-									echo "<td>".'<span class="badge badge-warning">'.($diff->format("%a")).'</span>'."</td>";
+						$recs = array(297,299,302,300,301);
+						foreach ($recs as $rec){
+							echo "<tr>";
+							$entities = \ExpenseTransaction::where("lookupValueId","=",$rec)
+														->leftjoin("vehicle","expensetransactions.vehicleIds","=","vehicle.id")
+														->leftjoin("lookuptypevalues","expensetransactions.lookupValueId","=","lookuptypevalues.id")
+														->where("expensetransactions.nextAlertDate","!=","0000-00-00")
+														->where("expensetransactions.nextAlertDate","!=","1970-01-01")
+														->select($select_args)->get();
+							
+							$in_10day_cnt = 0;
+							$in_10day_vehs_str = "";
+							$in_20day_cnt = 0;
+							$in_20day_vehs_str = "";
+							$in_30day_cnt = 0;
+							$in_30day_vehs_str = "";
+							$expired_cnt = 0;
+							$expired_vehs_str = "";
+							echo "<td>".$entities[0]->name."</td>";
+							foreach ($entities as $entity){
+								$date1=date_create($today);
+								$date2=date_create($entity->nextAlertDate);
+								$diff=date_diff($date1,$date2);
+								// 				echo $diff->format("%R%a").", "; continue;
+								$row = array();
+								if($diff->format("%R%a") > 0 && $diff->format("%R%a") < 30){
+									if($diff->format("%R%a") > 0 && $diff->format("%R%a") < 10){
+										$in_10day_cnt++;
+										$in_10day_vehs_str=$in_10day_vehs_str.$entity->veh_reg.",".date("d-m-Y",strtotime($entity->date)).",".date("d-m-Y",strtotime($entity->nextAlertDate))."$";
+									}
+									if($diff->format("%R%a") >= 10){
+										$in_30day_cnt++;
+										$in_30day_vehs_str=$in_30day_vehs_str.$entity->veh_reg.",".date("d-m-Y",strtotime($entity->date)).",".date("d-m-Y",strtotime($entity->nextAlertDate))."$";
+									}
+									$resp[] = $row;
+									$cnt++;
 								}
-								else{
-									echo "<td></td>";
+								else if($diff->format("%R%a") < 0){
+									$expired_cnt++;
+									$expired_vehs_str=$expired_vehs_str.$entity->veh_reg.",".date("d-m-Y",strtotime($entity->date)).",".date("d-m-Y",strtotime($entity->nextAlertDate))."$";
 								}
-								if($diff->format("%R%a") >= 10){
-									echo "<td>".'<span class="badge badge-danger">'.($diff->format("%a")).'</span>'."</td>";
-								}
-								else{
-									echo "<td></td>";
-								}
-								echo "</tr>";
 							}
-							else if($diff->format("%R%a") < 0){
-								echo "<tr>";
-								echo "<td>".$entity->veh_reg."</td>";
-								echo "<td>".$entity->name."</td>";
-								echo "<td>".'<span class="badge badge-inverse">'.$diff->format("%a").'</span>'."</td>";
-								echo "<td></td>";
-								echo "<td></td>";
-								echo "</tr>";
-							}
+							
+							echo "<script> var ".$entities[0]->name."_10days_str = '".$in_10day_vehs_str."';</script>";
+							echo "<script> var ".$entities[0]->name."_20days_str = '".$in_20day_vehs_str."';</script>";
+							echo "<script> var ".$entities[0]->name."_30days_str = '".$in_30day_vehs_str."';</script>";
+							echo "<script> var ".$entities[0]->name."_expired_str = '".$expired_vehs_str."';</script>";
+							
+							echo "<td><a href='#modal-table' role='button' data-toggle='modal' onclick=\"changeData('".$entities[0]->name."_10days_str', '".$entities[0]->name." EXPIRES IN 10 DAYS')\"".'<span class="badge badge-danger">'.$in_10day_cnt.'</span>'."</a></td>";
+							echo "<td><a href='#modal-table' role='button' data-toggle='modal' onclick=\"changeData('".$entities[0]->name."_20days_str', '".$entities[0]->name." EXPIRES IN 20 DAYS')\"".'<span class="badge badge-warning">'.$in_20day_cnt.'</span>'."</a></td>";
+							echo "<td><a href='#modal-table' role='button' data-toggle='modal' onclick=\"changeData('".$entities[0]->name."_30days_str', '".$entities[0]->name." EXPIRES IN 30 DAYS')\"".'<span class="badge badge-success">'.$in_30day_cnt.'</span>'."</a></td>";
+							echo "<td><a href='#modal-table' role='button' data-toggle='modal' onclick=\"changeData('".$entities[0]->name."_expired_str', '".$entities[0]->name." EXPIRED DAYS')\"".'<span class="badge badge-inverse">'.$expired_cnt.'</span>'."</a></td>";
+
+							echo "</tr>";
+							
 						}
 					?>
 					</tbody>
@@ -110,8 +126,8 @@
 					<thead>
 						<tr>
 							<th>EMPLOYEE</th>
-							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
+							<th>SENT FOR APP</th>
 							<th>APPROVED</th>
 							<th>REJECTED</th>
 						</tr>
@@ -129,8 +145,8 @@
 					<thead>
 						<tr>
 							<th>EMPLOYEE</th>
-							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
+							<th>SENT FOR APP</th>
 							<th>APPROVED</th>
 							<th>REJECTED</th>
 						</tr>
@@ -147,8 +163,8 @@
 					<thead>
 						<tr>
 							<th>EMPLOYEE</th>
-							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
+							<th>SENT FOR APP</th>
 							<th>APPROVED</th>
 							<th>REJECTED</th>
 						</tr>
@@ -167,8 +183,8 @@
 					<thead>
 						<tr>
 							<th>EMPLOYEE</th>
-							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
+							<th>SENT FOR APP</th>
 							<th>APPROVED</th>
 							<th>REJECTED</th>
 						</tr>
@@ -186,8 +202,8 @@
 						<tr>
 							<th>EMPLOYEE</th>
 							<th>EXPENSE TYPE</th>
-							<th>SENT FOR APP</th>
 							<th>PENDING FOR APP</th>
+							<th>SENT FOR APP</th>
 							<th>APPROVED</th>
 							<th>REJECTED</th>
 						</tr>
@@ -197,6 +213,36 @@
 					</tbody>
 				</table>								
 			</div>
+			
+			<div id="modal-table" class="modal fade" tabindex="-1">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header no-padding">
+							<div class="table-header">
+								<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+									<span class="white">&times;</span>
+								</button>
+								Results for <span id="headval"></span>
+							</div>
+						</div>
+
+						<div class="modal-body no-padding">
+							<table class="table table-striped table-bordered table-hover no-margin-bottom no-border-top">
+								<thead>
+									<tr>
+										<th>VEHICLE</th>
+										<th>AMOUNT PAID ON</th>
+										<th>NEXT ALERT DATE</th>
+									</tr>
+								</thead>
+								<tbody id="tbodydata">
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
 		</div>
 	@stop
 	
@@ -281,6 +327,22 @@
 				this.value = this.value.replace(/[^0-9.]/g, ''); 
 				this.value = this.value.replace(/(\..*)\./g, '$1');
 			});
+
+			function changeData(val, headval){
+				var tabledata = eval(val);
+				lines = tabledata.split("$");
+				data_str = "";
+				for(i=0; i<lines.length; i++){
+					data_str = data_str+"<tr>";
+					fields = lines[i].split(",");
+					for(j=0; j<fields.length; j++){
+						data_str = data_str+"<td>"+fields[j]+"</td>";
+					}
+					data_str = data_str+"</tr>";					
+				}
+				$("#tbodydata").html(data_str);	
+				$("#headval").html(headval);	
+			}
 			
 			jQuery(function($) {		
 				//initiate dataTables plugin

@@ -619,7 +619,24 @@ use settings\AppSettingsController;
 				clientId =  $("#clientname").val();
 				depotId = $("#depot").val();
 			}
-			
+
+			function getContractVehicles(val){
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
+				vehiclestatus =  $("input[name=contract_status]:checked").val();
+				if(vehiclestatus == undefined){
+					vehiclestatus = "ACTIVE";
+				}
+				//alert(vehiclestatus);
+				$.ajax({
+			      url: "getvehiclecontractinfo?clientid="+clientId+"&depotid="+depotId+"&vehiclestatus="+vehiclestatus,
+			      success: function(data) {
+			    	  $("#vehicles").append(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			   });
+			}			
 
 			function showPaymentFields(val){
 				//alert(val);

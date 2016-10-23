@@ -378,6 +378,7 @@ class TransactionController extends \Controller {
 				}
 				if(isset($values["fulltank"]) && $values["fulltank"] == "YES"){
 					$fields["fullTank"] = "YES";
+					$fields["mileage"] = $values["mileage"];
 				}
 				else{
 					$fields["fullTank"] = "NO";
@@ -588,8 +589,12 @@ class TransactionController extends \Controller {
 				if(!isset($values["suspense"])){
 					$fields["suspense"] = "No";
 				}
-				if(!isset($values["suspense"])){
-					$fields["suspense"] = "No";
+				if(isset($values["fulltank"]) && $values["fulltank"] == "YES"){
+					$fields["fullTank"] = "YES";
+					$fields["mileage"] = $values["mileage"];
+				}
+				else{
+					$fields["fullTank"] = "NO";
 				}
 				if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
 					$destinationPath = storage_path().'/uploads/'; // upload path
@@ -2526,14 +2531,15 @@ class TransactionController extends \Controller {
 		$entities = \FuelTransaction::where("filledDate","<",date("Y-m-d",strtotime($values['date'])))
 								->where("fueltransactions.vehicleId","=",$con_veh_id)
 								->where("fueltransactions.status","=","ACTIVE")
-								->where("fullTank","=","Yes")
-								->limit(6)->orderBy("filledDate","desc")
+								->limit(15)->orderBy("filledDate","desc")
 								->select(array("filledDate","startReading","litres","amount","fullTank"))->get();
 		$i=0;
 		$cnt = count($entities);
 		if((count($entities)>5)){
 			$cnt = 5;
 		}
+		$litres = 0;
+		$cnt_c = 0;
 		for($i=0; $i<$cnt; $i++){
 			$table = $table."<tr>";
 			$table = $table."<td>".date("d-m-Y",strtotime($entities[$i]->filledDate))."</td>";
@@ -2541,11 +2547,20 @@ class TransactionController extends \Controller {
 			$table = $table."<td>".$entities[$i]->litres."</td>";
 			$table = $table."<td>".$entities[$i]->amount."</td>";
 			$table = $table."<td>".$entities[$i]->fullTank."</td>";
-			if ($i+1 < $cnt){
-				$table = $table."<td>".round((($entities[$i]->startReading-$entities[$i+1]->startReading)/$entities[$i]->litres), 2)."</td>";
+			if($entities[$i]->fullTank=="YES" && $entities[$i]->mileage!="0.00"){
+				$table = $table."<td>".round(($entities[$i]->mileage), 2)."</td>";
+				$litres = 0;
 			}
 			else{
-				"<td>0</td>";
+				if ($entities[$i]->fullTank=="YES" && $i+1 < $cnt){
+					$litres = $litres+$entities[$i]->litres;
+					$table = $table."<td>".round((($entities[$i]->startReading-$entities[$i+1]->startReading)/$litres), 2)."</td>";
+					$litres = 0;
+				}
+				else{
+					$table = $table."<td>0</td>";
+					$litres = $litres+$entities[$i]->litres;
+				}
 			}
 			$table = $table."</tr>";
 		}
@@ -2568,6 +2583,22 @@ class TransactionController extends \Controller {
 			$entities = $entities[0];
 			$reading = $entities->startReading;
 		}
-		echo $reading;
+		
+		$con_veh_id = \ContractVehicle::where("contract_vehicles.id","=",$values['vehicleId'])->first();
+		$con_veh_id = $con_veh_id->vehicleId;
+		$entities = \FuelTransaction::where("filledDate","<",date("Y-m-d",strtotime($values['date'])))
+						->where("vehicleId","=",$con_veh_id)
+						->where("status","=","ACTIVE")
+						->limit(50)->orderBy("filledDate","desc")->get();
+		$litres=0;
+		foreach($entities as $entity){
+			if($entity->fullTank=="NO"){
+				$litres = $litres+$entity->litres;
+			}
+			else{
+				break;
+			}
+		}
+		echo json_encode(array("reading"=>$reading,"litres"=>$litres));
 	}
 }
