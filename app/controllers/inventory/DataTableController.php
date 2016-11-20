@@ -493,7 +493,7 @@ class DataTableController extends \Controller {
 			}
 			$entity["orderDate"] = date("d-m-Y",strtotime($entity["orderDate"]));
 			$pmtdate = date("d-m-Y",strtotime($entity["paymentDate"]));
-			if($pmtdate=="00-00-0000" || $pmtdate=="01-01-1970"){
+			if($pmtdate=="00-00-0000" || $pmtdate=="01-01-1970" || $pmtdate=="30-11--0001"){
 				$pmtdate = "";
 			}
 			$entity["paymentDate"] = $pmtdate;
@@ -681,7 +681,6 @@ class DataTableController extends \Controller {
 			$entities = $entities->toArray();
 			foreach($entities as $entity){
 				$entity["orderDate"] = date("d-m-Y",strtotime($entity["orderDate"]));
-				
 				$select_args[] = "employee.fullName as receivedBy";
 				$select_args[] = "purchase_orders.orderDate as orderDate";
 				$select_args[] = "purchase_orders.billNumber as billNumber";
@@ -748,18 +747,18 @@ class DataTableController extends \Controller {
 					$values["fromdate"] = date("Y-m-d",strtotime($values["fromdate"]));
 					$values["todate"] = date("Y-m-d",strtotime($values["todate"]));
 					$sql = \InventoryTransactions::where("fromWareHouseId","=",$values["warehouse"])
-									->where("inventory_transaction.status","=","ACTIVE");
+										->where("inventory_transaction.status","=","ACTIVE");
 									if(isset($values["stocktype"]) && $values["stocktype"]=="office"){
-										$sql = $sql->where("purchase_orders.type","=","OFFICE PURCHASE ORDER");
+										$sql = $sql->whereIn("purchase_orders.type",array("OFFICE PURCHASE ORDER","TO OFFICE WAREHOUSE"));
 									}
 									else{
 										$sql = $sql->where("purchase_orders.type","!=","OFFICE PURCHASE ORDER");
 									}
 									$sql->where("inventory_transaction.status","=","ACTIVE")
-									->wherebetween("date",array($values["fromdate"],$values["todate"]))
-									->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")
-									->leftjoin("purchase_orders","purchased_items.purchasedOrderId","=","purchase_orders.id")
-									->leftjoin("items","items.id","=","purchased_items.itemId");
+										->wherebetween("date",array($values["fromdate"],$values["todate"]))
+										->leftjoin("purchased_items","purchased_items.id","=","inventory_transaction.stockItemId")
+										->leftjoin("purchase_orders","purchased_items.purchasedOrderId","=","purchase_orders.id")
+										->leftjoin("items","items.id","=","purchased_items.itemId");
 					 $entities = 	$sql->select($select_args)->limit($length)->offset($start)->get();
 				
 					$total =\InventoryTransactions::where("fromWareHouseId","=",$values["warehouse"])

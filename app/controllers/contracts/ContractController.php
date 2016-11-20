@@ -589,6 +589,8 @@ class ContractController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"noofhelpers", "value"=>$entity->noofHelpers, "content"=>"no of helpers", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
+			$form_field = array("name"=>"show_vehicles", "value"=>"HIDE", "content"=>"inactive vehicles", "readonly"=>"",  "required"=>"","type"=>"select",  "action"=>array("type"=>"onChange", "script"=>"changeInactiveVehicles(this.value);"), "options"=>array("SHOW"=>"SHOW","HIDE"=>"HIDE"),  "class"=>"form-control");
+			$form_fields[] = $form_field;
 			$form_field = array("name"=>"contractvehicles", "content"=>"", "readonly"=>"", "value"=>"", "required"=>"","type"=>"hidden", "class"=>"form-control");
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"id1", "content"=>"", "readonly"=>"", "value"=>$entity->id, "required"=>"","type"=>"hidden", "class"=>"form-control");

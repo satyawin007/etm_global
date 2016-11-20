@@ -74,6 +74,8 @@ use Illuminate\Support\Facades\Input;
 			<?php 
 				$billedamt = 0.00;
 				$receivedamt = 0.00;
+				$tdsamt = 0.00;
+				$emiamt = 0.00;
 				$table_data = "";
 				if(isset($values["month"]) && $values["month"]!="" && isset($values["clientname"]) && $values["clientname"]!=""){
 					$recs = BillPayments::where("billMonth","=",$values["month"])
@@ -90,24 +92,44 @@ use Illuminate\Support\Facades\Input;
 						$table_data = $table_data."<td>".date("F",strtotime($rec->billMonth))."</td>";
 						$table_data = $table_data."<td>".$rec->totalAmount."</td>";
 						$table_data = $table_data."<td>".$rec->amountPaid."</td>";
-						$table_data = $table_data."<td>".date("d-m-Y",strtotime($rec->billDate))."</td>";
-						$table_data = $table_data."<td>".date("d-m-Y",strtotime($rec->paidDate))."</td>";
+						$pmtdate = date("d-m-Y",strtotime($rec->billDate));
+						if($pmtdate=="00-00-0000" || $pmtdate=="01-01-1970" || $pmtdate=="30-11--0001"){
+							$table_data = $table_data."<td>"." "."</td>";
+						}
+						else{
+							$table_data = $table_data."<td>".$pmtdate."</td>";
+						}
+						$pmtdate = date("d-m-Y",strtotime($rec->paidDate));
+						$pmtdate = date("d-m-Y",strtotime($rec->billDate));
+						if($pmtdate=="00-00-0000" || $pmtdate=="01-01-1970" || $pmtdate=="30-11--0001"){
+							$table_data = $table_data."<td>"." "."</td>";
+						}
+						else{
+							$table_data = $table_data."<td>".$pmtdate."</td>";
+						}
+						$table_data = $table_data."<td>".$rec->billType."</td>";
 						$table_data = $table_data."<td>".$rec->billParticulars."</td>";
 						$table_data = $table_data."<td>".$rec->remarks."</td>";
 						$table_data = $table_data."<td>".$parent_bill_no."</td>";
-						$table_data = $table_data."<td>".$rec->transctionType."</td>";
+						$table_data = $table_data."<td>".$rec->paymentType."</td>";
 						$table_data = $table_data."</tr>";
 						
 						if($rec->parentBillId==0){
 							$parent_bill_arr[$rec->id]=$rec->billNo;
 							$billedamt = $billedamt+$rec->totalAmount;
 						}
+						if($rec->tdsPercentage!="" && $rec->tdsPercentage!="0.00"){
+							$tdsamt = $tdsamt+(($rec->totalAmount*$rec->tdsPercentage)/100);
+						}
+						if($rec->emiAmount!="" && $rec->emiAmount!="0.00"){
+							$emiamt = $emiamt+$rec->emiAmount;
+						}
 						$receivedamt = $receivedamt+$rec->amountPaid;
 					}
 				}
-				$balamt = $billedamt-$receivedamt;
+				$balamt = ($billedamt-$tdsamt-$emiamt)-$receivedamt;
 			?>
-			<span style="float:right; margin-right:1%; font-size: 16px; font-weight: bold;">Billed Amount for the Month : <span ><a href="#modal-table" role="button" data-toggle="modal"  <span="" >{{round(($billedamt), 2)}}</a></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Total Received Amt for the month : <span id="receivedamt">{{$receivedamt}}</span> &nbsp;&nbsp;&nbsp;  Balance Amt : <span id="balamtformonth">{{$balamt}}</span> &nbsp;&nbsp;&nbsp;</span>				 
+			<span style="float:right; margin-right:1%; font-size: 16px; font-weight: bold;">Billed Amt / Month : <span ><a href="#modal-table" role="button" data-toggle="modal"  <span="" >{{round(($billedamt), 2)}}</a></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  TDS Amt / Month  : <span id="tdsamt">{{$tdsamt}}</span> &nbsp;&nbsp;&nbsp;&nbsp; EMI Amt / Month  : <span id="emiamt">{{$emiamt}}</span> &nbsp;&nbsp;&nbsp;&nbsp;  Total Received Amt / Month  : <span id="receivedamt">{{$receivedamt}}</span> &nbsp;&nbsp;&nbsp;  Bal Amt : <span id="balamtformonth">{{$balamt}}</span> &nbsp;&nbsp;&nbsp;</span>				 
 		</div>
 		<div id="modal-table" class="modal fade" tabindex="-1">
 				<div class="modal-dialog">
@@ -131,6 +153,7 @@ use Illuminate\Support\Facades\Input;
 										<th>Amont Paid</th>
 										<th>Bill Date</th>
 										<th>Paid Date</th>
+										<th>Amount For</th>
 										<th>Bill Particulars</th>
 										<th>Remarks</th>
 										<th>Parent BillNo</th>
@@ -178,7 +201,7 @@ use Illuminate\Support\Facades\Input;
 				<?php
 					$totnetamt = 0;
 					$totpaidamt = 0;
-					$values = Input::All();
+					//$values = Input::All();
 					if(isset($values["clientname"]) && isset($values["month"])){		
 				?>	
 	
@@ -377,13 +400,13 @@ use Illuminate\Support\Facades\Input;
 									<input type="text" style="max-width:70px;"  name="veh_stopped[]" onchange="calcNetAmount(this.id)" id="{{$i}}_veh_stopped" value=""/>
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
-									<input type="text" style="max-width:70px;"  name="veh_insurance[]" readonly="readonly" onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_insurance" value=""/>
+									<input type="text" style="max-width:70px;"  name="veh_insurance[]"  onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_insurance" value=""/>
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
-									<input type="text" style="max-width:70px;"  name="veh_tollgate[]" readonly="readonly" onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_tollgate" value=""/>
+									<input type="text" style="max-width:70px;"  name="veh_tollgate[]"  onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_tollgate" value=""/>
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
-									<input type="text" style="max-width:70px;"  name="veh_parking[]" readonly="readonly" onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_parking" value=""/>
+									<input type="text" style="max-width:70px;"  name="veh_parking[]"  onchange="calcNetAmount(this.id)"  id="{{$i}}_veh_parking" value=""/>
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
 									<input type="text" style="max-width:70px;"  name="veh_otherincome[]" onchange="calcNetAmount(this.id)" id="{{$i}}_veh_otherincome" value=""/>
@@ -537,6 +560,18 @@ use Illuminate\Support\Facades\Input;
 				if(veh_stopped==""){
 					veh_stopped=0;
 				}
+				veh_insurance = $("#"+id+"_veh_insurance").val();
+				if(veh_insurance==""){
+					veh_insurance=0;
+				}
+				veh_tollgate = $("#"+id+"_veh_tollgate").val();
+				if(veh_tollgate==""){
+					veh_tollgate=0;
+				}
+				veh_parking = $("#"+id+"_veh_parking").val();
+				if(veh_parking==""){
+					veh_parking=0;
+				}
 				otherincome = $("#"+id+"_veh_otherincome").val();
 				if(otherincome==""){
 					otherincome=0;
@@ -548,6 +583,9 @@ use Illuminate\Support\Facades\Input;
 				net = parseInt(veh_gross)-parseInt(veh_tds);
 				net = net-(parseInt(veh_emi));
 				net = net-parseInt(veh_stopped);
+				net = net-parseInt(veh_insurance);
+				net = net-parseInt(veh_tollgate);
+				net = net-parseInt(veh_parking);
 				net = net+parseInt(otherincome);
 				net = net-parseInt(otherdeductions);
 				$("#"+id+"_veh_netamount").val(net);
@@ -575,6 +613,9 @@ use Illuminate\Support\Facades\Input;
 		    	$("#"+rowid+"_veh_tds").attr("readonly",false);
 		    	$("#"+rowid+"_veh_emi").attr("readonly",false);
 		    	$("#"+rowid+"_veh_stopped").attr("readonly",false);
+		    	$("#"+rowid+"_veh_insurance").attr("readonly",false);
+		    	$("#"+rowid+"_veh_tollgate").attr("readonly",false);
+		    	$("#"+rowid+"_veh_parking").attr("readonly",false);
 		    	$("#"+rowid+"_veh_otherincome").attr("readonly",false);
 		    	$("#"+rowid+"_veh_otherdeductions").attr("readonly",false);
 		    	$("#"+rowid+"_veh_clientamount").attr("readonly",false);
@@ -593,6 +634,9 @@ use Illuminate\Support\Facades\Input;
 				veh_tds = $("#"+rowid+"_veh_tds").val();
 				veh_emi = $("#"+rowid+"_veh_emi").val();
 				veh_stopped = $("#"+rowid+"_veh_stopped").val();
+				veh_insurance = $("#"+rowid+"_veh_insurance").val();
+				veh_tollgate = $("#"+rowid+"_veh_tollgate").val();
+				veh_parking = $("#"+rowid+"_veh_parking").val();				
 				veh_otherincome = $("#"+rowid+"_veh_otherincome").val();
 				veh_otherdeductions = $("#"+rowid+"_veh_otherdeductions").val();
 				veh_clientamount = $("#"+rowid+"_veh_clientamount").val();
@@ -610,6 +654,9 @@ use Illuminate\Support\Facades\Input;
 				url = url+"&veh_gross="+veh_gross;
 				url = url+"&veh_tds="+veh_tds;
 				url = url+"&veh_emi="+veh_emi;
+				url = url+"&veh_insurance="+veh_insurance;
+				url = url+"&veh_tollgate="+veh_tollgate;
+				url = url+"&veh_parking="+veh_parking;
 				url = url+"&veh_stopped="+veh_stopped;
 				url = url+"&veh_otherincome="+veh_otherincome;
 				url = url+"&veh_otherdeductions="+veh_otherdeductions;
@@ -635,6 +682,9 @@ use Illuminate\Support\Facades\Input;
 		    	$("#"+rowid+"_veh_tds").attr("readonly",true);
 		    	$("#"+rowid+"_veh_emi").attr("readonly",true);
 		    	$("#"+rowid+"_veh_stopped").attr("readonly",true);
+		    	$("#"+rowid+"veh_insurance").attr("readonly",true);
+		    	$("#"+rowid+"veh_tollgate").attr("readonly",true);
+		    	$("#"+rowid+"veh_parking").attr("readonly",true);
 		    	$("#"+rowid+"_veh_otherincome").attr("readonly",true);
 		    	$("#"+rowid+"_veh_otherdeductions").attr("readonly",true);
 		    	$("#"+rowid+"_veh_clientamount").attr("readonly",true);

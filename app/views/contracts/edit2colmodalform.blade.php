@@ -87,6 +87,7 @@
 		<script>
 			submit_data = "false";
 			$(".removerowbtn").hide();
+			$("#inactive_data").hide();
 			var app = angular.module('myApp', []);
 			var editid = 0;
 			app.controller('myCtrl', function($scope, $http) {
@@ -120,7 +121,7 @@
 						$vehtypes_arr[$vehtype->id] = $vehtype->name;
 					}
 				
-					$con_vehs = \ContractVehicle::where("contractId","=",$values["id"])->get();
+					$con_vehs = \ContractVehicle::where("contractId","=",$values["id"])->orderBy("status")->get();
 					$con_vehs_str = "[";
 					$con_vehs_text_str = "[";
 					foreach ($con_vehs as $veh){
@@ -616,6 +617,15 @@
 			      },
 			      type: 'GET'
 			   });
+			}
+
+			function changeInactiveVehicles(val){
+				if(val=="SHOW"){
+					$(".inactive_data").show();
+				}
+				else{
+					$(".inactive_data").hide();
+				}
 			}
 
 			function changeCity(val){

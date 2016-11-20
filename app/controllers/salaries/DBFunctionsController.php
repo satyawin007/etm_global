@@ -56,7 +56,7 @@ class DBFunctionsController extends \Controller {
 	{
 		//print_r($data); print_r($table); print_r($fields); die();
 		$fields["updatedBy"] = \Auth::user()->id;
-		return $table::where('sourceEntityId', $data['id'])->update($fields);
+		return $table::where('id', $data['id'])->update($fields);
 	}
 	
 	/**

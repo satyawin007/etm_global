@@ -274,7 +274,38 @@
 										<th>ACTIONS</th>
 									</tr>
 								</thead>
-								<tr ng-repeat="vehicle in vehicles_text">
+								<tr ng-repeat="vehicle in vehicles_text" ng-if="vehicle.status=='ACTIVE'">
+									<td>@{{vehicle.vehicle}}</td>
+									<td>@{{vehicle.vehicletype}}</td>
+									<td>@{{vehicle.driver1}}@{{vehicle['drv1dt']!="01-01-1970" ? "("+vehicle['drv1dt']+" to" : ''}} @{{vehicle['drv1edt']!="01-01-1970" ? ""+vehicle['drv1edt']+")" : ''}}, 
+										@{{vehicle.driver2}}@{{vehicle['drv2dt']!="01-01-1970" ? "("+vehicle['drv2dt']+" to" : ''}} @{{vehicle['drv2edt']!="01-01-1970" ? ""+vehicle['drv2edt']+")" : ''}}, 
+										@{{vehicle.driver3}}@{{vehicle['drv3dt']!="01-01-1970" ? "("+vehicle['drv3dt']+" to" : ''}} @{{vehicle['drv3edt']!="01-01-1970" ? ""+vehicle['drv3edt']+")" : ''}}, 
+										@{{vehicle.driver4}}@{{vehicle['drv4dt']!="01-01-1970" ? "("+vehicle['drv4dt']+" to" : ''}} @{{vehicle['drv4edt']!="01-01-1970" ? ""+vehicle['drv4edt']+")" : ''}}, 
+										@{{vehicle.driver5}}@{{vehicle['drv5dt']!="01-01-1970" ? "("+vehicle['drv5dt']+" to" : ''}} @{{vehicle['drv5edt']!="01-01-1970" ? ""+vehicle['drv5edt']+")" : ''}} 
+									</td>
+									<td>
+										@{{vehicle.helper}}@{{vehicle['helperdt']!="01-01-1970" ? "("+vehicle['helperdt']+" to" : ''}} @{{vehicle['helperedt']!="01-01-1970" ? ""+vehicle['helperedt']+")" : ''}}
+									</td>
+									<td>@{{vehicle.startdt}}</td>
+									<td>@{{vehicle.floorrate}}</td>
+									<td>@{{vehicle.routes}}</td>
+									<td>@{{vehicle.status}} @{{vehicle['date']!="01-01-1970" ? "("+vehicle['date']+")" : ''}}</td>
+									<td>@{{vehicle.remarks}}</td>
+									<?php 
+										if(isset($form_info['btn_action_type']) && $form_info['btn_action_type']=="edit"){
+									?>
+										<td>
+											<input type="button" value="Edit" class="btn btn-minier btn-purple" style="margin:2px;" id="editrowbtn" ng-click="editRow(vehicle.id)"/> &nbsp;&nbsp;&nbsp;
+											<input type="button" value="Remove" class="btn btn-minier btn-purple removerowbtn" style="margin:2px;" id="removerowbtn" ng-click="removeRow(vehicle.id)"/>
+										</td>
+									<?php } else{?>
+										<td>
+											<input type="button" value="Edit" class="btn btn-minier btn-purple" style="margin:2px;" id="editrowbtn" ng-click="editRow(vehicle.vehicle)"/> &nbsp;&nbsp;&nbsp;
+											<input type="button" value="Remove" class="btn btn-minier btn-purple removerowbtn" style="margin:2px;" id="removerowbtn" ng-click="removeRow(vehicle.vehicle)"/>
+										</td>
+									<?php }?>
+								</tr>
+								<tr class="inactive_data" style="display:none;" ng-repeat="vehicle in vehicles_text" ng-if="vehicle.status=='INACTIVE'">
 									<td>@{{vehicle.vehicle}}</td>
 									<td>@{{vehicle.vehicletype}}</td>
 									<td>@{{vehicle.driver1}}@{{vehicle['drv1dt']!="01-01-1970" ? "("+vehicle['drv1dt']+" to" : ''}} @{{vehicle['drv1edt']!="01-01-1970" ? ""+vehicle['drv1edt']+")" : ''}}, 

@@ -655,7 +655,7 @@
 						bAutoWidth: false,
 						"aoColumns": [
 							{ "bSortable": false }, { "bSortable": false }, null,
-							null, { "bSortable": false }, { "bSortable": false },
+							null, { "bSortable": false }, { "bSortable": false }, { "bSortable": false },
 							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
 							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false },
 							{ "bSortable": false }, { "bSortable": false }, { "bSortable": false }

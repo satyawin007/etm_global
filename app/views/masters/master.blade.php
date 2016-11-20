@@ -422,25 +422,32 @@
 						</a>
 						<b class="arrow"></b>
 						<ul class="submenu">
-							<?php if(in_array(113, $jobs)){?>
+							<?php if(in_array(121, $jobs)){?>
 							<li class="hover">
 								<a href="attendence">
 									<i class="menu-icon fa fa-caret-right"></i>
 									ATTENDENCE
 								</a>
 							</li>
-							<?php } if(in_array(113, $jobs)){?>
+							<?php } if(in_array(122, $jobs)){?>
 							<li class="hover">
 								<a href="leaves">
 									<i class="menu-icon fa fa-caret-right"></i>
 									EMPLOYEE LEAVES
 								</a>
 							</li>
-							<?php } if(in_array(114, $jobs)){?>
+							<?php } if(in_array(123, $jobs)){?>
 							<li class="hover">
-								<a href="salaryadvances">
+								<a href="salaryadvances?type=office">
 									<i class="menu-icon fa fa-caret-right"></i>
-									SALARY ADVANCES
+									SALARY ADVANCES (OFFICE)
+								</a>
+							</li>
+							<?php } if(in_array(124, $jobs)){?>
+							<li class="hover">
+								<a href="salaryadvances?type=nonoffice">
+									<i class="menu-icon fa fa-caret-right"></i>
+									SALARY ADVANCES (NON-OFFICE)
 								</a>
 							</li>
 							<?php }?>

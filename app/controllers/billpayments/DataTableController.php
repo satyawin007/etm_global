@@ -48,6 +48,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "bill_payments.billNo as billNo";
 		$select_args[] = "bill_payments.billMonth as billMonth";
 		$select_args[] = "bill_payments.billDate as billDate";
+		$select_args[] = "bill_payments.billType as billType";
 		$select_args[] = "bill_payments.paidDate as paidDate";
 		$select_args[] = "bill_payments.totalAmount as totalAmount";
 		$select_args[] = "bill_payments.amountPaid as amountPaid";
@@ -62,10 +63,12 @@ class DataTableController extends \Controller {
 		$select_args[] = "bill_payments.parentBillId as parentBillId";
 		$select_args[] = "bill_payments.filePath as filePath";
 		$select_args[] = "bill_payments.billNo as billNo1";
+		$select_args[] = "bill_payments.tdsPercentage as tdsPercentage";
+		$select_args[] = "bill_payments.emiAmount as emiAmount";
 			
 		$actions = array();
 		if(in_array(310, $this->jobs)){
-			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditBillPayments(", "jsdata"=>array("billNo1","billDate","paidDate", "totalAmount", "amountPaid","name","billParticulars", "remarks" ,"status", "id","clientId","parentBillId","transctionType"), "text"=>"EDIT");
+			$action = array("url"=>"#edit", "type"=>"modal", "css"=>"primary", "js"=>"modalEditBillPayments(", "jsdata"=>array("billNo1","billDate", "tdsPercentage", "emiAmount", "billMonth", "billType", "paidDate", "totalAmount", "amountPaid","name","billParticulars", "remarks" ,"status", "id","clientId","parentBillId","transctionType"), "text"=>"EDIT");
 			$actions[] = $action;
 		}
 		$values["actions"] = $actions;
@@ -107,6 +110,26 @@ class DataTableController extends \Controller {
 					$entity["paidDate"] = "";
 				}
 			}
+			$actions = $values['actions'];
+			$action_data = "";
+			foreach($actions as $action){
+				if($action["type"] == "modal"){
+					$jsfields = $action["jsdata"];
+					$jsdata = "";
+					$i=0;
+					for($i=0; $i<(count($jsfields)-1); $i++){
+						$val = $entity[$jsfields[$i]];
+						//$val = $val.substr_replace("'", "\'", 0);
+						$val = str_replace("'", "\'", $val);
+						$jsdata = $jsdata." '".$val."', ";
+					}
+					$jsdata = $jsdata." '".$entity[$jsfields[$i]];
+					$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+				}
+				else {
+					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
+				}
+			}
 			if($entity["billMonth"] != ""){
 				$billMonth = date("d-m-Y",strtotime($entity["billMonth"]));
 				$entity["billMonth"] = date("F",strtotime($entity["billMonth"]));
@@ -116,24 +139,7 @@ class DataTableController extends \Controller {
 			}
 			$entity["dueAmount"] = $entity["totalAmount"]-$paid_amt_tot;
 			$data_values = array_values($entity);
-			$actions = $values['actions'];
-			$action_data = "";
-			foreach($actions as $action){
-				if($action["type"] == "modal"){
-					$jsfields = $action["jsdata"];
-					$jsdata = "";
-					$i=0;
-					for($i=0; $i<(count($jsfields)-1); $i++){
-						$jsdata = $jsdata." '".$entity[$jsfields[$i]]."', ";
-					}
-					$jsdata = $jsdata." '".$entity[$jsfields[$i]];
-					$action_data = $action_data. "<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."' data-toggle='modal' onClick=\"".$action['js'].$jsdata."')\">".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
-				}
-				else {
-					$action_data = $action_data."<a class='btn btn-minier btn-".$action["css"]."' href='".$action['url']."&id=".$entity['id']."'>".strtoupper($action["text"])."</a>&nbsp; &nbsp;" ;
-				}
-			}
-			$data_values[11] = $action_data;
+			$data_values[12] = $action_data;
 			$data[] = $data_values;
 		}
 		return array("total"=>$total, "data"=>$data);

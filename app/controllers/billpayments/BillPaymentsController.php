@@ -16,8 +16,10 @@ class BillPaymentsController extends \Controller {
 		{
 			//$values["test"];
 			$values = Input::all();
-			$field_names = array("billno"=>"billNo","month"=>"billMonth","billdate"=>"billDate","paiddate"=>"paidDate",
-					"totalamount"=>"totalAmount","amountpaid"=>"amountPaid","clientname"=>"clientId","parentbill"=>"parentBillId",
+			$field_names = array("billno"=>"billNo","month"=>"billMonth","billtype"=>"billType","billdate"=>"billDate","tdspercentage"=>"tdsPercentage", "paiddate"=>"paidDate",
+					"totalamount"=>"totalAmount", "emiamount"=>"emiAmount", "amountpaid"=>"amountPaid","clientname"=>"clientId","parentbill"=>"parentBillId",
+					"paymenttype"=>"paymentType","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate",
+					"transactiondate"=>"transactionDate","accountnumber"=>"accountNumber","bankname"=>"bankName",
 					"billparticulars"=>"billParticulars","remarks"=>"remarks");
 			$fields = array();
 			
@@ -26,10 +28,12 @@ class BillPaymentsController extends \Controller {
 					if ($key == "billdate" || $key=="paiddate"){
 						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 					}
+					else if($key == "transactiondate" || $key=="date1" || $key=="issuedate" || $key=="next_alert_date" || $key=="entity_date"){
+						$fields[$val] = date("Y-m-d",strtotime($values[$key]));
+					}
 					else{
 						$fields[$val] = $values[$key];
 					}
-					
 				}
 			}
 			if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
@@ -99,8 +103,8 @@ class BillPaymentsController extends \Controller {
 		{
 			//$values["test"];
 			$values = Input::all();
-			$field_names = array("billno1"=>"billNo","month1"=>"billMonth","billdate1"=>"billDate","paiddate1"=>"paidDate",
-					"totalamount1"=>"totalAmount","amountpaid1"=>"amountPaid","clientname1"=>"clientId","parentbill1"=>"parentBillId",
+			$field_names = array("billno1"=>"billNo","month1"=>"billMonth","billtype1"=>"billType","billdate1"=>"billDate","paiddate1"=>"paidDate",
+					"totalamount1"=>"totalAmount", "emiamount1"=>"emiAmount",  "amountpaid1"=>"amountPaid","clientname1"=>"clientId","parentbill1"=>"parentBillId","tdspercentage1"=>"tdsPercentage", 
 					"billparticulars1"=>"billParticulars","remarks1"=>"remarks","status1"=>"status");
 			$fields = array();
 			foreach ($field_names as $key=>$val){
@@ -172,7 +176,7 @@ class BillPaymentsController extends \Controller {
 		$values['add_url'] = 'addbill';
 		$values['form_action'] = 'bill';
 		$values['action_val'] = '';
-		$theads = array('Bill No','For Month','Bill Date', "Paid Date", "Total Amount", "Amount Paid","Due Amount","Client","Bill Particulars","Transaction","Remarks","Actions");
+		$theads = array('Bill No','For Month', 'Bill Date', 'Bill Type', "Paid Date", "Total Amount", "Amount Paid","Due Amount","Client","Bill Particulars","Transaction","Remarks","Actions");
 		$values["theads"] = $theads;
 			
 		$actions = array();
@@ -229,7 +233,13 @@ class BillPaymentsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"month",  "content"=>"for month", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$month_arr);
 		$form_fields[] = $form_field;
+		$form_field = array("name"=>"billtype",  "content"=>"payment of ", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>array("Client Income"=>"Client Income", "Advance"=>"Advance", "Diesel Hike"=>"Diesel Hike", "Extra Kms"=>"Extra Kms", "Excess Kms"=>"Excess Kms"));
+		$form_fields[] = $form_field;
 		$form_field = array("name"=>"billdate", "content"=>"bill date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"tdspercentage", "content"=>"tds %", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"emiamount", "content"=>"emi amount", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paiddate", "content"=>"paid date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;
@@ -249,6 +259,10 @@ class BillPaymentsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"billfile", "content"=>"upload bill", "readonly"=>"", "required"=>"", "type"=>"file", "class"=>"form-control file");
 		$form_fields[] = $form_field;
+		$form_field = array("name"=>"paymentpaid", "value"=>"No", "content"=>"payment paid", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "action"=>array("type"=>"onChange","script"=>"enablePaymentType(this.value)"), "options"=>array("Yes"=>"YES","No"=>"NO"));
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"paymenttype", "value"=>"cash", "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_credit"=>"CHEQUE (CREDIT)","cheque_debit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
+		$form_fields[] = $form_field;
 		
 		$form_info["form_fields"] = $form_fields;
 		$values['form_info'] = $form_info;
@@ -265,7 +279,13 @@ class BillPaymentsController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"month1",  "content"=>"for month", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$month_arr);
 		$form_fields[] = $form_field;
+		$form_field = array("name"=>"billtype1",  "content"=>"payment of ", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>array("Client Income"=>"Client Income", "Advance"=>"Advance", "Diesel Hike"=>"Diesel Hike", "Extra Kms"=>"Extra Kms", "Excess Kms"=>"Excess Kms"));
+		$form_fields[] = $form_field;
 		$form_field = array("name"=>"billdate1", "content"=>"bill date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"tdspercentage1", "content"=>"tds %", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"emiamount1", "content"=>"emi amount", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"paiddate1", "content"=>"paid date", "readonly"=>"",  "required"=>"","type"=>"text", "class"=>"form-control date-picker");
 		$form_fields[] = $form_field;

@@ -392,7 +392,7 @@ class PurchaseOrderController extends \Controller {
 			}
 		}
 		
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 									->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
@@ -733,7 +733,7 @@ class PurchaseOrderController extends \Controller {
 				}
 			}
 			
-			$incharges =  \InchargeAccounts::join("employee", "employee.id","=","inchargeaccounts.empid")
+			$incharges =  \InchargeAccounts::join("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 								->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 			$incharges_arr = array();
 			foreach ($incharges as $incharge){
@@ -1107,6 +1107,7 @@ class PurchaseOrderController extends \Controller {
 		$incharges =  \InchargeAccounts::join("employee", "employee.id","=","inchargeaccounts.empid")
 							->join("cities", "cities.id","=","employee.cityId")
 							->where("cities.stateId","=",$stateId)
+							->where("employee.status","=","ACTIVE")
 							->select(array("inchargeaccounts.empid as id","employee.fullName as name"))
 							->groupBy("employee.id")->get();
 		$incharges_options = "";

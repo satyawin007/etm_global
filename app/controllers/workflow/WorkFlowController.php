@@ -171,7 +171,7 @@ class WorkFlowController extends \Controller {
 	private function purchaseOrdersWorkFlow($values)
 	{
 		$values['bredcum'] = "PURCHASE ORDERS";
-		$theads = array('Warehouse', 'Credit supplier', "date", "bill number", "payment paid", "payment Type", "total amount", "comments", "summary",  "created By", 'WF Status', 'WF Remarks', "Actions");
+		$theads = array('Warehouse', 'Credit supplier', "date", "bill number", "payment paid", "payment Type", "incharge", "total amount", "comments", "summary",  "created By", 'WF Status', 'WF Remarks', "Actions");
 		$values["theads"] = $theads;
 	
 		$form_info = array();
@@ -240,6 +240,9 @@ class WorkFlowController extends \Controller {
 				if($values["transactiontype"] == "inchargetransactions"){
 					$i = 0;	
 					foreach($values["action"] as $rec){
+						if(!isset($values["remarks"][$rec])){
+							$values["remarks"][$rec] = "";
+						}
 						$update_dt = array("workFlowStatus"=>$values["workflowstatus"], "workFlowRemarks"=>$values["remarks"][$rec], "updatedBy"=>\Auth::user()->id);
 						$table::where("transactionId","=",$values["recid"][$rec])->update($update_dt);
 						$i++;
@@ -248,6 +251,9 @@ class WorkFlowController extends \Controller {
 				else if($values["transactiontype"] == "expensetransactions"){
 					$i = 0;
 					foreach($values["action"] as $rec){
+						if(!isset($values["remarks"][$rec])){
+							$values["remarks"][$rec] = "";
+						}
 						$update_dt = array("workFlowStatus"=>$values["workflowstatus"], "workFlowRemarks"=>$values["remarks"][$rec], "updatedBy"=>\Auth::user()->id);
 						$table::where("transactionId","=",$values["recid"][$rec])->update($update_dt);
 						$i++;
@@ -256,6 +262,9 @@ class WorkFlowController extends \Controller {
 				else{
 					$i = 0;	
 					foreach($values["action"] as $rec){
+						if(!isset($values["remarks"][$rec])){
+							$values["remarks"][$rec] = "";
+						}
 						$update_dt = array("workFlowStatus"=>$values["workflowstatus"], "workFlowRemarks"=>$values["remarks"][$rec], "updatedBy"=>\Auth::user()->id);
 						$table::where("id","=",$values["recid"][$rec])->update($update_dt);
 						$i++;

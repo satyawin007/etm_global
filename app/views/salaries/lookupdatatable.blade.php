@@ -168,9 +168,9 @@
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$("#entries").on("change",function(){paginate(1);});
-			$("#clientname").attr("disabled",true);
-			$("#depot").attr("disabled",true);
-			$("#officebranch").attr("disabled",true);
+			//$("#clientname").attr("disabled",true);
+			//$("#depot").attr("disabled",true);
+			//$("#officebranch").attr("disabled",true);
 
 			$('.chosen-select').focus(function(e){
 			    e.preventDefault();

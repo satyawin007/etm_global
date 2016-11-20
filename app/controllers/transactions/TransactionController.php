@@ -159,6 +159,14 @@ class TransactionController extends \Controller {
 				$ret_id = 0;
 				$ret_id = $db_functions_ctrl->insertRetId($table, $fields);
 				if($ret_id != ""){
+					if(isset($values["incharge"]) && $values["incharge"]>0){
+						if($values["type"] == 2053){
+							$incharge_acct = \InchargeAccounts::where("empid","=",$values["incharge"])->first();
+							$balance_amount = $incharge_acct->balance;
+							$balance_amount = $balance_amount-$values["amount"];
+							\InchargeAccounts::where("empid","=",$values["incharge"])->update(array("balance"=>$balance_amount));
+						}
+					}
 					$json_resp = array("status"=>"success","id"=>$ret_id, "table"=>$table, "message"=>"Operation completed Successfully");
 					echo json_encode($json_resp);
 					return;
@@ -218,12 +226,18 @@ class TransactionController extends \Controller {
 				}				
 				$fields["contractId"] = 0;
 				if(isset($values["vehicleno"])){
-					$contract_veh = \ContractVehicle::where("id","=",$values["vehicleno"])->get();
-					if(count($contract_veh)>0){
-						$contract_veh = $contract_veh[0];
-						$fields["contractId"] = $contract_veh->contractId;
-						$fields["vehicleId"] = $contract_veh->vehicleId;;
+					$vehids = "";
+					foreach ($values["vehicleno"] as $veh_con_id) {
+						$contract_veh = \ContractVehicle::where("id","=",$veh_con_id)->get();
+						if(count($contract_veh)>0){
+							$contract_veh = $contract_veh[0];
+							$fields["contractId"] = $contract_veh->contractId;
+							$vehids = $vehids.$contract_veh->vehicleId.",";
+						}
 					}
+					$vehids = substr($vehids, 1);
+					$fields["vehicleId"] = $vehids;
+					$fields["vehicleIds"] = $vehids;
 				}
 				
 				if (isset($values["billfile"]) && Input::hasFile('billfile') && Input::file('billfile')->isValid()) {
@@ -464,7 +478,7 @@ class TransactionController extends \Controller {
 		{
 			if(isset($values["type1"]) && $values["type1"] == "income" ){
 				$field_names = array("branch"=>"branchId","amount"=>"amount","paymenttype"=>"paymentType", "transtype"=>"name", "type"=>"lookupValueId",
-						"branch1"=>"branchId1","incharge"=>"inchargeId","employee"=>"employeeId","vehicle"=>"vehicleIds","billno"=>"billNo",
+						"branch1"=>"branchId1","incharge"=>"inchargeId","employee"=>"employeeId","vehicle"=>"vehicleIds","vehicle"=>"vehicleId","billno"=>"billNo",
 						"remarks"=>"remarks","bankaccount"=>"bankAccount","chequenumber"=>"chequeNumber","issuedate"=>"issueDate",
 						"transactiondate"=>"date", "suspense"=>"suspense", "date1"=>"date","accountnumber"=>"accountNumber","bankname"=>"bankName"
 				);
@@ -658,7 +672,7 @@ class TransactionController extends \Controller {
 				}
 				$incomes_arr["999"] = "PREPAID RECHARGE";
 				
-				$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+				$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 				$incharges_arr = array();
 				foreach ($incharges as $incharge){
 					$incharges_arr[$incharge->id] = $incharge->name;
@@ -672,7 +686,7 @@ class TransactionController extends \Controller {
 				$form_fields[] = $form_field;
 				
 				if($entity->inchargeId != 0){
-					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 					$incharges_arr = array();
 					foreach ($incharges as $incharge){
 						$incharges_arr[$incharge->id] = $incharge->name;
@@ -850,7 +864,7 @@ class TransactionController extends \Controller {
 				$form_field = array("name"=>"type", "id"=>"transtype",  "value"=>$entity->lookupValueId, "content"=>"transaction type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incomes_arr);
 				$form_fields[] = $form_field;
 				if(true){
-					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 					$incharges_arr = array();
 					foreach ($incharges as $incharge){
 						$incharges_arr[$incharge->id] = $incharge->name;
@@ -862,7 +876,19 @@ class TransactionController extends \Controller {
 					$form_field = array("name"=>"inchargebalance", "value"=>"",  "content"=>"Incharge balance", "value"=>"", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
 					$form_fields[] = $form_field;
 				}
-				if($entity->vehicleIds != ""){
+				if($entity->vehicleId != "" && $entity->contractId>0 ){
+					$vehicles_arr = array();
+					$vehs = \ContractVehicle::join("vehicle","vehicle.id","=", "contract_vehicles.vehicleId")
+									->where("contractId","=",$entity->contractId)
+									->select(array("vehicle.id","vehicle.veh_reg"))->get();
+					foreach ($vehs as $veh){
+						$vehicles_arr[$veh->id] = $veh->veh_reg;
+					}
+					$sel_vehs = explode(",", $entity->vehicleIds);
+					$form_field = array("name"=>"vehicle[]", "id"=>"vehicle", "value"=>$sel_vehs, "content"=>"vehicle reg no", "readonly"=>"",  "required"=>"", "multiple"=>"multiple", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
+					$form_fields[] = $form_field;
+				}
+				else if($entity->vehicleIds != ""){
 					$vehicles_arr = array();
 					$vehs = AppSettingsController::getNonContractVehicles();
 					foreach ($vehs as $veh){
@@ -872,6 +898,7 @@ class TransactionController extends \Controller {
 					$form_field = array("name"=>"vehicle[]", "id"=>"vehicle", "value"=>$sel_vehs, "content"=>"vehicle reg no", "readonly"=>"",  "required"=>"", "multiple"=>"multiple", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
 					$form_fields[] = $form_field;
 				}
+				
 				if($entity->branchId1 != 0){
 					$branches =  \OfficeBranch::All();
 					$branches_arr = array();
@@ -1046,7 +1073,7 @@ class TransactionController extends \Controller {
 					$fuelstations_arr[$fuelstation['id']] = $fuelstation->name." - ".$fuelstation->cityname;
 				}
 				
-				$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+				$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 								->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 				$incharges_arr = array();
 				foreach ($incharges as $incharge){
@@ -1059,8 +1086,25 @@ class TransactionController extends \Controller {
 				$form_field = array("name"=>"filldate", "content"=>"fill date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
 				$form_fields[] = $form_field;
 				*/
+				$vehreg = "";
+				$vehId = \Vehicle::where("id","=",$entity->vehicleId)->get();
+				if(count($vehId)>0){
+					$vehId = $vehId[0];
+					$vehreg = $vehId->veh_reg;
+				}
+				
+				$con_veh_id = "0";
+				$vehId = \ServiceLog::join("contract_vehicles","service_logs.contractVehicleId","=","contract_vehicles.id")
+									->where("service_logs.serviceDate","=",$entity->filledDate)
+									->where("contract_vehicles.vehicleId","=",$entity->vehicleId)
+									->select(array("contract_vehicles.id as id"))->get();
+				if(count($vehId)>0){
+					$vehId = $vehId[0];
+					$con_veh_id = $vehId->id;
+				}
+				
 				if($entity->tripId==0){
-					$form_field = array("name"=>"vehicleno",  "value"=>$entity->vehicleId, "id"=>"vehicleno",  "content"=>"vehicle number", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$vehicles_arr);
+					$form_field = array("name"=>"vehicleno",  "value"=>$con_veh_id, "id"=>"vehicleno",  "content"=>"vehicle number", "readonly"=>"",  "required"=>"", "type"=>"select", "options"=>array($con_veh_id=>$vehreg), "class"=>"form-control");
 					$form_fields[] = $form_field;
 				}
 				/*
@@ -1262,7 +1306,7 @@ class TransactionController extends \Controller {
 			echo "";
 			return "";
 			/*
-			 $incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+			 $incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 			$incharges_arr = array();
 			foreach ($incharges as $incharge){
 				$incharges_arr[$incharge->id] = $incharge->name;
@@ -1378,7 +1422,7 @@ class TransactionController extends \Controller {
 			echo "";
 			return "";
 			/*
-			 $incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+			 $incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 				$incharges_arr = array();
 				foreach ($incharges as $incharge){
 				$incharges_arr[$incharge->id] = $incharge->name;
@@ -1630,7 +1674,7 @@ class TransactionController extends \Controller {
 		$form_fields[] = $form_field;
 		*/
 		
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 							->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
@@ -1697,14 +1741,14 @@ class TransactionController extends \Controller {
 		$form_info = array();
 		$values = Input::All();
 		
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 							->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;
 		}
 		
-		if(isset($values["typeId"]) && ($values["typeId"]>900 || $values["typeId"]=="88" || $values["typeId"]=="89" || 
+		if(isset($values["typeId"]) && (($values["typeId"]>900 &&  $values["typeId"]<1000) || $values["typeId"]=="88" || $values["typeId"]=="89" || 
 				 $values["typeId"]=="108" || $values["typeId"]=="119" || $values["typeId"]=="120" || 
 				 $values["typeId"]=="124" || $values["typeId"]=="129" || $values["typeId"]=="134" || 
 				 $values["typeId"]=="121" || $values["typeId"]=="145" || $values["typeId"]=="146" || 
@@ -1811,7 +1855,7 @@ class TransactionController extends \Controller {
 				//$values["typeId"] = "995";
 			}
 			if($values["typeId"] == "994"){
-				$entities =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+				$entities =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 				$entity_arr = array();
 				foreach ($entities as $entity){
 					$entity_arr[$entity->id] = $entity->name;
@@ -2062,14 +2106,16 @@ class TransactionController extends \Controller {
 			$form_field = array("name"=>"amount", "content"=>"amount", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control number");
 			$form_fields[] = $form_field;
 			if($values["transtype"] == "expense"){
-// 				$form_field = array("name"=>"enableincharge", "content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
-// 				$form_fields[] = $form_field;
+ 				$form_field = array("name"=>"enableincharge", "content"=>"enable incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>array("YES"=>" YES","NO"=>" NO"), "action"=>array("type"=>"onchange","script"=>"enableIncharge(this.value)"), "class"=>"form-control");
+ 				$form_fields[] = $form_field;
 			}
 			$form_field = array("name"=>"suspense", "content"=>"suspense", "readonly"=>"", "required"=>"","type"=>"checkboxslide", "options"=>array("YES"=>" YES","NO"=>" NO"),  "class"=>"form-control");
 			$form_fields[] = $form_field;
 			if($values["transtype"] == "expense"){
-// 				$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incharges_arr);
-// 				$form_fields[] = $form_field;
+ 				$form_field = array("name"=>"incharge", "content"=>"Incharge name", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "action"=>array("type"=>"onchange", "script"=>"getInchargeBalance(this.value)"), "options"=>$incharges_arr);
+				$form_fields[] = $form_field;
+ 				$form_field = array("name"=>"inchargebalance", "content"=>"Incharge balance", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
+ 				$form_fields[] = $form_field;
 			}
 			$form_field = array("name"=>"billno", "content"=>"bill no", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -2091,7 +2137,7 @@ class TransactionController extends \Controller {
 				$showfields = $showfields[0];
 				$fields = explode(",", $showfields->fields);
 				if(in_array("INCHARGE",$fields)){
-					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 					$incharges_arr = array();
 					foreach ($incharges as $incharge){
 						$incharges_arr[$incharge->id] = $incharge->name;
@@ -2299,7 +2345,7 @@ class TransactionController extends \Controller {
 			$branches_arr[$branch->id] = $branch->name;
 		}
 		
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;
@@ -2411,7 +2457,7 @@ class TransactionController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getContractVehicles(this.id);"), "class"=>"form-control chosen-select", "options"=>array());
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"vehicleno", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array());
+			$form_field = array("name"=>"vehicleno[]", "id"=>"vehicleno", "content"=>"vehicle", "readonly"=>"",  "required"=>"required", "type"=>"select", "multiple"=>"multiple", "class"=>"form-control chosen-select", "options"=>array());
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"meeterreading", "content"=>"meeter reading (if any)", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -2547,18 +2593,18 @@ class TransactionController extends \Controller {
 			$table = $table."<td>".$entities[$i]->litres."</td>";
 			$table = $table."<td>".$entities[$i]->amount."</td>";
 			$table = $table."<td>".$entities[$i]->fullTank."</td>";
-			if($entities[$i]->fullTank=="YES" && $entities[$i]->mileage!="0.00"){
+			if($entities[$i]->fullTank=="YES" && $entities[$i]->mileage!="0.00" && $entities[$i]->mileage!="0" && $entities[$i]->mileage!=""){
 				$table = $table."<td>".round(($entities[$i]->mileage), 2)."</td>";
 				$litres = 0;
 			}
 			else{
-				if ($entities[$i]->fullTank=="YES" && $i+1 < $cnt){
+				if ($entities[$i]->fullTank=="YES" && $i+1 <= $cnt){
 					$litres = $litres+$entities[$i]->litres;
 					$table = $table."<td>".round((($entities[$i]->startReading-$entities[$i+1]->startReading)/$litres), 2)."</td>";
 					$litres = 0;
 				}
 				else{
-					$table = $table."<td>0</td>";
+					$table = $table."<td>0.00</td>";
 					$litres = $litres+$entities[$i]->litres;
 				}
 			}

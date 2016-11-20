@@ -136,7 +136,9 @@ use settings\AppSettingsController;
 						<select name="updatelogstatus" id="updatelogstatus" class="formcontrol chosen-select">
 							<option value="Send for Approval">Send for Approval</option>
 							<option value="Requested">Requested</option>
-							<option value="Open">Open</option>
+							<?php if(in_array(418, $jobs)){ ?>
+								<option value="Open">Open</option>
+							<?php }?>
 							<option value="Closed">Closed</option>
 						</select>
 					</div>

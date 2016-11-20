@@ -400,6 +400,8 @@ Route::post('/addemployee',"masters\EmployeeController@addEmployee");
 
 Route::post('/employee',"masters\EmployeeController@manageEmployees");
 
+Route::any('/assignwork',"masters\EmployeeController@assignWork");
+
 Route::get('/editemployee',"masters\EmployeeController@editEmployee");
 
 Route::get('/states', "masters\StateController@manageStates");
@@ -539,6 +541,8 @@ Route::any('/postfile', "transactions\TransactionController@postFile");
 Route::get('/transactions', "transactions\TransactionController@manageTransactions");
 
 Route::any('/clientincometransactions', "transactions\ClientIncomeController@manageClientIncome");
+
+Route::any('/apsrtcclientincometransactions', "transactions\ClientIncomeController@manageClientIncome");
 
 Route::any('/addclientincome', "transactions\ClientIncomeController@addClientIncome");
 
@@ -770,6 +774,8 @@ Route::get('/reports', function()
 Route::any('/report', "reports\ReportsController@getReport");
 
 Route::any('/getreport', "reports\ReportsController@getReport");
+
+Route::any('/getloansbyfinance', "reports\ReportsController@getLoansByFinance");
 
 Route::any('/carryforward', "reports\ReportsController@carryForward");
 

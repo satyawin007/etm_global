@@ -449,7 +449,7 @@ class ContractFuelTransactionController extends \Controller {
 				}
 				$incomes_arr["999"] = "PREPAID RECHARGE";
 				
-				$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+				$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 				$incharges_arr = array();
 				foreach ($incharges as $incharge){
 					$incharges_arr[$incharge->id] = $incharge->name;
@@ -463,7 +463,7 @@ class ContractFuelTransactionController extends \Controller {
 				$form_fields[] = $form_field;
 				
 				if($entity->inchargeId != 0){
-					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 					$incharges_arr = array();
 					foreach ($incharges as $incharge){
 						$incharges_arr[$incharge->id] = $incharge->name;
@@ -635,7 +635,7 @@ class ContractFuelTransactionController extends \Controller {
 				$form_field = array("name"=>"type", "id"=>"transtype",  "value"=>$entity->lookupValueId, "content"=>"transaction type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select",  "options"=>$incomes_arr);
 				$form_fields[] = $form_field;
 				if($entity->inchargeId != 0){
-					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 					$incharges_arr = array();
 					foreach ($incharges as $incharge){
 						$incharges_arr[$incharge->id] = $incharge->name;
@@ -815,7 +815,7 @@ class ContractFuelTransactionController extends \Controller {
 					$fuelstations_arr[$fuelstation['id']] = $fuelstation->name." - ".$fuelstation->cityname;
 				}
 				
-				$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+				$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 				->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 				$incharges_arr = array();
 				foreach ($incharges as $incharge){
@@ -1200,7 +1200,7 @@ class ContractFuelTransactionController extends \Controller {
 		$form_fields[] = $form_field;
 		*/
 		
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 		->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
@@ -1257,7 +1257,7 @@ class ContractFuelTransactionController extends \Controller {
 		$form_info = array();
 		$values = Input::All();
 		
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 		->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
@@ -1341,7 +1341,7 @@ class ContractFuelTransactionController extends \Controller {
 				$values["typeId"] = "995";
 			}
 			if($values["typeId"] == "994"){
-				$entities =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+				$entities =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 				$entity_arr = array();
 				foreach ($entities as $entity){
 					$entity_arr[$entity->id] = $entity->name;
@@ -1520,7 +1520,7 @@ class ContractFuelTransactionController extends \Controller {
 				$showfields = $showfields[0];
 				$fields = explode(",", $showfields->fields);
 				if(in_array("INCHARGE",$fields)){
-					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+					$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 					$incharges_arr = array();
 					foreach ($incharges as $incharge){
 						$incharges_arr[$incharge->id] = $incharge->name;
@@ -1691,7 +1691,7 @@ class ContractFuelTransactionController extends \Controller {
 			$branches_arr[$branch->id] = $branch->name;
 		}
 		
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;
@@ -1783,7 +1783,7 @@ class ContractFuelTransactionController extends \Controller {
 			$branches_arr[$branch->id] = $branch->name;
 		}
 	
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;
@@ -1876,7 +1876,7 @@ class ContractFuelTransactionController extends \Controller {
 			$branches_arr[$branch->id] = $branch->name;
 		}
 	
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;
@@ -1972,7 +1972,7 @@ class ContractFuelTransactionController extends \Controller {
 			$branches_arr[$branch->id] = $branch->name;
 		}
 	
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;

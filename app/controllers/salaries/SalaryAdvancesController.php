@@ -280,14 +280,18 @@ class SalaryAdvancesController extends \Controller {
 		}
 		
 		$form_fields = array();		
-		$form_field = array("name"=>"employeetype", "content"=>"employee type", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"enableClientDepot(this.value);"),  "options"=>array("OFFICE"=>"OFFICE", "CLIENT BRANCH"=>"CLIENT BRANCH"), "class"=>"form-control chosen-select");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"officebranch","content"=>"office branch", "readonly"=>"","required"=>"", "type"=>"select", "options"=>$branches_arr, "action"=>array("type"=>"onChange", "script"=>"getEmployeesByOffice(this.value);"), "class"=>"form-control chosen-select");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getEmployeesByDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
-		$form_fields[] = $form_field;
+		//$form_field = array("name"=>"employeetype", "content"=>"employee type", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"enableClientDepot(this.value);"),  "options"=>array("OFFICE"=>"OFFICE", "CLIENT BRANCH"=>"CLIENT BRANCH"), "class"=>"form-control chosen-select");
+		//$form_fields[] = $form_field;
+		if(isset($values["type"]) && $values["type"]=="nonoffice"){
+			$form_field = array("name"=>"clientname", "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+			$form_fields[] = $form_field;
+			$form_field = array("name"=>"depot", "content"=>"depot/branch name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"getEmployeesByDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>array());
+			$form_fields[] = $form_field;
+		}
+		else{
+			$form_field = array("name"=>"officebranch","content"=>"office branch", "readonly"=>"","required"=>"", "type"=>"select", "options"=>$branches_arr, "action"=>array("type"=>"onChange", "script"=>"getEmployeesByOffice(this.value);"), "class"=>"form-control chosen-select");
+			$form_fields[] = $form_field;
+		}
 		$form_field = array("name"=>"employeename", "content"=>"employee name", "readonly"=>"", "required"=>"required","type"=>"select", "options"=>array(), "class"=>"form-control chosen-select");
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"incharge", "content"=>"incharge", "readonly"=>"", "required"=>"","type"=>"select", "options"=>$incharges_arr, "class"=>"form-control chosen-select");
@@ -331,8 +335,11 @@ class SalaryAdvancesController extends \Controller {
 		$form_info["form_fields"] = $form_fields;
 		$modals[] = $form_info;
 		$values["modals"] = $modals;*/
-		
-		$values['provider'] = "salaryadvances";
+		$values['provider'] = "";
+		$jobs = \Session::get("jobs");
+		if(in_array(125, $jobs)){
+			$values['provider'] = "salaryadvances";
+		}
 		return View::make('salaries.lookupdatatable', array("values"=>$values));
 	}	
 	

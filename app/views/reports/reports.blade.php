@@ -145,12 +145,10 @@ use Illuminate\Support\Facades\Input;
 									<i class="ace-icon fa fa-check green"></i>
 									<a target="_blank" href="report?reporttype=vehiclemileage_full"> VEHICLE MILEAGE REPORT (FULL) </a>
 								</li>
-								<?php } if(in_array(608, $jobs)) {?>								
-								<li>
-									<i class="ace-icon fa fa-check green"></i>
-									<a target="_blank" href="report?reporttype=vehicleperformance"> VEHICLE PERFORMANCE REPORT  </a>
-								</li>
 								<?php }?>
+								<li>
+									&nbsp;
+								</li>
 								<li>
 									&nbsp;
 								</li>
@@ -436,6 +434,45 @@ use Illuminate\Support\Facades\Input;
 								</li>
 								<?php } ?>
 	
+								<li>
+									&nbsp;
+								</li>
+								
+								<li>
+									&nbsp;
+								</li>
+								
+								<li>
+									&nbsp;
+								</li>
+							</ul>
+						</div>
+						<div>
+							<a href="#" class="btn btn-block btn-primary">
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xs-6 col-sm-3 pricing-box">
+				<div class="widget-box widget-color-blue">
+					<div class="widget-header">
+						<h5 class="widget-title bigger lighter"><a href="#" class="btn btn-block btn-primary">
+								<span>CLIENT INCOME REPORTS</span>
+							</a></h5>
+					</div>
+					<div class="widget-body">
+						<div class="widget-main">
+							<ul class="list-unstyled spaced2">
+								<?php if(in_array(628, $jobs)) {?>
+								<li>
+									<i class="ace-icon fa fa-check green"></i>
+									<a target="_blank" href="report?reporttype=vehicleincome"> VEHICLE INCOME </a>
+								</li>
+								<?php } ?>								
+								<li>
+									&nbsp;
+								</li>
 								<li>
 									&nbsp;
 								</li>

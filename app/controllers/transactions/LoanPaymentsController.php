@@ -107,7 +107,7 @@ class LoanPaymentsController extends \Controller {
 		if(isset($values["typeofloan"])){
 			$typeofloan_val = $values["typeofloan"];
 		}
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 								->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
@@ -192,17 +192,24 @@ class LoanPaymentsController extends \Controller {
 			foreach ($ids as $id){
 				$id = $id%$values["dynamic-table_length"];
 				$field_names = array("amount"=>"amount",
-									 "vehid"=>"entityValue",									 
+									 "vehid"=>"entityValue",
+									 "pmtdate"=>"nextAlertDate",
 									 "remarks"=>"remarks");
 				$fields = array();
 				foreach ($field_names as $key=>$val){
 					if(isset($values[$key])){
-						$fields[$val] = $values[$key][$id];
+						if($key == "pmtdate" ){
+							$fields[$val] = date("Y-m-d",strtotime($values[$key][$id]));
+						}
+						else {
+							$fields[$val] = $values[$key][$id];
+						}
 					}
+					
 				}
 				$field_names = array("branch"=>"branchId",
 									"incharge"=>"inchargeId",
-									"entity_date"=>"entityDate",
+									"entity_date"=>"entityDate",									
 									"date"=>"date",
 									"paymenttype"=>"paymentType",
 									"bankaccount"=>"bankAccount",
@@ -213,7 +220,7 @@ class LoanPaymentsController extends \Controller {
 									"transactiondate"=>"transactionDate");
 				foreach ($field_names as $key=>$val){
 					if(isset($values[$key])){
-						if($key == "date" || $key == "entity_date"  || $key == "issuedate" || $key == "transactiondate"){
+						if($key == "date" || $key == "entity_date"  || $key == "pmtdate"  || $key == "issuedate" || $key == "transactiondate"){
 							$fields[$val] = date("Y-m-d",strtotime($values[$key]));
 						}
 						else {

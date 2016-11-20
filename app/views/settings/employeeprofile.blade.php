@@ -179,6 +179,30 @@ use Illuminate\Support\Facades\Input;
 														</select>
 													</div>
 												</div>
+												<div class="form-group">
+													<label class="col-xs-4 control-label no-padding-right" for="form-field-1"> Assign Employees<span style="color:red;"></span> </label>
+													<div class="col-xs-8">
+														<select class="form-control chosen-select"   id="assignedempids" name="assignedempids[]"  multiple="multiple">
+															<?php 
+																$emps = \Employee::where("status","!=","ACTIVE")
+																				->where("rolePrevilegeId","!=","19")
+																				->where("rolePrevilegeId","!=","20")
+																				->where("rolePrevilegeId","!=","20")
+																				->get();
+																$client_branches = $employee->assignedEmpIds;
+																$client_branches = explode(",", $client_branches);
+																foreach ($emps as $emp){
+																	if(in_array($emp->id, $client_branches)){
+																		echo "<option selected value='".$emp->id."'>".$emp->fullName."</option>";
+																	}
+																	else{
+																		echo "<option value='".$emp->id."'>".$emp->fullName."</option>";
+																	}
+																}
+															?>												
+														</select>
+													</div>
+												</div>
 											</div>
 											<div class="col-xs-6">
 												<div class="form-group">

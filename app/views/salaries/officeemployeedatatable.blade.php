@@ -975,7 +975,22 @@ use Illuminate\Support\Facades\Input;
 					$.ajax({
 				      url: url,
 				      success: function(data) {
-				    	  $("#transvalue").html(data);
+				    	  var obj = JSON.parse(data);
+				    	  $("#transvalue").html(obj.bal_amt);
+				    	  if(obj.pmt_type!="cash" && obj.pmt_type!=""){
+					    	  showPaymentFields(obj.pmt_type);	
+					    	  setTimeout(function() {
+						    	  $('[name=paymenttype] option').filter(function() { 
+					    		    return ($(this).val() == obj.pmt_type); //To select Blue
+					    		  }).prop('selected', true);	
+						    	  $('[name=bankaccount] option').filter(function() { 
+					    		    return ($(this).val() == obj.bank_act); //To select Blue
+					    		  }).prop('selected', true);	
+						    	  $("#chequenumber").val(obj.trans_num);
+							  }, 500);
+					    	  
+				    	  }
+						      
 				      },
 				      type: 'GET'
 				    });

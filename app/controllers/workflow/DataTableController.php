@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Input;
 use Illuminate\Support\Facades\View;
 use masters\BlockDataEntryController;
 use settings\AppSettingsController;
+use Illuminate\Support\Facades\Auth;
 class DataTableController extends \Controller {
 
 	/**
@@ -173,8 +174,24 @@ class DataTableController extends \Controller {
 			$dtrange = explode(" - ", $dtrange);
 			$startdt = date("Y-m-d",strtotime($dtrange[0]));
 			$enddt = date("Y-m-d",strtotime($dtrange[1]));
-			$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("branchId","=",$values["branch1"])->whereBetween("date",array($startdt,$enddt))->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")->select($select_args)->limit($length)->offset($start)->get();
-			$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("branchId","=",$values["branch1"])->whereBetween("date",array($startdt,$enddt))->count();
+			$logstatus_arr = array();
+			if($values["logstatus"] != "All"){
+				//$qry->where("purchase_orders.workFlowStatus","=",$values["logstatus"]);
+				$logstatus_arr [] =  $values["logstatus"];
+			}
+			else{
+				$logstatus_arr = array("Requested","Sent for Approval","Approved","Rejected","Hold");
+			}
+			$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
+								->where("branchId","=",$values["branch1"])
+								>where("incometransactions.workFlowStatus",$logstatus_arr)
+								->whereBetween("date",array($startdt,$enddt))
+								->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")
+								->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")
+								->select($select_args)->limit($length)->offset($start)->get();
+			$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
+								->where("branchId","=",$values["branch1"])
+								->whereBetween("date",array($startdt,$enddt))->count();
 			foreach ($entities as $entity){
 				$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 			}
@@ -279,6 +296,18 @@ class DataTableController extends \Controller {
 		}
 		$emp_contracts_str = substr($emp_contracts_str, 0, strlen($emp_contracts_str)-1);
 		
+		$createdby_arr = array();
+		if(in_array(507, $this->jobs)){
+			$emps = \Employee::All();
+			$createdby_arr[] = 0;
+			foreach ($emps as $emp){
+				$createdby_arr[] = $emp->id;
+			}
+		}
+		else{
+			$createdby_arr[] = Auth::user()->id;
+		}
+		
 		if($search != ""){
 			$entities = \Vehicle::where("veh_reg", "like", "%$search%")
 							->where("vehicle.status","=","ACTIVE")->get();
@@ -288,6 +317,7 @@ class DataTableController extends \Controller {
 			}
 			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
 							->whereIn("vehicleId",$veh_arr)
+							->whereIn("fueltransactions.createdBy",$createdby_arr)
 							->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
 							->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
 							->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
@@ -303,7 +333,7 @@ class DataTableController extends \Controller {
 							->count();
 		}
 		else {
-			$qry = \Leaves::whereRaw('(leaves.branchId in('.$emp_branches_str.')) ');
+			$qry = \Leaves::whereRaw('(leaves.branchId in('.$emp_branches_str.')) ')->whereIn("leaves.createdBy",$createdby_arr);
 						if($values["logstatus"] != "All"){
 							$qry->where("leaves.workFlowStatus","=",$values["logstatus"]);
 						}
@@ -312,7 +342,7 @@ class DataTableController extends \Controller {
 						->leftjoin("employee as employee1", "employee1.id","=","leaves.createdBy");
 			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
 			
-			$qry = \Leaves::whereRaw('(leaves.branchId in('.$emp_branches_str.')) ');
+			$qry = \Leaves::whereRaw('(leaves.branchId in('.$emp_branches_str.')) ')->whereIn("leaves.createdBy",$createdby_arr);
 						if($values["logstatus"] != "All"){
 							$qry->where("leaves.workFlowStatus","=",$values["logstatus"]);
 						}						
@@ -420,6 +450,19 @@ class DataTableController extends \Controller {
 	
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
+		
+		$createdby_arr = array();
+		if(in_array(507, $this->jobs)){
+			$emps = \Employee::All();
+			$createdby_arr[] = 0;
+			foreach ($emps as $emp){
+				$createdby_arr[] = $emp->id;
+			}
+		}
+		else{
+			$createdby_arr[] = Auth::user()->id;
+		}
+		
 		if($search != ""){
 			$supids_arr = array();
 			$suppliers = \CreditSupplier::where("supplierName","like","%$search%")->get();
@@ -434,6 +477,7 @@ class DataTableController extends \Controller {
 			$entities = \CreditSupplierTransactions::whereIn("creditsuppliertransactions.branchId",$branchids_arr)
 							->orWhereIn("creditsuppliertransactions.creditSupplierId",$supids_arr)
 							->where("creditsuppliertransactions.deleted","=","No")
+							->whereIn("creditsuppliertransactions.createdBy",$createdby_arr)
 							->whereRaw('(creditsuppliertransactions.branchId in('.$emp_branches_str.') or creditsuppliertransactions.contractId in('.$emp_contracts_str.'))')
 							->leftjoin("vehicle", "vehicle.id","=","creditsuppliertransactions.vehicleId")
 							->leftjoin("employee as employee2", "employee2.id","=","creditsuppliertransactions.createdBy")
@@ -442,11 +486,12 @@ class DataTableController extends \Controller {
 							->select($select_args)->limit($length)->offset($start)->get();
 			$total = \CreditSupplierTransactions::whereIn("creditsuppliertransactions.branchId",$branchids_arr)
 							->orWhereIn("creditsuppliertransactions.creditSupplierId",$supids_arr)
+							->whereIn("creditsuppliertransactions.createdBy",$createdby_arr)
 							->whereRaw('(creditsuppliertransactions.branchId in('.$emp_branches_str.') or creditsuppliertransactions.contractId in('.$emp_contracts_str.'))')
 							->where("creditsuppliertransactions.deleted","=","No")->count();
 		}
 		else {
-			$qry = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No");
+			$qry = \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No")->whereIn("creditsuppliertransactions.createdBy",$createdby_arr);
 							if($values["logstatus"] != "All"){
 								$qry->where("creditsuppliertransactions.workFlowStatus","=",$values["logstatus"]);
 							}
@@ -461,7 +506,7 @@ class DataTableController extends \Controller {
 							->leftjoin("depots", "depots.id","=","contracts.depotId");							
 			$entities =    $qry->select($select_args)->limit($length)->groupBy("creditsuppliertransdetails.id")->offset($start)->get();
 			
-			$qry =  \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No");
+			$qry =  \CreditSupplierTransactions::where("creditsuppliertransactions.deleted","=","No")->whereIn("creditsuppliertransactions.createdBy",$createdby_arr);
 							if($values["logstatus"] != "All"){
 								$qry->where("creditsuppliertransactions.workFlowStatus","=",$values["logstatus"]);
 							}
@@ -583,6 +628,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "purchase_orders.billNumber as billNo";
 		$select_args[] = "purchase_orders.amountPaid as paymentPaid";
 		$select_args[] = "purchase_orders.paymentType as paymentType";
+		$select_args[] = "employee3.fullName as incharge";
 		$select_args[] = "purchase_orders.totalAmount as amount";
 		$select_args[] = "purchase_orders.comments as comments";
 		$select_args[] = "purchase_orders.comments as items";
@@ -632,6 +678,19 @@ class DataTableController extends \Controller {
 	
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
+		
+		$createdby_arr = array();		
+		if(in_array(507, $this->jobs)){
+			$emps = \Employee::All();
+			$createdby_arr[] = 0;
+			foreach ($emps as $emp){
+				$createdby_arr[] = $emp->id;
+			}
+		}
+		else{
+			$createdby_arr[] = Auth::user()->id;
+		}
+		
 		if($search != ""){
 			$supids_arr = array();
 			$suppliers = \CreditSupplier::where("supplierName","like","%$search%")->get();
@@ -647,14 +706,17 @@ class DataTableController extends \Controller {
 							->orWhereIn("purchase_orders.creditSupplierId",$supids_arr)
 							->where("purchase_orders.status","=","ACTIVE")
 							->whereIn("purchase_orders.type",array("PURCHASE ORDER","OFFICE PURCHASE ORDER"))
+							->whereIn("purchase_orders.createdBy",$createdby_arr)
 							->whereRaw('purchase_orders.officeBranchId in('.$emp_branches_str.')')
 							->leftjoin("officebranch", "officebranch.id","=","purchase_orders.officeBranchId")
 							->leftjoin("creditsuppliers", "creditsuppliers.id","=","purchase_orders.creditSupplierId")
 							->leftjoin("employee as employee2", "employee2.id","=","purchase_orders.createdBy")
+							->leftjoin("employee as employee3", "employee3.id","=","purchase_orders.inchargeId")
 							->select($select_args)->limit($length)->offset($start)->get();
 			$total = \PurchasedOrders::whereIn("purchase_orders.officeBranchId",$branchids_arr)
 							->orWhereIn("purchase_orders.creditSupplierId",$supids_arr)
 							->whereRaw('purchase_orders.officeBranchId in('.$emp_branches_str.')')
+							->whereIn("purchase_orders.createdBy",$createdby_arr)
 							->where("purchase_orders.status","=","ACTIVE")->count();
 		}
 		else {
@@ -663,12 +725,14 @@ class DataTableController extends \Controller {
 				$qry->where("purchase_orders.workFlowStatus","=",$values["logstatus"]);
 			}
 			$qry->whereRaw('purchase_orders.officeBranchId in('.$emp_branches_str.')')
+						->whereIn("purchase_orders.createdBy",$createdby_arr)
 						->leftjoin("officebranch", "officebranch.id","=","purchase_orders.officeBranchId")
 						->leftjoin("employee as employee2", "employee2.id","=","purchase_orders.createdBy")
+						->leftjoin("employee as employee3", "employee3.id","=","purchase_orders.inchargeId")
 						->leftjoin("creditsuppliers", "creditsuppliers.id","=","purchase_orders.creditSupplierId");
 			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
 				
-			$qry =  \PurchasedOrders::where("purchase_orders.status","=","ACTIVE");
+			$qry =  \PurchasedOrders::where("purchase_orders.status","=","ACTIVE")->whereIn("purchase_orders.createdBy",$createdby_arr);
 						if($values["logstatus"] != "All"){
 							$qry->where("purchase_orders.workFlowStatus","=",$values["logstatus"]);
 						}
@@ -696,11 +760,11 @@ class DataTableController extends \Controller {
 			$trans_items = \PurchasedItems::where("purchasedOrderId","=",$entity["id"])
 							->where("purchased_items.status","=","ACTIVE")
 							->leftjoin("items","items.id","=","purchased_items.itemId")
-							->select(array("items.name as name"))->get();
+							->select(array("items.name as name", "purchased_items.purchasedQty as qty"))->get();
 				
 			$entity["items"] = "ITEMS : ";
 			foreach($trans_items as $trans_item){
-				$entity["items"] = $entity["items"].$trans_item->name.", ";
+				$entity["items"] = $entity["items"].$trans_item->name."(".$trans_item->qty."), ";
 			}
 			if($entity["workFlowStatus"] == "Sent for Approval"){
 				$entity["workFlowRemarks"] = '<label> <input name="remarks[]" type="text" class=""></label>';
@@ -739,6 +803,7 @@ class DataTableController extends \Controller {
 			}
 			
 			$action_data = "";
+			$login_user = \Auth::user()->fullName;
 			if($entity["workFlowStatus"] != "Approved"){
 				$login_user = \Auth::user()->fullName;
 				if((isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (isset($entity["createdBy"]) && in_array(507, $this->jobs))){
@@ -750,9 +815,6 @@ class DataTableController extends \Controller {
 			}
 			else{
 				$action_data = '<input type="hidden" name="recid[]" value='.$entity["id"].' /> <label> <input name="action[]" type="hidden" class="ace" value="'.$i.'"> <span class="lbl">&nbsp;</span></label>';
-			}
-			if(!(isset($entity["createdBy"]) && $entity["createdBy"]==$login_user) || (in_array(507, $this->jobs))){
-				continue;
 			}
 			$data_values[12] = $action_data;
 			$data[] = $data_values;
@@ -824,33 +886,66 @@ class DataTableController extends \Controller {
 			}
 		}
 		$emp_contracts_str = substr($emp_contracts_str, 0, strlen($emp_contracts_str)-1);
-	
+		
+		$createdby_arr = array();
+		if(in_array(507, $this->jobs)){
+			$emps = \Employee::All();
+			$createdby_arr[] = 0;
+			foreach ($emps as $emp){
+				$createdby_arr[] = $emp->id;
+			}
+		}
+		else{
+			$createdby_arr[] = Auth::user()->id;
+		}
+		
 		if($search != ""){
 			$entities = \Vehicle::where("veh_reg", "like", "%$search%")
-			->where("vehicle.status","=","ACTIVE")->get();
-			$veh_arr = array();
+								->where("vehicle.status","=","ACTIVE")->get();
+			$veh_arr_str = "0,";
 			foreach ($entities as $entity){
-				$veh_arr[] = $entity->id;
+				$veh_arr_str = $veh_arr_str.$entity->id.",";
 			}
-			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-			->whereIn("vehicleId",$veh_arr)
-			->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
-			->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
-			->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
-			->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
-			->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
-			->leftjoin("employee as employee2", "employee2.id","=","fueltransactions.createdBy")
-			->leftjoin("employee as employee4", "employee4.id","=","fueltransactions.inchargeId")
-			->leftjoin("clients", "clients.id","=","contracts.clientId")
-			->leftjoin("depots", "depots.id","=","contracts.depotId");
+			//echo $veh_arr_str;die();
+			$veh_arr_str = substr($veh_arr_str, 0, strlen($veh_arr_str)-1);
+			//echo $veh_arr_str;die();
+			
+			$entities = \FuelStation::where("name", "like", "%$search%")->get();
+			$station_arr_str = "0,";
+			foreach ($entities as $entity){
+				$station_arr_str = $station_arr_str.$entity->id.",";
+			}
+			$station_arr_str = substr($station_arr_str, 0, strlen($station_arr_str)-1);
+			//echo $station_arr_str;die();
+			
+			$entities = \Employee::where("fullName", "like", "%$search%")->get();
+			$createdBy_arr_str= "-1,";
+			foreach ($entities as $entity){
+				$createdBy_arr_str= $createdBy_arr_str. $entity->id.",";
+			}
+			$createdBy_arr_str = substr($createdBy_arr_str, 0, strlen($createdBy_arr_str)-1);
+			
+			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")->whereIn("fueltransactions.createdBy",$createdby_arr)
+									->whereRaw('(fueltransactions.fuelStationId in('.$station_arr_str.') or fueltransactions.vehicleId in('.$veh_arr_str.') or fueltransactions.createdBy in('.$createdBy_arr_str.')) ')
+									//->whereRaw('(fueltransactions.fuelStationId in('.$station_arr_str.') or fueltransactions.vehicleId in('.$veh_arr_str.')) ')
+									->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
+									->leftjoin("officebranch", "officebranch.id","=","fueltransactions.branchId")
+									->leftjoin("vehicle", "vehicle.id","=","fueltransactions.vehicleId")
+									->leftjoin("fuelstationdetails", "fuelstationdetails.id","=","fueltransactions.fuelStationId")
+									->leftjoin("contracts", "contracts.id","=","fueltransactions.contractId")
+									->leftjoin("employee as employee2", "employee2.id","=","fueltransactions.createdBy")
+									->leftjoin("employee as employee4", "employee4.id","=","fueltransactions.inchargeId")
+									->leftjoin("clients", "clients.id","=","contracts.clientId")
+									->leftjoin("depots", "depots.id","=","contracts.depotId");
 			$entities = $qry->select($select_args)->limit($length)->offset($start)->get();
-				
-			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")
-			->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
-			->count();
+			
+			$total = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")->whereIn("fueltransactions.createdBy",$createdby_arr)
+									->whereRaw('(fueltransactions.fuelStationId in('.$station_arr_str.') or fueltransactions.vehicleId in('.$veh_arr_str.') or fueltransactions.createdBy in('.$createdBy_arr_str.')) ')
+									->whereRaw('(fueltransactions.branchId in('.$emp_branches_str.') or fueltransactions.contractId in('.$emp_contracts_str.'))')
+									->count();
 		}
 		else {
-			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE");
+			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")->whereIn("fueltransactions.createdBy",$createdby_arr);
 			if($values["logstatus"] != "All"){
 				$qry->where("fueltransactions.workFlowStatus","=",$values["logstatus"]);
 			}
@@ -865,7 +960,7 @@ class DataTableController extends \Controller {
 			->leftjoin("depots", "depots.id","=","contracts.depotId");
 			$entities = $qry->select($select_args)->orderBy("fueltransactions.vehicleId")->orderBy("filledDate","desc")->limit($length)->offset($start)->get();
 				
-			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE");
+			$qry = \FuelTransaction::where("fueltransactions.status","=","ACTIVE")->whereIn("fueltransactions.createdBy",$createdby_arr);
 			if($values["logstatus"] != "All"){
 				$qry->where("fueltransactions.workFlowStatus","=",$values["logstatus"]);
 			}
@@ -1171,21 +1266,44 @@ class DataTableController extends \Controller {
 			$select_args[] = "expensetransactions.entity as entity";
 			$select_args[] = "expensetransactions.entityValue as entityValue";
 			
+			$createdby_arr = array();
+			if(in_array(507, $this->jobs)){
+				$emps = \Employee::All();
+				$createdby_arr[] = 0;
+				foreach ($emps as $emp){
+					$createdby_arr[] = $emp->id;
+				}
+			}
+			else{
+				$createdby_arr[] = Auth::user()->id;
+			}
+			
 			if($search != ""){
 				$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
+								->whereIn("expensetransactions.createdBy",$createdby_arr)
 								->where("transactionId", "like", "%$search%")
 								->where("branchId","=",$values["branch1"])
 								->leftjoin("officebranch", "officebranch.id","=","expensetransactions.branchId")
 								->leftjoin("employee as employee2", "employee2.id","=","expensetransactions.createdBy")
 								->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","expensetransactions.lookupValueId")
 								->select($select_args)->limit($length)->offset($start)->get();
-				$total = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->count();
+				$total = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")->where("transactionId", "like", "%$search%")->count();
 				foreach ($entities as $entity){
 					$entity["date"] = date("d-m-Y",strtotime($entity["date"]));
 				}
 			}
 			else{
+				$logstatus_arr = array();
+				if($values["logstatus"] != "All"){
+					//$qry->where("purchase_orders.workFlowStatus","=",$values["logstatus"]);
+					$logstatus_arr [] =  $values["logstatus"];
+				}
+				else{
+					$logstatus_arr = array("Requested","Sent for Approval","Approved","Rejected","Hold");
+				}
 				$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
+								->whereIn("expensetransactions.createdBy",$createdby_arr)
+								->whereIn("expensetransactions.workFlowStatus",$logstatus_arr)
 								->where("expensetransactions.inchargeId","=",0)
 								->whereRaw('(expensetransactions.branchId in('.$emp_branches_str.') or expensetransactions.contractId in('.$emp_contracts_str.'))')
 								->leftjoin("officebranch", "officebranch.id","=","expensetransactions.branchId")
@@ -1197,6 +1315,7 @@ class DataTableController extends \Controller {
 								->leftjoin("depots", "depots.id","=","contracts.depotId")
 								->select($select_args)->limit($length)->offset($start)->get();
 				$total = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
+								->whereIn("expensetransactions.createdBy",$createdby_arr)
 								->where("expensetransactions.inchargeId","=",0)
 								->whereRaw('(expensetransactions.branchId in('.$emp_branches_str.') or expensetransactions.contractId in('.$emp_contracts_str.'))')
 								->count();
@@ -1393,8 +1512,16 @@ class DataTableController extends \Controller {
 				}
 			}
 			else{
+				if($values["logstatus"] != "All"){
+					//$qry->where("purchase_orders.workFlowStatus","=",$values["logstatus"]);
+					$logstatus_arr [] =  $values["logstatus"];
+				}
+				else{
+					$logstatus_arr = array("Requested","Sent for Approval","Approved","Rejected","Hold");
+				}
 				$entities = \IncomeTransaction::where("incometransactions.status","=","ACTIVE")
 								->where("incometransactions.inchargeId",">",0)
+								->whereIn("incometransactions.workFlowStatus",$logstatus_arr)
 								->whereRaw('(incometransactions.branchId in('.$emp_branches_str.') or incometransactions.contractId in('.$emp_contracts_str.'))')
 								->leftjoin("officebranch", "officebranch.id","=","incometransactions.branchId")
 								->leftjoin("lookuptypevalues", "lookuptypevalues.id","=","incometransactions.lookupValueId")
@@ -1505,7 +1632,15 @@ class DataTableController extends \Controller {
 				}
 			}
 			else{
+				if($values["logstatus"] != "All"){
+					//$qry->where("purchase_orders.workFlowStatus","=",$values["logstatus"]);
+					$logstatus_arr [] =  $values["logstatus"];
+				}
+				else{
+					$logstatus_arr = array("Requested","Sent for Approval","Approved","Rejected","Hold");
+				}
 				$entities = \ExpenseTransaction::where("expensetransactions.status","=","ACTIVE")
+								->whereIn("expensetransactions.workFlowStatus",$logstatus_arr)
 								->where("expensetransactions.inchargeId",">",0)
 								->whereRaw('(expensetransactions.branchId in('.$emp_branches_str.') or expensetransactions.contractId in('.$emp_contracts_str.'))')
 								->leftjoin("officebranch", "officebranch.id","=","expensetransactions.branchId")

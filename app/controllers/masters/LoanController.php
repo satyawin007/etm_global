@@ -148,6 +148,7 @@ class LoanController extends \Controller {
 		$values = Input::all();
 		if (\Request::isMethod('post'))
 		{
+			
 			$field_names = array("loanno"=>"loanNo","loanforvehicle"=>"vehicleId","loanpurpose"=>"purpose",
 				"financecompany"=>"financeCompanyId","firstinstallmentdate"=>"agmtDate","loanamount"=>"amountFinanced","installmentamount"=>"installmentAmount",
 				"interestrate"=>"interestRate","frequency"=>"frequency","totalinstallments"=>"totalInstallments","noofinstallmentspaid"=>"paidInstallments","status"=>"status",
@@ -266,7 +267,6 @@ class LoanController extends \Controller {
 			foreach ($cities as $city){
 				$cities_arr[$city['id']] = $city->name;
 			}*/
-
 			
 			$form_field = array("name"=>"loanno", "value"=>$entity->loanNo, "id"=>"loanno", "content"=>"Loan no", "readonly"=>"",  "required"=>"required","type"=>"text", "class"=>"form-control");
 			$form_fields[] = $form_field;
@@ -290,12 +290,11 @@ class LoanController extends \Controller {
 			$form_fields[] = $form_field;
 			$form_field = array("name"=>"noofinstallmentspaid", "value"=>$entity->paidInstallments, "id"=>"noofinstallmentspaid",  "content"=>"no of inst. paid", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control  number");
 			$form_fields[] = $form_field;
-			$form_field = array("name"=>"status", "value"=>$entity->status, "id"=>"status",  "content"=>"status", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>array("ACTIVE"=>"ACTIVE","CLOSED"=>"CLOSED"));
-			$form_fields[] = $form_field;
-			$form_field = array("name"=>"paymenttype", "value"=>$entity->paymentType, "id"=>"paymenttype", "content"=>"payment type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$type_arr);
+			$form_field = array("name"=>"paymenttype", "value"=>$entity->paymentType, "id"=>"paymenttype", "content"=>"payment type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 			$form_fields[] = $form_field;
 // 			$form_field = array("name"=>"bankaccount", "value"=>$entity->bankAccountId, "id"=>"bankaccount", "content"=>"Bank account", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$banks_arr);
 // 			$form_fields[] = $form_field;
+
 			$form_info["form_fields"] = $form_fields;
 			return View::make("masters.layouts.edit2colform",array("form_info"=>$form_info));
 		}
@@ -447,11 +446,11 @@ class LoanController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"noofinstallmentspaid", "id"=>"noofinstallmentspaid",  "content"=>"no of inst. paid", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control  number");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"status", "id"=>"status",  "content"=>"status", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("ACTIVE"=>"ACTIVE","CLOSED"=>"CLOSED"));
-		$form_fields[] = $form_field;
 		$form_field = array("name"=>"remarks", "id"=>"remarks",  "content"=>"remarks", "readonly"=>"",  "required"=>"","type"=>"textarea", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
+		$form_field = array("name"=>"paymenttype", "id"=>"paymenttype",  "content"=>"payment type", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
+		$form_fields[] = $form_field;
+		$form_field = array("name"=>"status", "id"=>"status",  "content"=>"status", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control chosen-select", "options"=>array("ACTIVE"=>"ACTIVE","CLOSED"=>"CLOSED"));
 		$form_fields[] = $form_field;
 // 		$form_field = array("name"=>"bankaccount", "id"=>"bankaccount", "content"=>"Bank account", "readonly"=>"",  "required"=>"", "type"=>"select", "class"=>"form-control chosen-select", "options"=>$banks_arr);
 // 		$form_fields[] = $form_field;

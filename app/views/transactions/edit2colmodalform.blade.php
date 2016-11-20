@@ -400,7 +400,10 @@
 	        	if(status == "YES"){
 		            $.ajax({
 					      url: "getvehiclelastreading?vehicleId="+vehicleid+"&date="+date,
-					      success: function(prev_reading) {
+					      success: function(response) {
+					    	  response = jQuery.parseJSON(response);	
+					    	  prev_reading = parseInt(response.reading);
+					    	  litres = parseFloat(litres)+parseFloat(response.litres);
 						      mileage = (startreading-prev_reading)/litres;
 						      mileage = parseFloat(mileage).toFixed(2);
 						      $("#mileage").val(mileage);

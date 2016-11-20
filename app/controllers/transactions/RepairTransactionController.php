@@ -264,7 +264,7 @@ class RepairTransactionController extends \Controller {
 				$values["type"] = "-1";
 			}
 			
-			$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+			$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 			->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 			$incharges_arr = array();
 			foreach ($incharges as $incharge){
@@ -858,7 +858,7 @@ class RepairTransactionController extends \Controller {
 			$warehouse_arr[$warehouse->id] = $warehouse->name;
 		}
 		
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 						->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){

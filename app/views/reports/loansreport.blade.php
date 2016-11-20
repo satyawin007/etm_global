@@ -108,15 +108,20 @@
 							<thead>
 								<tr>
 									<td>DATE</td>
+									<td>LOAN NO</td>
 									<td>FINANCE</td>
 									<td>VEHICLE</td>
 									<td>EMI PERIOD</td>
-									<td>EMI</td>
-									<td>PAID AMT</td>
+									<td>LOAN AMT</td>
+									<td>TOT EMI AMT</td>
+									<td>PAID EMI AMT</td>
+									<td>BAL EMI AMT</td>
+									<td>TOT EMIS</td>
 									<td>PAID EMIS</td>
-									<td>PAYMENT TYPE</td>
-									<td>BANK NAME</td>
-									<td>LOAN NO</td>
+									<td>REM EMIS AMT</td>
+									<td>EMI</td>
+									<td>PAID AMT</td>									
+									<td>PAYMENT INFO</td>
 									<td>REMARKS</td>
 								</tr>
 							</thead>
@@ -206,6 +211,20 @@
 					$("#vehicleid").hide();
 					$("#driverid").show();
 				}
+			}
+
+			function changeFinance(val){
+				$.ajax({
+			      url: "getloansbyfinance?id="+val,
+			      success: function(data) {
+			    	  $("#loan").html(data);
+			    	  $('.chosen-select').trigger("chosen:updated");
+			      },
+			      type: 'GET'
+			    });
+
+				clientId =  $("#clientname").val();
+				depotId = $("#depot").val();
 			}
 
 			function paginate(page){
@@ -412,7 +431,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-						  null, null, null, null, null, null, null, null, null, null,  null
+						  null, null, null, null, null, null, null, null, null, null, null,  null,  null,  null,  null,  null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",

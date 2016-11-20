@@ -135,7 +135,7 @@ class SalariesController extends \Controller {
 			}
 		}
 		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
-								->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+								->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;
@@ -160,7 +160,7 @@ class SalariesController extends \Controller {
 		$form_fields[] = $form_field;
 		$form_field = array("name"=>"inchargebalance", "content"=>"Incharge balance", "readonly"=>"readonly",  "required"=>"", "type"=>"text", "class"=>"form-control");
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
+		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control",  "options"=>array("cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
 		$form_fields[] = $form_field;
 		
 		if(isset($values["chequenumber"])){
@@ -278,7 +278,7 @@ class SalariesController extends \Controller {
 			$casual_leaves = $values["casualleaves"];
 		}
 		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
-							->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
+							->where("employee.status","=","ACTIVE")->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;
@@ -450,7 +450,7 @@ class SalariesController extends \Controller {
 							$fields[$val] = $values[$key][$id];
 						}
 					}
-					$field_names = array("branch"=>"branchId","paymentdate"=>"paymentDate");
+					$field_names = array("branch"=>"branchId","month"=>"salaryMonth","paymentdate"=>"paymentDate");
 					foreach ($field_names as $key=>$val){
 						if(isset($values[$key]) && $key == "paymentdate"){
 							$fields[$val] = date("Y-m-d",strtotime($values[$key]));
@@ -459,7 +459,7 @@ class SalariesController extends \Controller {
 							$fields[$val] = $values[$key];
 						}
 					}
-					if(isset($fields["amount"]) && $fields["amount"]>0){
+					if(isset($fields["amount"]) && $fields["amount"]*-1>0){
 						$db_functions_ctrl->insert($table, $fields);
 					}
 				}
@@ -550,12 +550,17 @@ class SalariesController extends \Controller {
 				if(count($recid)>0){
 					$recid = $recid[0];
 					$table = "EmpDueAmount";
-					$data = array("id"=>$recid->id);
-					$fields = array("amount"=>(-1*$values["deductions"]));
-					if(isset($fields["amount"]) && $fields["amount"]>0){
-						if($db_functions_ctrl->updateEmpDueAmout($table, $fields, $data)){
-						    echo "success";
-							return;
+					$data = array("empId"=>$values["eid"], "sourceentity"=>"empsalarytransactions", "sourceentityid"=>$recid->id);
+					$recid = $db_functions_ctrl->get($table, $data);
+					if(count($recid)>0){
+						$recid = $recid[0];
+						$fields = array("amount"=>(-1*$values["deductions"]));
+						$data = array("id"=>$recid->id);
+						if(isset($fields["amount"]) && $fields["amount"]*-1>0){
+							if($db_functions_ctrl->updateEmpDueAmout($table, $fields, $data)){
+							    echo "success";
+								return;
+							}
 						}
 					}
 				}
@@ -733,9 +738,15 @@ class SalariesController extends \Controller {
 		if($values["transid"]==""){
 			$values["transid"] = "zzzz";
 		}
+		$pmttype = "";
+		$bankacct = "";
+		$transnumber = "";
 		$recs = \ExpenseTransaction::where("status","=","ACTIVE")->where("chequeNumber","=",$values["transid"])->get();
 		foreach($recs as $rec){
 			$depo_amt = $depo_amt+$rec->amount;
+			$pmttype = $rec->paymentType;
+			$bankacct = $rec->bankAccount;
+			$transnumber = $rec->chequeNumber;
 		}
 		$tot_amt = 0;
 		$recs = \SalaryTransactions::where("chequeNumber","=",$values["transid"])->get();
@@ -743,7 +754,7 @@ class SalariesController extends \Controller {
 			$tot_amt = $tot_amt+$rec->salaryPaid;
 		}
 		$tot_amt = $depo_amt-$tot_amt;
-		echo "BAL AMT : ".$tot_amt;
+		echo json_encode(array("bal_amt"=>"BAL AMT : ".$tot_amt,"pmt_type"=>$pmttype,"bank_act"=>$bankacct,"trans_num"=>$transnumber));
 	}
 	
 }

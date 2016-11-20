@@ -815,6 +815,7 @@ class DataTableController extends \Controller {
 		$select_args[] = "employee4.fullName as inchargeName";
 		$select_args[] = "expensetransactions.chequeNumber as chequeNumber";
 		$select_args[] = "expensetransactions.bankAccount as bankAccount";
+		$select_args[] = "expensetransactions.createdBy as createdById";
 		
 		if(isset($values["contracts"]) && $values["contracts"]=="true"){
 			$select_args[] = "depots.name as depotname";
@@ -1103,9 +1104,14 @@ class DataTableController extends \Controller {
 				}
 			}
 			$login_user = \Auth::user()->fullName;
-			if(isset($entity["createdBy"]) && $entity["createdBy"]!=$login_user){
-				$action_data = "";
+			$assignedemps = \Auth::user()->assignedEmpIds;
+			$assignedemps_arr = explode(",", $assignedemps);
+			if(isset($entity["createdById"]) && in_array($entity["createdById"], $assignedemps_arr)){
+				//$action_data = "";
 			}
+			else if(isset($entity["createdBy"]) && $entity["createdBy"]!=$login_user){
+				$action_data = "";
+			}			
 			if(isset($entity["workFlowStatus"]) && $entity["workFlowStatus"]=="Approved"){
 				$action_data = "";
 			}

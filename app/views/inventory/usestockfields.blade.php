@@ -84,15 +84,15 @@
 					//->where("purchase_orders.type","=","PURCHASE ORDER")
 					->where("purchase_orders.workFlowStatus","=","Approved");
 					if(isset($values["stocktype"]) && $values["stocktype"]=="office"){
-						$sql->where("purchase_orders.type","=","OFFICE PURCHASE ORDER");
+						$sql->whereIn("purchase_orders.type",array("OFFICE PURCHASE ORDER","TO OFFICE WAREHOUSE"));
 					}
 					else{
 						$sql->where("purchase_orders.type","!=","OFFICE PURCHASE ORDER");
 					}
 					$sql->leftjoin("purchase_orders","purchased_items.purchasedOrderId","=","purchase_orders.id")
-					->leftjoin("items","purchased_items.itemId","=","items.id")
-					->leftjoin("item_types","purchased_items.itemTypeId","=","item_types.id")
-					->leftjoin("creditsuppliers","purchase_orders.creditSupplierId","=","creditsuppliers.id");
+						->leftjoin("items","purchased_items.itemId","=","items.id")
+						->leftjoin("item_types","purchased_items.itemTypeId","=","item_types.id")
+						->leftjoin("creditsuppliers","purchase_orders.creditSupplierId","=","creditsuppliers.id");
 	$stockitems =   $sql->select($select_fields)->get();
 	$stockitems_arr = array();
 	foreach ($stockitems as $stockitem){
@@ -290,6 +290,7 @@
 		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
 							->join("cities", "cities.id","=","employee.cityId")
 							->where("cities.stateId","=",$stateId)
+							->where("employee.status","=","ACTIVE")
 							->groupBy("employee.id")
 							->select(array("inchargeaccounts.id as id","employee.fullName as name"))->get();
 		$incharges_arr = array();

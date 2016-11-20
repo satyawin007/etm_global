@@ -156,6 +156,7 @@ use Illuminate\Support\Facades\Input;
 							<th>ROI</th>
 							<th>Pmt Amt</th>
 							<th>Month</th>
+							<th>Pmt Date</th>
 							<th>Paid Amt</th>
 							<th>comments</th>
 						</tr>
@@ -226,6 +227,9 @@ use Illuminate\Support\Facades\Input;
 								</td>
 								<td style="font-weight: bold; vertical-align: middle">
 									<span style="color: red; font-weight: bold; font-size:14px;">{{date("M",strtotime($values["entity_date"]))}}</span>
+								</td>
+								<td style="font-weight: bold; vertical-align: middle">
+									<input class="date-picker" type="text" style="min-width:70px;" name="pmtdate[]" id="{{$i}}_pmtdate"  value=""/>
 								</td>
 								<td style="vertical-align: middle;">
 									<input type="text" style="min-width:70px;" name="amount[]" id="{{$i}}_amount"  value=""/>	
@@ -705,7 +709,7 @@ use Illuminate\Support\Facades\Input;
 					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },
 					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },
 					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },
-					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false }
+					  { "bSortable": false },{ "bSortable": false },{ "bSortable": false },{ "bSortable": false }
 					],
 					"aaSorting": [],
 					

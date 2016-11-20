@@ -278,24 +278,36 @@ class DataTableController extends \Controller {
 		$search = $_REQUEST["search"];
 		$search = $search['value'];
 		if($search != ""){
+			$depotids_str = \Auth::user()->contractIds;
+			if($depotids_str == ""){
+				$depots = \Depot::where("status","=","ACTIVE")->get();
+				foreach($depots as $depot){
+					$depotids_str = $depotids_str.$depot->id.",";
+				}
+				$depotids_str = substr($depotids_str, 0, strlen($depotids_str)-1);
+			}
+			
 			$contract_arr =  array();
-			$con_vehs = \DB::select(\DB::raw("select id from depots where name like '%$search%' and status='ACTIVE'"));
+			$con_vehs = \DB::select(\DB::raw("select id from depots where name like '%$search%' and id in(".$depotids_str.") and status='ACTIVE'"));
 			foreach ($con_vehs as  $con_veh){
 				$contract_arr[] = $con_veh->id;
 			}
 			$entities = \ServiceLogRequest::wherein("contracts.depotId",$contract_arr)
 					->where("servicelogrequests.deleted", "=", "No")
+					->where("contract_vehicles.status", "=", "ACTIVE")
 					->join("contract_vehicles","contract_vehicles.id", "=", "servicelogrequests.vehicleId")
 					->join("contracts","contracts.id", "=", "servicelogrequests.contractId")
 					->join("clients","clients.id", "=", "contracts.clientId")
 					->join("depots","depots.id", "=", "contracts.depotId")
-					->join("vehicle","vehicle.id", "=", "servicelogrequests.vehicleId")
+					->join("vehicle","vehicle.id", "=", "contract_vehicles.vehicleId")
 					->join("employee","employee.id", "=", "servicelogrequests.createdBy")
 					->leftjoin("employee as employee1","employee1.id", "=", "servicelogrequests.openedBy")
 					->select($select_args)->limit($length)->offset($start)->get();
 			$total = \ServiceLogRequest::wherein("contracts.depotId",$contract_arr)
 					->join("contracts","contracts.id", "=", "servicelogrequests.contractId")
-					->where("servicelogrequests.deleted", "=", "No")->count();
+					->join("contract_vehicles","contract_vehicles.id", "=", "servicelogrequests.vehicleId")
+					->where("servicelogrequests.deleted", "=", "No")
+					->where("contract_vehicles.status", "=", "ACTIVE")->count();
 		}
 		else{
 			$depotids_str = \Auth::user()->contractIds;

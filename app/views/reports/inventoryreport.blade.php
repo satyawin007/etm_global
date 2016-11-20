@@ -114,7 +114,8 @@
 									<td>PURCHASED DATE</td>
 									<td>PURCHASED QTY</td>
 									<td>BILL NO</td>
-									<td>BILL DATE</td>
+									<td>PURCHASED FROM</td>
+									
 								</tr>
 							</thead>
 							<tbody id="tbody1">
@@ -173,8 +174,8 @@
 									<td>COMPANY</td>
 									<td>TRANSACTION DATE</td>
 									<td>TRANSACTION INFO</td>
-									<td>PURCHASED DATE</td>
-									<td>PURCHASED QTY</td>
+									<!-- <td>MOVED/PURCHASED DATE</td>  -->
+									<td>QTY</td>
 									<td>PURCHASED FROM</td>
 									<td>BILL NO</td>
 									<td>REMARKS</td>
@@ -622,7 +623,7 @@
 						], 
 						bAutoWidth: false,
 						"aoColumns": [
-							null, null, null, null, null, null, null, null, null, null, null
+							null, null, null, null, null, null, null, null, null, null
 						],
 						"aaSorting": [],
 						//"sScrollY": "500px",

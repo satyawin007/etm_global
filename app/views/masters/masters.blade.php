@@ -183,6 +183,13 @@
 				&nbsp; UPLOADS &nbsp; 
 			</button>	
 			</a>
+			<?php } if(in_array(168, $jobs)){?>
+			<a href="assignwork">			
+			<button style="PADDING-TOP: 16px;">
+				<i class="ace-icon fa fa-refresh bigger-240"></i><BR/>
+				&nbsp; ASSIGN WORK &nbsp; 
+			</button>	
+			</a>
 			<?php }?>				
 		</div>
 		</div>

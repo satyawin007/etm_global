@@ -159,9 +159,6 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "Show LOCAL TRIPS Tab";
                                             		$menu_arr[] = "Show DAILY TRIPS Tab";
                                             		
-                                            		$menu_arr[] = "Show EMPLOYEE LEAVES Tab";
-                                            		$menu_arr[] = "Show SALARY ADVANCES Tab";
-                                            		
                                             		$menu_arr[] = "Show LOOKUP VALUES Tab";
                                             		$menu_arr[] = "Show MANUFACTURERS Tab";
                                             		$menu_arr[] = "Show ITEM CATEGORIES Tab";
@@ -170,6 +167,12 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "Show PURCHASE ORDERS Tab";
                                             		$menu_arr[] = "Show USE STOCK ITEMS Tab";
                                             		$menu_arr[] = "Show ESTIMATE PURCHASE ORDER Tab";
+                                            		
+                                            		$menu_arr[] = "Show ATTENDENCE Tab";
+                                            		$menu_arr[] = "Show EMPLOYEE LEAVES Tab";
+                                            		$menu_arr[] = "Show SALARY ADVANCES(OFFICE) Tab";
+                                            		$menu_arr[] = "Show SALARY ADVANCES(NON-OFFICE) Tab";
+                                            		$menu_arr[] = "manage SALARY ADVANCES Tab";
                                             		$i=101;
                                             		foreach ($menu_arr as $menu_item){
                                             			$chk = "";
@@ -398,6 +401,7 @@ use Illuminate\Support\Facades\Input;
                                             		$menu_arr[] = "create CLIENTHOLIDAYS";
                                             		$menu_arr[] = "edit CLIENTHOLIDAYS";
                                             		$menu_arr[] = "edit SERVICE LOG REQUESTS";
+                                            		$menu_arr[] = "manage SERVICE LOG REQUESTS";
                                             		$i=401;
                                             		foreach ($menu_arr as $menu_item){
                                             			$chk = "";

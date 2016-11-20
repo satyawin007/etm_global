@@ -40,9 +40,9 @@ class StockController extends \Controller {
 					//print_r($json_data);die();
 					foreach($json_data as $json_obj){
 						$table = "InventoryTransactions";
-						$fields["toVehicleId"] = $json_obj->vehicle;
+						//$fields["toVehicleId"] = $json_obj->vehicle;
 						$fields["stockItemId"] = $json_obj->item;
-						$fields["meeterReading"] = $json_obj->meeterreading;
+						//$fields["meeterReading"] = $json_obj->meeterreading;
 						$fields["qty"] = $json_obj->qty;
 						$fields["remarks"] = $json_obj->remarks;
 						if(isset($json_obj->alertdate) && $json_obj->alertdate != ""){
@@ -63,10 +63,11 @@ class StockController extends \Controller {
 								if($item_num==""){
 									continue;
 								}
-								$item_num = $item_num;
-								$itemnumbers = str_replace($item_num,"",$itemnumbers);
+								//$item_num = $item_num;
+								$itemnumbers = str_replace($item_num," ",$itemnumbers);
 							}
-							$itemnumbers = str_replace(",,",",",$itemnumbers);
+							$itemnumbers = str_replace(", ,",",",$itemnumbers);
+							$itemnumbers = str_replace(", ","",$itemnumbers);
 							$data = array('id'=>$json_obj->item);
 							$table = "\PurchasedItems";
 							$fields1 = array("itemNumbers"=>$itemnumbers);
@@ -145,7 +146,12 @@ class StockController extends \Controller {
 						$purchasedOrder = $db_functions_ctrl->get($table, $fields1);
 						$purchasedOrder = $purchasedOrder[0];
 						$purchasedOrdernew = new \PurchasedOrders();
-						$purchasedOrdernew->type = 'TO WAREHOUSE';
+						if(isset($values["stocktype"]) && $values["stocktype"]=="office"){
+							$purchasedOrdernew->type = 'TO OFFICE WAREHOUSE';
+						}
+						else{
+							$purchasedOrdernew->type = 'TO WAREHOUSE';
+						}
 						$purchasedOrdernew->creditSupplierId = $purchasedOrder->creditSupplierId;
 						$purchasedOrdernew->officeBranchId = $json_obj->towarehouse;
 						$purchasedOrdernew->receivedBy = $purchasedOrder->receivedBy;
@@ -156,7 +162,7 @@ class StockController extends \Controller {
 						$purchasedOrdernew->amountPaid = $purchasedOrder->amountPaid;
 						$purchasedOrdernew->totalAmount = $purchasedOrder->totalAmount;
 						$purchasedOrdernew->comments = $purchasedOrder->comments;
-						$purchasedOrdernew->createdBy = \Auth::user()->fullName;
+						$purchasedOrdernew->createdBy = \Auth::user()->id;
 						$purchasedOrdernew->workFlowStatus = "Approved";
 						$insertId = $purchasedOrdernew->save();
 						$insertId = $purchasedOrdernew->id;
@@ -171,7 +177,30 @@ class StockController extends \Controller {
 						$purchasedItem->itemNumbers = $json_obj->itemnumbers;						
 						$purchasedItem->itemNumbersAll = $json_obj->itemnumbers;
 						
-						if(isset($json_obj->itemnumbers) && $json_obj->itemnumbers != ""){
+						if(isset($json_obj->itemnumbers) && $json_obj->itemnumbers != ""){							
+							$fields["itemNumbers"] = $json_obj->itemnumbers;
+							$table = "\PurchasedItems";
+							$fields1 = array("id"=>$json_obj->item);
+							$itemnumbers = $db_functions_ctrl->get($table, $fields1);
+							$itemnumbers = $itemnumbers[0];
+							$itemnumbers = $itemnumbers->itemNumbers;
+							$item_num_arr = explode(",",$json_obj->itemnumbers);
+							foreach($item_num_arr as  $item_num){
+								if($item_num==""){
+									continue;
+								}
+								//$item_num = $item_num;
+								$itemnumbers = str_replace($item_num," ",$itemnumbers);
+							}
+							$itemnumbers = str_replace(", ,",",",$itemnumbers);
+							$itemnumbers = str_replace(", ","",$itemnumbers);
+							$data = array('id'=>$json_obj->item);
+							$table = "\PurchasedItems";
+							$fields1 = array("itemNumbers"=>$itemnumbers);
+							$db_functions_ctrl->update($table, $fields1, $data);
+							
+							/*
+							
 							$table = "\PurchasedItems";
 							$fields1 = array("id"=>$json_obj->item);
 							$itemnumbers = $db_functions_ctrl->get($table, $fields1);
@@ -183,6 +212,8 @@ class StockController extends \Controller {
 							$table = "\PurchasedItems";
 							$fields1 = array("itemNumbers"=>$itemnumbers);
 							$db_functions_ctrl->update($table, $fields1, $data);
+							
+							*/
 						}
 						
 						$purchasedItem->qty = $json_obj->qty;

@@ -148,6 +148,7 @@
 			$("#div_parentbill").hide();
 			$("#div_balanceamount").hide();
 			$("#balanceamount").val("");
+			$("#paymenttype").attr("disabled",true);
 
 
 			$('#existing_bills').on('change', function() { 
@@ -267,6 +268,17 @@
 			   });
 			}
 
+			function enablePaymentType(val){
+				if(val == "Yes"){
+					$("#paymenttype").attr("disabled",false);
+				}
+				else{
+					$("#paymenttype option:selected").removeAttr("selected");
+					$("#paymenttype").attr("disabled",true);
+					  $("#addfields").html("");
+				}
+			}
+
 			function modalEditLookupValue(id, value, remarks, modules, fields, enabled, status){
 				$("#value1").val(value);
 				$("#id1").val(id);
@@ -329,14 +341,18 @@
 				$("#id1").val(id);		
 			}
 
-			function modalEditBillPayments(billNo,billDate,paidDate, totalAmount, amountPaid,name,billParticulars, remarks ,status, id,clientId,parentBillId,transctionType){
+			function modalEditBillPayments(billNo,billDate, tdsPercentage, emiAmount, billMonth, billType, paidDate, totalAmount, amountPaid,name,billParticulars, remarks ,status, id,clientId,parentBillId,transctionType){
 				$("#paiddate1").val(paidDate);				
 				$("#totalamount1").val(totalAmount);
+				$("#tdspercentage1").val(tdsPercentage);
+				$("#emiamount1").val(emiAmount);
 				$("#amountpaid1").val(amountPaid);
 				$("#clientname1 option").each(function() { this.selected = (this.text == name); });
 				$("#billparticulars1").val(billParticulars);
 				$("#remarks1").val(remarks);
 				$("#status1 option").each(function() { this.selected = (this.text == status); });
+				$("#billtype1 option").each(function() { this.selected = (this.text == billType); });
+				$("#month1 option").each(function() { this.selected = (this.value == billMonth); });
 				$("#id1").val(id);
 				$("#billdate1").val("");
 				$("#billno1").val("");

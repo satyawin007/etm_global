@@ -26,13 +26,14 @@ class AttendenceController extends \Controller {
 				return json_encode(['status' => 'fail', 'message' => 'Attendence for PREVIOUS DATES is not allowed']);
 			}
 			$time = date('H:i:s',strtotime("12 PM"));
+			/*$time = date('H:i:s',strtotime("12 PM"));
 			if( $values["session"]=="MORNING" && date('H:i:s') > $time){
 				return json_encode(['status' => 'fail', 'message' => 'Attendence for MORNING SESSION is closed']);
 			}
 			$time = date('H:i:s',strtotime("6 PM"));
 			if( $values["session"]=="AFTERNOON" && date('H:i:s') > $time){
 				return json_encode(['status' => 'fail', 'message' => 'Attendence for AFTERNOON SESSION is closed']);
-			}
+			}*/
 			$success = true;
 			$db_functions_ctrl = new DBFunctionsController();
 			$table = "\Attendence"; 

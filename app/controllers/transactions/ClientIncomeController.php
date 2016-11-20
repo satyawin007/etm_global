@@ -62,6 +62,19 @@ class ClientIncomeController extends \Controller {
 		$tdspercentage = "";   $todate_val = "";  $billno_val = "";   $show_val = "false";
 		$enableincharge_val = "NO";
 		$dieselhikeamount=0; $excesskmsamount=0; $extrakmsamount=0;
+		
+		if(isset($values["clientname"]) && isset($values["month"])){
+			$tds = \BillPayments::where("clientId","=",$values["clientname"])
+							->where("billType","=","Client Income")
+						   ->where("billMonth","=",$values["month"])->get();
+			if(count($tds)>0){
+				$values["tdspercentage"] = $tds[0]->tdsPercentage;
+			}
+			else{
+				$values["tdspercentage"] = 1;
+			}
+		}
+		
 		$values["show"] = "true";
 		if(isset($values["show"])){ $show_val = $values["show"]; }
 		if(isset($values["billdate"])){ $billdate_val = $values["billdate"]; }
@@ -111,38 +124,54 @@ class ClientIncomeController extends \Controller {
 				$depots_arr[$entity->id] = $entity->name;
 			}
 		}
-		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")
+		$incharges =  \InchargeAccounts::leftjoin("employee", "employee.id","=","inchargeaccounts.empid")->where("employee.status","=","ACTIVE")
 								->select(array("inchargeaccounts.empid as id","employee.fullName as name"))->get();
 		$incharges_arr = array();
 		foreach ($incharges as $incharge){
 			$incharges_arr[$incharge->id] = $incharge->name;
 		}
-		$form_field = array("name"=>"clientname", "value"=>$clientname_val, "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
-		$form_fields[] = $form_field;
+		if(isset($values["clienttype"])){
+			$form_field = array("name"=>"clientname", "value"=>$clientname_val, "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>array("1"=>"APSRTC"));
+			$form_fields[] = $form_field;
+		}
+		else{
+			$form_field = array("name"=>"clientname", "value"=>$clientname_val, "content"=>"client name", "readonly"=>"",  "required"=>"required", "type"=>"select", "action"=>array("type"=>"onChange", "script"=>"changeDepot(this.value);"), "class"=>"form-control chosen-select", "options"=>$clients_arr);
+			$form_fields[] = $form_field;
+		}
 		$form_field = array("name"=>"month", "value"=>$month_val, "content"=>"for month", "readonly"=>"",  "required"=>"required", "type"=>"select", "class"=>"form-control", "options"=>$month_arr);
 		$form_fields[] = $form_field;
-		$form_field = array("name"=>"billdate", "value"=>$billdate_val, "content"=>"bill date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"billno", "value"=>$billno_val, "content"=>"bill no", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymentdate", "value"=>$pmtdate_val, "content"=>"payment date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"tdspercentage", "value"=>$tdspercentage, "content"=>"tds percentage(%)", "readonly"=>"", "required"=>"required", "type"=>"text", "class"=>"form-control");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"dieselhikeamount", "value"=>$dieselhikeamount, "content"=>"Diesel Hike Amt", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"excesskmsamount", "value"=>$excesskmsamount, "content"=>"Excess Kms Amt", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"extrakmsamount", "value"=>$extrakmsamount, "content"=>"Extra Kms Amt", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
-		$form_fields[] = $form_field;
-		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array(""=>"NOT PAID", "cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
-		$form_fields[] = $form_field;  
-	
+		//$form_field = array("name"=>"billdate", "value"=>$billdate_val, "content"=>"bill date", "readonly"=>"",  "required"=>"required", "type"=>"text", "class"=>"form-control date-picker");
+		//$form_fields[] = $form_field;
+		//$form_field = array("name"=>"billno", "value"=>$billno_val, "content"=>"bill no", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
+		//$form_fields[] = $form_field;
+		//$form_field = array("name"=>"paymentdate", "value"=>$pmtdate_val, "content"=>"payment date", "readonly"=>"",  "required"=>"", "type"=>"text", "class"=>"form-control date-picker");
+		//$form_fields[] = $form_field;
+		if(!isset($values["clienttype"])){
+			$form_field = array("name"=>"tdspercentage", "value"=>$tdspercentage, "content"=>"tds percentage(%)", "readonly"=>"readonly", "required"=>"", "type"=>"text", "class"=>"form-control");
+			$form_fields[] = $form_field;
+		}
+// 		$form_field = array("name"=>"dieselhikeamount", "value"=>$dieselhikeamount, "content"=>"Diesel Hike Amt", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
+// 		$form_fields[] = $form_field;
+// 		$form_field = array("name"=>"excesskmsamount", "value"=>$excesskmsamount, "content"=>"Excess Kms Amt", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
+// 		$form_fields[] = $form_field;
+// 		$form_field = array("name"=>"extrakmsamount", "value"=>$extrakmsamount, "content"=>"Extra Kms Amt", "readonly"=>"", "required"=>"", "type"=>"text", "class"=>"form-control");
+// 		$form_fields[] = $form_field;
+// 		$form_field = array("name"=>"paymenttype", "value"=>$pmttype_val, "content"=>"payment type", "readonly"=>"",  "action"=>array("type"=>"onchange","script"=>"showPaymentFields(this.value)"), "required"=>"required", "type"=>"select", "class"=>"form-control select2",  "options"=>array(""=>"NOT PAID", "cash"=>"CASH","advance"=>"FROM ADVANCE","cheque_debit"=>"CHEQUE (CREDIT)","cheque_credit"=>"CHEQUE (DEBIT)","ecs"=>"ECS","neft"=>"NEFT","rtgs"=>"RTGS","dd"=>"DD","credit_card"=>"CREDIT CARD","debit_card"=>"DEBIT CARD"));
+// 		$form_fields[] = $form_field;  
+		if(isset($values["clienttype"])){
+			$form_field = array("name"=>"clienttype", "value"=>"apsrtc", "content"=>"", "readonly"=>"",  "required"=>"", "type"=>"hidden");
+			$form_fields[] = $form_field;
+		}
 		$form_info["form_fields"] = $form_fields;
 		$values["form_info"] = $form_info;
 		$modals[] = $form_info;
-			
-		return View::make('transactions.clientincomedatatable', array("values"=>$values));
+		
+		if(isset($values["clienttype"])&& $values["clienttype"]=="apsrtc"){
+			return View::make('transactions.apsrtcclientincomedatatable', array("values"=>$values));
+		}
+		else{
+			return View::make('transactions.clientincomedatatable', array("values"=>$values));
+		}
 	}
 	
 		
@@ -168,7 +197,8 @@ class ClientIncomeController extends \Controller {
 				$i++;
 			}
 			$message = "The following vehicles income added successfully : <br/><b>";
-			$url = "clientincometransactions?paymenttype=".$values["paymenttype"]."&tdspercentage=".$values["tdspercentage"]."&month=".$values["month"]."&billdate=".$values["billdate"];
+			$url = "clientincometransactions?tdspercentage=".$values["tdspercentage"]."&month=".$values["month"];
+			if(isset($values["clienttype"])){ $url = $url."&clienttype=".$values["clienttype"];}
 			if(isset($values["paymentdate"])){ $url = $url."&paymentdate=".$values["paymentdate"];}
 			if(isset($values["billno"])){ $url = $url."&billno=".$values["billno"];}
 			if(isset($values["clientname"])){ $url = $url."&clientname=".$values["clientname"];}
@@ -181,41 +211,53 @@ class ClientIncomeController extends \Controller {
 			if(isset($values["transactiondate"])){ $url = $url."&transactiondate=".$values["transactiondate"];}
 			foreach ($ids as $id){
 				$id = $id%$values["dynamic-table_length"];
-				$field_names = array("vehid"=>"vehicleId",
-									 "depotid"=>"depotId", 
-									 "veh_gross"=>"gross",
-									 "veh_tds"=>"tds",
-									 "veh_emi"=>"emi",
-									 "veh_insurance"=>"insurance",
-									 "veh_tollgate"=>"tollgate",
-								 	 "veh_parking"=>"parking",
-									 "veh_stopped"=>"stopped", 
-									 "veh_otherincome"=>"otherIncome", 
-									 "veh_otherdeductions"=>"otherDeductions",
-									 "veh_netamount"=>"netAmount",
-									 "veh_clientamount"=>"clientAmount",
-									 "veh_remarks"=>"remarks");
-				$fields = array();
-				foreach ($field_names as $key=>$val){
-					if(isset($values[$key])){
-						$fields[$val] = $values[$key][$id];
+				if(isset($values["clienttype"]) && $values["clienttype"]=="apsrtc"){
+					$field_names = array("vehid"=>"vehicleId",
+										 "depotid"=>"depotId", 
+										 "veh_gross"=>"gross",
+										 "veh_schekms"=>"scheKms",
+										 "veh_optdkms"=>"optdKms",
+										 "veh_rtperkm"=>"rtperKm",
+										 "veh_insreimburse"=>"insReimburse",
+									 	 "veh_arrears"=>"arrears",
+										 "veh_itamt"=>"itAmt", 
+										 "veh_penalties"=>"penalties", 
+										 "veh_otherdeductions"=>"otherDeductions",
+										 "veh_netamount"=>"netAmount",
+										 "veh_clientamount"=>"clientAmount",
+										 "veh_remarks"=>"remarks");
+					$fields = array();
+					foreach ($field_names as $key=>$val){
+						if(isset($values[$key])){
+							$fields[$val] = $values[$key][$id];
+						}
+					}
+				}
+				else{
+					$field_names = array("vehid"=>"vehicleId",
+							"depotid"=>"depotId",
+							"veh_gross"=>"gross",
+							"veh_tds"=>"tds",
+							"veh_emi"=>"emi",
+							"veh_insurance"=>"insurance",
+							"veh_tollgate"=>"tollgate",
+							"veh_parking"=>"parking",
+							"veh_stopped"=>"stopped",
+							"veh_otherincome"=>"otherIncome",
+							"veh_otherdeductions"=>"otherDeductions",
+							"veh_netamount"=>"netAmount",
+							"veh_clientamount"=>"clientAmount",
+							"veh_remarks"=>"remarks");
+					$fields = array();
+					foreach ($field_names as $key=>$val){
+						if(isset($values[$key])){
+							$fields[$val] = $values[$key][$id];
+						}
 					}
 				}
 				$field_names = array("month"=>"month",
 									"clientname"=>"clientId",
 									"paymentdate"=>"paymentDate",
-									"billdate"=>"billDate",
-									"billno"=>"billNo",
-									"paymenttype"=>"paymentType",
-									"bankaccount"=>"bankAccount",
-									"chequenumber"=>"chequeNumber",
-									"bankname"=>"bankName",
-									"accountnumber"=>"accountNumber",
-									"issuedate"=>"issueDate",
-									"dieselhikeamount"=>"dieselHikeAmount",
-									"excesskmsamount"=>"excessKmsAmount",
-									"extrakmsamount"=>"extraKmsAmount",
-									"transactiondate"=>"transactionDate",
 									"tdspercentage"=>"tdsPercentage");
 				foreach ($field_names as $key=>$val){
 					if(isset($values[$key])){
@@ -259,21 +301,49 @@ class ClientIncomeController extends \Controller {
 		if (\Request::isMethod('get'))
 		{
 			$values = Input::all();
-			$field_names = array("vehid"=>"vehicleId",
-								 "depotid"=>"depotId", 
-								 "veh_gross"=>"gross",
-								 "veh_tds"=>"tds",
-								 "veh_emi"=>"emi",
-								 "veh_stopped"=>"stopped", 
-								 "veh_otherincome"=>"otherIncome", 
-								 "veh_otherdeductions"=>"otherDeductions",
-								 "veh_netamount"=>"netAmount",
-								 "veh_clientamount"=>"clientAmount",
-								 "veh_remarks"=>"remarks");
-			$fields = array();
-			foreach ($field_names as $key=>$val){
-				if(isset($values[$key])){
-					$fields[$val] = $values[$key];
+			//$values["dasf"];
+			if(isset($values["clienttype"]) && $values["clienttype"]=="apsrtc"){
+				$field_names = array("vehid"=>"vehicleId",
+						"depotid"=>"depotId",
+						"veh_gross"=>"gross",
+						"veh_schekms"=>"scheKms",
+						"veh_optdkms"=>"optdKms",
+						"veh_rtperkm"=>"rtperKm",
+						"veh_insreimburse"=>"insReimburse",
+						"veh_arrears"=>"arrears",
+						"veh_itamt"=>"itAmt",
+						"veh_penalties"=>"penalties",
+						"veh_otherdeductions"=>"otherDeductions",
+						"veh_netamount"=>"netAmount",
+						"veh_clientamount"=>"clientAmount",
+						"veh_remarks"=>"remarks");
+				$fields = array();
+				foreach ($field_names as $key=>$val){
+					if(isset($values[$key])){
+						$fields[$val] = $values[$key];
+					}
+				}
+			}
+			else{
+				$field_names = array("vehid"=>"vehicleId",
+									 "depotid"=>"depotId", 
+									 "veh_gross"=>"gross",
+									 "veh_tds"=>"tds",
+									 "veh_emi"=>"emi",
+									 "veh_stopped"=>"stopped", 
+									 "veh_insurance"=>"insurance",
+									 "veh_tollgate"=>"tollgate",
+									 "veh_parking"=>"parking",
+									 "veh_otherincome"=>"otherIncome", 
+									 "veh_otherdeductions"=>"otherDeductions",
+									 "veh_netamount"=>"netAmount",
+									 "veh_clientamount"=>"clientAmount",
+									 "veh_remarks"=>"remarks");
+				$fields = array();
+				foreach ($field_names as $key=>$val){
+					if(isset($values[$key])){
+						$fields[$val] = $values[$key];
+					}
 				}
 			}
 			$field_names = array("month"=>"month",
